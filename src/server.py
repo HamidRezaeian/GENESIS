@@ -110,7 +110,7 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
-PORT = 8001
+PORT = 8002
 socketserver.TCPServer.allow_reuse_address = True
 with socketserver.TCPServer(("", PORT), APIHandler) as httpd:
     logging.info(f"Visualizer server running at http://localhost:{PORT}")

@@ -295,7 +295,7 @@
         };
 
         async function apiCommand(action) {
-            await fetch(`http://localhost:8001/api/control?action=${action}`);
+            await fetch(`/api/control?action=${action}`);
             if(action !== 'catastrophe') {
                 document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
                 if(action === 'pause') document.getElementById('btn-pause').classList.add('active');
@@ -315,7 +315,7 @@
             const el = document.getElementById(`sl-${key}`);
             const lbl = document.getElementById(`lbl-${key}`);
             const apiKeys = {'mut': 'mutation_rate', 'env': 'env_energy_total', 'met': 'metabolism_cost', 'edg': 'edge_cost'};
-            el.onchange = (e) => { fetch(`http://localhost:8001/api/settings?${apiKeys[key]}=${e.target.value}`); };
+            el.onchange = (e) => { fetch(`/api/settings?${apiKeys[key]}=${e.target.value}`); };
             el.oninput = (e) => { lbl.innerText = e.target.value; };
         });
 
@@ -323,7 +323,7 @@
 
         async function fetchState() {
             try {
-                const res = await fetch('http://localhost:8001/api/state');
+                const res = await fetch('/api/state');
                 if (!res.ok) return;
                 const data = await res.json();
                 
