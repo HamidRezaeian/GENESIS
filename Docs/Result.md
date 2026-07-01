@@ -157,3 +157,17 @@ The GENESIS experiments conclusively demonstrate that:
 4. **Language and Symbols** naturally emerge when cooperation provides a thermodynamic advantage against environmental hazards.
 5. **Red Queen Extinction:** Prolonged simulations (e.g. 73,000+ ticks) prove that arms races can end in faction extinction. If the parasitic Exploiters cannot keep up with the Builders' erratic, unpredictable mutations, they starve.
 6. **Hermit Evolution:** Without a driving need to interact (such as catastrophe shocks or reproduction pressures), nodes will organically drop all edges to save `Interaction Cost` energy, reducing their accuracy to 0% but maximizing lifespan.
+
+---
+
+## 🧪 Experiment 9: Network Plasticity (Curing the Hermit Evolution)
+
+**Objective:** Address the "Hermit Evolution" phenomenon where the entire ecosystem disintegrates into disconnected, blind nodes (accuracy 0%) to save energy. We needed a mechanism to continuously force social interaction without manual intervention (like catastrophes).
+**Setup:**
+- **Spontaneous Edge Formation:** Added a 1% chance per tick for random disconnected nodes to form an edge.
+- **Edge Mutation:** When reproducing, offspring have a chance (equal to their mutation rate) to form a completely new, random connection.
+
+**Results & Observations:**
+- **The End of Isolationism:** The network no longer dissolved into darkness. Nodes were continuously forced to interact. 
+- **Sustained Intelligence:** Because edges were constantly forming, nodes were forced to continuously predict their new neighbors. The Top 5 Smartest nodes maintained high accuracy (near 100%) indefinitely, proving that constant environmental interaction is the key to sustained intelligence.
+- **Conclusion:** Network Plasticity is essential for an open-ended universe. Without forced exploration (spontaneous connections), evolution favors total isolation to minimize energy costs.

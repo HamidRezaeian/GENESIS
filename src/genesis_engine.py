@@ -337,6 +337,15 @@ class GraphUniverse:
             for n in receivers:
                 n.energy += ep
 
+            # Spontaneous edge formation (Network Plasticity)
+            if len(self.nodes) > 1:
+                num_new_edges = max(1, int(len(self.nodes) * 0.01))
+                node_ids = list(self.nodes.keys())
+                for _ in range(num_new_edges):
+                    u, v = random.sample(node_ids, 2)
+                    self.nodes[u].add_edge(v)
+                    self.nodes[v].add_edge(u)
+
         # Phase 3: THERMODYNAMIC COSTS (with faction-aware edge costs)
         for node in self.nodes.values():
             cost = self.metabolism_cost
@@ -417,6 +426,14 @@ class GraphUniverse:
                     nb = self.get_node(eid)
                     if nb:
                         nb.add_edge(child.id)
+                
+                # Edge Mutation: Child has a chance to form a new random connection
+                if random.random() < self.mutation_rate and len(self.nodes) > 1:
+                    target_id = random.choice(list(self.nodes.keys()))
+                    if target_id != child.id:
+                        child.add_edge(target_id)
+                        self.nodes[target_id].add_edge(child.id)
+                        
                 births += 1
                 self.total_births += 1
                 if child.generation > self.max_generation_seen:
