@@ -155,3 +155,5 @@ The GENESIS experiments conclusively demonstrate that:
 2. **Evolution does not require biological definitions** (DNA, cells); it only requires heredity, variance, and selective pressure.
 3. **Open-ended complexity** can be sustained indefinitely by pitting intelligent agents against one another in a Red Queen arms race.
 4. **Language and Symbols** naturally emerge when cooperation provides a thermodynamic advantage against environmental hazards.
+5. **Red Queen Extinction:** Prolonged simulations (e.g. 73,000+ ticks) prove that arms races can end in faction extinction. If the parasitic Exploiters cannot keep up with the Builders' erratic, unpredictable mutations, they starve.
+6. **Hermit Evolution:** Without a driving need to interact (such as catastrophe shocks or reproduction pressures), nodes will organically drop all edges to save `Interaction Cost` energy, reducing their accuracy to 0% but maximizing lifespan.

@@ -25,7 +25,13 @@ def simulation_loop():
 sim_thread = threading.Thread(target=simulation_loop, daemon=True)
 sim_thread.start()
 
+import os
+
+PUBLIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'public'))
+
 class APIHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=PUBLIC_DIR, **kwargs)
     def do_GET(self):
         global is_paused, universe
         

@@ -23,7 +23,7 @@ The frontend must provide an "Observation Deck" for the user to watch evolution 
 - **Live Leaderboard:** A ranking of the top 5 smartest organisms (`avg_err`).
 - **Follow Camera:** The ability to lock the viewport onto specific organisms.
 - **Visual Auras:** Elite/smart nodes must emit glowing halos (Golden Auras) for easy identification.
-- **Live Tuning:** Sliders to adjust the Laws of Physics (mutation rate, metabolism, environmental energy) in real-time.
+- **Live Tuning & Controls:** Play, Pause, Restart, and Catastrophe controls, plus sliders to adjust the Laws of Physics (mutation rate, metabolism, environmental energy) in real-time.
 
 ## 5. Success Metrics
 - **Stability:** The population should reach a dynamic equilibrium (neither exploding nor going extinct).
