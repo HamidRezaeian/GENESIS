@@ -52,7 +52,8 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
                 "mutation_rate": universe.mutation_rate,
                 "env_energy_total": universe.env_energy_total,
                 "metabolism_cost": universe.metabolism_cost,
-                "edge_cost": universe.edge_cost
+                "edge_cost": universe.edge_cost,
+                "model_cost_per_weight": universe.model_cost_per_weight
             }
             self.wfile.write(json.dumps(data).encode('utf-8'))
             
@@ -89,6 +90,8 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
                 universe.metabolism_cost = float(qs['metabolism_cost'][0])
             if 'edge_cost' in qs:
                 universe.edge_cost = float(qs['edge_cost'][0])
+            if 'model_cost_per_weight' in qs:
+                universe.model_cost_per_weight = float(qs['model_cost_per_weight'][0])
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -98,7 +101,8 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
                 "mutation_rate": universe.mutation_rate,
                 "env_energy_total": universe.env_energy_total,
                 "metabolism_cost": universe.metabolism_cost,
-                "edge_cost": universe.edge_cost
+                "edge_cost": universe.edge_cost,
+                "model_cost_per_weight": universe.model_cost_per_weight
             }).encode('utf-8'))
             
         elif self.path == '/':
