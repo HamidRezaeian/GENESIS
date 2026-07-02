@@ -172,7 +172,7 @@
             <input type="range" id="sl-met" min="0" max="1.0" step="0.01" value="0.10">
         </div>
         <div class="slider-group">
-            <label>Interaction Cost (Edge Cost) <span id="lbl-edg">0.03</span></label>
+            <label>Cognitive Load (Vision Cost) <span id="lbl-edg">0.03</span></label>
             <input type="range" id="sl-edg" min="0" max="0.2" step="0.01" value="0.03">
         </div>
         <div class="slider-group" style="margin-bottom:0;">
@@ -214,28 +214,33 @@
     <script>
         const canvas = document.getElementById('world');
         const ctx = canvas.getContext('2d');
-        let width, height;
-        let transform = d3.zoomIdentity;
+        let width = window.innerWidth, height = window.innerHeight;
+        let transform = d3.zoomIdentity.translate(width / 2 - 500, height / 2 - 500);
         
         let nodesData = [];
         let edgesData = [];
+        let bindingEdgesData = [];
+        let foodsData = [];
         let selectedNodeId = null;
         let followedNodeId = null;
         let topSmartestIds = new Set();
         let ripples = []; 
 
-        const simulation = d3.forceSimulation()
-            .force("link", d3.forceLink().id(d => d.id).distance(40).strength(0.3))
-            .force("charge", d3.forceManyBody().strength(-40))
-            .force("center", d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2))
-            .force("collide", d3.forceCollide().radius(d => Math.sqrt(d.energy||10) + 5).iterations(2))
-            .alphaDecay(0);
+        function findNode(x, y, radius) {
+            let closest = null;
+            let minDist = radius * radius;
+            for(let n of nodesData) {
+                let dx = n.x - x; let dy = n.y - y;
+                let distSq = dx*dx + dy*dy;
+                if(distSq < minDist) { minDist = distSq; closest = n; }
+            }
+            return closest;
+        }
 
         function resize() {
             width = window.innerWidth; height = window.innerHeight;
             canvas.width = width * window.devicePixelRatio; canvas.height = height * window.devicePixelRatio;
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            if(simulation && followedNodeId === null) simulation.force("center", d3.forceCenter(width / 2, height / 2));
         }
         window.addEventListener('resize', resize);
         resize();
@@ -253,7 +258,7 @@
 
         d3.select(canvas).on("click", (e) => {
             const [x, y] = transform.invert([e.offsetX, e.offsetY]);
-            const clicked = simulation.find(x, y, 30);
+            const clicked = findNode(x, y, 30);
             if (clicked) {
                 selectedNodeId = clicked.id;
                 document.getElementById('top-right').style.display = 'block';
@@ -266,20 +271,35 @@
 
         d3.select(canvas).on("mousemove", (e) => {
             const [x, y] = transform.invert([e.offsetX, e.offsetY]);
-            const hovered = simulation.find(x, y, 20);
+            const hovered = findNode(x, y, 20);
             const tooltip = document.getElementById('tooltip');
             if (hovered) {
                 tooltip.style.display = 'block';
                 tooltip.style.left = e.pageX + 15 + 'px';
                 tooltip.style.top = e.pageY + 15 + 'px';
                 const acc = Math.max(0, 100 - (hovered.avg_err * 100)).toFixed(1);
-                const role = hovered.faction === 0 ? 'Builder' : 'Exploiter';
+                let role = hovered.faction === 0 ? 'Builder' : 'Exploiter';
+                if (hovered.is_egg) role += ' Egg (Incubating)';
                 const color = hovered.faction === 0 ? 'var(--builder)' : 'var(--exploiter)';
+                
+                let intelHtml = hovered.is_egg 
+                    ? `<strong>Status:</strong> <span style="color:#FFF">Dormant</span><br>`
+                    : `<strong>Intel:</strong> <span style="color:#4ade80">${acc}%</span><br>`;
+                    
+                if (hovered.age > 500) {
+                    intelHtml += `<strong style="color: #FF4444;">⚠️ Dying of Old Age</strong><br>`;
+                }
+                
+                if (hovered.is_attacking) {
+                    intelHtml += `<strong style="color: #FF003C;">⚔️ ATTACKING</strong><br>`;
+                }
+                    
                 tooltip.innerHTML = `
                     <strong style="color:${color}; font-size:1.1rem;">Subject #${hovered.id}</strong><br>
                     <span style="color:#AAA;">${role}</span><br><br>
-                    <strong>Intel:</strong> <span style="color:#4ade80">${acc}%</span><br>
+                    ${intelHtml}
                     <strong>Energy:</strong> ${hovered.energy.toFixed(0)}<br>
+                    <strong>Age:</strong> ${hovered.age} ticks<br>
                     <strong>Synapses:</strong> ${hovered.brain_size}
                 `;
             } else {
@@ -400,17 +420,24 @@
                 });
                 
                 newNodesMap.forEach(n => {
-                    n.x = width / 2 + (Math.random() - 0.5) * 100;
-                    n.y = height / 2 + (Math.random() - 0.5) * 100;
                     nodesData.push(n);
                 });
 
-                edgesData = data.edges.map(e => ({ source: e.source, target: e.target }));
-                simulation.nodes(nodesData);
-                simulation.force("link").links(edgesData);
+                let currentNodesMap = new Map();
+                nodesData.forEach(n => currentNodesMap.set(n.id, n));
+                edgesData = data.edges.map(e => ({ 
+                    source: currentNodesMap.get(e.source), 
+                    target: currentNodesMap.get(e.target) 
+                })).filter(e => e.source && e.target);
                 
-                if (data.is_paused) simulation.stop();
-                else simulation.alpha(0.1).restart();
+                bindingEdgesData = (data.binding_edges || []).map(e => ({
+                    source: currentNodesMap.get(e.source), 
+                    target: currentNodesMap.get(e.target) 
+                })).filter(e => e.source && e.target);
+                
+                foodsData = data.foods || [];
+
+
 
                 if (selectedNodeId !== null) {
                     const node = nodesData.find(n => n.id === selectedNodeId);
@@ -428,7 +455,12 @@
             document.getElementById('insp-title').innerText = `Subject #${node.id}`;
             document.getElementById('insp-title').style.color = node.faction === 0 ? "var(--builder)" : "var(--exploiter)";
             document.getElementById('insp-energy').innerText = node.energy.toFixed(1);
-            document.getElementById('insp-age').innerText = node.age;
+            
+            let ageText = node.age;
+            if (node.age > 500) ageText += " (Dying)";
+            document.getElementById('insp-age').innerText = ageText;
+            document.getElementById('insp-age').style.color = node.age > 500 ? "#FF4444" : "#E0E0E0";
+            
             document.getElementById('insp-gen').innerText = node.generation;
             document.getElementById('insp-brain').innerText = node.brain_size;
             document.getElementById('insp-acc').innerText = node.accuracy.toFixed(1) + "%";
@@ -458,6 +490,17 @@
             ctx.translate(transform.x, transform.y);
             ctx.scale(transform.k, transform.k);
             
+            // Draw Food
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "rgba(150, 255, 50, 0.8)";
+            ctx.fillStyle = "rgba(150, 255, 50, 0.8)";
+            foodsData.forEach(f => {
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, Math.max(2, Math.sqrt(f.e)), 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+
             for(let i=ripples.length-1; i>=0; i--) {
                 const r = ripples[i];
                 const targetNode = nodesData.find(n => n.id === r.linkedId);
@@ -497,13 +540,41 @@
                 ctx.beginPath(); ctx.moveTo(d.source.x, d.source.y); ctx.lineTo(d.target.x, d.target.y); ctx.stroke();
                 ctx.lineWidth = 1;
             });
+            
+            // Draw Binding Edges (thick, glowing)
+            ctx.lineWidth = 3;
+            bindingEdgesData.forEach(d => {
+                ctx.strokeStyle = "rgba(100, 255, 100, 0.8)";
+                ctx.shadowColor = "#64ff64";
+                ctx.shadowBlur = 10;
+                
+                if (selectedNodeId !== null && d.source.id !== selectedNodeId && d.target.id !== selectedNodeId) {
+                    ctx.strokeStyle = "rgba(100, 255, 100, 0.1)";
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.beginPath(); 
+                ctx.moveTo(d.source.x, d.source.y); 
+                ctx.lineTo(d.target.x, d.target.y); 
+                ctx.stroke();
+            });
+            ctx.lineWidth = 1;
+            ctx.shadowBlur = 0;
 
             nodesData.forEach(d => {
                 const radius = Math.max(3, Math.min(18, Math.sqrt(d.energy || 5)));
                 let opacity = (selectedNodeId !== null && !connected.has(d.id)) ? 0.15 : 1.0;
                 
-                ctx.shadowBlur = (opacity === 1.0) ? 15 : 0;
-                ctx.shadowColor = d.faction === 0 ? "#00F0FF" : "#FF003C";
+                const isSenescent = d.age > 500;
+                
+                ctx.shadowBlur = (opacity === 1.0 && !isSenescent) ? 15 : 0;
+                let colorBase = d.faction === 0 ? "0, 240, 255" : "255, 0, 60";
+                
+                if (isSenescent) {
+                    colorBase = "150, 150, 150"; // Gray out old nodes
+                }
+                
+                ctx.shadowColor = `rgba(${colorBase}, 1.0)`;
                 
                 if (topSmartestIds.has(d.id) && opacity === 1.0) {
                     ctx.beginPath(); ctx.arc(d.x, d.y, radius + 6, 0, 2 * Math.PI);
@@ -516,8 +587,28 @@
 
                 ctx.beginPath();
                 ctx.arc(d.x, d.y, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = d.faction === 0 ? `rgba(0, 240, 255, ${opacity})` : `rgba(255, 0, 60, ${opacity})`;
-                ctx.fill();
+                if (d.is_egg) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                    ctx.fill();
+                    ctx.strokeStyle = `rgba(${colorBase}, ${opacity})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = `rgba(${colorBase}, ${opacity})`;
+                    ctx.fill();
+                }
+                
+                if (d.is_attacking && opacity > 0.5) {
+                    ctx.beginPath();
+                    for (let i = 0; i < 8; i++) {
+                        let angle = (i * Math.PI) / 4;
+                        ctx.moveTo(d.x + Math.cos(angle) * radius, d.y + Math.sin(angle) * radius);
+                        ctx.lineTo(d.x + Math.cos(angle) * (radius + 6), d.y + Math.sin(angle) * (radius + 6));
+                    }
+                    ctx.strokeStyle = "#FF003C";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
                 
                 ctx.shadowBlur = 0;
                 

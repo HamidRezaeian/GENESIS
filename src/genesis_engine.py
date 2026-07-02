@@ -105,21 +105,41 @@ class DynamicBrain:
             
         return new_brain
 
+class Food:
+    def __init__(self, x, y, energy):
+        self.x = x
+        self.y = y
+        self.energy = energy
+
 class Node:
     def __init__(self, node_id, initial_energy, faction=BUILDER,
                  learning_rate=None, generation=0, parent=None):
         self.id = node_id
         self.energy = initial_energy
-        self.edges = set()
+        self.visible_nodes = set()
 
         # Lineage
         self.generation = generation
         self.parent_id = parent.id if parent else None
         self.children_spawned = 0
+        
+        self.is_egg = False
+        self.incubation_timer = 0
+        
+        self.memory = [0.0, 0.0]
+        self.bindings = set()
 
         # Observable state
         self.state = 0.0
         self._update_state()
+
+        # Spatial physics
+        self.x = random.uniform(0, 1000)
+        self.y = random.uniform(0, 1000)
+        self.vx = 0.0
+        self.vy = 0.0
+        self.thrust_x = 0.0
+        self.thrust_y = 0.0
 
         # Internal World Model
         self.internal_model = {}
@@ -136,12 +156,13 @@ class Node:
             self.lr = learning_rate if learning_rate is not None else random.uniform(0.01, 0.1)
             self.reproduction_threshold = 25.0
             self.faction = faction
-            self.brain = DynamicBrain(input_size=3, output_size=3, hidden_size=0) 
+            self.brain = DynamicBrain(input_size=5, output_size=9, hidden_size=0) 
             
         self.stability = random.uniform(0.0, 1.0)
         self.aggression = random.uniform(0.0, 0.5)
         self.signal = 0.0
         self.defended = False
+        self.attacking = False
         self.received_signal_error = 0.0
         self.next_received_signal_error = 0.0
 
@@ -152,44 +173,84 @@ class Node:
         self.age = 0
 
     def _update_state(self):
-        self.state = 1.0 / (1.0 + math.exp(-0.1 * (self.energy - 5.0)))
-
-    def add_edge(self, target_id):
-        self.edges.add(target_id)
-
-    def remove_edge(self, target_id):
-        if target_id in self.edges:
-            self.edges.remove(target_id)
+        if self.is_egg:
+            self.state = 0.5
+        else:
+            self.state = 1.0 / (1.0 + math.exp(-0.1 * (self.energy - 5.0)))
 
     def predict_neighbors(self, universe, env_warning):
+        if self.is_egg: return
         self.predictions = {}
         my_total_signal = 0
         my_total_defend = 0
+        my_total_thrust_x = 0
+        my_total_thrust_y = 0
+        my_total_next_mem = [0.0, 0.0]
         self.naive_surprise = 0.0
-        for neighbor_id in self.edges:
+        
+        if not self.visible_nodes:
+            outs, context = self.brain.predict([0.0, env_warning, 0.0] + self.memory)
+            self.signal = outs[2]
+            self.defended = outs[1] > 0.5
+            self.thrust_x = outs[3] * 2.0 - 1.0
+            self.thrust_y = outs[4] * 2.0 - 1.0
+            self.memory = outs[5:7]
+            self.attacking = outs[8] > 0.5
+            self.predictions['ENV'] = {
+                'pred_state': 0.0,
+                'def_action': outs[1],
+                'sig': outs[2],
+                'thrust_x': outs[3] * 2.0 - 1.0,
+                'thrust_y': outs[4] * 2.0 - 1.0,
+                'next_mem': outs[5:7],
+                'bind_action': outs[7],
+                'attack_action': outs[8],
+                'context': context,
+                'actual_state_before_tick': 0.0
+            }
+            return
+
+        my_total_attack = 0
+
+        for neighbor_id in self.visible_nodes:
             neighbor = universe.get_node(neighbor_id)
             if neighbor:
-                outs, context = self.brain.predict([neighbor.state, env_warning, neighbor.signal])
+                outs, context = self.brain.predict([neighbor.state, env_warning, neighbor.signal] + self.memory)
                 pred_state, def_action, sig = outs[0], outs[1], outs[2]
+                thrust_x = outs[3] * 2.0 - 1.0
+                thrust_y = outs[4] * 2.0 - 1.0
+                next_mem = outs[5:7]
+                bind_action = outs[7]
+                attack_action = outs[8]
                 self.predictions[neighbor_id] = {
                     'pred_state': pred_state,
                     'def_action': def_action,
                     'sig': sig,
+                    'thrust_x': thrust_x,
+                    'thrust_y': thrust_y,
+                    'next_mem': next_mem,
+                    'bind_action': bind_action,
+                    'attack_action': attack_action,
                     'context': context,
                     'actual_state_before_tick': neighbor.state
                 }
                 my_total_signal += sig
                 my_total_defend += def_action
+                my_total_thrust_x += thrust_x
+                my_total_thrust_y += thrust_y
+                my_total_next_mem[0] += next_mem[0]
+                my_total_next_mem[1] += next_mem[1]
+                my_total_attack += attack_action
                 
-        if self.edges:
-            self.signal = my_total_signal / len(self.edges)
-            self.defended = (my_total_defend / len(self.edges)) > 0.5
-        else:
-            self.signal = 0.0
-            self.defended = False
+        self.signal = my_total_signal / len(self.visible_nodes)
+        self.defended = (my_total_defend / len(self.visible_nodes)) > 0.5
+        self.thrust_x = my_total_thrust_x / len(self.visible_nodes)
+        self.thrust_y = my_total_thrust_y / len(self.visible_nodes)
+        self.attacking = (my_total_attack / len(self.visible_nodes)) > 0.5
+        self.memory = [m / len(self.visible_nodes) for m in my_total_next_mem]
 
     def evaluate_predictions(self, universe):
-        if not self.predictions:
+        if self.is_egg or not self.predictions:
             return 1.0, 1.0
         total_error = 0.0
         total_naive_error = 0.0
@@ -214,9 +275,16 @@ class Node:
         return me, self.naive_surprise
 
     def learn(self, universe, target_defend):
+        if self.is_egg: return
         err_sig = self.received_signal_error
         
         for nid, outs in self.predictions.items():
+            if nid == 'ENV':
+                err_state = 0.0
+                err_defend = outs['def_action'] - target_defend
+                grad_x = self.brain.learn(self.lr, [err_state, err_defend, err_sig, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], outs['context'])
+                continue
+
             neighbor = universe.get_node(nid)
             if neighbor is None:
                 continue
@@ -225,7 +293,7 @@ class Node:
             err_defend = outs['def_action'] - target_defend
             
             # Backprop errors through DynamicBrain
-            grad_x = self.brain.learn(self.lr, [err_state, err_defend, err_sig], outs['context'])
+            grad_x = self.brain.learn(self.lr, [err_state, err_defend, err_sig, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], outs['context'])
             
             # grad_x[2] is the gradient w.r.t the neighbor's signal input
             neighbor.next_received_signal_error += grad_x[2]
@@ -235,7 +303,7 @@ class Node:
         self.next_received_signal_error = 0.0
 
     def can_reproduce(self):
-        return self.energy >= self.reproduction_threshold
+        return not self.is_egg and self.energy >= self.reproduction_threshold
 
     def create_offspring(self, child_id, mutation_rate=0.15):
         child_energy = self.energy * 0.4
@@ -249,9 +317,11 @@ class Node:
             parent=self,
             generation=self.generation + 1
         )
-        
-        for nid in self.edges:
-            child.edges.add(nid)
+        child.x = (self.x + random.uniform(-10, 10)) % 1000.0
+        child.y = (self.y + random.uniform(-10, 10)) % 1000.0
+        child.is_egg = True
+        child.incubation_timer = 30
+        child._update_state()
         return child
 
 
@@ -282,7 +352,8 @@ class GraphUniverse:
         self.total_deaths = 0
         self.max_generation_seen = 0
         
-        self.active_storms = set()
+        self.storm_queue = []
+        self.foods = []
 
     def _get_next_id(self):
         nid = self._next_node_id
@@ -299,14 +370,47 @@ class GraphUniverse:
 
     def remove_node(self, nid):
         if nid in self.nodes:
-            for n in self.nodes.values():
-                n.remove_edge(nid)
             del self.nodes[nid]
 
     def tick(self):
         self.tick_count += 1
         for n in self.nodes.values():
-            n.age += 1
+            if not n.is_egg:
+                n.age += 1
+            else:
+                n.incubation_timer -= 1
+                if n.incubation_timer <= 0:
+                    n.is_egg = False
+
+        # Phase 0: SPATIAL VISION SENSORS
+        grid = {}
+        cell_size = 80.0
+        for n in self.nodes.values():
+            n.visible_nodes = set()
+            cx = int(n.x / cell_size)
+            cy = int(n.y / cell_size)
+            if (cx, cy) not in grid:
+                grid[(cx, cy)] = []
+            grid[(cx, cy)].append(n)
+            
+        grid_w = int(1000 / cell_size) + 1
+        for n in self.nodes.values():
+            cx = int(n.x / cell_size)
+            cy = int(n.y / cell_size)
+            
+            # Check 3x3 cells (with wrap around)
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    nx = (cx + dx) % grid_w
+                    ny = (cy + dy) % grid_w
+                    if (nx, ny) in grid:
+                        for other in grid[(nx, ny)]:
+                            if other.id != n.id:
+                                # Toroidal distance
+                                dist_x = min(abs(n.x - other.x), 1000 - abs(n.x - other.x))
+                                dist_y = min(abs(n.y - other.y), 1000 - abs(n.y - other.y))
+                                if dist_x*dist_x + dist_y*dist_y <= cell_size*cell_size:
+                                    n.visible_nodes.add(other.id)
 
         # Phase 1: PREDICT (and Storm spawning)
         new_warnings = set()
@@ -317,39 +421,147 @@ class GraphUniverse:
         for n in self.nodes.values():
             env_warning = 1.0 if n.id in new_warnings else 0.0
             n.predict_neighbors(self, env_warning)
+
+        # Phase 1.5: FORM MUTUAL BINDINGS
+        for n in self.nodes.values():
+            if n.is_egg: continue
+            for nid, outs in n.predictions.items():
+                if nid == 'ENV': continue
+                neighbor = self.get_node(nid)
+                if neighbor and not neighbor.is_egg:
+                    if outs.get('bind_action', 0) > 0.5:
+                        n_pred = neighbor.predictions.get(n.id)
+                        if n_pred and n_pred.get('bind_action', 0) > 0.5:
+                            dist_x = min(abs(n.x - neighbor.x), 1000 - abs(n.x - neighbor.x))
+                            dist_y = min(abs(n.y - neighbor.y), 1000 - abs(n.y - neighbor.y))
+                            if dist_x*dist_x + dist_y*dist_y < 900: # distance < 30
+                                n.bindings.add(neighbor.id)
+                                neighbor.bindings.add(n.id)
+
+        # Phase 1.6: PREDATION (ARMS RACE)
+        for n in self.nodes.values():
+            if n.is_egg or not n.attacking: continue
             
-        # Storm hits nodes from previous tick
-        for nid in self.active_storms:
-            node = self.get_node(nid)
-            if node:
-                if node.defended:
-                    node.energy -= 5 # cost of defense
+            # Find closest visible node to attack
+            closest_dist = float('inf')
+            closest_target = None
+            for nid in n.visible_nodes:
+                if nid in n.bindings: continue # Don't attack bound partners
+                target = self.get_node(nid)
+                if target and not target.is_egg:
+                    dist_x = min(abs(n.x - target.x), 1000 - abs(n.x - target.x))
+                    dist_y = min(abs(n.y - target.y), 1000 - abs(n.y - target.y))
+                    dist_sq = dist_x*dist_x + dist_y*dist_y
+                    if dist_sq < 400 and dist_sq < closest_dist: # Distance < 20
+                        closest_dist = dist_sq
+                        closest_target = target
+            
+            if closest_target:
+                if not closest_target.defended:
+                    # Successful attack!
+                    n.energy += 15
+                    closest_target.energy -= 15
                 else:
-                    node.energy -= 30 # massive damage!
+                    # Failed attack on armored target
+                    n.energy -= 5
+            
+
+        # Storm hits nodes from 3 ticks ago
+        self.storm_queue.append(new_warnings)
+        self.hitting_storm = set()
+        if len(self.storm_queue) > 3:
+            self.hitting_storm = self.storm_queue.pop(0)
+            for nid in self.hitting_storm:
+                node = self.get_node(nid)
+                if node:
+                    is_defended = node.defended
+                    if not is_defended:
+                        for bid in node.bindings:
+                            partner = self.get_node(bid)
+                            if partner and partner.defended:
+                                is_defended = True
+                                break
+                    if is_defended:
+                        node.energy -= 5 # cost of defense
+                    else:
+                        node.energy -= 30 # massive damage!
+
+        # Phase 2: PHYSICAL FOOD (WORLD CHANGES)
+        # Spawn new food randomly (N pieces per tick)
+        if len(self.foods) < 300: # Cap food to prevent memory blowup
+            for _ in range(3):
+                self.foods.append(Food(
+                    x=random.uniform(0, 1000),
+                    y=random.uniform(0, 1000),
+                    energy=random.uniform(10, 30)
+                ))
+        
+        # Nodes eat food if they overlap
+        for n in self.nodes.values():
+            if n.is_egg: continue
+            # Find food close to node
+            eaten = []
+            for i, f in enumerate(self.foods):
+                dx = n.x - f.x
+                dy = n.y - f.y
+                if dx*dx + dy*dy < 225: # radius 15
+                    n.energy += f.energy
+                    eaten.append(i)
+            # Remove eaten food
+            for i in sorted(eaten, reverse=True):
+                self.foods.pop(i)
+
+        # Phase 2.5: MOVEMENT & BINDING PHYSICS
+        for n in self.nodes.values():
+            if n.is_egg:
+                n.vx = 0.0
+                n.vy = 0.0
+                continue
+                
+            n.vx += n.thrust_x * 0.5
+            n.vy += n.thrust_y * 0.5
+            
+            # Binding Springs
+            broken_bindings = set()
+            for bid in n.bindings:
+                bound_partner = self.get_node(bid)
+                if bound_partner:
+                    dx = bound_partner.x - n.x
+                    dy = bound_partner.y - n.y
+                    if dx > 500: dx -= 1000
+                    if dx < -500: dx += 1000
+                    if dy > 500: dy -= 1000
+                    if dy < -500: dy += 1000
                     
-        self.active_storms = new_warnings
+                    dist = math.sqrt(dx*dx + dy*dy)
+                    if dist > 80:
+                        broken_bindings.add(bid)
+                    elif dist > 0.01:
+                        # Spring physics (rest dist = 20)
+                        force = (dist - 20) * 0.05
+                        fx = (dx / dist) * force
+                        fy = (dy / dist) * force
+                        n.vx += fx
+                        n.vy += fy
+            
+            n.bindings -= broken_bindings
+            
+            # Friction
+            n.vx *= 0.9
+            n.vy *= 0.9
+            
+            n.x = (n.x + n.vx) % 1000.0
+            n.y = (n.y + n.vy) % 1000.0
 
-        # Phase 2: WORLD CHANGES
-        if self.nodes:
-            cnt = min(self.env_energy_nodes, len(self.nodes))
-            receivers = random.sample(list(self.nodes.values()), cnt)
-            ep = self.env_energy_total / cnt
-            for n in receivers:
-                n.energy += ep
-
-            # Spontaneous edge formation (Network Plasticity)
-            if len(self.nodes) > 1:
-                num_new_edges = max(1, int(len(self.nodes) * 0.01))
-                node_ids = list(self.nodes.keys())
-                for _ in range(num_new_edges):
-                    u, v = random.sample(node_ids, 2)
-                    self.nodes[u].add_edge(v)
-                    self.nodes[v].add_edge(u)
-
-        # Phase 3: THERMODYNAMIC COSTS (with faction-aware edge costs)
+        # Phase 3: THERMODYNAMIC COSTS & SHARED ENERGY
         for node in self.nodes.values():
-            cost = self.metabolism_cost
-            for eid in node.edges:
+            cost = self.metabolism_cost * (0.5 if node.is_egg else 1.0)
+            
+            # Senescence (Aging) penalty
+            if node.age > 500:
+                cost += (node.age - 500) * 0.05
+
+            for eid in node.visible_nodes:
                 neighbor = self.get_node(eid)
                 if neighbor and neighbor.faction == node.faction:
                     # Same-faction edges are cheaper (cooperation)
@@ -357,7 +569,23 @@ class GraphUniverse:
                 else:
                     cost += self.edge_cost
             cost += node.brain.get_weight_count() * self.model_cost_per_weight
+            
+            # Movement cost based on thrust applied
+            movement_cost = (abs(node.thrust_x) + abs(node.thrust_y)) * 0.02
+            cost += movement_cost
+            
             node.energy -= cost
+            
+        # Shared Energy Pool
+        for node in self.nodes.values():
+            for bid in node.bindings:
+                if bid > node.id: # Process each pair once
+                    partner = self.get_node(bid)
+                    if partner:
+                        diff = node.energy - partner.energy
+                        transfer = diff * 0.05
+                        node.energy -= transfer
+                        partner.energy += transfer
 
         # Phase 4: UPDATE STATES
         for n in self.nodes.values():
@@ -406,7 +634,8 @@ class GraphUniverse:
 
         # Phase 6: LEARN
         for n in self.nodes.values():
-            target_defend = 1.0 if n.id in self.active_storms else 0.0
+            storm_that_hit = self.hitting_storm if hasattr(self, 'hitting_storm') else set()
+            target_defend = 1.0 if n.id in storm_that_hit else 0.0
             n.learn(self, target_defend)
             
         for n in self.nodes.values():
@@ -422,17 +651,6 @@ class GraphUniverse:
                 cid = self._get_next_id()
                 child = parent.create_offspring(cid, self.mutation_rate)
                 self.add_node(child)
-                for eid in list(child.edges):
-                    nb = self.get_node(eid)
-                    if nb:
-                        nb.add_edge(child.id)
-                
-                # Edge Mutation: Child has a chance to form a new random connection
-                if random.random() < self.mutation_rate and len(self.nodes) > 1:
-                    target_id = random.choice(list(self.nodes.keys()))
-                    if target_id != child.id:
-                        child.add_edge(target_id)
-                        self.nodes[target_id].add_edge(child.id)
                         
                 births += 1
                 self.total_births += 1
@@ -443,6 +661,10 @@ class GraphUniverse:
         dead = [nid for nid, n in self.nodes.items() if n.energy <= 0]
         for nid in dead:
             self.remove_node(nid)
+            # Cleanup bindings
+            for n in self.nodes.values():
+                if nid in n.bindings:
+                    n.bindings.remove(nid)
         self.total_deaths += len(dead)
 
         # Stats
@@ -485,6 +707,7 @@ class GraphUniverse:
         """Export current state for the visualizer."""
         nodes = []
         edges = []
+        binding_edges = []
         for n in self.nodes.values():
             nodes.append({
                 'id': n.id, 'energy': round(n.energy, 2),
@@ -492,42 +715,33 @@ class GraphUniverse:
                 'age': n.age, 'lr': round(n.lr, 4),
                 'avg_err': round(n.avg_prediction_error, 4),
                 'brain_size': n.brain.get_weight_count() if n.brain else 0,
+                'x': round(n.x, 2), 'y': round(n.y, 2),
+                'is_egg': n.is_egg,
+                'is_attacking': n.attacking
             })
-            for eid in n.edges:
-                if eid in self.nodes:
+            for eid in n.visible_nodes:
+                if eid in self.nodes and n.id < eid:
                     edges.append({'source': n.id, 'target': eid})
+            for bid in n.bindings:
+                if bid in self.nodes and n.id < bid:
+                    binding_edges.append({'source': n.id, 'target': bid})
+        foods_json = [{'x': round(f.x, 2), 'y': round(f.y, 2), 'e': round(f.energy, 2)} for f in self.foods]
         return json.dumps({
             'tick': self.tick_count,
-            'nodes': nodes, 'edges': edges,
+            'nodes': nodes, 'edges': edges, 'binding_edges': binding_edges, 'foods': foods_json,
             'stats': self.history[-1] if self.history else {},
         })
 
     def trigger_catastrophe(self, rewire_ratio=0.7):
         import random
-        num_edges_to_break = int(len(self.nodes) * rewire_ratio)
-        if num_edges_to_break == 0: return
+        num_teleport = int(len(self.nodes) * rewire_ratio)
+        if num_teleport == 0: return
         
-        edges_list = []
-        for n in self.nodes.values():
-            for e in n.edges:
-                edges_list.append((n.id, e))
-                
-        if not edges_list: return
-        
-        # We can't safely sample more edges than exist
-        num_edges_to_break = min(num_edges_to_break, len(edges_list))
-        edges_to_break = random.sample(edges_list, num_edges_to_break)
-        
-        for u, v in edges_to_break:
-            if self.get_node(u): self.nodes[u].remove_edge(v)
-            if self.get_node(v): self.nodes[v].remove_edge(u)
-            
-        node_ids = list(self.nodes.keys())
-        for _ in range(num_edges_to_break):
-            u, v = random.sample(node_ids, 2)
-            if u != v:
-                self.nodes[u].add_edge(v)
-                self.nodes[v].add_edge(u)
+        node_ids = random.sample(list(self.nodes.keys()), num_teleport)
+        for nid in node_ids:
+            if self.get_node(nid):
+                self.nodes[nid].x = random.uniform(0, 1000)
+                self.nodes[nid].y = random.uniform(0, 1000)
 
 
 
@@ -550,17 +764,9 @@ def initialize_universe(num_nodes=500, connection_prob=0.006,
         universe.add_node(Node(node_id=i, initial_energy=initial_energy,
                                faction=faction))
 
-    ids = list(universe.nodes.keys())
-    for i in ids:
-        for j in ids:
-            if i != j and random.random() < connection_prob:
-                universe.nodes[i].add_edge(j)
-
     b = sum(1 for n in universe.nodes.values() if n.faction == BUILDER)
     e = num_nodes - b
-    te = sum(len(n.edges) for n in universe.nodes.values())
-    logging.info(f"Universe: {num_nodes} nodes ({b} builders, {e} exploiters), "
-                 f"{te} edges")
+    logging.info(f"Universe: {num_nodes} nodes ({b} builders, {e} exploiters)")
     return universe
 
 

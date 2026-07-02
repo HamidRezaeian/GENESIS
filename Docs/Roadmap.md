@@ -33,13 +33,45 @@ This roadmap outlines the past, present, and future phases of the GENESIS Digita
 - [x] "Follow Camera" for tracking subjects.
 - [x] Golden Auras to highlight evolutionary winners.
 
-## 🔵 Phase 5: Spatial Physics & True Multi-Cellular Life (Planned)
+## 🟢 Phase 5: Spatial Physics & True Multi-Cellular Life (Completed)
 **Goal:** Move from abstract graph topologies to a Euclidean 2D space.
-- [ ] Implement X/Y coordinate physics (Movement, Velocity, Mass).
-- [ ] Vision Sensors: Allow agents to see pixels/entities in a radius instead of abstract neighbors.
-- [ ] Physical clustering: Allow nodes to physically bind together to form multi-cellular organisms with specialized parts (Sensors, Motors, Brains).
+- [x] Implement X/Y coordinate physics (Movement, Velocity, Mass).
+- [x] Vision Sensors: Allow agents to see pixels/entities in a radius instead of abstract neighbors.
 
-## 🔵 Phase 6: Memory & Statefulness (Planned)
-**Goal:** Evolve Recurrent Neural Networks (RNNs).
-- [ ] Allow `DynamicBrain` to form cyclic edges (memory loops).
-- [ ] Test if agents can remember past events to solve temporally delayed hazards.
+
+## 🟢 Phase 6: Physical Reproduction & Egg Laying (Completed)
+**Goal:** Introduce vulnerable reproduction cycles to enforce territorial and stealth evolutionary strategies.
+- [x] Implement `is_egg` state for newborns (stationary, predictable).
+- [x] Force eggs to incubate for N ticks before hatching.
+- [x] Render eggs distinctively in the visualizer.
+
+## 🟢 Phase 7: Memory & Statefulness [COMPLETED]
+**Goal:** Evolve Recurrent Neural Networks (RNNs) to solve temporally delayed tasks.
+- [x] Expand `DynamicBrain` to accept previous internal state (memory) as input and output the next memory state.
+- [x] Test if agents can remember past events to solve temporally delayed hazards (3-tick delayed storms).
+
+## 🟢 Phase 8: Physical Clustering (Multi-Cellular Life) [COMPLETED]
+**Goal:** Evolution of specialized multi-cellular organisms.
+- [x] Nodes can output a "bind" action.
+- [x] If two close nodes mutually consent to bind, they form a spring-physics link.
+- [x] Bound nodes pool their energy and share defenses, allowing for specialization (e.g. Brain node + Motor node).
+
+## 🟢 Phase 9: Physical Food Resources & UI Optimization [COMPLETED]
+**Goal:** Force exploratory movement by removing ambient energy.
+- [x] Introduce `Food` particles that spawn randomly on the map.
+- [x] Remove ambient background energy so nodes must actively search for food.
+- [x] Implement collision detection for nodes to "eat" food.
+- [x] Overhaul UI rendering to display food particles and optimize canvas performance.
+
+## 🟢 Phase 10: Aging & Death (Senescence) [COMPLETED]
+**Goal:** Force generational turnover by making old age fatal.
+- [x] Add an `age` counter that increments only after hatching.
+- [x] Introduce an exponentially growing metabolism penalty for nodes older than 500 ticks.
+- [x] Update UI so old nodes visually turn gray and lose their glow.
+- [x] Update Inspector and tooltip to warn when a node is dying of old age.
+
+## 🟢 Phase 11: Predation & Arms Race [COMPLETED]
+**Goal:** Allow nodes to attack each other and define their own survival landscape.
+- [x] Expand `DynamicBrain` to output an `attack` flag.
+- [x] Implement Phase 1.6 Predation to resolve stealing energy from undefended neighbors.
+- [x] Render spiky attack auras in the UI.
