@@ -3,26 +3,21 @@
 ## 1. System Architecture
 GENESIS is split into a **Python Backend (Physics Engine)** and a **JavaScript Frontend (Visualizer)**, connected via a RESTful API.
 
-### 1.1 Backend: The Physics Engine (`genesis_engine.py`)
-The backend is a pure, custom-built simulation engine. It does **not** rely on heavy ML frameworks like PyTorch or TensorFlow, ensuring maximum control over the gradient mathematics.
-- **Entities:** `Node` (Organism) and `Edge` (Interaction/Observation).
-- **The Graph:** Managed as a dynamic list of nodes and edges.
-- **The Brain (`DynamicBrain`):** A custom, structurally mutating Multi-Layer Perceptron.
-  - Implements its own manual Forward Pass and manual Backpropagation (`backward()`).
-  - Capable of structural growth (adding hidden neurons).
-- **Core Loop (Tick):**
-  1. Environmental Energy injection.
-  2. Forward Pass (Nodes predict the environment).
-  3. Energy Accounting (Bonus for accuracy, penalty for size/metabolism).
-  4. Backpropagation (Weight updates via Gradient Descent).
-  5. Culling (Death of nodes with Energy <= 0).
-  6. Reproduction (Asexual division with genetic mutation).
-  7. Graph Maintenance (Breaking/forming edges).
+### 1.1 Backend: The Digital Physics Engine (`genesis_engine.py`)
+The backend is a pure, custom-built simulation engine compiled down to machine code using **Numba `@njit`**. It models a 1D Memory Space (RAM) where organisms are execution threads.
+- **The Universe:** A 1D NumPy array representing Memory (Opcodes).
+- **Entities:** Execution Threads (Registers: A, B, C, D, IP, Energy, etc.).
+- **Core Loop (Tick):** 
+  - Each thread executes the Opcode at its Instruction Pointer (IP).
+  - Energy is consumed or rewarded purely based on the physical consequences of the executed opcode (e.g., EAT command on an energy block).
+  - Threads that deplete their energy are culled.
+  - Threads that execute `SPAWN` successfully reproduce.
+- **Execution Speed:** Can exceed 120,000 cycles per second natively on CPU.
 
 ### 1.2 Frontend: The Observation Deck (`index.html` & `server.py`)
-- **Server:** Python's built-in `http.server` handles GET requests for `/api/state` and serves `index.html`.
-- **Client:** Uses vanilla JavaScript and `D3.js` for rendering.
-- **Rendering:** Uses HTML5 Canvas for performance (capable of rendering thousands of nodes at 60 FPS).
+- **Server:** FastAPI / Python's `http.server` providing `/api/state` and `/api/control`.
+- **Client:** Vanilla JavaScript rendering the 1D Memory Array as a 2D Grid.
+- **Rendering:** Uses an offscreen HTML5 Canvas for blazing fast pixel manipulation (mapping Opcodes to RGB values).
 - **State Synchronization:** The frontend polls `/api/state` every 100ms.
 
 ## 2. Core Mathematical Mechanisms

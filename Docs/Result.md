@@ -171,3 +171,35 @@ The GENESIS experiments conclusively demonstrate that:
 - **The End of Isolationism:** The network no longer dissolved into darkness. Nodes were continuously forced to interact. 
 - **Sustained Intelligence:** Because edges were constantly forming, nodes were forced to continuously predict their new neighbors. The Top 5 Smartest nodes maintained high accuracy (near 100%) indefinitely, proving that constant environmental interaction is the key to sustained intelligence.
 - **Conclusion:** Network Plasticity is essential for an open-ended universe. Without forced exploration (spontaneous connections), evolution favors total isolation to minimize energy costs.
+
+---
+
+## 🧪 Experiment 10: The Informational Substrate & True Digital Physics (Headless Numba Engine)
+
+**Objective:** Overcome the computational ceiling of 2D/Graph physics and obey the AGI energy-efficiency rule (~20 watts equivalent). Erase all "Scripted Game" heuristics (Age, predetermined Brains, Hunger) and pivot to pure digital physics.
+**Setup:**
+- The universe is a 1D Array of Memory (The Digital Soup).
+- "Organisms" are just self-replicating execution threads.
+- **Physics Rules:** Threads execute Opcodes. Executing an Opcode costs no energy, but making mistakes (like trying to read invalid memory) does. Energy is gained *only* by executing the `EAT` command on an "Energy Block" (`255` in memory).
+- **Execution:** Rewritten in Python using Numba `@njit` for extreme performance.
+
+**Results & Observations (run_headless.py):**
+- **Extreme Speed:** The headless engine processed over **120,000 CPU cycles per second** natively.
+- **Population Dynamics:** Without any hardcoded rules for lifespan, organisms naturally competed for the sparse `255` blocks. We observed rapid population spikes (up to 10,000+ threads) followed by massive die-offs as they depleted the environment's energy, settling into a chaotic equilibrium.
+- **Natural Selection:** Organisms that mutated inefficient code starved. Only the fastest, tightest replicators survived to copy their code into the next generation.
+- **Conclusion:** By moving to an informational substrate, we successfully stripped away artificial biological heuristics. Survival and replication became purely a matter of physical algorithm efficiency.
+
+---
+
+## 🧪 Experiment 11: The Dawn of Logic (Turing Completeness)
+
+**Objective:** During self-critique, we discovered the organisms were physically incapable of decision-making (they lacked conditional jumps based on sensory input). We needed to make the physics Turing Complete to allow for AGI emergence.
+**Setup:**
+- Added `SUB_A_FROM_B` (subtracts registers to compare values).
+- Added `IF_B_ZERO_JMP_FWD` and `IF_B_NOT_ZERO_JMP_FWD` (conditional branching).
+- Seeded the primordial soup with a Turing-Complete Hunter Ancestor.
+
+**Results & Observations:**
+- **The Capacity for Logic:** Organisms can now theoretically write `If/Else` blocks. For example, they can read a memory value, subtract `255`, and if the result is `0`, branch to their `EAT` routine.
+- **Open-Ended Potential:** The introduction of these three instructions unlocked the theoretical potential for any computable algorithm (including neural networks) to evolve purely from Opcodes.
+- **Conclusion:** The physics engine is now fundamentally capable of supporting AGI. The organisms are no longer blind copiers; they have the physical capacity to evolve internal logic, self-critique, and intelligent decision-making.

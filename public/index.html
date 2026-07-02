@@ -2,636 +2,305 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>GENESIS - Artificial Life Simulator</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENESIS: Intelligence Bottleneck</title>
     <style>
-        /* Premium Sci-Fi CSS */
         :root {
-            --bg: #050505;
-            --panel: rgba(10, 10, 15, 0.85);
-            --border: rgba(255, 255, 255, 0.1);
-            --builder: #00F0FF;
-            --exploiter: #FF003C;
-            --text: #E0E0E0;
-            --gold: #FFD700;
+            --bg-color: #000000;
+            --panel-bg: rgba(10, 15, 10, 0.9);
+            --border-color: #1a3a1a;
+            --text-main: #4ade80;
+            --text-dim: #225522;
+            --text-gold: #FFD700;
         }
+
         body {
-            margin: 0; padding: 0; background: var(--bg); color: var(--text);
-            font-family: 'Outfit', sans-serif; overflow: hidden; user-select: none;
-        }
-        canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
-        
-        .glass-panel {
-            position: absolute; z-index: 10;
-            background: var(--panel); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border); border-radius: 16px;
-            padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            color: white;
+            margin: 0; padding: 0; overflow: hidden;
+            background: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace;
         }
 
-        #top-left { top: 24px; left: 24px; width: 320px; }
-        #bottom-left { bottom: 24px; left: 24px; width: 320px; }
-        #leaderboard { top: 24px; right: 24px; width: 320px; max-height: 380px; overflow-y: auto; padding-right: 15px; }
-        #top-right { top: 430px; right: 24px; width: 320px; display: none; }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .hud-panel {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.1);
+            z-index: 10;
+        }
+
+        #top-left { top: 20px; left: 20px; width: 400px; }
+        #top-right { top: 20px; right: 20px; min-width: 80px; }
+
+        h1 { margin: 0 0 5px 0; font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; }
+        p.subtitle { margin: 0 0 20px 0; font-size: 0.85rem; color: var(--text-dim); }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+        .stat-box {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            background: rgba(0,20,0,0.5);
+        }
 
-        h1 { margin: 0 0 5px 0; font-size: 2.2rem; font-weight: 700; background: linear-gradient(90deg, #00F0FF, #FF003C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; font-weight: 300; }
-        
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .metric { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; }
-        .m-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .m-val { font-size: 1.5rem; font-weight: 700; }
+        .stat-box.gold {
+            border-color: var(--text-gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+            color: var(--text-gold);
+        }
 
-        .f-bar-container { height: 8px; border-radius: 4px; background: #222; display: flex; overflow: hidden; margin-top: 10px; }
-        .f-bar-b { background: var(--builder); transition: width 0.3s ease; box-shadow: 0 0 10px var(--builder); }
-        .f-bar-e { background: var(--exploiter); transition: width 0.3s ease; box-shadow: 0 0 10px var(--exploiter); }
+        .stat-label { font-size: 0.75rem; color: inherit; opacity: 0.8; text-transform: uppercase; }
+        .stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; }
 
+        /* Controls */
         .controls { display: flex; gap: 10px; margin-top: 20px; }
         button {
-            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-family: 'Outfit'; font-weight: 500;
+            flex: 1;
+            padding: 10px;
+            background: #0a1f0a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
             transition: all 0.2s;
         }
-        button:hover { background: rgba(255,255,255,0.1); }
-        button.active { background: white; color: black; }
-
-        .slider-group { margin-bottom: 15px; }
-        .slider-group label { display: flex; justify-content: space-between; font-size: 0.85rem; color: #AAA; margin-bottom: 8px; }
-        input[type=range] { width: 100%; height: 4px; background: #333; border-radius: 2px; appearance: none; outline: none; }
-        input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: white; cursor: pointer; }
-
-        .legend { font-size: 0.85rem; color: #AAA; line-height: 1.6; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
-        .l-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; display: inline-block; }
-
-        /* Leaderboard Styles */
-        .lb-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 5px; }
-        .lb-item:hover { background: rgba(255,255,255,0.08); }
-        .lb-rank { font-weight: 700; color: var(--gold); width: 24px; font-size: 1.1rem;}
-        .lb-info { flex: 1; }
-        .lb-name { font-weight: 600; font-size: 0.95rem; }
-        .lb-stats { font-size: 0.75rem; color:#888; margin-top: 3px; }
-        .lb-score { font-size: 1.1rem; font-weight: 700; color: #4ade80; text-align: right; }
-
-        /* Follow Button */
-        .btn-follow { width: 100%; margin-top: 15px; background: rgba(255, 215, 0, 0.05); border-color: rgba(255, 215, 0, 0.3); color: var(--gold); }
-        .btn-follow:hover { background: rgba(255, 215, 0, 0.15); }
-        .btn-follow.active { background: var(--gold); color: black; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-
-        /* Tooltip */
-        #tooltip {
-            position: absolute; display: none; background: rgba(10,10,15,0.95); border: 1px solid var(--border);
-            color: white; padding: 12px; border-radius: 8px; pointer-events: none; z-index: 100;
-            font-size: 0.85rem; box-shadow: 0 8px 24px rgba(0,0,0,0.8); line-height: 1.5; backdrop-filter: blur(4px);
+        button:hover { background: #143d14; border-color: var(--text-main); }
+        
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            background: var(--panel-bg);
+            padding: 10px;
+            border: 1px solid var(--border-color);
         }
 
-        @keyframes shake {
-            0% { transform: translate(2px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(0px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(2px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(2px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        .shake-effect { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
 <body>
-    <canvas id="world"></canvas>
+    <canvas id="ram"></canvas>
 
-    <div id="tooltip"></div>
-
-    <!-- Main Dashboard -->
-    <div id="top-left" class="glass-panel">
-        <h1>GENESIS</h1>
-        <div class="subtitle">Artificial Life Simulator</div>
-
-        <div class="metric-grid">
-            <div class="metric">
-                <div class="m-label">Timeline (Ticks)</div>
-                <div class="m-val" id="val-tick">0</div>
+    <div id="top-left" class="hud-panel">
+        <h1>GENESIS OS</h1>
+        <p class="subtitle">SYS.MEM.DUMP // SUBSTRATE 14 (I/O)</p>
+        
+        <div class="stat-grid">
+            <div class="stat-box">
+                <div class="stat-label">CPU Cycles</div>
+                <div class="stat-value" id="val-tick">0</div>
             </div>
-            <div class="metric">
-                <div class="m-label">Population</div>
-                <div class="m-val" id="val-pop">0</div>
+            <div class="stat-box">
+                <div class="stat-label">Total Pop</div>
+                <div class="stat-value" id="val-pop">0</div>
             </div>
-        </div>
-
-        <div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500;">
-                <span style="color: var(--builder)" id="val-b-count">0 Builders</span>
-                <span style="color: var(--exploiter)" id="val-e-count">0 Exploiters</span>
+            <div class="stat-box gold">
+                <div class="stat-label">Total Replications</div>
+                <div class="stat-value" id="val-smart">0</div>
             </div>
-            <div class="f-bar-container">
-                <div id="bar-b" class="f-bar-b" style="width: 50%"></div>
-                <div id="bar-e" class="f-bar-e" style="width: 50%"></div>
+            <div class="stat-box gold">
+                <div class="stat-label">Avg Energy</div>
+                <div class="stat-value" id="val-level">1</div>
             </div>
         </div>
 
         <div class="controls">
-            <button id="btn-play" class="active">Play</button>
-            <button id="btn-pause">Pause</button>
-            <button id="btn-restart" style="background: rgba(255,0,0,0.1); border-color: rgba(255,0,0,0.3); color: #FF4444;">Restart</button>
-            <button id="btn-catastrophe" style="background: rgba(255,165,0,0.1); border-color: rgba(255,165,0,0.3); color: #FFA500;">Catastrophe</button>
-        </div>
-
-        <div class="legend">
-            <div class="legend-item"><span class="l-dot" style="background: var(--builder); box-shadow: 0 0 8px var(--builder);"></span> <strong>Builders:</strong> Seek stability & cooperate.</div>
-            <div class="legend-item"><span class="l-dot" style="background: var(--exploiter); box-shadow: 0 0 8px var(--exploiter);"></span> <strong>Exploiters:</strong> Steal energy from Builders.</div>
-            <div class="legend-item"><span class="l-dot" style="background: var(--gold); box-shadow: 0 0 8px var(--gold);"></span> <strong>Golden Aura:</strong> The 3 Smartest Nodes.</div>
-            <div class="legend-item" style="margin-top: 8px;"><em>* Click any node for deep insights. Scroll to zoom.</em></div>
+            <button id="btn-pause" onclick="togglePause()">HALT (PAUSE)</button>
+            <button onclick="fetch('/api/control?action=restart')">REBOOT</button>
         </div>
     </div>
-
-    <!-- Laws of Physics -->
-    <div id="bottom-left" class="glass-panel">
-        <h2 style="margin: 0 0 15px 0; font-size: 1.1rem; color: white;">Laws of Physics (Live)</h2>
-        
-        <div class="slider-group">
-            <label>Mutation Probability <span id="lbl-mut">0.15</span></label>
-            <input type="range" id="sl-mut" min="0" max="0.5" step="0.01" value="0.15">
-        </div>
-        <div class="slider-group">
-            <label>Environmental Energy (Sunlight) <span id="lbl-env">120</span></label>
-            <input type="range" id="sl-env" min="0" max="500" step="10" value="120">
-        </div>
-        <div class="slider-group">
-            <label>Metabolism Cost (Calories/Tick) <span id="lbl-met">0.10</span></label>
-            <input type="range" id="sl-met" min="0" max="1.0" step="0.01" value="0.10">
-        </div>
-        <div class="slider-group">
-            <label>Cognitive Load (Vision Cost) <span id="lbl-edg">0.03</span></label>
-            <input type="range" id="sl-edg" min="0" max="0.2" step="0.01" value="0.03">
-        </div>
-        <div class="slider-group" style="margin-bottom:0;">
-            <label>Neural Synapse Cost <span id="lbl-syn">0.008</span></label>
-            <input type="range" id="sl-syn" min="0" max="0.05" step="0.001" value="0.008">
-        </div>
+    
+    <div id="top-right" class="hud-panel">
+        <div class="stat-label" style="text-align: right;">FPS</div>
+        <div class="stat-value" id="val-fps" style="text-align: right; color: var(--text-gold);">0</div>
     </div>
-
-    <!-- Leaderboard -->
-    <div id="leaderboard" class="glass-panel">
-        <h2 style="margin: 0 0 15px 0; font-size: 1.2rem; color: white;">🏆 Top 5 Smartest</h2>
-        <div id="leaderboard-list">
-            <!-- Dynamic Items -->
-        </div>
-    </div>
-
-    <!-- Node Inspector -->
-    <div id="top-right" class="glass-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 id="insp-title" style="margin:0; font-size: 1.3rem;">Subject #--</h2>
-            <button id="btn-close" style="padding: 5px 10px; background: none; border: none; font-size: 1.2rem; margin:0; flex: 0; color: white; cursor: pointer;">×</button>
-        </div>
-        
-        <div class="metric-grid">
-            <div class="metric"><div class="m-label">Energy Level</div><div class="m-val" id="insp-energy" style="color: #4ade80;">0</div></div>
-            <div class="metric"><div class="m-label">Age (Ticks)</div><div class="m-val" id="insp-age">0</div></div>
-            <div class="metric"><div class="m-label">Generation</div><div class="m-val" id="insp-gen">0</div></div>
-            <div class="metric"><div class="m-label">Neural Synapses</div><div class="m-val" id="insp-brain" style="color: #F000FF;">0</div></div>
-        </div>
-        <div class="metric-grid" style="margin-bottom: 0;">
-            <div class="metric" style="grid-column: span 2;">
-                <div class="m-label" style="color: var(--gold);">Intelligence Rating (Accuracy)</div>
-                <div class="m-val" id="insp-acc" style="color: var(--gold);">0%</div>
-            </div>
-        </div>
-        <button id="btn-follow" class="btn-follow">🎯 Follow Camera</button>
+    
+    <div id="legend">
+        ⬛ NOP &nbsp;&nbsp; 🟪 CODE &nbsp;&nbsp; 🟩 THREAD (HIGH ENERGY) &nbsp;&nbsp; 🟥 LOW ENERGY &nbsp;&nbsp; <span style="color:#FFD700; font-weight:bold;">🟨 ALPHA (REPLICATOR)</span>
     </div>
 
     <script>
-        const canvas = document.getElementById('world');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('ram');
+        const ctx = canvas.getContext('2d', { alpha: false });
         let width = window.innerWidth, height = window.innerHeight;
-        let transform = d3.zoomIdentity.translate(width / 2 - 500, height / 2 - 500);
         
-        let nodesData = [];
-        let edgesData = [];
-        let bindingEdgesData = [];
-        let foodsData = [];
-        let selectedNodeId = null;
-        let followedNodeId = null;
-        let topSmartestIds = new Set();
-        let ripples = []; 
-
-        function findNode(x, y, radius) {
-            let closest = null;
-            let minDist = radius * radius;
-            for(let n of nodesData) {
-                let dx = n.x - x; let dy = n.y - y;
-                let distSq = dx*dx + dy*dy;
-                if(distSq < minDist) { minDist = distSq; closest = n; }
-            }
-            return closest;
+        let memory = [];
+        let threads = [];
+        let isPaused = false;
+        let needsMemoryUpdate = false;
+        
+        const MEM_SIZE = 10000;
+        const GRID_COLS = 125;
+        const GRID_ROWS = 80;
+        
+        // Colors for opcodes (Precompute RGB values for ImageData)
+        const OP_RGB = [[0, 0, 0, 255]]; // 0 NOP
+        for(let i=1; i<=30; i++) {
+            const intensity = 30 + (i * 7);
+            OP_RGB.push([Math.floor(intensity/3), Math.floor(intensity/5), intensity, 255]);
         }
+        
+        // Create an offscreen canvas for blazing fast pixel manipulation
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = GRID_COLS;
+        offscreenCanvas.height = GRID_ROWS;
+        const offscreenCtx = offscreenCanvas.getContext('2d', { alpha: false });
+        let imgData = offscreenCtx.createImageData(GRID_COLS, GRID_ROWS);
 
         function resize() {
             width = window.innerWidth; height = window.innerHeight;
             canvas.width = width * window.devicePixelRatio; canvas.height = height * window.devicePixelRatio;
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            ctx.imageSmoothingEnabled = false; // Keep pixels sharp
+            needsMemoryUpdate = true;
         }
         window.addEventListener('resize', resize);
         resize();
 
-        const zoomBehavior = d3.zoom().scaleExtent([0.1, 5]).on("zoom", (e) => { 
-            if(e.sourceEvent && (e.sourceEvent.type === 'mousemove' || e.sourceEvent.type === 'wheel' || e.sourceEvent.type === 'mousedown')) {
-                if(followedNodeId !== null && e.sourceEvent.type !== 'wheel') {
-                    followedNodeId = null;
-                    document.getElementById('btn-follow').classList.remove('active');
-                }
-            }
-            transform = e.transform; 
-        });
-        d3.select(canvas).call(zoomBehavior);
-
-        d3.select(canvas).on("click", (e) => {
-            const [x, y] = transform.invert([e.offsetX, e.offsetY]);
-            const clicked = findNode(x, y, 30);
-            if (clicked) {
-                selectedNodeId = clicked.id;
-                document.getElementById('top-right').style.display = 'block';
-                updateInspector(clicked);
+        function togglePause() {
+            const btn = document.getElementById('btn-pause');
+            if (btn.innerText.includes('HALT')) {
+                fetch('/api/control?action=pause');
+                btn.innerText = 'RESUME';
+                btn.style.color = '#ff4444';
+                btn.style.borderColor = '#ff4444';
             } else {
-                selectedNodeId = null;
-                document.getElementById('top-right').style.display = 'none';
-            }
-        });
-
-        d3.select(canvas).on("mousemove", (e) => {
-            const [x, y] = transform.invert([e.offsetX, e.offsetY]);
-            const hovered = findNode(x, y, 20);
-            const tooltip = document.getElementById('tooltip');
-            if (hovered) {
-                tooltip.style.display = 'block';
-                tooltip.style.left = e.pageX + 15 + 'px';
-                tooltip.style.top = e.pageY + 15 + 'px';
-                const acc = Math.max(0, 100 - (hovered.avg_err * 100)).toFixed(1);
-                let role = hovered.faction === 0 ? 'Builder' : 'Exploiter';
-                if (hovered.is_egg) role += ' Egg (Incubating)';
-                const color = hovered.faction === 0 ? 'var(--builder)' : 'var(--exploiter)';
-                
-                let intelHtml = hovered.is_egg 
-                    ? `<strong>Status:</strong> <span style="color:#FFF">Dormant</span><br>`
-                    : `<strong>Intel:</strong> <span style="color:#4ade80">${acc}%</span><br>`;
-                    
-                if (hovered.age > 500) {
-                    intelHtml += `<strong style="color: #FF4444;">⚠️ Dying of Old Age</strong><br>`;
-                }
-                
-                if (hovered.is_attacking) {
-                    intelHtml += `<strong style="color: #FF003C;">⚔️ ATTACKING</strong><br>`;
-                }
-                    
-                tooltip.innerHTML = `
-                    <strong style="color:${color}; font-size:1.1rem;">Subject #${hovered.id}</strong><br>
-                    <span style="color:#AAA;">${role}</span><br><br>
-                    ${intelHtml}
-                    <strong>Energy:</strong> ${hovered.energy.toFixed(0)}<br>
-                    <strong>Age:</strong> ${hovered.age} ticks<br>
-                    <strong>Synapses:</strong> ${hovered.brain_size}
-                `;
-            } else {
-                tooltip.style.display = 'none';
-            }
-        });
-
-        document.getElementById('btn-close').onclick = () => { selectedNodeId = null; document.getElementById('top-right').style.display = 'none'; };
-        document.getElementById('btn-follow').onclick = () => {
-            if (followedNodeId === selectedNodeId) {
-                followedNodeId = null;
-                document.getElementById('btn-follow').classList.remove('active');
-            } else {
-                followedNodeId = selectedNodeId;
-                document.getElementById('btn-follow').classList.add('active');
-            }
-        };
-
-        async function apiCommand(action) {
-            await fetch(`/api/control?action=${action}`);
-            if(action !== 'catastrophe') {
-                document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
-                if(action === 'pause') document.getElementById('btn-pause').classList.add('active');
-                else document.getElementById('btn-play').classList.add('active');
+                fetch('/api/control?action=play');
+                btn.innerText = 'HALT (PAUSE)';
+                btn.style.color = 'var(--text-main)';
+                btn.style.borderColor = 'var(--border-color)';
             }
         }
-        document.getElementById('btn-play').onclick = () => apiCommand('play');
-        document.getElementById('btn-pause').onclick = () => apiCommand('pause');
-        document.getElementById('btn-restart').onclick = () => apiCommand('restart');
-        document.getElementById('btn-catastrophe').onclick = () => {
-            apiCommand('catastrophe');
-            document.body.classList.add('shake-effect');
-            setTimeout(() => document.body.classList.remove('shake-effect'), 500);
-        };
-
-        ['mut', 'env', 'met', 'edg', 'syn'].forEach(key => {
-            const el = document.getElementById(`sl-${key}`);
-            const lbl = document.getElementById(`lbl-${key}`);
-            const apiKeys = {'mut': 'mutation_rate', 'env': 'env_energy_total', 'met': 'metabolism_cost', 'edg': 'edge_cost', 'syn': 'model_cost_per_weight'};
-            el.onchange = (e) => { fetch(`/api/settings?${apiKeys[key]}=${e.target.value}`); };
-            el.oninput = (e) => { lbl.innerText = e.target.value; };
-        });
-
-        let settingsLoaded = false;
 
         async function fetchState() {
             try {
                 const res = await fetch('/api/state');
                 if (!res.ok) return;
                 const data = await res.json();
-                
-                if(!settingsLoaded && data.settings) {
-                    ['mut', 'env', 'met', 'edg', 'syn'].forEach(k => {
-                        const m = {'mut': 'mutation_rate', 'env': 'env_energy_total', 'met': 'metabolism_cost', 'edg': 'edge_cost', 'syn': 'model_cost_per_weight'};
-                        document.getElementById(`sl-${k}`).value = data.settings[m[k]];
-                        document.getElementById(`lbl-${k}`).innerText = data.settings[m[k]];
-                    });
-                    settingsLoaded = true;
-                }
 
                 document.getElementById('val-tick').innerText = data.tick;
-                document.getElementById('val-pop').innerText = data.stats.alive || 0;
-                const b = data.stats.builders || 0; const e = data.stats.exploiters || 0;
-                document.getElementById('val-b-count').innerText = `${b} Builders`;
-                document.getElementById('val-e-count').innerText = `${e} Exploiters`;
-                document.getElementById('bar-b').style.width = `${(b/(b+e||1))*100}%`;
-                document.getElementById('bar-e').style.width = `${(e/(b+e||1))*100}%`;
-
-                const newNodesMap = new Map(data.nodes.map(n => {
-                    // Inject Accuracy
-                    n.accuracy = Math.max(0, 100 - (n.avg_err * 100));
-                    n.isMature = n.age > 10;
-                    return [n.id, n];
-                }));
+                document.getElementById('val-pop').innerText = data.pop;
+                document.getElementById('val-smart').innerText = data.total_replications || 0;
+                document.getElementById('val-level').innerText = data.avg_energy || 0;
                 
-                // Update Leaderboard
-                const sortedNodes = Array.from(newNodesMap.values()).filter(n => n.isMature).sort((a,b) => b.accuracy - a.accuracy);
-                const top5 = sortedNodes.slice(0, 5);
-                topSmartestIds = new Set(top5.slice(0, 3).map(n => n.id));
+                memory = data.memory;
+                threads = data.threads;
+                isPaused = data.is_paused;
+                needsMemoryUpdate = true;
                 
-                const lbList = document.getElementById('leaderboard-list');
-                lbList.innerHTML = '';
-                top5.forEach((n, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'lb-item';
-                    if (n.id === selectedNodeId) div.style.background = 'rgba(255,255,255,0.15)';
-                    div.onclick = () => {
-                        selectedNodeId = n.id;
-                        followedNodeId = n.id;
-                        document.getElementById('top-right').style.display = 'block';
-                        document.getElementById('btn-follow').classList.add('active');
-                        updateInspector(n);
-                        render();
-                    };
-                    const color = n.faction === 0 ? 'var(--builder)' : 'var(--exploiter)';
-                    div.innerHTML = `
-                        <div class="lb-rank">#${idx+1}</div>
-                        <div class="lb-info">
-                            <div class="lb-name" style="color:${color}">Subject ${n.id}</div>
-                            <div class="lb-stats">Gen ${n.generation} | ${n.brain_size} Synapses</div>
-                        </div>
-                        <div class="lb-score">${n.accuracy.toFixed(1)}%</div>
-                    `;
-                    lbList.appendChild(div);
-                });
-
-                data.nodes.forEach(n => {
-                    if(!nodesData.find(old => old.id === n.id) && nodesData.length > 0) {
-                        ripples.push({x: width/2, y: height/2, radius: 0, color: n.faction === 0 ? '#00F0FF' : '#FF003C', alpha: 1, linkedId: n.id});
-                    }
-                });
-
-                nodesData = nodesData.filter(n => newNodesMap.has(n.id));
-                nodesData.forEach(n => {
-                    const fresh = newNodesMap.get(n.id);
-                    Object.assign(n, fresh);
-                    newNodesMap.delete(n.id);
-                });
-                
-                newNodesMap.forEach(n => {
-                    nodesData.push(n);
-                });
-
-                let currentNodesMap = new Map();
-                nodesData.forEach(n => currentNodesMap.set(n.id, n));
-                edgesData = data.edges.map(e => ({ 
-                    source: currentNodesMap.get(e.source), 
-                    target: currentNodesMap.get(e.target) 
-                })).filter(e => e.source && e.target);
-                
-                bindingEdgesData = (data.binding_edges || []).map(e => ({
-                    source: currentNodesMap.get(e.source), 
-                    target: currentNodesMap.get(e.target) 
-                })).filter(e => e.source && e.target);
-                
-                foodsData = data.foods || [];
-
-
-
-                if (selectedNodeId !== null) {
-                    const node = nodesData.find(n => n.id === selectedNodeId);
-                    if (node) updateInspector(node);
-                    else { 
-                        selectedNodeId = null; 
-                        followedNodeId = null;
-                        document.getElementById('top-right').style.display = 'none'; 
-                    }
+                const btn = document.getElementById('btn-pause');
+                if(isPaused && btn.innerText.includes('HALT')) {
+                    btn.innerText = 'RESUME';
+                    btn.style.color = '#ff4444';
+                    btn.style.borderColor = '#ff4444';
+                } else if(!isPaused && btn.innerText.includes('RESUME')) {
+                    btn.innerText = 'HALT (PAUSE)';
+                    btn.style.color = 'var(--text-main)';
+                    btn.style.borderColor = 'var(--border-color)';
                 }
+
             } catch (e) {}
         }
 
-        function updateInspector(node) {
-            document.getElementById('insp-title').innerText = `Subject #${node.id}`;
-            document.getElementById('insp-title').style.color = node.faction === 0 ? "var(--builder)" : "var(--exploiter)";
-            document.getElementById('insp-energy').innerText = node.energy.toFixed(1);
-            
-            let ageText = node.age;
-            if (node.age > 500) ageText += " (Dying)";
-            document.getElementById('insp-age').innerText = ageText;
-            document.getElementById('insp-age').style.color = node.age > 500 ? "#FF4444" : "#E0E0E0";
-            
-            document.getElementById('insp-gen').innerText = node.generation;
-            document.getElementById('insp-brain').innerText = node.brain_size;
-            document.getElementById('insp-acc').innerText = node.accuracy.toFixed(1) + "%";
-            
-            const btnFollow = document.getElementById('btn-follow');
-            if(followedNodeId === node.id) btnFollow.classList.add('active');
-            else btnFollow.classList.remove('active');
-        }
+        let fpsElement;
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
 
         function render() {
-            if (followedNodeId !== null) {
-                const targetNode = nodesData.find(n => n.id === followedNodeId);
-                if (targetNode) {
-                    const targetX = width / 2 - targetNode.x * transform.k;
-                    const targetY = height / 2 - targetNode.y * transform.k;
-                    transform.x += (targetX - transform.x) * 0.1;
-                    transform.y += (targetY - transform.y) * 0.1;
-                    d3.select(canvas).call(zoomBehavior.transform, transform);
-                } else {
-                    followedNodeId = null;
-                    document.getElementById('btn-follow').classList.remove('active');
-                }
+            // Track FPS
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                if(fpsElement) fpsElement.innerText = frameCount;
+                frameCount = 0;
+                lastFpsTime = now;
             }
 
-            ctx.save();
-            ctx.clearRect(0, 0, width, height);
-            ctx.translate(transform.x, transform.y);
-            ctx.scale(transform.k, transform.k);
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
             
-            // Draw Food
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = "rgba(150, 255, 50, 0.8)";
-            ctx.fillStyle = "rgba(150, 255, 50, 0.8)";
-            foodsData.forEach(f => {
-                ctx.beginPath();
-                ctx.arc(f.x, f.y, Math.max(2, Math.sqrt(f.e)), 0, 2 * Math.PI);
-                ctx.fill();
-            });
-            ctx.shadowBlur = 0;
-
-            for(let i=ripples.length-1; i>=0; i--) {
-                const r = ripples[i];
-                const targetNode = nodesData.find(n => n.id === r.linkedId);
-                if(targetNode) { r.x = targetNode.x; r.y = targetNode.y; }
-                
-                ctx.beginPath();
-                ctx.arc(r.x, r.y, r.radius, 0, 2*Math.PI);
-                ctx.strokeStyle = r.color;
-                ctx.globalAlpha = r.alpha;
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                r.radius += 1.5;
-                r.alpha -= 0.03;
-                if(r.alpha <= 0) ripples.splice(i, 1);
+            if(memory.length === 0) {
+                requestAnimationFrame(render);
+                return;
             }
-            ctx.globalAlpha = 1;
-
-            let connected = new Set();
-            if (selectedNodeId !== null) {
-                connected.add(selectedNodeId);
-                edgesData.forEach(d => {
-                    if (d.source.id === selectedNodeId) connected.add(d.target.id);
-                    if (d.target.id === selectedNodeId) connected.add(d.source.id);
-                });
-            }
-
-            ctx.lineWidth = 1;
-            edgesData.forEach(d => {
-                if (selectedNodeId !== null && d.source.id !== selectedNodeId && d.target.id !== selectedNodeId) {
-                    ctx.strokeStyle = "rgba(255,255,255,0.02)";
-                } else {
-                    ctx.strokeStyle = d.source.faction === d.target.faction 
-                        ? (d.source.faction === 0 ? "rgba(0, 240, 255, 0.15)" : "rgba(255, 0, 60, 0.15)")
-                        : "rgba(255, 255, 255, 0.1)";
-                    if (selectedNodeId !== null) { ctx.strokeStyle = "rgba(255, 255, 255, 0.8)"; ctx.lineWidth = 1.5; }
-                }
-                ctx.beginPath(); ctx.moveTo(d.source.x, d.source.y); ctx.lineTo(d.target.x, d.target.y); ctx.stroke();
-                ctx.lineWidth = 1;
-            });
             
-            // Draw Binding Edges (thick, glowing)
-            ctx.lineWidth = 3;
-            bindingEdgesData.forEach(d => {
-                ctx.strokeStyle = "rgba(100, 255, 100, 0.8)";
-                ctx.shadowColor = "#64ff64";
-                ctx.shadowBlur = 10;
-                
-                if (selectedNodeId !== null && d.source.id !== selectedNodeId && d.target.id !== selectedNodeId) {
-                    ctx.strokeStyle = "rgba(100, 255, 100, 0.1)";
-                    ctx.shadowBlur = 0;
+            const padding = 50;
+            const availableW = width - padding*2;
+            const availableH = height - padding*2;
+            
+            const cellW = availableW / GRID_COLS;
+            const cellH = availableH / GRID_ROWS;
+            const cellSize = Math.floor(Math.min(cellW, cellH));
+            
+            const gridW = cellSize * GRID_COLS;
+            const gridH = cellSize * GRID_ROWS;
+            
+            const offsetX = Math.floor((width - gridW) / 2);
+            const offsetY = Math.floor((height - gridH) / 2);
+            
+            // 1. UPDATE MEMORY IMAGE ONLY WHEN NEEDED (10 FPS instead of 60 FPS)
+            if (needsMemoryUpdate) {
+                const data = imgData.data;
+                for(let i=0; i<MEM_SIZE; i++) {
+                    const op = memory[i];
+                    const rgb = OP_RGB[op] || [50, 50, 50, 255];
+                    const idx = i * 4;
+                    data[idx] = rgb[0];
+                    data[idx+1] = rgb[1];
+                    data[idx+2] = rgb[2];
+                    data[idx+3] = rgb[3]; // alpha
                 }
+                offscreenCtx.putImageData(imgData, 0, 0);
+                needsMemoryUpdate = false;
+            }
+            
+            // Draw the tiny 125x80 canvas scaled up perfectly onto the main canvas
+            ctx.drawImage(offscreenCanvas, offsetX, offsetY, gridW, gridH);
+            
+            // 2. DRAW THREADS OVER MEMORY
+            for(let i=0; i<threads.length; i++) {
+                const ip = threads[i].ip;
+                const col = ip % GRID_COLS;
+                const row = Math.floor(ip / GRID_COLS);
+                const isAlpha = threads[i].s >= 5; // Alpha if replicated 5+ times
                 
-                ctx.beginPath(); 
-                ctx.moveTo(d.source.x, d.source.y); 
-                ctx.lineTo(d.target.x, d.target.y); 
-                ctx.stroke();
-            });
-            ctx.lineWidth = 1;
-            ctx.shadowBlur = 0;
-
-            nodesData.forEach(d => {
-                const radius = Math.max(3, Math.min(18, Math.sqrt(d.energy || 5)));
-                let opacity = (selectedNodeId !== null && !connected.has(d.id)) ? 0.15 : 1.0;
+                const x = offsetX + col * cellSize;
+                const y = offsetY + row * cellSize;
                 
-                const isSenescent = d.age > 500;
+                ctx.fillStyle = threads[i].c; 
+                ctx.fillRect(x, y, cellSize, cellSize);
                 
-                ctx.shadowBlur = (opacity === 1.0 && !isSenescent) ? 15 : 0;
-                let colorBase = d.faction === 0 ? "0, 240, 255" : "255, 0, 60";
-                
-                if (isSenescent) {
-                    colorBase = "150, 150, 150"; // Gray out old nodes
-                }
-                
-                ctx.shadowColor = `rgba(${colorBase}, 1.0)`;
-                
-                if (topSmartestIds.has(d.id) && opacity === 1.0) {
-                    ctx.beginPath(); ctx.arc(d.x, d.y, radius + 6, 0, 2 * Math.PI);
-                    ctx.strokeStyle = "rgba(255, 215, 0, 0.6)"; ctx.lineWidth = 3; ctx.stroke();
-                    ctx.beginPath(); ctx.arc(d.x, d.y, radius + 12, 0, 2 * Math.PI);
-                    ctx.strokeStyle = "rgba(255, 215, 0, 0.15)"; ctx.lineWidth = 8; ctx.stroke();
-                    ctx.shadowColor = "#FFD700";
-                    ctx.shadowBlur = 25;
-                }
-
-                ctx.beginPath();
-                ctx.arc(d.x, d.y, radius, 0, 2 * Math.PI);
-                if (d.is_egg) {
-                    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-                    ctx.fill();
-                    ctx.strokeStyle = `rgba(${colorBase}, ${opacity})`;
+                if (isAlpha) {
+                    ctx.strokeStyle = '#FFD700';
                     ctx.lineWidth = 2;
-                    ctx.stroke();
-                } else {
-                    ctx.fillStyle = `rgba(${colorBase}, ${opacity})`;
-                    ctx.fill();
+                    ctx.strokeRect(x - 2, y - 2, cellSize + 4, cellSize + 4);
+                    
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.4)';
+                    ctx.fillRect(x - cellSize, y - cellSize, cellSize*3, cellSize*3);
                 }
-                
-                if (d.is_attacking && opacity > 0.5) {
-                    ctx.beginPath();
-                    for (let i = 0; i < 8; i++) {
-                        let angle = (i * Math.PI) / 4;
-                        ctx.moveTo(d.x + Math.cos(angle) * radius, d.y + Math.sin(angle) * radius);
-                        ctx.lineTo(d.x + Math.cos(angle) * (radius + 6), d.y + Math.sin(angle) * (radius + 6));
-                    }
-                    ctx.strokeStyle = "#FF003C";
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-                
-                ctx.shadowBlur = 0;
-                
-                if (d.id === selectedNodeId) {
-                    ctx.beginPath(); ctx.arc(d.x, d.y, radius + 5, 0, 2 * Math.PI);
-                    ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
-                } else if (d.energy > 20 && opacity > 0.5) {
-                    ctx.beginPath(); ctx.arc(d.x, d.y, radius + 2, 0, 2 * Math.PI);
-                    ctx.strokeStyle = d.faction === 0 ? "rgba(0, 240, 255, 0.5)" : "rgba(255, 0, 60, 0.5)";
-                    ctx.lineWidth = 1; ctx.stroke();
-                }
-            });
+            }
 
-            ctx.restore();
+            requestAnimationFrame(render);
         }
-
-        function renderLoop() {
-            render();
-            requestAnimationFrame(renderLoop);
-        }
-        requestAnimationFrame(renderLoop);
-
-        setInterval(fetchState, 100);
+        
+        window.onload = () => {
+            fpsElement = document.getElementById('val-fps');
+        };
+        requestAnimationFrame(render);
+        setInterval(fetchState, 100); // Polling every 100ms instead of 50ms to save CPU
     </script>
 </body>
 </html>

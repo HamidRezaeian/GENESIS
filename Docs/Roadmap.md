@@ -75,3 +75,39 @@ This roadmap outlines the past, present, and future phases of the GENESIS Digita
 - [x] Expand `DynamicBrain` to output an `attack` flag.
 - [x] Implement Phase 1.6 Predation to resolve stealing energy from undefended neighbors.
 - [x] Render spiky attack auras in the UI.
+
+## 🟢 Phase 12: True Emergence & Artificial Chemistry [COMPLETED]
+**Goal:** Erase all scripted game rules (Age, Hunger, Brains) and simulate true natural emergence from fundamental forces.
+- [x] Remove ABM (Agent-Based Model) logic.
+- [x] Implement fundamental particles with attraction/repulsion forces.
+- [x] Prove that complex structures can self-assemble without hardcoded instructions.
+
+## 🟢 Phase 13: The Informational Substrate (Completed)
+**Goal:** Pivot from computationally heavy 2D physics to a highly efficient informational universe (Memory/RAM) to break the complexity ceiling and scale towards AGI.
+- [x] Design a shared memory arena (The Digital Soup) where particles are Opcodes.
+- [x] Define "Energy" as CPU cycles.
+- [x] Allow self-replicating code to mutate and compete.
+
+## 🟢 Phase 16: True Digital Physics (Headless Numba Engine) (Completed)
+**Goal:** Maximize execution speed and eliminate "scripted game" heuristics, obeying AGI energy-efficiency rules.
+- [x] Rewrite backend using Numba `@njit` for extreme performance (>120,000 cycles/sec).
+- [x] Erase hardcoded intelligence metrics and predefined neural networks.
+- [x] Implement natural survival mechanics based entirely on physics: energy depletion and replication.
+- [x] Create headless runner to simulate millions of cycles in seconds.
+
+## 🟢 Phase 17: Turing Completeness & The Dawn of Logic (Completed)
+**Goal:** Provide the digital physics required for self-critique and conditional logic, enabling true intelligence.
+- [x] Add `SUB_A_FROM_B` for comparative math.
+- [x] Add `IF_B_ZERO_JMP_FWD` and `IF_B_NOT_ZERO_JMP_FWD` for conditional branching based on environmental reads.
+- [x] Inject a Turing-Complete Hunter Ancestor to seed the primordial soup.
+
+## 🟡 Phase 18: Advanced Problem Solving (The Intelligence Bottleneck) - NEXT
+**Goal**: Transition organisms from "blind self-replicators" to "problem solvers" by introducing an I/O interface into the physical environment.
+**Strategy**:
+- Inject complex logic/math patterns into the environment (Memory).
+- Reward organisms with massive energy if they output the correct answer pattern.
+- The environment will naturally select for organisms that evolve complex neural-network-like algorithms in pure Opcodes.
+
+## 🟣 Phase 19: Emergent AGI
+**Goal:** Achieve Artificial General Intelligence through self-optimizing, energy-efficient digital organisms operating near the 20W equivalent limit.
+- [ ] TBD: Mechanisms for unbounded complexity accumulation.
