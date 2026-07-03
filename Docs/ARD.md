@@ -3,16 +3,16 @@
 ## 1. System Architecture
 GENESIS is split into a **Python Backend (Physics Engine)** and a **JavaScript Frontend (Visualizer)**, connected via a RESTful API.
 
-### 1.1 Backend: The Digital Physics Engine (`genesis_engine.py`)
-The backend is a pure, custom-built simulation engine compiled down to machine code using **Numba `@njit`**. It models a 1D Memory Space (RAM) where organisms are execution threads.
-- **The Universe:** A 1D NumPy array representing Memory (Opcodes).
-- **Entities:** Execution Threads (Registers: A, B, C, D, IP, Energy, etc.).
+### 1.1 Backend: The Turing-Neumann Engine (`turing_engine.py` & `genesis_lab.py`)
+The backend is a pure, custom-built Turing-complete simulation engine compiled down to machine code using **Numba `@njit`**. It models a 1D Memory Space (RAM) where organisms are execution threads. The old Graph Physics (`genesis_engine.py`) has been fully deprecated and removed.
+- **The Universe:** A 1D NumPy array representing Memory (Opcodes) acting as the primordial soup.
+- **Entities:** Execution Threads. Each thread has an Instruction Pointer (IP) and 4 Registers (A, B, C, D).
 - **Core Loop (Tick):** 
-  - Each thread executes the Opcode at its Instruction Pointer (IP).
-  - Energy is consumed or rewarded purely based on the physical consequences of the executed opcode (e.g., EAT command on an energy block).
-  - Threads that deplete their energy are culled.
-  - Threads that execute `SPAWN` successfully reproduce.
-- **Execution Speed:** Can exceed 120,000 cycles per second natively on CPU.
+  - Each thread executes the Opcode at its IP.
+  - "Energy" is fundamentally defined as CPU Execution Cycles.
+  - Opcodes perform memory reads/writes, arithmetic, and jumping.
+  - Threads reproduce physically by copying their bytecode and executing `SPLIT` or `ALLOC`.
+- **Execution Speed:** Exceeds 100,000 cycles per second natively on CPU.
 
 ### 1.2 Frontend: The Observation Deck (`index.html` & `server.py`)
 - **Server:** FastAPI / Python's `http.server` providing `/api/state` and `/api/control`.
@@ -21,19 +21,19 @@ The backend is a pure, custom-built simulation engine compiled down to machine c
 - **State Synchronization:** The frontend polls `/api/state` every 100ms.
 
 ## 2. Core Mathematical Mechanisms
-### 2.1 The Free Energy Principle (FEP)
-Survival is directly tied to predictive accuracy.
-`Energy_Delta = Reward_Constant * (1.0 - Prediction_Error) - Metabolism_Cost`
+### 2.1 Informational Physics & The Reaper
+There is no explicit "fitness function". Survival is strictly determined by:
+1. **Replication Speed:** Algorithms that duplicate their DNA using fewer cycles spread faster.
+2. **Thermodynamic Capacity Cap:** A stochastic "Reaper" kills random IPs when the maximum thermodynamic limit (Max IPs) is reached, enforcing a brutal spatial-temporal competition.
 
-### 2.2 Structural Complexity Costs
-Brains are not free. Thermodynamic laws enforce minimal complexity.
-`Cost = (Nodes_Count + Edges_Count) * Synapse_Cost`
+### 2.2 Thermodynamic Radiation
+The environment constantly experiences cosmic radiation (random byte flips in memory) based on a `noise_rate`. This acts as the evolutionary mutagen and forces organisms to evolve structural robustness and error correction.
 
-### 2.3 Multi-Agent Backpropagation (Differentiable Communication)
-To solve the Symbol Grounding problem without supervision, gradients are passed *between* agents.
-- **Forward:** Node A emits `Signal_x`. Node B receives `Signal_x` and computes `Action_y`.
-- **Loss:** Node B incurs `Loss` based on environmental survival.
-- **Backward:** Node B calculates `dLoss / dSignal_x` and sends this gradient back to Node A. Node A uses it to update its weights, learning to "speak" accurately.
+### 2.4 Cryptographic Molecules (The I/O Bottleneck)
+To introduce an I/O intelligence bottleneck without hardcoding a fitness function, the environment spawns "Cryptographic Molecules" (`254`).
+- **Structure:** `[254, X, Y, Z]` (Where X and Y are random bytes, and Z is the answer slot).
+- **Physical Law:** The bond can only be broken by executing the `CATALYZE` Opcode when `Z == (X + Y) % 256`.
+- **Time Dilation Reward:** Successful catalysis grants the solving Thread an immediate **10,000 Bonus Cycles**, allowing it to hyper-replicate.
 
 ## 3. Data Flow
 1. User adjusts slider on Frontend.

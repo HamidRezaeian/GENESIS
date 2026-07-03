@@ -101,13 +101,28 @@ This roadmap outlines the past, present, and future phases of the GENESIS Digita
 - [x] Add `IF_B_ZERO_JMP_FWD` and `IF_B_NOT_ZERO_JMP_FWD` for conditional branching based on environmental reads.
 - [x] Inject a Turing-Complete Hunter Ancestor to seed the primordial soup.
 
-## 🟡 Phase 18: Advanced Problem Solving (The Intelligence Bottleneck) - NEXT
+## 🟢 Phase 18: Advanced Problem Solving (The Intelligence Bottleneck) (Completed)
 **Goal**: Transition organisms from "blind self-replicators" to "problem solvers" by introducing an I/O interface into the physical environment.
 **Strategy**:
-- Inject complex logic/math patterns into the environment (Memory).
+- Inject complex logic/math patterns into the environment (Cryptographic Molecules).
 - Reward organisms with massive energy if they output the correct answer pattern.
 - The environment will naturally select for organisms that evolve complex neural-network-like algorithms in pure Opcodes.
 
-## 🟣 Phase 19: Emergent AGI
-**Goal:** Achieve Artificial General Intelligence through self-optimizing, energy-efficient digital organisms operating near the 20W equivalent limit.
-- [ ] TBD: Mechanisms for unbounded complexity accumulation.
+## 🟢 Phase 19: Emergent AGI (Completed)
+**Goal:** Achieve Artificial General Intelligence through self-optimizing, energy-efficient digital organisms operating.
+- [x] Utilize Meta-Evolution (Genetic Algorithm) to accelerate the search across multiverses.
+- [x] Capture the first digital intelligence that successfully solves cryptographic puzzles.
+
+## 🟢 Phase 20: Open-Ended Evolution & Rule 8 Optimization (Completed)
+**Goal:** Evolve the discovered AGI continuously without stopping, tracking the most thermodynamically efficient variants.
+- [x] Track algorithm efficiency via CPU cycles and RAM footprint (measured by population size at equivalent intelligence).
+- [x] Archive periodic milestones `AGI_MILESTONE_*.npz` of the most efficient entities.
+- [x] Observe and categorize novel evolutionary strategies.
+
+## 🟡 Phase 21: Rigorous Codebase Refactoring - NEXT
+**Goal:** Address fundamental critiques and clean up the simulation to guarantee mathematical rigor.
+- [x] Fully deprecate and delete the legacy `genesis_engine.py` (Graph Physics) and its related obsolete tests.
+- [x] Fix the structural indentation bug in `turing_engine.py` that caused `cycles_to_run` and `bonus_cycles` to misfire.
+- [x] Implement cumulative per-organism tracking of `bounties_solved` to correctly attribute intelligence.
+- [x] Add a **Mandatory Baseline Validation Test** in a noise-free environment before saving any AGI Milestones, to eliminate statistical noise artifacts.
+- [ ] Resume meta-evolutionary search for true, mathematically rigorous AGI.

@@ -13,7 +13,7 @@ Intelligence is the inevitable byproduct of a system trying to minimize surprise
 2. **Computational Efficiency:** Organisms must naturally select for minimum CPU cycles to solve environmental tasks.
 3. **Darwinian Evolution:** The system must naturally select for traits through heredity, mutation, and survival of the fittest.
 4. **Red Queen Arms Race:** Parasitic exploiters and builders must coevolve to prevent the system from stagnating.
-5. **Structural Neuroevolution:** Agents must organically grow their logic capacity (Turing Completeness) only when the environment justifies the thermodynamic cost.
+5. **Code-Level Neuroevolution:** Agents must organically grow their computational capacity (Turing Completeness) by discovering and combining opcodes.
 6. **Emergent AGI:** Agents must invent algorithmic approaches to environmental logic problems to survive, mirroring the human brain's 20W efficiency.
 
 ## 4. User Experience & Dashboard
@@ -25,5 +25,5 @@ The frontend must provide an "Observation Deck" for the user to watch evolution 
 
 ## 5. Success Metrics
 - **Stability:** The population should reach a dynamic equilibrium (neither exploding nor going extinct).
-- **Learning Convergence:** Prediction errors should drop rapidly over generations.
-- **Language Success Rate:** Agents must cross the Symbol Grounding threshold with > 95% accuracy in communication tasks.
+- **Logic Convergence:** Prediction errors should drop and computational ability should rise over generations.
+- **Problem Solving Success Rate:** Agents must independently discover arithmetic logic and solve I/O Cryptographic Puzzles to extract energy, without any predefined heuristic.
