@@ -1,276 +1,260 @@
 import numpy as np
-from numba import njit, prange
+from numba import njit
 import time
 import random
 import os
-from turing_engine import tick_numba
+from turing_engine import tick_numba, DEFAULT_ZONE_RATES, NUM_ZONES
 from primordial_seed import build_ancestor
+import threading
+import json
+import base64
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
-@njit(parallel=True)
-def run_lab_batch(memories, ips_all, registers_all, bonus_cycles_all, num_ips_all, max_ips, cycles, noise_rate, bounties_solved_all):
-    N = memories.shape[0]
-    mem_size = memories.shape[1]
-    
-    for i in prange(N):
-        # Drop puzzles based on cycle count (rate = 0.1 per tick)
-        num_puzzles = int(cycles * 0.1)
-        for _ in range(num_puzzles):
-            idx = random.randint(0, mem_size - 4)
-            memories[i, idx] = 254
-            x = random.randint(1, 255)
-            y = random.randint(1, 255)
-            while (x + y) % 256 == 0:
-                y = random.randint(1, 255)
-            memories[i, idx+1] = x
-            memories[i, idx+2] = y
-            memories[i, idx+3] = 0
+WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public")
+
+GLOBAL_MEM = None
+GLOBAL_IPS = None
+GLOBAL_NUM_IPS = [0]
+GLOBAL_CYCLES = [0]
+GLOBAL_EXT = [0]
+GLOBAL_ZONES = None
+
+class GenesisAPIHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=WEB_DIR, **kwargs)
+
+    def do_GET(self):
+        if self.path.startswith('/api/state'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
             
-        num_ips = tick_numba(
-            memories[i], ips_all[i], registers_all[i], bonus_cycles_all[i],
-            num_ips_all[i], max_ips, cycles, noise_rate, bounties_solved_all[i]
-        )
-        num_ips_all[i] = num_ips
+            if GLOBAL_MEM is None:
+                self.wfile.write(b'{}')
+                return
 
-from collections import Counter
+            mem_b64 = base64.b64encode(GLOBAL_MEM.tobytes()).decode('ascii')
+            active_ips = GLOBAL_IPS[:GLOBAL_NUM_IPS[0]].tolist() if GLOBAL_IPS is not None else []
+            zones = GLOBAL_ZONES.tolist() if GLOBAL_ZONES is not None else []
+            
+            data = {
+                'tick': GLOBAL_CYCLES[0],
+                'pop': GLOBAL_NUM_IPS[0],
+                'max_pop': 4000,
+                'extinctions': GLOBAL_EXT[0],
+                'memory_b64': mem_b64,
+                'ips': active_ips,
+                'zones': zones
+            }
+            self.wfile.write(json.dumps(data).encode('utf-8'))
+        else:
+            super().do_GET()
 
-def extract_dominant_dna(memory):
-    """Finds the most repeated sequence in the memory of a successful universe."""
-    counts = Counter()
-    # Sample sliding windows of length 30
-    for i in range(0, len(memory) - 30, 5):
-        seq = tuple(memory[i:i+30])
-        # Ignore empty space or purely NOPs
-        if seq.count(0) < 25: 
-            counts[seq] += 1
-    if len(counts) > 0:
-        return list(counts.most_common(1)[0][0])
-    return None
+    def log_message(self, format, *args):
+        pass # Suppress logging to avoid cluttering stdout
+
+def run_server():
+    server = HTTPServer(('0.0.0.0', 8081), GenesisAPIHandler)
+    print("Dashboard Server running on http://localhost:8081")
+    server.serve_forever()
+
+def extract_dominant_species(memory, ips, num_ips, max_len=64):
+    """Quick inline genome extraction for auto-logging."""
+    from collections import Counter
+    if num_ips == 0:
+        return 0, 0, "EXTINCT"
+    
+    mem_size = len(memory)
+    genomes = []
+    for i in range(min(num_ips, 500)):  # Sample up to 500 for speed
+        ip = ips[i]
+        # Scan backward to find start of code block
+        start = ip
+        for _ in range(max_len):
+            if memory[(start - 1) % mem_size] == 0:
+                break
+            start = (start - 1) % mem_size
+        # Scan forward
+        end = start
+        for _ in range(max_len):
+            if memory[end % mem_size] == 0:
+                break
+            end = (end + 1) % mem_size
+        length = (end - start) % mem_size
+        if length == 0 or length > max_len:
+            length = max_len
+            start = ip
+        block = bytes([memory[(start + j) % mem_size] for j in range(length)])
+        genomes.append(block)
+    
+    counter = Counter(genomes)
+    top = counter.most_common(1)[0]
+    num_species = len(counter)
+    return len(top[0]), num_species, top[0].hex()[:40]
 
 def main():
     print("========================================================")
-    print("      GENESIS LAB - META-EVOLUTIONARY GA BOOTSTRAP      ")
+    print("      GENESIS WORLD - CAMBRIAN ACCELERATION ENGINE      ")
     print("========================================================")
     
     MILESTONES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Milestones")
     if not os.path.exists(MILESTONES_DIR):
         os.makedirs(MILESTONES_DIR)
     
-    N = 250           # Number of parallel universes (balanced for CPU cores)
-    size = 100000     # Memory size
-    max_ips = 2000    # Lower max ips to speed up simulation per universe
-    noise_rate = 2e-5 # Double mutagenic rate to compensate for smaller N
-    cycles_per_batch = 10000
+    # SINGLE MASSIVE UNIVERSE
+    size = 131072      # Memory size (POWER OF 2)
+    max_ips = 4000     # Adjusted max IPs for a large single universe
+    noise_rate = 2e-7  # Cosmic radiation rate
+    cycles_per_batch = 1000000 # Print status every 1M cycles
+    zone_rotation_period = 20_000_000  # Phase 28: Longer tectonic period (20M)
+    genome_log_period = 10_000_000  # Auto-extract genomes every 10M cycles
     
     seed_code = build_ancestor()
-    best_dna = list(seed_code)
     
-    print(f"Parallel Universes: {N}")
+    print(f"Memory Size: {size} bytes")
+    print(f"Max Population: {max_ips}")
     print(f"Mutation Rate (Noise): {noise_rate}")
-    print(f"Cycles per Batch: {cycles_per_batch}")
+    print(f"Tectonic Period: {zone_rotation_period:,} cycles")
     print("Initializing Quantum Matrix...")
     
-    checkpoint_file = os.path.join(MILESTONES_DIR, "CHECKPOINT.npz")
+    checkpoint_file = os.path.join(MILESTONES_DIR, "WORLD_CHECKPOINT.npz")
     
-    # Pre-allocate numpy arrays
-    memories = np.zeros((N, size), dtype=np.uint8)
-    ips_all = np.zeros((N, max_ips), dtype=np.int32)
-    registers_all = np.zeros((N, max_ips, 4), dtype=np.int32)
-    bonus_cycles_all = np.zeros((N, max_ips), dtype=np.int32)
-    num_ips_all = np.zeros(N, dtype=np.int32)
-    bounties_solved_all = np.zeros((N, max_ips), dtype=np.int32)
+    memory = np.zeros(size, dtype=np.uint8)
+    ips = np.zeros(max_ips, dtype=np.int32)
+    registers = np.zeros((max_ips, 4), dtype=np.int32)
+    zone_rates = DEFAULT_ZONE_RATES.copy()
+    
+    global GLOBAL_MEM, GLOBAL_IPS, GLOBAL_NUM_IPS, GLOBAL_CYCLES, GLOBAL_EXT, GLOBAL_ZONES
+    GLOBAL_MEM = memory
+    GLOBAL_IPS = ips
+    GLOBAL_ZONES = zone_rates
     
     if os.path.exists(checkpoint_file):
         print(f"Resuming from {checkpoint_file}...")
         data = np.load(checkpoint_file)
         
-        best_mem = data['memory']
-        best_ips = data['ips']
-        best_regs = data['registers']
-        best_bonus = data['bonus_cycles']
-        best_num = data['num_ips']
-        batch_count = data['batch_count'].item()
-        historical_max_bounties = int(data.get('historical_max', 0))
-        historical_max_pop = int(data.get('historical_max_pop', 0))
+        memory[:] = data['memory']
+        ips[:] = data['ips']
+        registers[:] = data['registers']
+        num_ips = data['num_ips'].item()
+        total_cycles = data['total_cycles'].item()
+        historical_max_pop = data.get('historical_max_pop', 0).item()
+        extinction_count = int(data['extinction_count'].item()) if 'extinction_count' in data else 0
+        if 'zone_rates' in data:
+            zone_rates[:] = data['zone_rates']
         
-        for i in range(N):
-            memories[i] = np.copy(best_mem)
-            ips_all[i] = np.copy(best_ips)
-            registers_all[i] = np.copy(best_regs)
-            bonus_cycles_all[i] = np.copy(best_bonus)
-            num_ips_all[i] = best_num
-            # Kill 50% for diversity
-            kill_count = num_ips_all[i] // 2
-            if kill_count > 0:
-                ips_all[i, :kill_count] = ips_all[i, num_ips_all[i]-kill_count:num_ips_all[i]]
-                num_ips_all[i] -= kill_count
-                
-        print(f"Successfully resumed at Batch {batch_count}")
+        print(f"Successfully resumed at {total_cycles:,} cycles (Extinctions: {extinction_count})")
     else:
         print("No checkpoint found. Starting from scratch...")
-        batch_count = 0
-        historical_max_bounties = 0
+        total_cycles = 0
         historical_max_pop = 0
-        # Seed all universes
-        seed_idx = size // 2
-        for i in range(N):
-            for j, byte in enumerate(best_dna):
-                memories[i, (seed_idx + j) % size] = byte
-            ips_all[i, 0] = seed_idx
-            num_ips_all[i] = 1
+        extinction_count = 0
         
+        # Seed the universe with 100 ancestors spaced evenly
+        num_seeds = 100
+        spacing = size // num_seeds
+        for s in range(num_seeds):
+            seed_pos = s * spacing
+            for j, byte in enumerate(seed_code):
+                memory[(seed_pos + j) % size] = byte
+            ips[s] = seed_pos
+        num_ips = num_seeds
+        
+    GLOBAL_NUM_IPS[0] = num_ips
+    GLOBAL_CYCLES[0] = total_cycles
+    GLOBAL_EXT[0] = extinction_count
+    
+    # Start web server thread
+    server_thread = threading.Thread(target=run_server, daemon=True)
+    server_thread.start()
+    
     print("Warming up Numba JIT compiler...")
     # Warmup
-    run_lab_batch(memories, ips_all, registers_all, bonus_cycles_all, num_ips_all, max_ips, 1, noise_rate, bounties_solved_all)
+    num_ips = tick_numba(memory, ips, registers, num_ips, max_ips, 1, noise_rate, zone_rates)
     
-    print("JIT Compiled. Commencing GA Search...")
+    print("JIT Compiled. Commencing Continuous Evolution...")
     
     start_time = time.time()
     last_save_time = time.time()
     
     while True:
-        # Rule 8: Efficiency Selection
-        # 1. Primary: Intelligence (bounties solved)
-        # 2. Secondary: Efficiency (population size - smaller/faster code reproduces more)
-        max_bounties = np.max(bounties_solved_all)
-        
-        # Find the universe with the best bounties. If tie, find the one with highest population.
-        best_bounty_universes = np.where(np.max(bounties_solved_all, axis=1) == max_bounties)[0]
-        winning_idx = best_bounty_universes[np.argmax(num_ips_all[best_bounty_universes])]
-        winning_pop = num_ips_all[winning_idx]
-
-        is_new_milestone = False
-        old_historical_max_bounties = historical_max_bounties
-        old_historical_max_pop = historical_max_pop
-        
-        if max_bounties > historical_max_bounties:
-            is_new_milestone = True
-            historical_max_bounties = max_bounties
-            historical_max_pop = winning_pop
-        elif max_bounties > 0 and max_bounties == historical_max_bounties and winning_pop > historical_max_pop:
-            is_new_milestone = True
-            historical_max_pop = winning_pop
-            
-        if is_new_milestone:
-            print("\n========================================================")
-            print(f"            !!! INTELLIGENCE CANDIDATE !!!            ")
-            print("========================================================")
-            print("Running baseline validation on noise-free environment...")
-            test_mem = np.copy(memories[winning_idx])
-            test_ips = np.copy(ips_all[winning_idx])
-            test_regs = np.copy(registers_all[winning_idx])
-            test_bonus = np.copy(bonus_cycles_all[winning_idx])
-            test_num = num_ips_all[winning_idx]
-            test_bounties = np.zeros(max_ips, dtype=np.int32)
-            
-            # Inject puzzles to test
-            num_puzzles = int(cycles_per_batch * 0.1)
-            for _ in range(num_puzzles):
-                idx = random.randint(0, size - 4)
-                test_mem[idx] = 254
-                x = random.randint(1, 255)
-                y = random.randint(1, 255)
-                while (x + y) % 256 == 0:
-                    y = random.randint(1, 255)
-                test_mem[idx+1] = x
-                test_mem[idx+2] = y
-                test_mem[idx+3] = 0
-                
-            tick_numba(test_mem, test_ips, test_regs, test_bonus, test_num, max_ips, cycles_per_batch, 0.0, test_bounties)
-            
-            if np.max(test_bounties) > 0:
-                print("Validation PASSED! Intelligence is robust.")
-                print(f"Universe {winning_idx} solved {max_bounties} puzzles with Population {winning_pop}!")
-                print(f"Total physics cycles searched: {batch_count * cycles_per_batch * N:,}")
-                
-                timestamp = int(time.time())
-                milestone_bin = os.path.join(MILESTONES_DIR, f"AGI_MILESTONE_B{historical_max_bounties}_P{winning_pop}_{timestamp}.bin")
-                milestone_npz = os.path.join(MILESTONES_DIR, f"AGI_MILESTONE_B{historical_max_bounties}_P{winning_pop}_{timestamp}.npz")
-                
-                # Save the winning universe's memory
-                with open(milestone_bin, "wb") as f:
-                    f.write(memories[winning_idx].tobytes())
-                
-                # Save the full exact state too
-                np.savez(milestone_npz, 
-                         memory=memories[winning_idx], 
-                         ips=ips_all[winning_idx], 
-                         registers=registers_all[winning_idx], 
-                         bonus_cycles=bonus_cycles_all[winning_idx], 
-                         num_ips=num_ips_all[winning_idx],
-                         batch_count=batch_count)
-                print(f"Saved highly efficient milestone to {milestone_bin} and {milestone_npz}")
-            else:
-                print("Validation FAILED! The intelligence was an artifact of noise.")
-                print("Killing false-positive universe to accelerate search...")
-                num_ips_all[winning_idx] = 0
-                historical_max_bounties = old_historical_max_bounties
-                historical_max_pop = old_historical_max_pop
-
-        # Check if we should re-seed dead universes using GA selection
-        dead_count = np.sum(num_ips_all == 0)
-        
-        # Extinction Recovery: If the max population is less than 2, the multiverse is functionally dead (stagnant/sterile).
-        # We must recover from the original seed to prevent "Survival of the Stagnant".
-        if np.max(num_ips_all) < 2:
-            print("!!! TOTAL MULTIVERSE EXTINCTION OR STAGNATION !!! Recovering from original seed...")
-            for i in range(N):
-                memories[i] = np.zeros(size, dtype=np.uint8)
-                seed_pos = random.randint(0, size - len(seed_code))
-                for j, byte in enumerate(seed_code):
-                    memories[i, (seed_pos + j) % size] = byte
-                ips_all[i, 0] = seed_pos
-                registers_all[i] = np.zeros((max_ips, 4), dtype=np.int32)
-                bonus_cycles_all[i] = np.zeros(max_ips, dtype=np.int32)
-                num_ips_all[i] = 1
-                bounties_solved_all[i] = np.zeros(max_ips, dtype=np.int32)
-            
-        elif dead_count > 0:
-            # GA Selection: Find the most robust universe
-            best_idx = np.argmax(num_ips_all)
-            
-            # Re-seed all dead universes by CLONING the best universe!
-            for i in range(N):
-                if num_ips_all[i] == 0:
-                    # Clone memory (add tiny noise)
-                    memories[i] = np.copy(memories[best_idx])
-                    # Clone IPs and Registers
-                    ips_all[i] = np.copy(ips_all[best_idx])
-                    registers_all[i] = np.copy(registers_all[best_idx])
-                    bonus_cycles_all[i] = np.copy(bonus_cycles_all[best_idx])
-                    num_ips_all[i] = num_ips_all[best_idx]
-                    bounties_solved_all[i] = bounties_solved_all[best_idx]
-                    
-                    # Randomly kill 50% of the population in the cloned universe to increase diversity
-                    kill_count = num_ips_all[i] // 2
-                    if kill_count > 0:
-                        ips_all[i, :kill_count] = ips_all[i, num_ips_all[i]-kill_count:num_ips_all[i]]
-                        num_ips_all[i] -= kill_count
-
-        # Run the batch
         t0 = time.time()
-        run_lab_batch(memories, ips_all, registers_all, bonus_cycles_all, num_ips_all, max_ips, cycles_per_batch, noise_rate, bounties_solved_all)
+        num_ips = tick_numba(memory, ips, registers, num_ips, max_ips, cycles_per_batch, noise_rate, zone_rates)
         t1 = time.time()
         
-        batch_count += 1
-        speed = (N * cycles_per_batch) / (t1 - t0) if t1 > t0 else 0
-        total_cycles = batch_count * cycles_per_batch
+        total_cycles += cycles_per_batch
+        speed = cycles_per_batch / (t1 - t0) if t1 > t0 else 0
         
-        max_pop = np.max(num_ips_all)
-        print(f"[Batch {batch_count}] Elapsed: {time.time()-start_time:.1f}s | Speed: {speed:,.0f} c/s | Extinctions: {dead_count}/{N} | Max Pop: {max_pop}", flush=True)
+        # Tectonic Zone Rotation
+        if total_cycles % zone_rotation_period < cycles_per_batch:
+            zone_rates = np.roll(zone_rates, 1)
+            GLOBAL_ZONES[:] = zone_rates
+            print(f"  [TECTONIC SHIFT] Zones rotated. New layout: {zone_rates}")
+            
+        GLOBAL_NUM_IPS[0] = num_ips
+        GLOBAL_CYCLES[0] = total_cycles
+        GLOBAL_EXT[0] = extinction_count
+        
+        print(f"[Cycle {total_cycles:,}] {time.time()-start_time:.0f}s | {speed:,.0f} c/s | Pop: {num_ips}/{max_ips} | Extinctions: {extinction_count}", flush=True)
+
+        # Periodic Genome Analysis
+        if total_cycles % genome_log_period < cycles_per_batch and num_ips > 0:
+            dom_size, num_species, dom_hex = extract_dominant_species(memory, ips, num_ips)
+            print(f"  [GENOME] Dominant: {dom_size}B | Species: {num_species} | Hex: {dom_hex}...")
+
+        if num_ips > historical_max_pop:
+            historical_max_pop = num_ips
+            if historical_max_pop % 100 == 0: # Only alert on major boundaries
+                print("\n========================================================")
+                print(f"      !!! NEW POPULATION MILESTONE REACHED !!!           ")
+                print("========================================================")
+                print(f"Population reached {historical_max_pop}!")
+                print(f"Total physics cycles searched: {total_cycles:,}")
+                
+                timestamp = int(time.time())
+                milestone_bin = os.path.join(MILESTONES_DIR, f"AGI_MILESTONE_P{historical_max_pop}_{timestamp}.bin")
+                
+                with open(milestone_bin, "wb") as f:
+                    f.write(memory.tobytes())
+                print(f"Saved milestone to {milestone_bin}")
+
+        # Phase 28: PANSPERMIA — Auto-restart on extinction
+        if num_ips == 0:
+            extinction_count += 1
+            print(f"\n!!! EXTINCTION #{extinction_count} !!! Panspermia: Reseeding universe...", flush=True)
+            
+            # Save extinction snapshot
+            timestamp = int(time.time())
+            extinct_file = os.path.join(MILESTONES_DIR, f"EXTINCTION_{extinction_count}_{total_cycles}c_{timestamp}.npz")
+            np.savez(extinct_file, memory=memory, total_cycles=total_cycles, extinction_count=extinction_count)
+            
+            # Reseed: inject fresh ancestors into the existing (corrupted) memory
+            num_seeds = 100
+            spacing = size // num_seeds
+            for s in range(num_seeds):
+                seed_pos = s * spacing
+                for j, byte in enumerate(seed_code):
+                    memory[(seed_pos + j) % size] = byte
+                ips[s] = seed_pos
+                for col in range(4):
+                    registers[s, col] = 0
+            num_ips = num_seeds
+            zone_rates = DEFAULT_ZONE_RATES.copy()
+            print(f"  Reseeded {num_seeds} ancestors. Evolution continues...\n")
 
         current_time = time.time()
         if current_time - last_save_time >= 60:  # Save every 60 seconds
-            best_idx = np.argmax(num_ips_all)
             np.savez(checkpoint_file, 
-                     memory=memories[best_idx], 
-                     ips=ips_all[best_idx], 
-                     registers=registers_all[best_idx], 
-                     bonus_cycles=bonus_cycles_all[best_idx], 
-                     num_ips=num_ips_all[best_idx],
-                     batch_count=batch_count,
-                     historical_max=historical_max_bounties,
-                     historical_max_pop=historical_max_pop)
-            print(f"Saved Checkpoint at Batch {batch_count}", flush=True)
+                     memory=memory, 
+                     ips=ips, 
+                     registers=registers, 
+                     num_ips=num_ips,
+                     total_cycles=total_cycles,
+                     historical_max_pop=historical_max_pop,
+                     zone_rates=zone_rates,
+                     extinction_count=extinction_count)
+            print(f"Saved Checkpoint at {total_cycles:,} cycles", flush=True)
             last_save_time = current_time
 
 if __name__ == "__main__":

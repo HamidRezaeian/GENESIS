@@ -3,304 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS: Intelligence Bottleneck</title>
-    <style>
-        :root {
-            --bg-color: #000000;
-            --panel-bg: rgba(10, 15, 10, 0.9);
-            --border-color: #1a3a1a;
-            --text-main: #4ade80;
-            --text-dim: #225522;
-            --text-gold: #FFD700;
-        }
-
-        body {
-            margin: 0; padding: 0; overflow: hidden;
-            background: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        .hud-panel {
-            position: absolute;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(74, 222, 128, 0.1);
-            z-index: 10;
-        }
-
-        #top-left { top: 20px; left: 20px; width: 400px; }
-        #top-right { top: 20px; right: 20px; min-width: 80px; }
-
-        h1 { margin: 0 0 5px 0; font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; }
-        p.subtitle { margin: 0 0 20px 0; font-size: 0.85rem; color: var(--text-dim); }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-box {
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            background: rgba(0,20,0,0.5);
-        }
-
-        .stat-box.gold {
-            border-color: var(--text-gold);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-            color: var(--text-gold);
-        }
-
-        .stat-label { font-size: 0.75rem; color: inherit; opacity: 0.8; text-transform: uppercase; }
-        .stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; }
-
-        /* Controls */
-        .controls { display: flex; gap: 10px; margin-top: 20px; }
-        button {
-            flex: 1;
-            padding: 10px;
-            background: #0a1f0a;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        button:hover { background: #143d14; border-color: var(--text-main); }
-        
-        #legend {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            background: var(--panel-bg);
-            padding: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-    </style>
+    <title>GENESIS | Quantum Substrate Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <canvas id="ram"></canvas>
+    <!-- Background tectonic ambient glow -->
+    <div id="ambient-glow" class="ambient-glow"></div>
 
-    <div id="top-left" class="hud-panel">
-        <h1>GENESIS OS</h1>
-        <p class="subtitle">SYS.MEM.DUMP // SUBSTRATE 14 (I/O)</p>
-        
-        <div class="stat-grid">
-            <div class="stat-box">
-                <div class="stat-label">CPU Cycles</div>
-                <div class="stat-value" id="val-tick">0</div>
+    <main class="dashboard-container">
+        <!-- Header -->
+        <header class="glass-panel main-header">
+            <div class="logo-area">
+                <div class="status-indicator"></div>
+                <h1>GENESIS</h1>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Total Pop</div>
-                <div class="stat-value" id="val-pop">0</div>
+            <div class="subtitle">ARTIFICIAL GENERAL INTELLIGENCE ENGINE</div>
+        </header>
+
+        <!-- Main Visualization (Center) -->
+        <section class="visualization-container">
+            <div class="canvas-wrapper">
+                <canvas id="ramCanvas"></canvas>
             </div>
-            <div class="stat-box gold">
-                <div class="stat-label">Total Replications</div>
-                <div class="stat-value" id="val-smart">0</div>
+        </section>
+
+        <!-- KPI Grid (Left) -->
+        <aside class="kpi-panel glass-panel">
+            <div class="kpi-card highlight-green">
+                <div class="kpi-label">COMPUTATIONAL CYCLES</div>
+                <div class="kpi-value" id="val-cycles">0</div>
+                <div class="kpi-sparkline" id="spark-cycles"></div>
             </div>
-            <div class="stat-box gold">
-                <div class="stat-label">Avg Energy</div>
-                <div class="stat-value" id="val-level">1</div>
+            <div class="kpi-card highlight-orange">
+                <div class="kpi-label">ACTIVE POPULATION</div>
+                <div class="kpi-value" id="val-pop">0 <span class="dim">/ 4000</span></div>
             </div>
-        </div>
+            <div class="kpi-card highlight-red">
+                <div class="kpi-label">EXTINCTION EVENTS</div>
+                <div class="kpi-value" id="val-extinctions">0</div>
+            </div>
+        </aside>
 
-        <div class="controls">
-            <button id="btn-pause" onclick="togglePause()">HALT (PAUSE)</button>
-            <button onclick="fetch('/api/control?action=restart')">REBOOT</button>
-        </div>
-    </div>
-    
-    <div id="top-right" class="hud-panel">
-        <div class="stat-label" style="text-align: right;">FPS</div>
-        <div class="stat-value" id="val-fps" style="text-align: right; color: var(--text-gold);">0</div>
-    </div>
-    
-    <div id="legend">
-        ⬛ NOP &nbsp;&nbsp; 🟪 CODE &nbsp;&nbsp; 🟩 THREAD (HIGH ENERGY) &nbsp;&nbsp; 🟥 LOW ENERGY &nbsp;&nbsp; <span style="color:#FFD700; font-weight:bold;">🟨 ALPHA (REPLICATOR)</span>
-    </div>
+        <!-- Footer / Legend -->
+        <footer class="glass-panel footer-legend">
+            <div class="legend-item"><span class="swatch color-nop"></span> JUNK (NOP)</div>
+            <div class="legend-item"><span class="swatch color-code"></span> LOGIC (CODE)</div>
+            <div class="legend-item"><span class="swatch color-ip"></span> INSTRUCTION POINTER</div>
+            <div class="legend-item"><span class="swatch color-hot"></span> HOT ZONE (HIGH VISCOSITY/RAD)</div>
+            <div class="legend-item"><span class="swatch color-cold"></span> COLD ZONE</div>
+        </footer>
+    </main>
 
-    <script>
-        const canvas = document.getElementById('ram');
-        const ctx = canvas.getContext('2d', { alpha: false });
-        let width = window.innerWidth, height = window.innerHeight;
-        
-        let memory = [];
-        let threads = [];
-        let isPaused = false;
-        let needsMemoryUpdate = false;
-        
-        const MEM_SIZE = 10000;
-        const GRID_COLS = 125;
-        const GRID_ROWS = 80;
-        
-        // Colors for opcodes (Precompute RGB values for ImageData)
-        const OP_RGB = [[0, 0, 0, 255]]; // 0 NOP
-        for(let i=1; i<=30; i++) {
-            const intensity = 30 + (i * 7);
-            OP_RGB.push([Math.floor(intensity/3), Math.floor(intensity/5), intensity, 255]);
-        }
-        
-        // Create an offscreen canvas for blazing fast pixel manipulation
-        const offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = GRID_COLS;
-        offscreenCanvas.height = GRID_ROWS;
-        const offscreenCtx = offscreenCanvas.getContext('2d', { alpha: false });
-        let imgData = offscreenCtx.createImageData(GRID_COLS, GRID_ROWS);
-
-        function resize() {
-            width = window.innerWidth; height = window.innerHeight;
-            canvas.width = width * window.devicePixelRatio; canvas.height = height * window.devicePixelRatio;
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            ctx.imageSmoothingEnabled = false; // Keep pixels sharp
-            needsMemoryUpdate = true;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        function togglePause() {
-            const btn = document.getElementById('btn-pause');
-            if (btn.innerText.includes('HALT')) {
-                fetch('/api/control?action=pause');
-                btn.innerText = 'RESUME';
-                btn.style.color = '#ff4444';
-                btn.style.borderColor = '#ff4444';
-            } else {
-                fetch('/api/control?action=play');
-                btn.innerText = 'HALT (PAUSE)';
-                btn.style.color = 'var(--text-main)';
-                btn.style.borderColor = 'var(--border-color)';
-            }
-        }
-
-        async function fetchState() {
-            try {
-                const res = await fetch('/api/state');
-                if (!res.ok) return;
-                const data = await res.json();
-
-                document.getElementById('val-tick').innerText = data.tick;
-                document.getElementById('val-pop').innerText = data.pop;
-                document.getElementById('val-smart').innerText = data.total_replications || 0;
-                document.getElementById('val-level').innerText = data.avg_energy || 0;
-                
-                memory = data.memory;
-                threads = data.threads;
-                isPaused = data.is_paused;
-                needsMemoryUpdate = true;
-                
-                const btn = document.getElementById('btn-pause');
-                if(isPaused && btn.innerText.includes('HALT')) {
-                    btn.innerText = 'RESUME';
-                    btn.style.color = '#ff4444';
-                    btn.style.borderColor = '#ff4444';
-                } else if(!isPaused && btn.innerText.includes('RESUME')) {
-                    btn.innerText = 'HALT (PAUSE)';
-                    btn.style.color = 'var(--text-main)';
-                    btn.style.borderColor = 'var(--border-color)';
-                }
-
-            } catch (e) {}
-        }
-
-        let fpsElement;
-        let frameCount = 0;
-        let lastFpsTime = performance.now();
-
-        function render() {
-            // Track FPS
-            frameCount++;
-            const now = performance.now();
-            if (now - lastFpsTime >= 1000) {
-                if(fpsElement) fpsElement.innerText = frameCount;
-                frameCount = 0;
-                lastFpsTime = now;
-            }
-
-            ctx.fillStyle = '#050505';
-            ctx.fillRect(0, 0, width, height);
-            
-            if(memory.length === 0) {
-                requestAnimationFrame(render);
-                return;
-            }
-            
-            const padding = 50;
-            const availableW = width - padding*2;
-            const availableH = height - padding*2;
-            
-            const cellW = availableW / GRID_COLS;
-            const cellH = availableH / GRID_ROWS;
-            const cellSize = Math.floor(Math.min(cellW, cellH));
-            
-            const gridW = cellSize * GRID_COLS;
-            const gridH = cellSize * GRID_ROWS;
-            
-            const offsetX = Math.floor((width - gridW) / 2);
-            const offsetY = Math.floor((height - gridH) / 2);
-            
-            // 1. UPDATE MEMORY IMAGE ONLY WHEN NEEDED (10 FPS instead of 60 FPS)
-            if (needsMemoryUpdate) {
-                const data = imgData.data;
-                for(let i=0; i<MEM_SIZE; i++) {
-                    const op = memory[i];
-                    const rgb = OP_RGB[op] || [50, 50, 50, 255];
-                    const idx = i * 4;
-                    data[idx] = rgb[0];
-                    data[idx+1] = rgb[1];
-                    data[idx+2] = rgb[2];
-                    data[idx+3] = rgb[3]; // alpha
-                }
-                offscreenCtx.putImageData(imgData, 0, 0);
-                needsMemoryUpdate = false;
-            }
-            
-            // Draw the tiny 125x80 canvas scaled up perfectly onto the main canvas
-            ctx.drawImage(offscreenCanvas, offsetX, offsetY, gridW, gridH);
-            
-            // 2. DRAW THREADS OVER MEMORY
-            for(let i=0; i<threads.length; i++) {
-                const ip = threads[i].ip;
-                const col = ip % GRID_COLS;
-                const row = Math.floor(ip / GRID_COLS);
-                const isAlpha = threads[i].s >= 5; // Alpha if replicated 5+ times
-                
-                const x = offsetX + col * cellSize;
-                const y = offsetY + row * cellSize;
-                
-                ctx.fillStyle = threads[i].c; 
-                ctx.fillRect(x, y, cellSize, cellSize);
-                
-                if (isAlpha) {
-                    ctx.strokeStyle = '#FFD700';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(x - 2, y - 2, cellSize + 4, cellSize + 4);
-                    
-                    ctx.fillStyle = 'rgba(255, 215, 0, 0.4)';
-                    ctx.fillRect(x - cellSize, y - cellSize, cellSize*3, cellSize*3);
-                }
-            }
-
-            requestAnimationFrame(render);
-        }
-        
-        window.onload = () => {
-            fpsElement = document.getElementById('val-fps');
-        };
-        requestAnimationFrame(render);
-        setInterval(fetchState, 100); // Polling every 100ms instead of 50ms to save CPU
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

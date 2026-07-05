@@ -26,4 +26,6 @@ The frontend must provide an "Observation Deck" for the user to watch evolution 
 ## 5. Success Metrics
 - **Stability:** The population should reach a dynamic equilibrium (neither exploding nor going extinct).
 - **Logic Convergence:** Prediction errors should drop and computational ability should rise over generations.
-- **Problem Solving Success Rate:** Agents must independently discover arithmetic logic and solve I/O Cryptographic Puzzles to extract energy, without any predefined heuristic.
+- **Predation & Foraging Success:** Agents must independently discover how to hunt for thermodynamic food (Byte 255) and attack other organisms to steal energy in a Zero-Sum Ecosystem.
+- **Emergent Self-Awareness:** Organisms must demonstrate logic or strategies that were never explicitly defined or rewarded by the environment (e.g., inventing immune systems, forming cooperative colonies, creating internal self-representations).
+- **Unprompted Problem Generation:** The system must transition from solving human-injected puzzles to solving problems generated entirely by the complex interactions of the agents themselves (Red Queen Dynamics).

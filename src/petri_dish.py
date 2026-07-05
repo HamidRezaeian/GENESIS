@@ -7,11 +7,11 @@ from numba import njit
 from turing_engine import tick_numba
 
 # --- CONFIGURATION ---
-GRID_SIZE = 316 # 316x316 = 99,856 (close to 100,000)
-CELL_SIZE = 2
+GRID_SIZE = 181 # 181x181 = 32761 (close to 32768)
+CELL_SIZE = 3   # Make cells slightly larger since grid is smaller
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
-MEM_SIZE = 100000
+MEM_SIZE = 32768
 
 # Colors
 BLACK = (0, 0, 0)
@@ -25,7 +25,7 @@ import os
 
 def load_state():
     memory = np.zeros(MEM_SIZE, dtype=np.uint8)
-    max_ips = 2000
+    max_ips = 1000
     ips = np.zeros(max_ips, dtype=np.int32)
     registers = np.zeros((max_ips, 4), dtype=np.int32)
     bonus_cycles = np.zeros(max_ips, dtype=np.int32)

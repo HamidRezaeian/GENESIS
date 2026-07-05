@@ -35,6 +35,18 @@ To introduce an I/O intelligence bottleneck without hardcoding a fitness functio
 - **Physical Law:** The bond can only be broken by executing the `CATALYZE` Opcode when `Z == (X + Y) % 256`.
 - **Time Dilation Reward:** Successful catalysis grants the solving Thread an immediate **10,000 Bonus Cycles**, allowing it to hyper-replicate.
 
+### 2.5 The Autotelic Phase (Future Physics)
+Once basic Turing Completeness is proven, the Cryptographic Molecules will be removed. The universe will transition to a Zero-Sum Thermodynamic Ecosystem:
+- **Zero-Sum Energy:** A fixed amount of energy cycles through the universe. Energy can only be acquired by stealing it from other IPs, absorbing dead IPs, or cooperative trading.
+- **Open Memory Architecture:** IPs will have the physical ability to read/write into shared memory spaces, allowing for the evolution of Communication, Deception, and Cooperative Colonies.
+- **Entropy as the Ultimate Enemy:** Extreme cosmic radiation will force organisms to evolve complex DNA error-correction (Check-sums, Parity) and immune systems, driving the emergence of self-awareness (the ability to read and repair one's own code).
+
+### 2.6 The Tierra Trap Avoidance (Rule 10)
+The physics engine must be designed so that blind, fast replication is NOT the globally optimal survival strategy. If the environment only rewards copy speed, evolution produces hyper-optimized viruses, not AGI. The physical laws must contain inherent complexities (e.g., non-linear resource processing, environmental hazards requiring predictive modeling) that make computational intelligence a thermodynamic necessity for long-term survival.
+
+### 2.7 The 20W Architectural Paradigm (Rule 11)
+The human brain achieves ~20W efficiency through massive, slow parallelism (~86 billion neurons at ~200 Hz), not high-speed sequential execution. While the Turing engine uses sequential opcodes, the architecture must observe and select for organisms that invent parallel, cooperative, or multi-threaded sub-routines (e.g., multi-cellular IP clusters sharing memory). Pure Von Neumann brute-force sequential speed diverges from the biological blueprint for energy-efficient AGI.
+
 ## 3. Data Flow
 1. User adjusts slider on Frontend.
 2. Frontend sends GET request (e.g., `/api/settings?mutation_rate=0.2`).
