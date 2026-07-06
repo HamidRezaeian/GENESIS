@@ -3,56 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS | Quantum Substrate Dashboard</title>
+    <title>GENESIS | Neuromorphic Evolution</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Background tectonic ambient glow -->
-    <div id="ambient-glow" class="ambient-glow"></div>
+    <div class="ambient-glow"></div>
 
     <main class="dashboard-container">
         <!-- Header -->
         <header class="glass-panel main-header">
             <div class="logo-area">
-                <div class="status-indicator"></div>
-                <h1>GENESIS</h1>
+                <div class="pulse-ring"></div>
+                <h1>GENESIS <span class="badge">SNN ENGINE</span></h1>
             </div>
-            <div class="subtitle">ARTIFICIAL GENERAL INTELLIGENCE ENGINE</div>
+            <div class="subtitle">NEUROMORPHIC ECOLOGY & DEEP TIME SIMULATOR</div>
         </header>
 
         <!-- Main Visualization (Center) -->
-        <section class="visualization-container">
-            <div class="canvas-wrapper">
-                <canvas id="ramCanvas"></canvas>
+        <section class="visualization-container glass-panel">
+            <div class="canvas-header">
+                <h2>QUANTUM SUBSTRATE MAP</h2>
+                <div class="controls">
+                    <button id="btn-analyze" class="btn-neo" style="padding: 4px 12px; font-size: 0.8rem; background: rgba(0,255,157,0.1); border-color: #00FF9D; color: #00FF9D;">ANALYZE BRAIN</button>
+                </div>
+            </div>
+            <div class="canvas-wrapper" id="wrapper-ram">
+                <canvas id="ramCanvas" width="800" height="800"></canvas>
             </div>
         </section>
 
         <!-- KPI Grid (Left) -->
         <aside class="kpi-panel glass-panel">
-            <div class="kpi-card highlight-green">
-                <div class="kpi-label">COMPUTATIONAL CYCLES</div>
-                <div class="kpi-value" id="val-cycles">0</div>
-                <div class="kpi-sparkline" id="spark-cycles"></div>
+            <div class="kpi-card highlight-cyan">
+                <div class="kpi-label">DEEP TIME CYCLES</div>
+                <div class="kpi-value neo-text" id="val-cycles">0</div>
             </div>
-            <div class="kpi-card highlight-orange">
+            <div class="kpi-card highlight-green">
                 <div class="kpi-label">ACTIVE POPULATION</div>
-                <div class="kpi-value" id="val-pop">0 <span class="dim">/ 4000</span></div>
+                <div class="kpi-value" id="val-pop">0 <span class="dim">/ 5000</span></div>
             </div>
             <div class="kpi-card highlight-red">
-                <div class="kpi-label">EXTINCTION EVENTS</div>
+                <div class="kpi-label">ECOLOGICAL OVERSHOOTS</div>
                 <div class="kpi-value" id="val-extinctions">0</div>
+            </div>
+            <div class="kpi-card highlight-purple">
+                <div class="kpi-label">ELITE LIFESPAN (MAX AGE)</div>
+                <div class="kpi-value" id="val-maxage">0 <span class="dim">ticks</span></div>
+            </div>
+            <div class="kpi-card highlight-cyan">
+                <div class="kpi-label">ELITE BRAIN IQ</div>
+                <div class="kpi-value" id="val-iq">0 <span class="dim">%</span></div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="extinctionChart"></canvas>
             </div>
         </aside>
 
         <!-- Footer / Legend -->
         <footer class="glass-panel footer-legend">
-            <div class="legend-item"><span class="swatch color-nop"></span> JUNK (NOP)</div>
-            <div class="legend-item"><span class="swatch color-code"></span> LOGIC (CODE)</div>
-            <div class="legend-item"><span class="swatch color-ip"></span> INSTRUCTION POINTER</div>
-            <div class="legend-item"><span class="swatch color-hot"></span> HOT ZONE (HIGH VISCOSITY/RAD)</div>
-            <div class="legend-item"><span class="swatch color-cold"></span> COLD ZONE</div>
+            <div class="legend-item"><span class="swatch color-atp"></span> FOOD / SUN ZONE</div>
+            <div class="legend-item"><span class="swatch color-org"></span> SNN ORGANISM</div>
         </footer>
+
+        <!-- Brain Analyzer Modal -->
+        <div id="brain-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel glow-panel">
+                <div class="modal-header">
+                    <h2>🧠 SNN ARCHITECTURE & SYNAPTIC WEIGHTS</h2>
+                    <button id="btn-close-modal" class="btn-neo btn-close">&times;</button>
+                </div>
+                <div class="modal-body" id="brain-data">
+                    <p>Fetching synaptic data from the Ark...</p>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="app.js"></script>

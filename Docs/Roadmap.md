@@ -195,3 +195,37 @@ This roadmap outlines the past, present, and future phases of the GENESIS Digita
 - [x] Entropic Decay: Cosmic radiation decays matter to vacuum (`0x00`) 80% of the time instead of purely random mutation.
 - [x] Computational Heat Death: Idle computation (NOPs) triggers IP thermal meltdown after 16 consecutive invalid opcodes.
 - [x] Run deep-time simulation: Verify that populations collapse unless they maintain actively processing code, yielding highly functional 31-byte organisms.
+
+## 🟢 Phase 32: Dashboard Overhaul [COMPLETED]
+- [x] Implement spatial visualization of thermodynamic zones directly on the HTML5 canvas.
+- [x] Fix `nop_heat` accumulator bug in `turing_engine.py` by persisting it across ticks in an extended architectural register.
+
+## 🟢 Phase 33: The Conservation of Energy & Spatial Viscosity [COMPLETED]
+**Goal:** Break the "Tierra Trap" where `OP_SPLIT_B` allows organisms to magically generate thermodynamic free energy by saturating the execution pool. Impose absolute physical constraints on space and energy.
+- [x] **Global Cycle Pool:** The universe no longer provides a fixed number of execution cycles *per organism*. Instead, a fixed pool of total energy (cycles) is distributed among all active IPs. Mass replication now results in mass starvation.
+- [x] **Spatial Viscosity:** Operations that access memory at a distance (`OP_READ`, `OP_WRITE`, `OP_CROSSOVER`, `OP_SPLIT`) now incur a massive execution penalty proportional to the physical distance (`dist >> 4` stall cycles). Teleportation is banned. Organisms must respect locality.
+- [x] **Implementation:** The `registers` array was expanded from `(max_ips, 5)` to `(max_ips, 6)` to include a `sleep_timer` for tracking spatial viscosity penalties. Outer execution loop mathematically distributes `cycles // num_ips`.
+
+## 🟢 Phase 33.2: Biological Mitosis & Vacuum Cohesion [COMPLETED]
+**Goal:** Address two massive physics flaws causing infinite extinction loops: the Vacuum Landmine and the Reincarnation Loophole.
+- [x] **The Vacuum Landmine:** Mapped `OP_HALT` to opcode `255` instead of `0x00`. `0x00` is now an invalid opcode (NOP). Organisms coast through vacuum, generating heat, and can survive up to 15 bytes of empty space, allowing true physical exploration.
+- [x] **Biological Mitosis:** Updated `OP_SPLIT_B` to spawn children that inherit the exact state of their parent's architectural registers (`A`, `B`, `C`, `D`). The `0d` Zombie Loophole (immortal zero-address spawners) is permanently closed.
+
+## 🟢 Phase 34: GENESIS v2 (Spiking Neural Networks & 2D Physics) [COMPLETED]
+**Goal:** Transition from the 1D Tierra-style memory soup to a true 2D embodied ecological simulation driven by biologically plausible Spiking Neural Networks (SNNs).
+- [x] **2D Grid Substrate:** Replaced the 1D ring buffer with a 64x64 toroidal map where organisms move spatially (N/S/E/W).
+- [x] **LIF Neurons & STDP Learning:** Implemented a 29-neuron network (7 Input, 16 Hidden, 6 Output) using Leaky Integrate-and-Fire physics and Spike-Timing Dependent Plasticity (Hebbian Learning).
+- [x] **Lamarckian Genetics:** Organisms inherit not just static DNA, but the dynamically learned synaptic weights of their parents (256-byte parameter genomes).
+- [x] **The Age-Based Ark:** Implemented an Elite Ark that preserves the genome of the longest-living (highest Age) organism across mass extinction events, guaranteeing strictly ascending evolution.
+- [x] **Dashboard Overhaul:** Completely rewrote the UI to render the 2D grid world, mapping energy/food (Green) and living SNN agents (Hot Pink).
+
+## 🟢 Phase 40: Breaking the Catatonia Trap (The Intelligent Ancestor) [COMPLETED]
+**Goal:** Guarantee baseline survival by seeding the universe with a functional organism (Rule 5).
+- [x] **The Intelligent Ancestor:** Fixed `create_intelligent_ancestor()` to ensure initial organisms possess perfectly functioning synapses for foraging, eating, and reproducing.
+- [x] **Physics Engine Fix:** Fixed `lif_step` so that synaptic weights correctly push neuron voltage above threshold.
+
+## 🟢 Phase 41: SNN Diagnostic Engine & Dashboard Fixes [COMPLETED]
+**Goal:** Track Elite capability across deep time.
+- [x] **Foraging IQ Evaluation:** Wrote an isolated sandbox test that evaluates Elite genomes against 5 deterministic foraging scenarios.
+- [x] **UI Stream:** Extracted `max_age` and `iq` into the `/api/state` HTTP endpoint.
+- [x] **Layout Repair:** Fixed CSS Grid layout issues and flexbox constraints to stabilize the dashboard UI layout.
