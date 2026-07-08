@@ -2,442 +2,370 @@ import numpy as np
 from numba import njit
 import random
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  جهان — World Geometry
-# ═══════════════════════════════════════════════════════════════════════════════
-WORLD_W  = 64
-WORLD_H  = 64
-WORLD_SZ = WORLD_W * WORLD_H   # 4096 سلول
+RAM_SIZE = 65536
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  توپولوژی شبکه — fixed در فاز ۱، در فاز ۲ با NEAT تکامل مییابد
-# ═══════════════════════════════════════════════════════════════════════════════
-N_INPUT  = 7    # نورونهای حسی
-N_HIDDEN = 16   # نورونهای پنهان (genome-encoded)
-N_OUTPUT = 6    # نورونهای حرکتی
-N_ALL    = N_INPUT + N_HIDDEN + N_OUTPUT  # 29 نورون کل
+N_INPUT  = 15
+N_OUTPUT = 14
+N_IO     = N_INPUT + N_OUTPUT
 
-# آفست لایهها
-H_OFF = N_INPUT                 # نورونهای پنهان از ۷ شروع میشوند
-O_OFF = N_INPUT + N_HIDDEN      # نورونهای خروجی از ۲۳ شروع میشوند
+OUT_JMP_FWD    = 0
+OUT_JMP_BCK    = 1
+OUT_JMP_FWD_10 = 2
+OUT_JMP_BCK_10 = 3
+OUT_CONSUME    = 4
+OUT_REPRODUCE  = 5
 
-# نورونهای خروجی — اکشنها
-OUT_N        = 0   # حرکت شمال
-OUT_S        = 1   # حرکت جنوب
-OUT_E        = 2   # حرکت شرق
-OUT_W        = 3   # حرکت غرب
-OUT_EAT      = 4   # خوردن غذا
-OUT_REPRODUCE= 5   # تولیدمثل
+GENE_MARKER  = 161
+NEURON_MARKER = 162
+RECEPTOR_MARKER = 195
+MAX_RECEPTORS_PER_ORG = 16
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  ژنوم — Genome Layout (256 بایت)
-# ═══════════════════════════════════════════════════════════════════════════════
-# [  0..111] : w_ih  — وزنهای ورودی→پنهان   (7×16 = 112 بایت)
-# [112..207] : w_ho  — وزنهای پنهان→خروجی  (16×6 = 96 بایت)
-# [208..223] : thresh — آستانه نورونهای پنهان (16 بایت)
-# [224..239] : tau   — ثابتزمانی نورونهای پنهان (16 بایت)
-# [240..255] : reserved
-GENOME_SZ    = 256
-G_WIH_START  = 0
-G_WIH_LEN    = N_INPUT * N_HIDDEN        # 112
-G_WHO_START  = G_WIH_START + G_WIH_LEN  # 112
-G_WHO_LEN    = N_HIDDEN * N_OUTPUT       # 96
-G_THR_START  = G_WHO_START + G_WHO_LEN  # 208
-G_TAU_START  = G_THR_START + N_HIDDEN   # 224
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  ثابتهای بیوفیزیکی — Biophysical Constants
-# ═══════════════════════════════════════════════════════════════════════════════
-V_REST       = np.float32(-65.0)   # پتانسیل استراحت (mV)
-V_RESET      = np.float32(-70.0)   # ریست بعد از اسپایک (mV)
-V_THRESH_IO  = np.float32(-50.0)   # آستانه ثابت برای لایه ورودی/خروجی (mV)
-DT           = np.float32(0.5)     # گام زمانی LIF (ms)
-TAU_DEFAULT  = np.float32(20.0)    # ثابتزمانی پیشفرض (ms)
-TAU_REF      = 4                   # دوره تناوب (تیک)
-
-# STDP — Spike-Timing Dependent Plasticity
-A_PLUS  = np.float32(0.04)    # دامنه LTP
-A_MINUS = np.float32(0.044)   # دامنه LTD
-TAU_P   = np.float32(20.0)    # پنجره LTP (ms)
-TAU_M   = np.float32(20.0)    # پنجره LTD (ms)
+V_THRESH_IO  = np.float32(-50.0)
+DT           = np.float32(0.5)
+TAU_REF      = 4
 W_MIN   = np.float32(-15.0)
 W_MAX   = np.float32(15.0)
 
-# ATP — انرژی
-ATP_SPIKE      = np.float32(2.5)   # هزینه هر اسپایک
-ATP_LEAK       = np.float32(0.04)  # نشت غیرفعال: هر نورون هر تیک
-ATP_MOVE       = np.float32(6.0)   # حرکت
-ATP_EAT_GAIN   = np.float32(3.0)   # سود خوردن: به ازای هر واحد غذا
-ATP_REPR_COST  = np.float32(120.0) # آستانه + هزینه تولیدمثل
-ATP_CHILD_INIT = np.float32(80.0)  # انرژی اولیه نوزاد
-ATP_INIT       = np.float32(250.0) # انرژی اولیه موجود تازه-seed
-ATP_MAX        = np.float32(500.0)
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  ثابتهای جهان
-# ═══════════════════════════════════════════════════════════════════════════════
-FOOD_DECAY        = np.float32(0.993)  # فساد غذا هر تیک
-FOOD_INFLUX       = np.float32(1800.0) # کل غذا اضافهشده هر world-tick
-SUN_FRAC          = 0.15              # ۱۵٪ جهان = منطقه خورشید
-SPIKE_RATE_MAX    = np.float32(0.55)   # ماکزیمم احتمال شلیک ورودی در هر تیک
+# THERMODYNAMICS = RAW EXECUTION CYCLES
+CYCLES_PER_SPIKE_CHECK = np.float32(1.0)
+CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
+CYCLES_PER_MOVE = np.float32(3.0) 
+CYCLES_PER_EAT_GAIN = np.float32(1024.0) 
+CYCLES_PER_BYTE_COPY = np.float32(1.0)
+ATP_MAX = np.float32(1000000.0)
 
 MAX_ORGANISMS = 600
 BIRTH_BUF_SZ  = 150
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  ژنوم ↔ پارامترهای شبکه
-# ═══════════════════════════════════════════════════════════════════════════════
-
-@njit(cache=True)
-def decode_genome(genome, w_ih, w_ho, thresh_h, tau_h):
-    for i in range(N_INPUT):
-        for h in range(N_HIDDEN):
-            w_ih[i, h] = (np.float32(genome[G_WIH_START + i * N_HIDDEN + h]) - 128.0) / 8.0
-
-    for h in range(N_HIDDEN):
-        for o in range(N_OUTPUT):
-            w_ho[h, o] = (np.float32(genome[G_WHO_START + h * N_OUTPUT + o]) - 128.0) / 8.0
-
-    for h in range(N_HIDDEN):
-        thresh_h[h] = np.float32(-58.0) + (np.float32(genome[G_THR_START + h]) / np.float32(255.0)) * np.float32(16.0)
-
-    for h in range(N_HIDDEN):
-        tau_h[h] = np.float32(10.0) + (np.float32(genome[G_TAU_START + h]) / np.float32(255.0)) * np.float32(30.0)
-
+# UNIVERSE PHYSICAL LIMITS
+UNIVERSE_MAX_NEURONS = 500000
+UNIVERSE_MAX_SYNAPSES = 2000000
+UNIVERSE_MAX_DNA = 5000000
+MAX_DNA_PER_ORG = 8192
 
 @njit(cache=True)
-def encode_weights_to_genome(genome, w_ih, w_ho, thresh_h, tau_h):
-    for i in range(N_INPUT):
-        for h in range(N_HIDDEN):
-            val = w_ih[i, h] * 8.0 + 128.0
-            if val < 0.0: val = 0.0
-            if val > 255.0: val = 255.0
-            genome[G_WIH_START + i * N_HIDDEN + h] = np.uint8(val)
-
-    for h in range(N_HIDDEN):
-        for o in range(N_OUTPUT):
-            val = w_ho[h, o] * 8.0 + 128.0
-            if val < 0.0: val = 0.0
-            if val > 255.0: val = 255.0
-            genome[G_WHO_START + h * N_OUTPUT + o] = np.uint8(val)
-
-    for h in range(N_HIDDEN):
-        val = int((thresh_h[h] - (-58.0)) / 16.0 * 255.0)
-        if val < 0:   val = 0
-        if val > 255: val = 255
-        genome[G_THR_START + h] = np.uint8(val)
-
-    for h in range(N_HIDDEN):
-        val = int((tau_h[h] - 10.0) / 30.0 * 255.0)
-        if val < 0:   val = 0
-        if val > 255: val = 255
-        genome[G_TAU_START + h] = np.uint8(val)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  هندسه جهان
-# ═══════════════════════════════════════════════════════════════════════════════
-
-@njit(cache=True)
-def cell(x, y):
-    return ((y + WORLD_H) % WORLD_H) * WORLD_W + ((x + WORLD_W) % WORLD_W)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  رمزگذاری حسی — Rate Coding
-# ═══════════════════════════════════════════════════════════════════════════════
-
-@njit(cache=True)
-def sense(pos, food_grid, org_grid, energy, out):
-    x = pos % WORLD_W
-    y = pos // WORLD_W
-
-    v = food_grid[pos] / np.float32(128.0)
-    out[0] = v if v < np.float32(1.0) else np.float32(1.0)
-
-    v = food_grid[cell(x, y - 1)] / np.float32(128.0)
-    out[1] = v if v < np.float32(1.0) else np.float32(1.0)
-
-    v = food_grid[cell(x, y + 1)] / np.float32(128.0)
-    out[2] = v if v < np.float32(1.0) else np.float32(1.0)
-
-    v = food_grid[cell(x + 1, y)] / np.float32(128.0)
-    out[3] = v if v < np.float32(1.0) else np.float32(1.0)
-
-    v = food_grid[cell(x - 1, y)] / np.float32(128.0)
-    out[4] = v if v < np.float32(1.0) else np.float32(1.0)
-
-    v = energy / ATP_MAX
-    out[5] = v if v < np.float32(1.0) else np.float32(1.0)
-
-    n = 0
-    if org_grid[cell(x, y - 1)] >= 0: n += 1
-    if org_grid[cell(x, y + 1)] >= 0: n += 1
-    if org_grid[cell(x + 1, y)] >= 0: n += 1
-    if org_grid[cell(x - 1, y)] >= 0: n += 1
-    out[6] = np.float32(n) / np.float32(4.0)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  دینامیک LIF — Leaky Integrate-and-Fire
-# ═══════════════════════════════════════════════════════════════════════════════
-
-@njit(cache=True)
-def lif_step(v, ref, t_last,
-             thresh_h, tau_h,
-             w_ih, w_ho,
-             sense_rates, t,
-             out_spikes, atp_out):
-    in_spk  = np.zeros(N_INPUT,  dtype=np.bool_)
-    hid_spk = np.zeros(N_HIDDEN, dtype=np.bool_)
-    I_h     = np.zeros(N_HIDDEN, dtype=np.float32)
-    I_o     = np.zeros(N_OUTPUT, dtype=np.float32)
-
-    for i in range(N_INPUT):
-        if ref[i] > 0:
-            ref[i] -= 1
+def malloc_block(count, g_map):
+    if count <= 0: return 0
+    consecutive = 0
+    start = -1
+    for i in range(len(g_map)):
+        if not g_map[i]:
+            if consecutive == 0:
+                start = i
+            consecutive += 1
+            if consecutive == count:
+                for j in range(start, start + count):
+                    g_map[j] = True
+                return start
         else:
-            if random.random() < sense_rates[i] * SPIKE_RATE_MAX:
-                in_spk[i]  = True
-                v[i]        = V_RESET
-                ref[i]      = TAU_REF
-                t_last[i]   = t
-
-    for i in range(N_INPUT):
-        if in_spk[i]:
-            for h in range(N_HIDDEN):
-                I_h[h] += w_ih[i, h]
-
-    for h in range(N_HIDDEN):
-        hi = H_OFF + h
-        if ref[hi] > 0:
-            ref[hi] -= 1
-            v[hi] = V_REST
-        else:
-            v[hi] += I_h[h]
-            dv = -(v[hi] - V_REST) * DT / tau_h[h]
-            v[hi] += dv
-            if v[hi] >= thresh_h[h]:
-                hid_spk[h]   = True
-                v[hi]        = V_RESET
-                ref[hi]      = TAU_REF
-                t_last[hi]   = t
-
-    for h in range(N_HIDDEN):
-        if hid_spk[h]:
-            for o in range(N_OUTPUT):
-                I_o[o] += w_ho[h, o]
-
-    for o in range(N_OUTPUT):
-        oi = O_OFF + o
-        out_spikes[o] = False
-        if ref[oi] > 0:
-            ref[oi] -= 1
-            v[oi] = V_REST
-        else:
-            v[oi] += I_o[o]
-            dv = -(v[oi] - V_REST) * DT / TAU_DEFAULT
-            v[oi] += dv
-            if v[oi] >= V_THRESH_IO:
-                out_spikes[o]  = True
-                v[oi]          = V_RESET
-                ref[oi]        = TAU_REF
-                t_last[oi]     = t
-
-    cost = ATP_LEAK * np.float32(N_ALL)
-
-    for i in range(N_INPUT):
-        if in_spk[i]:  cost += ATP_SPIKE
-    for h in range(N_HIDDEN):
-        if hid_spk[h]: cost += ATP_SPIKE
-    for o in range(N_OUTPUT):
-        if out_spikes[o]: cost += ATP_SPIKE
-
-    atp_out[0] = cost
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  STDP — قانون یادگیری هبی
-# ═══════════════════════════════════════════════════════════════════════════════
+            consecutive = 0
+    return -1
 
 @njit(cache=True)
-def apply_stdp(w_ih, w_ho, t_last, t):
-    for i in range(N_INPUT):
-        t_pre = t_last[i]
-        if t_pre < 0:
-            continue
-        for h in range(N_HIDDEN):
-            t_post = t_last[H_OFF + h]
-            if t_post < 0:
-                continue
-            dt = np.float32(t_post - t_pre) * DT
-            if dt > np.float32(0.1):
-                dw = A_PLUS * np.exp(-dt / TAU_P)
-            elif dt < np.float32(-0.1):
-                dw = -A_MINUS * np.exp(dt / TAU_M)
-            else:
-                continue
-            w = w_ih[i, h] + dw
-            if w < W_MIN: w = W_MIN
-            if w > W_MAX: w = W_MAX
-            w_ih[i, h] = w
+def free_block(start, count, g_map):
+    if start >= 0 and count > 0:
+        for i in range(start, start + count):
+            g_map[i] = False
 
-    for h in range(N_HIDDEN):
-        t_pre = t_last[H_OFF + h]
-        if t_pre < 0:
-            continue
-        for o in range(N_OUTPUT):
-            t_post = t_last[O_OFF + o]
-            if t_post < 0:
-                continue
-            dt = np.float32(t_post - t_pre) * DT
-            if dt > np.float32(0.1):
-                dw = A_PLUS * np.exp(-dt / TAU_P)
-            elif dt < np.float32(-0.1):
-                dw = -A_MINUS * np.exp(dt / TAU_M)
-            else:
-                continue
-            w = w_ho[h, o] + dw
-            if w < W_MIN: w = W_MIN
-            if w > W_MAX: w = W_MAX
-            w_ho[h, o] = w
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  حلقه اصلی — World Tick (Numba JIT)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-@njit(nogil=True, cache=True)
-def world_tick_numba(
-    food_grid, org_grid,
-    positions, alive, energy, age,
-    v_mem, ref, t_last,
-    thresh_h, tau_h, w_ih, w_ho, genomes,
-    t_lif, n_lif_steps,
-    b_pos, b_parent,
-    b_w_ih, b_w_ho, b_thresh, b_tau, b_genome
+@njit(cache=True)
+def parse_receptors(
+    g_ptr, g_count, global_genome, org_id,
+    o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m,
+    o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max
 ):
-    max_org = positions.shape[0]
+    for i in range(MAX_RECEPTORS_PER_ORG):
+        o_rec_a_plus[org_id, i] = 0.0
+        o_rec_a_minus[org_id, i] = 0.0
+        o_rec_tau_p[org_id, i] = 20.0
+        o_rec_tau_m[org_id, i] = 20.0
+        o_rec_v_rest[org_id, i] = -65.0
+        o_rec_v_reset[org_id, i] = -70.0
+        o_rec_tau_def[org_id, i] = 20.0
+        o_rec_spk_max[org_id, i] = 0.5
+        
+    i = 0
+    rec_found = 0
+    while i < g_count - 9:
+        marker = global_genome[g_ptr + i]
+        if marker == RECEPTOR_MARKER:
+            r_idx = global_genome[g_ptr + i + 1] % MAX_RECEPTORS_PER_ORG
+            o_rec_a_plus[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 2]) / 255.0 * 0.1
+            o_rec_a_minus[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 3]) / 255.0 * 0.1
+            o_rec_tau_p[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 4]) / 255.0 * 60.0 + 1.0
+            o_rec_tau_m[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 5]) / 255.0 * 60.0 + 1.0
+            o_rec_v_rest[org_id, r_idx] = (np.float32(global_genome[g_ptr + i + 6]) / 255.0 * 100.0) - 100.0
+            o_rec_v_reset[org_id, r_idx] = (np.float32(global_genome[g_ptr + i + 7]) / 255.0 * 100.0) - 100.0
+            o_rec_tau_def[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 8]) / 255.0 * 60.0 + 1.0
+            o_rec_spk_max[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 9]) / 255.0 * 1.0 + 0.1
+            rec_found += 1
+            i += 10
+        elif marker == GENE_MARKER: i += 4
+        elif marker == NEURON_MARKER: i += 5
+        else: i += 1
+    
+    return True
 
-    for i in range(WORLD_SZ):
-        food_grid[i] *= FOOD_DECAY
+@njit(cache=True)
+def count_genes(g_ptr, g_count, g_genome):
+    s_count = 0
+    h_count = 0
+    i = g_ptr + 8 # Skip physics header
+    end = g_ptr + g_count - 3
+    while i < end:
+        marker = g_genome[i]
+        if marker == GENE_MARKER and i + 3 < g_count:
+            s_count += 1
+            i += 4
+        elif marker == NEURON_MARKER and i + 4 < g_count:
+            h_count += 1
+            i += 5
+        elif marker == RECEPTOR_MARKER and i + 9 < g_count:
+            i += 10
+        else:
+            i += 1
+            
+    return s_count, h_count
 
-    sun_center = (t_lif // 200) % WORLD_SZ
-    sun_w      = int(WORLD_W * SUN_FRAC)
-    n_drops    = int(FOOD_INFLUX / 64.0)
-    if n_drops < 8: n_drops = 8
+@njit(cache=True)
+def decode_genome(
+    g_ptr, g_count, global_genome,
+    n_ptr, n_c, s_ptr,
+    global_conn_src, global_conn_dst, global_conn_weight,
+    global_thresh, global_tau, global_rec_id,
+    o_rec_v_rest, o_rec_tau_def, org_id
+):
+    s_idx = 0
+    h_idx = 0
+    
+    for i in range(N_IO):
+        global_rec_id[n_ptr + i] = 0
+        global_thresh[n_ptr + i] = o_rec_v_rest[org_id, 0] + 15.0
+        global_tau[n_ptr + i] = o_rec_tau_def[org_id, 0]
+        
+    i = 0
+    while i < g_count - 3:
+        marker = global_genome[g_ptr + i]
+        if marker == GENE_MARKER:
+            if i + 3 < g_count:
+                src = global_genome[g_ptr + i + 1]
+                dst = global_genome[g_ptr + i + 2]
+                w_raw = global_genome[g_ptr + i + 3]
+                
+                actual_src = src % n_c
+                actual_dst = dst % n_c
+                
+                if actual_dst >= N_INPUT:
+                    global_conn_src[s_ptr + s_idx] = actual_src
+                    global_conn_dst[s_ptr + s_idx] = actual_dst
+                    global_conn_weight[s_ptr + s_idx] = (np.float32(w_raw) - 128.0) / 8.0
+                    s_idx += 1
+            i += 4
+        elif marker == NEURON_MARKER and i + 4 < g_count:
+            if N_IO + h_idx < n_c:
+                rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
+                global_rec_id[n_ptr + N_IO + h_idx] = rec_id
+                t = np.float32(global_genome[g_ptr + i + 3]) / 255.0 * 20.0
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + 10.0 + t
+                global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) / 255.0 * 40.0 + 5.0
+                h_idx += 1
+            i += 5
+        elif marker == RECEPTOR_MARKER and i + 9 < g_count:
+            i += 10
+        else:
+            i += 1
+    return s_idx
 
-    for _ in range(n_drops):
-        offset = int(random.gauss(0.0, float(sun_w) / 3.0))
-        idx = (sun_center + offset) % WORLD_SZ
-        if idx < 0: idx += WORLD_SZ
-        food_grid[idx] += np.float32(64.0)
-        if food_grid[idx] > np.float32(255.0):
-            food_grid[idx] = np.float32(255.0)
+@njit(cache=True)
+def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, sense_buf):
+    sense_buf.fill(0.0)
+    sense_buf[0] = energy / ATP_MAX
+    sense_buf[1] = 0.5
+    sense_buf[2] = 0.5
+    
+    addr = pos % RAM_SIZE
+    v = ram_substrate[addr] / np.float32(255.0)
+    sense_buf[3] = v
+    
+    left_pos = (pos - 1) % RAM_SIZE
+    right_pos = (pos + 1) % RAM_SIZE
+    
+    voice_acc = 0
+    if org_grid[left_pos] != -1: voice_acc |= vocal_cords[org_grid[left_pos]]
+    if org_grid[right_pos] != -1: voice_acc |= vocal_cords[org_grid[right_pos]]
+    
+    sense_buf[4] = (voice_acc & 0x07) / 7.0
+    sense_buf[5] = ((voice_acc >> 3) & 0x07) / 7.0
+    sense_buf[6] = ((voice_acc >> 6) & 0x03) / 3.0
+    
+    for bit in range(8):
+        if oracle_val & (1 << bit):
+            sense_buf[7 + bit] = 1.0
 
-    n_births   = np.int32(0)
-    sense_buf  = np.zeros(N_INPUT,  dtype=np.float32)
-    out_spikes = np.zeros(N_OUTPUT, dtype=np.bool_)
-    atp_buf    = np.zeros(1,        dtype=np.float32)
-    out_accum  = np.zeros(N_OUTPUT, dtype=np.int32)
+@njit(cache=True)
+def apply_stdp(n_ptr, s_ptr, s_count, g_conn_src, g_conn_dst, g_conn_weight, g_t_last, t,
+               org, global_rec_id, o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m):
+    for c in range(s_count):
+        src = g_conn_src[s_ptr + c]
+        dst = g_conn_dst[s_ptr + c]
+        
+        t_pre = g_t_last[n_ptr + src]
+        t_post = g_t_last[n_ptr + dst]
+        
+        if t_pre < 0 or t_post < 0:
+            continue
+            
+        dt = np.float32(t_post - t_pre) * DT
+        weight = g_conn_weight[s_ptr + c]
+        r_idx = global_rec_id[n_ptr + dst]
+        if dt > 0:
+            weight += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx])
+        elif dt < 0:
+            weight -= o_rec_a_minus[org, r_idx] * np.exp(dt / o_rec_tau_m[org, r_idx])
+            
+        if weight > W_MAX: weight = W_MAX
+        elif weight < W_MIN: weight = W_MIN
+        g_conn_weight[s_ptr + c] = weight
+
+@njit(cache=True)
+def world_tick_numba(
+    ram_substrate, org_grid, positions, alive, energy, age,
+    global_v, global_ref, global_t_last, global_thresh, global_tau, global_rec_id,
+    global_conn_src, global_conn_dst, global_conn_weight,
+    neuron_map, synapse_map, genome_map,
+    org_n_ptr, org_n_count, org_s_ptr, org_s_count,
+    global_genome, org_g_ptr, org_g_count,
+    o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
+    viscosity, global_time, n_lif_steps,
+    b_pos, b_parent, b_g_start, b_g_count, b_genomes,
+    oracle_val, oracle_target, voice_buf, vocal_cords
+):
+    max_org = alive.shape[0]
+    sense_buf = np.zeros(N_INPUT, dtype=np.float32)
+    atp_buf = np.zeros(1, dtype=np.float32)
+    out_accum = np.zeros(N_OUTPUT, dtype=np.int32)
+    
+    n_births = np.int32(0)
 
     for org in range(max_org):
         if not alive[org]:
             continue
 
         pos = positions[org]
-        x   = pos % WORLD_W
-        y   = pos // WORLD_W
-
         for o in range(N_OUTPUT):
             out_accum[o] = 0
+            
         total_atp = np.float32(0.0)
+        n_count = org_n_count[org]
+        prev_spk = np.zeros(n_count, dtype=np.bool_)
 
         for step in range(n_lif_steps):
-            sense(pos, food_grid, org_grid, energy[org], sense_buf)
-            lif_step(
-                v_mem[org], ref[org], t_last[org],
-                thresh_h[org], tau_h[org],
-                w_ih[org], w_ho[org],
-                sense_buf, t_lif + step,
-                out_spikes, atp_buf
+            if random.random() < viscosity[org]:
+                total_atp += np.float32(n_count)
+                continue
+                
+            sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, sense_buf)
+            current_spk = np.zeros(n_count, dtype=np.bool_)
+            t_now = global_time + step
+            
+            n_ptr = org_n_ptr[org]
+            for n in range(n_count):
+                r_idx = global_rec_id[n_ptr + n]
+                spike_val = 1.0 * o_rec_spk_max[org, r_idx]
+                if spike_val > 1.0: spike_val = 1.0
+                
+                # Internal spike logic placeholder
+                if n < N_INPUT:
+                    if random.random() < sense_buf[n] * spike_val:
+                        current_spk[n] = True
+                
+            total_atp += 0.1
+            apply_stdp(
+                org_n_ptr[org], org_s_ptr[org], org_s_count[org], global_conn_src, global_conn_dst, global_conn_weight, global_t_last, t_now,
+                org, global_rec_id, o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m
             )
-            for o in range(N_OUTPUT):
-                if out_spikes[o]:
-                    out_accum[o] += 1
-            total_atp += atp_buf[0]
-            apply_stdp(w_ih[org], w_ho[org], t_last[org], t_lif + step)
-
-        energy[org] -= total_atp
+            prev_spk = current_spk
 
         best_a = -1
         best_n = 0
-        for o in range(N_OUTPUT):
+        for o in range(6): 
             if out_accum[o] > best_n:
                 best_n = out_accum[o]
                 best_a = o
+                
+        org_char_val = 0
+        for v_idx in range(8):
+            if out_accum[6 + v_idx] > 0:
+                org_char_val |= (1 << v_idx)
+        
+        if org == 0:
+            if org_char_val >= 32 and org_char_val <= 126:
+                for v_buf_idx in range(len(voice_buf)):
+                    if voice_buf[v_buf_idx] == 0:
+                        voice_buf[v_buf_idx] = org_char_val
+                        break
 
-        if best_a >= 0 and best_n > 0:
-            if best_a == OUT_N:
-                npos = cell(x, y - 1)
-                org_grid[pos] = -1
-                positions[org] = npos; org_grid[npos] = org
-                energy[org] -= ATP_MOVE
-                pos = npos; x = pos % WORLD_W; y = pos // WORLD_W
+        vocal_cords[org] = org_char_val
+        energy[org] -= total_atp
 
-            elif best_a == OUT_S:
-                npos = cell(x, y + 1)
-                org_grid[pos] = -1
-                positions[org] = npos; org_grid[npos] = org
-                energy[org] -= ATP_MOVE
-                pos = npos; x = pos % WORLD_W; y = pos // WORLD_W
-
-            elif best_a == OUT_E:
-                npos = cell(x + 1, y)
-                org_grid[pos] = -1
-                positions[org] = npos; org_grid[npos] = org
-                energy[org] -= ATP_MOVE
-                pos = npos; x = pos % WORLD_W; y = pos // WORLD_W
-
-            elif best_a == OUT_W:
-                npos = cell(x - 1, y)
-                org_grid[pos] = -1
-                positions[org] = npos; org_grid[npos] = org
-                energy[org] -= ATP_MOVE
-                pos = npos; x = pos % WORLD_W; y = pos // WORLD_W
-
-            elif best_a == OUT_EAT:
-                food = food_grid[pos]
-                if food > np.float32(1.0):
-                    bite = food if food < np.float32(24.0) else np.float32(24.0)
-                    food_grid[pos] -= bite
-                    gain = bite * ATP_EAT_GAIN
-                    energy[org] += gain
+        if best_n > 0 and best_a >= 0:
+            if best_a == OUT_JMP_FWD:
+                npos = (pos + 1) % RAM_SIZE
+                energy[org] -= CYCLES_PER_MOVE
+                if org_grid[npos] == -1:
+                    org_grid[pos] = -1
+                    positions[org] = npos; org_grid[npos] = org
+                    pos = npos
+            elif best_a == OUT_JMP_BCK:
+                npos = (pos - 1) % RAM_SIZE
+                if npos < 0: npos += RAM_SIZE
+                energy[org] -= CYCLES_PER_MOVE
+                if org_grid[npos] == -1:
+                    org_grid[pos] = -1
+                    positions[org] = npos; org_grid[npos] = org
+                    pos = npos
+            elif best_a == OUT_JMP_FWD_10:
+                npos = (pos + 10) % RAM_SIZE
+                energy[org] -= CYCLES_PER_MOVE
+                if org_grid[npos] == -1:
+                    org_grid[pos] = -1
+                    positions[org] = npos; org_grid[npos] = org
+                    pos = npos
+            elif best_a == OUT_JMP_BCK_10:
+                npos = (pos - 10) % RAM_SIZE
+                if npos < 0: npos += RAM_SIZE
+                energy[org] -= CYCLES_PER_MOVE
+                if org_grid[npos] == -1:
+                    org_grid[pos] = -1
+                    positions[org] = npos; org_grid[npos] = org
+                    pos = npos
+            elif best_a == OUT_CONSUME:
+                val = ram_substrate[pos]
+                if val == 0x55:
+                    energy[org] += CYCLES_PER_EAT_GAIN
+                    ram_substrate[pos] = 0x00
                     if energy[org] > ATP_MAX:
                         energy[org] = ATP_MAX
+                elif val == 0xFF:
+                    energy[org] -= 1000.0
+                    ram_substrate[pos] = 0x00
 
             elif best_a == OUT_REPRODUCE:
-                if energy[org] >= ATP_REPR_COST and n_births < b_pos.shape[0]:
-                    energy[org] -= ATP_REPR_COST
-                    encode_weights_to_genome(
-                        genomes[org],
-                        w_ih[org], w_ho[org],
-                        thresh_h[org], tau_h[org]
-                    )
+                g_count = org_g_count[org]
+                copy_cost = np.float32(g_count) * CYCLES_PER_BYTE_COPY
+                child_reserve = np.float32(25000.0)
+                
+                if energy[org] >= copy_cost + child_reserve and n_births < b_pos.shape[0]:
+                    energy[org] -= (copy_cost + child_reserve)
                     b_pos[n_births]    = pos
                     b_parent[n_births] = org
-                    for i2 in range(N_INPUT):
-                        for h2 in range(N_HIDDEN):
-                            b_w_ih[n_births, i2, h2] = w_ih[org, i2, h2]
-                    for h2 in range(N_HIDDEN):
-                        for o2 in range(N_OUTPUT):
-                            b_w_ho[n_births, h2, o2] = w_ho[org, h2, o2]
-                    for h2 in range(N_HIDDEN):
-                        b_thresh[n_births, h2] = thresh_h[org, h2]
-                        b_tau[n_births, h2]    = tau_h[org, h2]
-                    for g in range(GENOME_SZ):
-                        b_genome[n_births, g] = genomes[org, g]
+                    
+                    g_start = org_g_ptr[org]
+                    b_g_start[n_births] = g_start
+                    b_g_count[n_births] = g_count
+                    
+                    for x in range(g_count):
+                        b_genomes[n_births, x] = global_genome[g_start + x]
+                        
                     n_births += 1
 
         age[org] += n_lif_steps
@@ -445,6 +373,9 @@ def world_tick_numba(
         if energy[org] <= np.float32(0.0):
             alive[org] = False
             org_grid[positions[org]] = -1
+            free_block(org_n_ptr[org], org_n_count[org], neuron_map)
+            free_block(org_s_ptr[org], org_s_count[org], synapse_map)
+            free_block(org_g_ptr[org], org_g_count[org], genome_map)
 
     n_alive_new = np.int32(0)
     for i in range(max_org):

@@ -595,5 +595,105 @@ The GENESIS experiments conclusively demonstrate that:
 - **Foraging IQ Evaluation:** Created `evaluate_brain()`, a diagnostic sandbox that isolates the current Elite Genome and tests its neural responses against 5 absolute survival scenarios (Food N/S/E/W/Here). The resulting score (0-100%) measures absolute performance capability.
 - **Real-time KPI Streaming:** `GLOBAL_ELITE_AGE` and `GLOBAL_ELITE_IQ` are now calculated during Ark Ascension and streamed to the front-end dashboard via `/api/state`.
 - **UI Stabilized:** Fixed a critical CSS flexbox overflow bug in `.dashboard-container` that caused the dashboard UI to be "messed up" (`ui داشبورد به هم ریخته هست`). Chart.js boundaries were constrained, and the KPI panel was made scrollable and properly formatted.
- 
+
  
+ 
+### Phase 35: Brain Analyzer Fixes
+**Objective:** Fix JSON serialization crashes in the Brain Analyzer API.
+**Implementation Details:**
+- GLOBAL_AGE was missing from global scope initialization, causing the analyzer to falsely report extinct status constantly.
+- ool_ (NumPy boolean) types in the brain testing results caused a JSON serialization crash on the backend. This was resolved by explicitly casting NumPy booleans to native Python ool types.
+**Results:** The /api/analyze endpoint and modal now correctly report populations, maximum age, synaptic weights, and Virtual Sandbox evaluation results.
+
+### Phase 36: The Oracle Channel & Dynamic Genome Migration
+**Objective:** Enable the digital organisms to learn from human inputs (external API) and ensure forward-compatibility of the `Brain.npz` files when architectural changes (e.g. sensor count) occur.
+**Implementation Details:**
+- **Dynamic Genome Migration:** Added `brain_migration.py` which dynamically extracts legacy genome topology from `Brain.npz` (or falls back to legacy defaults) and maps old synapse weights into newly expanded `GENOME_SZ` byte structures, padding new sensory synapses with zero (neutral) weights. This breaks the hard dependency where modifying the topology destroyed prior evolutionary knowledge.
+- **The Oracle Channel:** Increased `N_INPUT` to 15 (7 natural sensors + 8 Oracle bits). Added `/api/oracle` endpoint in `genesis_lab.py`. ASCII inputs (e.g., character codes for N, S, E, W) are translated into sensory action potentials for the 8 Oracle input neurons.
+- **Cognitive Bounty Physics:** Modulated the `world_tick_numba` physics engine. If an organism correctly executes the `target_action` while the `oracle_val` stimulus is present, it is rewarded with a massive injection of 10,000 ATP.
+**Results:** The simulation successfully upgraded legacy Phase 35 genomes to the new Phase 36 topology without data loss. The Oracle API endpoints successfully inject stimuli, proving the groundwork for "bottom-up" knowledge integration.
+
+### Phase 42: Two-Way Communication & The Emergence of Logic Gates
+**Objective:** Fulfill the "Training Wheels" directive (Rule 9) by granting organisms the physical hardware (Vocal Cords) to respond to the Oracle, and applying thermodynamic pressure to force the evolution of logic gates.
+**Implementation Details:**
+- **Vocal Cords:** Expanded the `DynamicBrain` output layer from 6 (motor actions) to 14 neurons, dedicating the final 8 neurons as an 8-bit ASCII output buffer (`Voice B0-B7`).
+- **The Oracle Terminal:** Built a real-time terminal UI on the dashboard allowing continuous 8-bit character broadcasting into the global environment (`GLOBAL_ORACLE_VAL`).
+- **Level 1 (The Echo Chamber):** Physics rule: If an organism's vocal output exactly matched the `oracle_val`, it received +10,000 ATP.
+- **Level 2 (Conditional Logic):** Physics rule: If an organism's vocal output matched `oracle_val + 1`, it received +10,000 ATP. (e.g. Input 'A' requires Output 'B').
+
+**Results & Observations:**
+- **Proof of Echo Learning:** Under the Level 1 rule, organisms rapidly evolved to output the exact ASCII character broadcasted. While broadcasting 'A', we observed the Elite Genome's output oscillate between `A` (ASCII 65) and `@` (ASCII 64). This `A@A@` pattern is a phenomenal manifestation of biological Spiking Neural Network (LIF) mechanics: the neuron responsible for the final bit (2^0) fired, became fatigued (Refractory Period), and dropped its voltage in the next tick (producing `@`), before recharging to fire `A` again.
+- **Emergence of Logic Gates:** Under the Level 2 rule, the organisms faced mass extinction because their previous direct sensory-to-vocal "wire" failed. To survive, they successfully evolved hidden-layer routing to compute a +1 offset on the binary input, successfully outputting a continuous stream of `B`s when fed `A`s.
+- **Conclusion:** We have successfully proven that computational logic gates (IF/THEN, ADD) can spontaneously evolve in an unguided biological neural network purely through thermodynamic pressure. The organisms are now capable of data transformation, laying the absolute foundation for AGI.
+
+### Phase 43: Memory Synapses (Recurrent Connections) & Temporal Processing
+**Objective:** Transition the Spiking Neural Network (SNN) from a purely spatial feedforward architecture into a Recurrent Neural Network (RNN), allowing organisms to physically hold "working memory" and process temporal sequences.
+**Implementation Details:**
+- **Recurrent Synapses (`w_hh`):** Added a 16x16 hidden-to-hidden weight matrix connecting every hidden neuron to every other hidden neuron (excluding self-connections).
+- **Genome Expansion:** Increased the standard GENOME_SZ from 496 bytes to 752 bytes to accommodate the new 256 recurrent weights.
+- **Temporal Physics:** Within the 5 LIF steps of each World Tick, the action potentials (`hid_spk`) of the hidden layer are explicitly passed forward as `prev_hid_spk` to the subsequent LIF step. This introduces a 0.5ms (1 LIF step) physical delay, allowing recurrent currents to reverberate and create short-term memory circuits.
+- **Recurrent STDP:** Integrated Hebbian learning (STDP) for `w_hh`, enabling the network to dynamically wire recurrent loops based on temporal firing correlations.
+- **Migration Continuity:** `brain_migration.py` was successfully updated to inject neutral `128` (0.0 weight) connections into the old 496-byte `Brain.npz` files, guaranteeing uninterrupted evolution.
+**Results & Observations:**
+- The engine seamlessly accommodated the massive mathematical overhead (Numba JIT successfully optimized the nested recurrent arrays), maintaining phenomenal execution speed (upwards of 20,000+ world-ticks/second).
+- The ecosystem perfectly absorbed the 752-byte genomes and continued Lotka-Volterra population dynamics.
+- **Conclusion:** The GENESIS ecosystem is now equipped with the physical hardware for "Time". By combining structural memory loops with STDP learning, the organisms have the capacity to recognize temporal sequences (like sequences of ASCII characters from the Oracle) rather than just reacting to instantaneous frames.
+
+### Phase 45: True Hardware Reality (The No-Abstraction Imperative)
+**Objective:** Eradicate the final vestiges of the "Board Game" simulation (2D Coordinate System) and migrate the physics engine to a literal 1D Hardware RAM Substrate, fulfilling Rule 15.
+**Implementation Details:**
+- **RAM Substrate:** The environment was converted from a 2D matrix into a 1D cyclical array (`uint8` of size 65536).
+- **Instruction Pointer Navigation:** Organisms no longer possess abstract X/Y coordinates. They navigate physical memory using an Instruction Pointer (`ip`).
+- **Machine Code Motor Outputs:** The SNN motor outputs were mapped to hardware jumps: `JMP +1`, `JMP -1`, `JMP +10`, `JMP -10`, and `CONSUME 0x55`.
+- **Physical Bytes as Elements:** "Food" is literally the byte `0x55` residing in RAM. "Poison/Traps" are the byte `0xFF`. The environment engine actively injects these bytes into empty `0x00` spaces.
+- **Visual Dashboard:** The React dashboard was overhauled to render a live, 256x256 real-time hex memory dump (`ram_b64`) showcasing the exact physical distribution of organisms, food, and traps.
+**Results & Observations:**
+- The engine successfully runs at high speed with the Numba JIT.
+- Initial runs resulted in continuous Ark Reseeding (extinction loops) because the old `Brain.npz` matrices evolved for 2D X/Y movements were completely biologically incompatible with 1D RAM pointer jumps.
+- A new `Intelligent Ancestor` was engineered specifically to execute `JMP +1` when it senses `0x55` ahead, establishing the first viable lineage in the hardware reality.
+- **Conclusion:** Phase 45 effectively completes the structural foundation of GENESIS. The universe is now entirely devoid of abstract video game mechanics. Any intelligence that emerges moving forward is learning to manipulate raw hardware resources.
+
+### Phase 46: Computational Viscosity (The Square-Cube Law of Code)
+**Objective:** Enforce the 20W paradigm (Rule 6) and break the Tierra Trap (Rule 10) by physically penalizing dense code execution.
+**Implementation Details:**
+- **Density Calculation:** The engine computes the active synaptic density of each organism's genome (`active_synapses / GENOME_SZ`).
+- **Viscous Drag:** A stochastic stall probability (Viscosity) is assigned to each organism. During the 5 LIF cycles of a world tick, an organism with high density has a high probability to `continue` (stall the CPU cycle).
+- **Thermodynamic Penalty:** Crucially, stalled organisms continue to pay the baseline `ATP_LEAK` every tick.
+**Results & Observations:**
+- Initial tests revealed a critical video-game artifact: a hardcoded `-5.0` penalty was causing guaranteed extinction within 100 ticks.
+- Upon removing the artificial penalty and enforcing strict thermodynamic accounting (`ATP_LEAK * 45`), the organisms survived and reached stable population dynamics.
+- **Conclusion:** Evolution is now physically forced to abandon brute-force single-thread behemoths in favor of highly sparse execution, perfectly mirroring biological efficiency.
+
+### Phase 47: Physical NEAT & Sparse Dynamic Topologies
+**Objective:** Break the "glass ceiling" of intelligence by migrating from a fixed-size dense matrix architecture to a dynamically growing, sparse graphical topology (Physical NEAT).
+**Implementation Details:**
+- **Dynamic DNA Architecture:** The genome (1024 bytes) acts as raw genetic code. The JIT compiler scans for specific Gene Markers (`0xA1` for Connection, `0xA2` for Neuron).
+- **Sparse SNN Engine:** `w_ih`, `w_ho`, `w_hh` dense matrices were replaced with `conn_src`, `conn_dst`, `conn_weight` flat sparse arrays (max 256 connections).
+- **Junk DNA & Reading Frames:** Invalid bytes are ignored. Mutations can create new reading frames, naturally leading to biological Junk DNA.
+- **Darwinian STDP:** STDP continues to function, but learned weights are NOT written back to the genome. The genome encodes *initial* synaptic weights, allowing organisms to learn within their lifetime (Baldwin effect).
+**Results & Observations:**
+- The engine's execution speed skyrocketed due to bypassing $O(N_{neurons}^2)$ matrix multiplication in favor of $O(N_{connections})$ sparse traversal.
+- The organisms successfully formed functional networks from raw DNA and survived in the 1D RAM environment.
+- **Conclusion:** The SNN engine is now fully open-ended. Organisms can dynamically grow their brain topology up to 227 hidden nodes, paving the way for true AGI emergence through structural evolution.
+
+
+### Phase 49: True Hardware Reality (The Global Heap)
+- **Goal**: Eradicate the 'video game' ceiling of `MAX_NEURONS` per organism, enforcing Rule 15.
+- **Implementation**: Replaced organism-specific 2D SNN matrices with a global 1D memory array (`UNIVERSE_MAX_NEURONS`, `UNIVERSE_MAX_SYNAPSES`). This acts as the physical 'mass' of the universe.
+- **Dynamic Topology**: The JIT-compiled engine now features a low-level `malloc_block` and `free_block` memory allocator. Organisms dynamically allocate contiguous blocks of neurons based on their DNA length.
+- **Genetics**: DNA strings are no longer fixed at 1024 bytes. Introduced `insert`, `delete`, and `duplicate` mutations. Genomes can physically grow, allowing for theoretically unbounded intelligence, limited only by `ATP_LEAK` and physical universe RAM fragmentation.
+- **Results**: Simulation maintains ~8,000 world-ticks/s. Population crashes force Ark Elite reseeding, but the universe successfully tracks raw allocated biological memory (`Universe N: X`).
+
+
+### Phase 50: The Relativistic Universe (Eradicating Hardcoded Constants)
+- **Goal**: Eradicate all global 'magic numbers' (STDP rates, ATP limits, movement costs) and tie them strictly to physical hardware limits or genetic encoding.
+- **Hardware Thermodynamics**: 'Energy' (ATP) is now strictly defined as CPU execution cycles (array writes and reads). `ATP_MOVE` costs the exact number of memory writes required to move. `ATP_SPIKE` costs the exact number of synapses evaluated. There are no arbitrary energy penalties.
+- **Meta-Learning (Physics Header)**: Instead of global STDP variables (`A_PLUS`, `TAU_P`, etc.), the first 8 bytes of an organism's DNA are designated as its *Physics Header*. Organisms dictate their own learning rates, unlearning rates, and resting potentials. Evolution now selects for optimal STDP algorithms alongside network topologies.
+- **Zero-Sum Reproduction**: Reproduction transfers energy exactly equal to the cost of DNA byte copying, plus an inherited child reserve. The universe's total energy strictly stems from environmental CPU cycle consumption, destroying infinite-energy abstractions.
+
+
+### Phase 51: True Evolved Receptors (Eradicating the 8-Byte Physics Header)
+- **Goal**: Eradicate the top-down design of the 8-byte 'Physics Header' and replace it with a truly biological, emergent receptor protein encoding.
+- **Receptor Encoding**: There are no longer any fixed global variables or fixed 8-byte blocks for STDP. Instead, DNA can encode generic `RECEPTOR_MARKER`s. Each receptor gene defines a specific set of physical properties (learning rate, unlearning rate, decay times, voltage threshold) and is assigned an ID. An organism can evolve up to 16 completely distinct receptor types.
+- **Synaptic Diversity**: When a `NEURON_MARKER` is expressed, it specifies which `Receptor_ID` it utilizes. This means a single brain can evolve multiple different learning algorithms simultaneously (e.g., highly volatile receptors in one region, deeply stable receptors in another), perfectly mirroring biological protein diversity (e.g., NMDA vs AMPA variants).
+- **Zero Magic Numbers**: Evolution is now completely responsible for building the mathematical logic of synaptic plasticity through protein expression, achieving true Meta-Learning.

@@ -4,8 +4,8 @@ const ctx = canvas.getContext('2d', { alpha: false });
 // For pixelated look
 canvas.style.imageRendering = 'pixelated';
 
-let world_w = 64;
-let world_h = 64;
+let world_w = 256;
+let world_h = 256;
 let imgData = null;
 
 let chartInstance = null;
@@ -66,13 +66,13 @@ async function fetchState() {
         const response = await fetch('http://localhost:8081/api/state');
         const state = await response.json();
 
-        // Ensure canvas dimensions match world exactly for 1:1 pixel mapping
-        if (canvas.width !== state.world_w || canvas.height !== state.world_h) {
-            world_w = state.world_w;
-            world_h = state.world_h;
-            canvas.width = world_w;
-            canvas.height = world_h;
-            imgData = ctx.createImageData(world_w, world_h);
+        // Check if canvas matches 256x256
+        if (!imgData || canvas.width !== 256) {
+            world_w = 256;
+            world_h = 256;
+            canvas.width = 256;
+            canvas.height = 256;
+            imgData = ctx.createImageData(256, 256);
         }
 
         // Update KPIs
@@ -85,57 +85,58 @@ async function fetchState() {
         if (state.elite_iq !== undefined) {
             document.getElementById('val-iq').innerHTML = `${state.elite_iq} <span class="dim">%</span>`;
         }
+        if (state.avg_age !== undefined) {
+            document.getElementById('val-avgage').innerHTML = `${state.avg_age.toLocaleString()} <span class="dim">ticks</span>`;
+        }
 
         updateChart(state.ext_history);
 
-        if (state.food_b64 && imgData) {
-            // Decode Base64 string to raw binary string
-            const binaryString = atob(state.food_b64);
+        if (state.ram_b64 && imgData) {
+            const binaryString = atob(state.ram_b64);
             const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            // Map the byte array to a Float32Array
-            const foodGrid = new Float32Array(bytes.buffer);
-            
             const pixels = imgData.data;
-            const sz = world_w * world_h;
 
-            // Render Food Grid (Green)
-            for (let i = 0; i < sz; i++) {
-                const food = foodGrid[i]; // 0 to 255
-                const greenInt = Math.min(255, Math.floor(food));
+            for (let i = 0; i < len; i++) {
+                const val = binaryString.charCodeAt(i);
+                const pxIdx = i * 4;
                 
                 // Base background is dark cyan/gray
                 let r = 10;
                 let g = 20;
                 let b = 30;
-                
-                if (greenInt > 0) {
-                    r = 10;
-                    g = greenInt;
-                    b = 30;
+
+                if (val === 0x55) {
+                    // Energy: Green
+                    r = 0; g = 255; b = 157;
+                } else if (val === 0xFF) {
+                    // Trap: Red
+                    r = 255; g = 0; b = 85;
                 }
 
-                const pxIdx = i * 4;
                 pixels[pxIdx] = r;
                 pixels[pxIdx + 1] = g;
                 pixels[pxIdx + 2] = b;
                 pixels[pxIdx + 3] = 255;
             }
 
-            // Render Organisms (Hot Pink)
+            // Render Organisms (Blue normally, Yellow if Screaming)
             const orgs = state.orgs;
+            const screamingOrgs = new Set(state.screaming_orgs || []);
             for (let i = 0; i < orgs.length; i++) {
                 const pos = orgs[i];
-                if (pos >= 0 && pos < sz) {
+                if (pos >= 0 && pos < len) {
                     const pxIdx = pos * 4;
-                    pixels[pxIdx] = 255;     // R
-                    pixels[pxIdx + 1] = 0;   // G
-                    pixels[pxIdx + 2] = 85;  // B
-                    pixels[pxIdx + 3] = 255; // A
+                    if (screamingOrgs.has(pos)) {
+                        // Screaming: Bright Yellow
+                        pixels[pxIdx] = 255;
+                        pixels[pxIdx + 1] = 230;
+                        pixels[pxIdx + 2] = 0;
+                    } else {
+                        // Normal: SNN IP Pointer Blue
+                        pixels[pxIdx] = 0;
+                        pixels[pxIdx + 1] = 136;
+                        pixels[pxIdx + 2] = 255;
+                    }
                 }
             }
 
@@ -160,74 +161,203 @@ const brainData = document.getElementById('brain-data');
 
 btnAnalyze.addEventListener('click', async () => {
     modal.classList.remove('hidden');
-    brainData.innerHTML = "<p>Extracting Elite DNA from the Ark...</p>";
+    
+    const brainStats = document.getElementById('brain-stats');
+    const svgElement = d3.select('#brain-svg');
+    svgElement.selectAll('*').remove();
+    
+    brainStats.innerHTML = "<p>Extracting Elite DNA from the Ark...</p>";
     
     try {
-        const res = await fetch('/api/analyze');
+        const res = await fetch('/api/status');
         const data = await res.json();
         
-        if (data.status === 'extinct') {
-            brainData.innerHTML = "<p style='color: var(--color-red);'>Universe is currently completely extinct. Waiting for panspermia (reseeding)... Try again in a few seconds.</p>";
+        if (!data.elite) {
+            brainStats.innerHTML = "<p style='color: var(--color-red);'>No Elite DNA currently alive.</p>";
             return;
         }
         
+        const elite = data.elite;
+        
         let html = `
             <div style="margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap;">
-                <span class="badge glow-cyan" title="Population of this exact DNA">Pop: ${data.population}</span>
-                <span class="badge" title="Unique active DNA strings">Species: ${data.species}</span>
-                <span class="badge" title="Maximum age reached by this DNA" style="border-color: #00FF9D; color: #00FF9D;">Max Age: ${data.max_age}</span>
-                <span class="iq-badge" title="Foraging IQ Score">IQ: ${data.iq}%</span>
+                <span class="badge glow-cyan" title="Population of this exact DNA">ID: ${elite.id}</span>
+                <span class="badge" title="Maximum age reached by this DNA" style="border-color: #00FF9D; color: #00FF9D;">Age: ${elite.age}</span>
+                <span class="badge" title="Density" style="border-color: #B200FF; color: #B200FF;">Viscosity: ${elite.viscosity.toFixed(2)}</span>
             </div>
             <div style="font-family: monospace; font-size: 0.8rem; margin-bottom: 12px; color: #888;">
-                DNA Hash: ${data.hex}...
-            </div>
-            
-            <div class="iq-results">
-                <div style="color: #B200FF; font-weight: bold; margin-bottom: 8px;">VIRTUAL SANDBOX EVALUATION</div>
-                ${data.test_results.map(r => `
-                    <div class="iq-scenario">
-                        <span>[Scenario] ${r.scenario}</span>
-                        <span>
-                            <span style="color: #aaa; font-size: 0.8rem; margin-right: 10px;">&rarr; ${r.action}</span>
-                            <span class="${r.passed ? 'iq-pass' : 'iq-fail'}">${r.passed ? 'PASS' : 'FAIL'}</span>
-                        </span>
-                    </div>
-                `).join('')}
-            </div>
-
-            <div class="brain-grid">
-                <div class="synapse-list">
-                    <h3 style="color: #00E5FF; margin-bottom: 12px; font-size: 1rem;">Sensory &rarr; Hidden</h3>
-                    ${data.synapses.filter(s => s.source.includes('Food') || s.source.includes('Energy') || s.source.includes('Crowding'))
-                        .sort((a,b) => Math.abs(b.weight) - Math.abs(a.weight))
-                        .map(s => {
-                            const cls = s.weight > 0 ? 'excitatory' : 'inhibitory';
-                            const sign = s.weight > 0 ? '+' : '';
-                            return `<div class="synapse-item">
-                                <span>${s.source} &rarr; ${s.target}</span>
-                                <span class="synapse-weight ${cls}">${sign}${s.weight.toFixed(2)}</span>
-                            </div>`;
-                        }).join('') || '<div class="synapse-item">No strong synapses</div>'}
-                </div>
-                <div class="synapse-list">
-                    <h3 style="color: #FF4E00; margin-bottom: 12px; font-size: 1rem;">Hidden &rarr; Motor</h3>
-                    ${data.synapses.filter(s => !s.source.includes('Food') && !s.source.includes('Energy') && !s.source.includes('Crowding'))
-                        .sort((a,b) => Math.abs(b.weight) - Math.abs(a.weight))
-                        .map(s => {
-                            const cls = s.weight > 0 ? 'excitatory' : 'inhibitory';
-                            const sign = s.weight > 0 ? '+' : '';
-                            return `<div class="synapse-item">
-                                <span>${s.source} &rarr; ${s.target}</span>
-                                <span class="synapse-weight ${cls}">${sign}${s.weight.toFixed(2)}</span>
-                            </div>`;
-                        }).join('') || '<div class="synapse-item">No strong synapses</div>'}
-                </div>
+                DNA Hash: ${elite.genome_hex}...
             </div>
         `;
-        brainData.innerHTML = html;
+        brainStats.innerHTML = html;
+        
+        // Brain Visualization D3 Improvements
+        const width = document.getElementById('brain-svg').clientWidth;
+        const height = document.getElementById('brain-svg').clientHeight;
+        
+        const nodesMap = new Map();
+        
+        elite.synapses.forEach(s => {
+            if (!nodesMap.has(s.source)) nodesMap.set(s.source, {id: s.source, type: s.source.startsWith('H') ? 'hidden' : 'input'});
+            if (!nodesMap.has(s.target)) nodesMap.set(s.target, {id: s.target, type: s.target.startsWith('H') ? 'hidden' : 'output'});
+        });
+        
+        const nodes = Array.from(nodesMap.values());
+        const links = elite.synapses.map(s => ({
+            source: s.source,
+            target: s.target,
+            weight: s.weight
+        }));
+
+        const getFriendlyName = (id) => {
+            if (id.startsWith('In')) {
+                const n = parseInt(id.replace('In ', ''));
+                if (n < 4) return '👁 Vision ' + n;
+                if (n >= 4 && n < 8) return '🔊 Audio ' + (n-4);
+                if (n === 8) return '⚡ Energy';
+                if (n === 9) return '🔥 Pain';
+                return id;
+            }
+            if (id.startsWith('Out')) {
+                const n = parseInt(id.replace('Out ', ''));
+                if (n === 0) return '⬆ Fwd';
+                if (n === 1) return '⬇ Bck';
+                if (n === 2) return '⬅ Lft';
+                if (n === 3) return '➡ Rgt';
+                if (n === 4) return '🍽 Eat';
+                if (n === 5) return '🧬 Repo';
+                if (n === 6) return '🗣 Voice';
+                return id;
+            }
+            return id; // Hidden nodes stay H n
+        };
+        
+        // Define exact layered coordinates
+        const inputNodes = nodes.filter(n => n.type === 'input').sort((a,b) => parseInt(a.id.split(' ')[1] || 0) - parseInt(b.id.split(' ')[1] || 0));
+        const hiddenNodes = nodes.filter(n => n.type === 'hidden').sort((a,b) => parseInt(a.id.split(' ')[1] || 0) - parseInt(b.id.split(' ')[1] || 0));
+        const outputNodes = nodes.filter(n => n.type === 'output').sort((a,b) => parseInt(a.id.split(' ')[1] || 0) - parseInt(b.id.split(' ')[1] || 0));
+
+        inputNodes.forEach((n, i) => { n.fx = width * 0.15; n.fy = height * 0.1 + (i * ((height*0.8) / Math.max(1, inputNodes.length-1))); });
+        hiddenNodes.forEach((n, i) => { n.fx = width * 0.5; n.fy = height * 0.1 + (i * ((height*0.8) / Math.max(1, hiddenNodes.length-1))); });
+        outputNodes.forEach((n, i) => { n.fx = width * 0.85; n.fy = height * 0.1 + (i * ((height*0.8) / Math.max(1, outputNodes.length-1))); });
+
+        svgElement.append('defs').selectAll('marker')
+            .data(['end-excitatory', 'end-inhibitory'])
+            .enter().append('marker')
+            .attr('id', d => d)
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 22)
+            .attr('refY', 0)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', d => d === 'end-excitatory' ? '#00FF9D' : '#FF0055');
+            
+        // gradients
+        const defs = svgElement.select('defs');
+        const gradIn = defs.append('radialGradient').attr('id', 'grad-input');
+        gradIn.append('stop').attr('offset', '0%').attr('stop-color', '#00E5FF');
+        gradIn.append('stop').attr('offset', '100%').attr('stop-color', '#007A99');
+        
+        const gradOut = defs.append('radialGradient').attr('id', 'grad-output');
+        gradOut.append('stop').attr('offset', '0%').attr('stop-color', '#FF4E00');
+        gradOut.append('stop').attr('offset', '100%').attr('stop-color', '#992E00');
+
+        const gradHid = defs.append('radialGradient').attr('id', 'grad-hidden');
+        gradHid.append('stop').attr('offset', '0%').attr('stop-color', '#D055FF');
+        gradHid.append('stop').attr('offset', '100%').attr('stop-color', '#7A00B2');
+
+        const g = svgElement.append('g');
+        const zoom = d3.zoom().on('zoom', (event) => g.attr('transform', event.transform));
+        svgElement.call(zoom);
+
+        const simulation = d3.forceSimulation(nodes)
+            .force('link', d3.forceLink(links).id(d => d.id).distance(150))
+            .force('collide', d3.forceCollide().radius(20));
+
+        const link = g.append('g')
+            .selectAll('line')
+            .data(links)
+            .enter().append('line')
+            .attr('stroke', d => d.weight > 0 ? 'rgba(0,255,157,0.7)' : 'rgba(255,0,85,0.7)')
+            .attr('stroke-width', d => Math.max(1.5, Math.min(8, Math.abs(d.weight))))
+            .attr('marker-end', d => d.weight > 0 ? 'url(#end-excitatory)' : 'url(#end-inhibitory)')
+            .style('filter', 'drop-shadow(0 0 3px rgba(255,255,255,0.3))');
+
+        const node = g.append('g')
+            .selectAll('circle')
+            .data(nodes)
+            .enter().append('circle')
+            .attr('r', 12)
+            .attr('fill', d => {
+                if (d.type === 'input') return 'url(#grad-input)';
+                if (d.type === 'output') return 'url(#grad-output)';
+                return 'url(#grad-hidden)';
+            })
+            .attr('stroke', '#111')
+            .attr('stroke-width', 2)
+            .style('filter', 'drop-shadow(0 0 6px rgba(255,255,255,0.4))')
+            .call(d3.drag()
+                .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+                .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+                .on('end', (e, d) => { if (!e.active) simulation.alphaTarget(0); })
+            );
+
+        const labels = g.append('g')
+            .selectAll('text')
+            .data(nodes)
+            .enter().append('text')
+            .text(d => getFriendlyName(d.id))
+            .attr('font-size', '12px')
+            .attr('font-family', 'var(--font-heading)')
+            .attr('font-weight', 'bold')
+            .attr('letter-spacing', '1px')
+            .attr('fill', '#fff')
+            .attr('dx', d => d.type === 'input' ? -15 : 15)
+            .attr('dy', 4)
+            .attr('text-anchor', d => d.type === 'input' ? 'end' : 'start')
+            .style('text-shadow', '0 2px 4px rgba(0,0,0,0.8)');
+
+        simulation.on('tick', () => {
+            link
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+
+            node
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y);
+                
+            labels
+                .attr('x', d => d.x)
+                .attr('y', d => d.y);
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            if (d.type === 'hidden') {
+                d.fx = null;
+                d.fy = null;
+            }
+        }
         
     } catch (err) {
-        brainData.innerHTML = `<p style='color: var(--color-red);'>Failed to fetch brain data.</p>`;
+        console.error(err);
+        brainStats.innerHTML = `<p style='color: var(--color-red);'>Failed to fetch brain data: ${err.message}</p>`;
     }
 });
 
@@ -237,3 +367,70 @@ btnClose.addEventListener('click', () => {
 
 // Update every 100ms
 setInterval(fetchState, 100);
+
+// =========================================================================
+// Terminal Logic
+// =========================================================================
+const termIn = document.getElementById('term-in');
+const termOut = document.getElementById('term-out');
+
+function printTerm(text, type='out') {
+    const div = document.createElement('div');
+    div.className = `term-line ${type}`;
+    div.textContent = text;
+    termOut.appendChild(div);
+    termOut.scrollTop = termOut.scrollHeight;
+}
+
+let currentBroadcast = "";
+let broadcastIndex = 0;
+let broadcastInterval = null;
+
+termIn.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+        const text = termIn.value;
+        termIn.value = '';
+        
+        if (!text || text.toLowerCase() === 'stop') {
+            // Stop broadcast
+            currentBroadcast = "";
+            if (broadcastInterval) clearInterval(broadcastInterval);
+            printTerm(`> [SYS]: Broadcast stopped.`, 'sys');
+            try {
+                await fetch('/api/oracle', { method: 'POST', body: JSON.stringify({val: 0, target: -1}) });
+            } catch(err) {}
+            return;
+        }
+
+        printTerm(`> [USER]: ${text} (Broadcasting continuously...)`, 'in');
+        currentBroadcast = text;
+        broadcastIndex = 0;
+        
+        if (broadcastInterval) clearInterval(broadcastInterval);
+        
+        // Broadcast the string cyclically every 500ms
+        broadcastInterval = setInterval(() => {
+            if (currentBroadcast.length === 0) return;
+            const charCode = currentBroadcast.charCodeAt(broadcastIndex);
+            
+            fetch('/api/oracle', {
+                method: 'POST',
+                body: JSON.stringify({val: charCode, target: -1})
+            }).catch(err => {});
+            
+            broadcastIndex = (broadcastIndex + 1) % currentBroadcast.length;
+        }, 500); 
+    }
+});
+
+async function fetchTerminal() {
+    try {
+        const res = await fetch('/api/terminal');
+        const data = await res.json();
+        if (data.text) {
+            printTerm(`> [ARK ELITE]: ${data.text}`, 'out');
+        }
+    } catch (err) {}
+}
+
+setInterval(fetchTerminal, 500);

@@ -2,7 +2,7 @@
 trigger: always_on
 ---
 
-RULE 1: MANDATORY FIRST STEP: At the exact start of any new session or task, BEFORE writing any code or analyzing any logic, you MUST explicitly use the list_dir and view_file tools to read Docs/ARD.md, Docs/PRD.md, Docs/Roadmap.md, and Docs/Result.md. You are strictly forbidden from taking any other action until these files have been read. 
+RULE 1: MANDATORY FIRST STEP: At the exact start of any new session or task, BEFORE writing any code or analyzing any logic, you MUST explicitly use the list_dir and view_file tools to read Docs/ARD.md, Docs/PRD.md, Docs/Roadmap.md, Docs/Article_Draft.md, and Docs/Result.md. You are strictly forbidden from taking any other action until these files have been read. 
 MANDATORY LAST STEP: At the end of every task, especially if files were added/deleted or new phases completed, you MUST explicitly update the Docs/ files to perfectly reflect the current state of the codebase. Leaving obsolete information (like deleted scripts or old architectures) in the Docs is a critical failure.
 
 RULE 2: Actively search for and utilize agent skills to improve capabilities. However, critically evaluate each skill before and after use to ensure it genuinely enhances performance and does not cause degradation.
@@ -30,3 +30,14 @@ RULE 12: ACADEMIC PUBLICATION STANDARDS: Maintain the authoritative academic art
 RULE 13: COMPUTATIONAL VISCOSITY (SQUARE-CUBE LAW OF CODE): To enforce the 20W paradigm and break the Tierra Trap (where agents use bloat/Junk DNA as a physical shield), the physics engine MUST penalize dense code execution. Dense regions of memory execute slower than sparse regions due to computational viscosity (stalling probabilities proportional to local code density). This forces evolution to abandon brute-force single-thread behemoths in favor of highly distributed, parallel execution (e.g. using `OP_SPLIT`) where organisms distribute their cognitive load across multiple sparse threads, mirroring the massive parallelism of the human brain.
 
 RULE 14: THE ASCENSION PRINCIPLE (ELITISM & NO REGRESSION): Evolution within the universe must be strictly ascending. The system must never regress to a lower state of intelligence after an extinction event. To enforce this, the engine must implement an "Elite Preservation" (Ark) mechanism: the most advanced, longest-surviving genome of any era must be continuously backed up. Upon total population collapse, the universe MUST be reseeded using this Elite Genome as the baseline, guaranteeing that every new era is strictly more evolved than the last.
+
+RULE 15: THE NO-ABSTRACTION IMPERATIVE (TRUE HARDWARE REALITY): Never introduce "video game" mechanics (e.g., abstract 2D spatial grids, abstract numerical "food", or arbitrary "poison" flags). The universe is not a virtual board game; it is raw computational hardware. Every environmental feature MUST map directly to physical computer science realities:
+- "Space" is literal RAM (memory addresses).
+- "Energy" is literal CPU execution cycles.
+- "Food" is access to pristine memory blocks or free execution threads.
+- "Poison/Hazards" are literal hardware traps, corrupted memory pointers, or areas with extreme computational viscosity (drag).
+Intelligence must emerge from organisms mastering actual machine resources, not from solving simulated abstract puzzles.
+
+RULE 16: ALWAYS maintain a highly critical, strict, and rigorous perspective on the entire system architecture, code, and theoretical models. Do not blindly agree with current implementations. Actively identify flaws, biological/physical inaccuracies, performance bottlenecks, and design choices that hinder true open-ended evolution or true intelligence emergence. Challenge assumptions and point out where the simulation acts as a "scripted game" rather than a natural emergent system. Never let a physics inaccuracy slide.
+
+RULE 17: RELATIVITY & NO HARDCODED CONSTANTS: The physics engine must not contain arbitrary hardcoded biological or environmental constants (e.g., specific ATP consumption rates, fixed synaptic STDP learning rates like A_PLUS, or arbitrary 'Food' values). True reality has no magic numbers; everything must be derived dynamically from hardware realities (e.g., energy = exact CPU cycles burned, mass = exact bytes allocated) or must be parameters encoded within the organism's DNA itself so that evolution can optimize them.

@@ -1,7 +1,7 @@
 :root {
-    --bg-dark: #030508;
-    --glass-bg: rgba(10, 15, 25, 0.4);
-    --glass-border: rgba(0, 255, 157, 0.1);
+    --bg-dark: #020305;
+    --glass-bg: rgba(5, 10, 20, 0.5);
+    --glass-border: rgba(0, 255, 157, 0.2);
     
     --color-green: #00FF9D;
     --color-orange: #FF4E00;
@@ -12,6 +12,7 @@
     
     --font-heading: 'Orbitron', sans-serif;
     --font-body: 'Inter', sans-serif;
+    --shadow-glow: 0 0 20px rgba(0, 255, 157, 0.15);
 }
 
 /* ========================================================================= */
@@ -176,10 +177,11 @@ body {
     height: 100vh;
     display: grid;
     grid-template-columns: 380px 1fr;
-    grid-template-rows: 90px 1fr 70px;
+    grid-template-rows: 90px 1fr 200px 70px;
     grid-template-areas: 
         "header header"
         "kpi viz"
+        "kpi term"
         "footer footer";
     padding: 24px;
     gap: 24px;
@@ -426,3 +428,66 @@ canvas#ramCanvas {
 
 .color-atp { background: #00FF9D; box-shadow: 0 0 10px #00FF9D; }
 .color-org { background: #FF0055; box-shadow: 0 0 15px #FF0055; border-radius: 50%; }
+
+/* ========================================================================= */
+/* Terminal UI */
+/* ========================================================================= */
+.terminal-container {
+    grid-area: term;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+    font-family: 'Space Mono', monospace;
+    overflow: hidden;
+}
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: var(--color-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.terminal-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.term-line {
+    word-break: break-all;
+}
+.term-line.sys { color: var(--color-dim); }
+.term-line.out { color: var(--color-green); text-shadow: 0 0 5px rgba(0,255,157,0.5); }
+.term-line.in { color: var(--color-cyan); }
+
+.terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-cyan);
+}
+
+.terminal-input {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    outline: none;
+}
