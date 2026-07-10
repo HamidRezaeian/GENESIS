@@ -76,14 +76,63 @@ Each physical mechanism was verified to be live and correct (not dead code):
 
 ---
 
+## 🧪 Experiment 3 — Efficiency-Selection Alignment (Rule 6/7/11)
+**Objective:** Test whether the physics actually *select* for the ~20 W paradigm —
+low-hardware brains (few CPU cycles + small RAM footprint) — or merely *measure* it.
+
+**Method:** An adversarial multi-agent audit (5 independent efficiency lenses over the live
+source, then 3-vote adversarial verification of the load-bearing conclusions) followed by a
+controlled before/after A/B in `tests/smoke_test.py` (now mirroring `sim_loop`'s food
+respawn + Ark reseed so the harness matches the real economy).
+
+**Finding (verified):** Efficiency was only *weakly, second-order* selected. The single
+per-tick cost that scaled with brain size, idle metabolism, was charged at an arbitrary
+`0.1 × n_neurons` (a Rule 17 magic discount), ~10× too small to compete with food (`+1024`)
+and the `250,000` seed-energy buffer. The synapse/plasticity RAM footprint had **zero**
+per-tick holding cost, and `elite_iq` (age ÷ footprint) was pure dashboard telemetry, never
+fed into survival. Net: a bloated brain survived almost as well as a lean one.
+
+**Change (honest raw-cycle accounting — emergent, never a fitness function):**
+1. Neuron membrane update billed at its true **1 cycle/neuron** (was `0.1×`); constant
+   `CYCLES_PER_NEURON_UPDATE`.
+2. STDP weight update billed **1 cycle**, **activity-gated** (only when a synapse actually
+   potentiates/depresses) — closes the "plasticity is free" exploit while rewarding *sparse
+   firing*, not *few synapses* (Rule 11).
+3. `sense()` hoisted out of the LIF sub-step loop (its inputs are invariant within a tick) —
+   a pure, behaviour-identical engine speedup.
+
+**Results (A/B, identical harsh food = 0.02, seed 300, 2500 ticks):**
+
+| Metric | Old fudge `0.1` | Honest `1.0` |
+|---|---|---|
+| Equilibrium population | ~514–592 (near cap) | ~170–205 (margin-bound) |
+| Avg energy | 20k–32k (coasting) | 3k–5k (near the death margin) |
+| **Neurons the ecosystem sustains** | **~20,000** | **~6,500** |
+| Extinction→Ark cycles | 1 | 4 (all recovered) |
+| Wall-clock | 8.1 s | 2.7 s |
+
+**Analysis:** Under honest cost the *same* food supply sustains **~3× less neural tissue**
+and holds organisms at the energy margin, where a cheaper brain decisively out-survives a
+costlier one — Rule 7 selection is now first-order and emergent (energy only), with no
+top-down metric. At the realistic food rate (`0.1`) the population is stable with the
+designed boom-bust + Ark recovery (one buffer-burndown transient per ~500 ticks, always
+recovered). The honest engine is also ~3× faster (fewer neurons + hoisted `sense()`),
+serving the "runs on less hardware" goal directly. *Caveat:* this shows the selection
+*gradient* is now strong and correctly signed; it does not yet prove a leaner brain of
+*equal capability* wins (capability is still unmeasured — see below).
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
 - **Learning efficacy:** STDP + Lamarckian memory are implemented, but we have not yet
   measured that they *improve survival on a task* over a non-learning control.
 - **Communication/logic:** vocal cords, neighbour hearing and the Oracle channel exist, but
   no unsupervised language or logic-gate emergence has been measured on this engine.
-- **Efficiency selection (Rule 7):** an efficiency metric (age ÷ neural footprint) is now
-  surfaced to the dashboard, but selection *for* efficiency at equal capability is unproven.
+- **Efficiency selection (Rule 7):** the per-cycle physics now select *for* leaner brains
+  strongly and emergently (Experiment 3), but selection for efficiency *at equal capability*
+  is still unproven because capability itself is unmeasured. `elite_iq` remains
+  observation-only by design (wiring it into selection would violate Rule 5/9).
 - **Autotelic end-state (Rule 9):** food/oracle/curriculum are still human-supplied
   scaffolds; agent-generated survival problems are future work.
 

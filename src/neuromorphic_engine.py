@@ -32,6 +32,15 @@ CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
 CYCLES_PER_MOVE = np.float32(3.0)
 CYCLES_PER_EAT_GAIN = np.float32(1024.0)
 CYCLES_PER_BYTE_COPY = np.float32(1.0)
+# Honest raw-cycle accounting (Rule 15/17): one canonical executed operation costs 1 cycle,
+# the same unit already used for a synapse read (1) and a move (3). A neuron membrane update
+# is real work done for every neuron every step, so it costs 1 cycle/neuron — replacing the
+# old arbitrary 0.1 discount that made neuron footprint effectively non-selective. An STDP
+# weight update (read + exp + scale + clamp + write) is likewise real work, charged only when
+# it actually fires (activity-gated), so a large but sparsely-firing brain stays cheap — the
+# 20W massive-sparse-parallelism paradigm (Rule 11), not a penalty on merely HAVING synapses.
+CYCLES_PER_NEURON_UPDATE = np.float32(1.0)
+CYCLES_PER_STDP_UPDATE   = np.float32(1.0)
 ATP_MAX = np.float32(1000000.0)
 
 # STDP increment scaling: raw receptor bytes are 0-255 but the whole weight range is only
@@ -286,15 +295,20 @@ def world_tick_numba(
             local_viscosity = np.float32(0.5)
         viscosity[org] = local_viscosity
 
+        # Sensory input is invariant across this organism's LIF sub-steps: energy, pointer
+        # position, the oracle broadcast and neighbour voices only change between world-ticks,
+        # not within the step loop, and sense() is deterministic (no RNG). So compute it ONCE
+        # per tick instead of re-scanning neighbours every step — a pure engine speedup with
+        # identical dynamics, so the simulator itself needs less hardware for the same physics.
+        sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, sense_buf)
+        # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
+        # feel population density and evolve migration/dispersal away from the trap.
+        sense_buf[2] = crowding
+
         for step in range(n_lif_steps):
             if random.random() < viscosity[org]:
                 total_atp += np.float32(n_count)
                 continue
-                
-            sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, sense_buf)
-            # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms
-            # can feel population density and evolve migration/dispersal away from the trap.
-            sense_buf[2] = crowding
 
             # Zero current spike buffer
             for i in range(n_count):
@@ -363,7 +377,12 @@ def world_tick_numba(
                         w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx])
                         if w > W_MAX: w = W_MAX
                         global_conn_weight[s_ptr + c] = w
-                        
+                        # Plasticity is real compute (an exp() + weight write). Charge it when
+                        # it actually fires, so learning carries its own honest energy cost and
+                        # a brain thrashing a huge plastic fabric pays for it — activity-gated,
+                        # so sparse-firing large brains are not penalised (Rule 7/11/17).
+                        total_atp += CYCLES_PER_STDP_UPDATE
+
                 elif curr_spk_buf[src]:
                     t_post = global_t_last[n_ptr + dst]
                     if t_post >= 0 and t_post < t_now:
@@ -373,9 +392,14 @@ def world_tick_numba(
                         w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx])
                         if w < W_MIN: w = W_MIN
                         global_conn_weight[s_ptr + c] = w
+                        total_atp += CYCLES_PER_STDP_UPDATE
 
-            total_atp += 0.1 * n_count
-            
+            # Membrane update for every neuron this step is real executed work: charge the
+            # honest 1 cycle/neuron (was an arbitrary 0.1 discount that made brain size cost
+            # ~10x too little to matter). This is the emergent thermodynamic pressure that
+            # makes a cheaper brain reproductively fitter (Rule 7) — not a top-down fitness term.
+            total_atp += CYCLES_PER_NEURON_UPDATE * n_count
+
             # Pointer swap buffers
             temp = prev_spk_buf
             prev_spk_buf = curr_spk_buf

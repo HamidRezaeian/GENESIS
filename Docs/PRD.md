@@ -20,8 +20,12 @@ themselves (via STDP) into efficient survival circuits or starve.
 
 ## 3. Target Capabilities
 1. **Self-organisation [implemented]** — genome-seeded synapses adapt in-lifetime via STDP.
-2. **Computational efficiency [scaffold]** — computational viscosity penalises dense
-   genomes; a true CPU-cycle/RAM efficiency metric per lineage is still a goal.
+2. **Computational efficiency [implemented]** — every neural operation is billed its honest
+   CPU-cycle cost (neuron update, activity-gated STDP update, synapse transmission), so a
+   leaner brain retains more energy and out-reproduces a costlier one; computational
+   viscosity additionally penalises dense genomes. Efficiency is *selected emergently* by
+   thermodynamics (Result.md Exp 3), not by a metric. **Equal-capability** efficiency (§4)
+   remains a goal, since capability is not yet quantified.
 3. **Darwinian evolution [implemented]** — heredity of DNA-encoded topology + receptor
    chemistry, mutation (point/indel/duplication), selection by starvation.
 4. **Evolvable neuro-physics [implemented]** — receptor "proteins" let each organism evolve

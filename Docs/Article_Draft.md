@@ -12,13 +12,17 @@ decoded into a sparse Leaky-Integrate-and-Fire network with Spike-Timing-Depende
 Plasticity (STDP), whose learning constants — including per-receptor resting potentials —
 are themselves DNA-encoded and therefore subject to meta-evolution. We describe the engine's
 architecture and physics, and characterise its behaviour: on a single CPU (Numba JIT) it
-sustains ~773 world-ticks/s while holding a population in bounded, boom-and-bust dynamics
-(mean ≈ 208 organisms, no extinction over 500 ticks). We further introduce two mechanisms
-aimed at the project's Prime Directive — a ~20 W, brain-like efficiency target: (i)
-**Lamarckian consolidation**, blending each organism's STDP-learned weights into its
-offspring's genome so plasticity is partially heritable, and (ii) a **fossil pool with
-horizontal gene transfer**, which recovers extinct universes by recombining preserved elite
-genomes rather than cloning one. We are explicit that emergent cognition — unsupervised
+sustains a high world-tick rate while holding a population in bounded, boom-and-bust dynamics.
+Toward the project's Prime Directive — a ~20 W, brain-like efficiency target — we make
+efficiency a *selected* rather than merely *measured* property: by charging every neural
+operation its honest CPU-cycle cost (removing a legacy discount that made brain size ~10× too
+cheap to matter), a leaner brain retains more energy and out-reproduces a costlier one, with
+no top-down fitness function. A controlled A/B shows this makes the same food supply sustain
+~3× less neural tissue and pushes organisms to the metabolic margin where efficiency decides
+survival. We further introduce two heredity mechanisms: **Lamarckian consolidation**, blending
+each organism's STDP-learned weights into its offspring's genome so plasticity is partially
+heritable, and a **fossil pool with horizontal gene transfer**, which recovers extinct
+universes by recombining preserved elite genomes rather than cloning one. We are explicit that emergent cognition — unsupervised
 language, logic, and long-horizon reasoning — remains a **goal, not a demonstrated result**;
 this paper reports the substrate and its verified mechanisms, and frames the open problems.
 
@@ -78,10 +82,20 @@ choices enforce biological and evolutionary fidelity:
   that a raw additive rule produces against a 256-wide weight range.
 
 ### 2.4 Thermodynamics
-Energy is CPU cycles, drawn per action from a reserve capped at `ATP_MAX = 10⁶`: synapse
-read 1, movement 3, per-step idle metabolism `0.1 × n_neurons`, and a viscosity stall costs
-`n_neurons`. Reproduction costs `genome_length` cycles to copy the genome, then splits the
-remaining energy in half with the child; an organism dies at energy ≤ 0.
+Energy is CPU cycles, drawn per action from a reserve capped at `ATP_MAX = 10⁶`, and every
+cost is an **honest raw-cycle count** — one executed operation debits one cycle, with no
+arbitrary discounts: synapse transmission 1, **neuron membrane update 1 × n_neurons per
+step**, **STDP weight update 1** (activity-gated — charged only when a synapse actually
+potentiates or depresses), movement 3, and a viscosity stall costs `n_neurons`. Reproduction
+costs `genome_length` cycles to copy the genome, then splits the remaining energy in half
+with the child; an organism dies at energy ≤ 0.
+- **Emergent efficiency selection (Rule 7).** Because neural work is billed at its true rate,
+  a leaner brain retains more energy and out-reproduces a costlier one — efficiency is
+  selected *thermodynamically*, never by a fitness metric. A prior revision discounted the
+  neuron update to `0.1×`, which (we show in §3.3) made brain size ~10× too cheap to be
+  selected. The activity-gated form is deliberate: it prices *spiking and plasticity*, not
+  the mere *possession* of synapses, so the substrate rewards the 20 W regime of many
+  synapses firing sparsely rather than degenerate minimal brains.
 - **Conservation of compute.** The per-tick LIF-step budget is global: `steps = 3000 /
   population`. Mass replication dilutes everyone's compute, coupling population to a fixed
   energy budget (bounded, boom-bust dynamics).
@@ -122,6 +136,22 @@ graded STDP, synaptic-density viscosity, live-genome radiation, Lamarckian conso
 fossil-pool crossover reseed (fossils accumulate; crossover preserves the protected header;
 reseed repopulates) were each verified to be live and correct. See `Result.md` for the
 per-mechanism verification.
+
+### 3.3 Efficiency Selection is Emergent, Not Cosmetic
+To test whether the physics *select* for the ~20 W paradigm rather than merely *measure* it,
+we ran a controlled A/B (Numba 0.66.0 / NumPy 2.4.6) at identical, deliberately food-scarce
+settings (respawn rate 0.02, seed 300, 2500 world-ticks), varying only the neuron-update
+cost. Under the prior `0.1×` discount the ecosystem coasted on its seed-energy buffer,
+sustaining ~20,000 neurons at a near-cap population (~514–592) with abundant energy
+(20k–32k). Under honest `1.0×` cost the *same* food supply sustained **~3× less neural
+tissue (~6,500 neurons)** and held organisms at the death margin (~3k–5k energy, population
+~170–205), with four extinction→Ark-recovery cycles. Thus a leaner brain confers a decisive,
+purely thermodynamic reproductive advantage — Rule 7 efficiency is now a first-order
+selective force emerging from energy accounting alone, with no top-down fitness term. The
+honest engine also ran ~3× faster (fewer neurons plus once-per-tick sensory evaluation),
+i.e. the substrate itself became cheaper to simulate. We stress a limit: this establishes a
+strong, correctly-signed selection *gradient* on footprint; it does not yet establish
+efficiency *at equal capability*, since capability remains unquantified.
 
 ---
 

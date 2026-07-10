@@ -56,8 +56,14 @@ motor neurons (`N_IO = 29`) plus a variable number of hidden neurons.
 - **STDP (Hebbian)**: on a post-synaptic spike, pre-before-post potentiates
   (`w += A_PLUS·e^(−Δt/TAU_P)`); pre-after-post depresses
   (`w −= A_MINUS·e^(−Δt/TAU_M)`). Weights clamp to `[W_MIN, W_MAX] = [−128, 127]`.
-- Learned weights are **not** written back to the genome (Baldwin-effect lifetime
-  learning); offspring inherit the *initial* DNA-encoded weights only.
+- Lifetime STDP changes are held in the runtime weight array (Baldwin-style in-lifetime
+  learning). At **reproduction** they are **partially written back**: each synapse's weight
+  byte is blended 50/50 with the weight the parent learned via STDP this lifetime
+  (**Lamarckian consolidation**, `neuromorphic_engine.py` birth block ~L498–521), so
+  acquired plasticity is partially heritable rather than reset to the initial DNA value each
+  generation. See §2.6 (Reproduction) and `Result.md` Exp 2. *(An earlier revision of this doc
+  claimed learned weights were never written back — that is stale; the 50/50 blend adds a
+  Lamarckian channel on top of Baldwin lifetime learning.)*
 
 ### 1.6 Sensors (15) and Motors (14)
 - **Inputs:** `0` energy reserve, `1` constant bias, `2` local crowding (density),
@@ -76,12 +82,25 @@ motor neurons (`N_IO = 29`) plus a variable number of hidden neurons.
 ## 2. Core Mechanisms
 ### 2.1 Thermodynamics = CPU Cycles
 Energy is execution cycles, drained per action from each organism's reserve
-(`ATP_MAX = 1,000,000` ceiling):
-- synapse read `1`, movement `3`, per-step idle metabolism `0.1 × n_neurons`, a viscosity
-  stall costs `n_neurons` cycles.
+(`ATP_MAX = 1,000,000` ceiling). Costs are **honest raw-cycle counts** — one executed
+operation debits one cycle (Rule 15/17), with no arbitrary discounts:
+- synapse transmission `1` (when the pre-synaptic neuron fired), **neuron membrane update
+  `1 × n_neurons` per step** (`CYCLES_PER_NEURON_UPDATE`), **STDP weight update `1`**
+  (`CYCLES_PER_STDP_UPDATE`, charged only when a synapse actually potentiates or depresses —
+  activity-gated), movement `3`, and a viscosity stall costs `n_neurons` cycles.
 - **Consume** a `0x55` food byte → `+CYCLES_PER_EAT_GAIN = 1024`.
 - **Reproduce**: pay `genome_length × CYCLES_PER_BYTE_COPY` to copy the genome, then split
   the remaining energy in half with the child. An organism dies when energy `≤ 0`.
+
+Because neuron and synapse work is now billed at its true rate — the neuron update was
+formerly discounted to `0.1×`, making brain size ~10× too cheap to matter — a leaner brain
+retains more energy and out-reproduces a costlier one. **Rule 7 efficiency is therefore
+selected _emergently by thermodynamics_, never by a fitness metric** (the dashboard
+`elite_iq = age / footprint` is observation-only and must never feed back into selection;
+Rule 5/9). Synapse/plasticity costs are deliberately **activity-gated** rather than a flat
+size tax, so the substrate rewards *many synapses firing sparsely* (the 20 W paradigm,
+Rule 11), not merely *few* synapses. Sensory input is computed once per world-tick (it is
+invariant across a tick's LIF sub-steps), keeping the simulator itself lean.
 
 ### 2.2 Computational Viscosity (Rule 13)
 Each tick, local code density in a ±16-byte window sets a stall probability (up to 0.5).
@@ -93,10 +112,12 @@ The per-tick LIF step budget is a global pool: `steps = GLOBAL_CYCLE_POOL(3000) 
 Mass replication dilutes everyone's compute, coupling population to a fixed energy budget.
 
 ### 2.4 Cosmic Radiation (Entropy)
-Two random bit-flips per tick are applied to the global genome arena, providing thermal
-mutation pressure. *(Known limitation: because phenotypes are decoded once at spawn and
-most of the 5 MB arena is unallocated, this currently behaves as inheritance noise rather
-than real-time entropy — see the roadmap.)*
+Each tick, two random bit-flips are applied **inside the genomes of living organisms**
+(germline mutation), not into the mostly-empty 5 MB arena where ~99% of flips previously
+landed in vacuum. This is heritable thermal entropy that error-correction must out-run.
+*(Known limitation: a phenotype is decoded once at spawn, so a flip alters the organism's
+OFFSPRING, not its already-running brain; true in-lifetime somatic entropy remains future
+work — see the roadmap.)*
 
 ### 2.5 The Elite Ark (Rule 14)
 `sim_loop` continuously tracks the highest-age living genome. On **total extinction** the
@@ -107,6 +128,15 @@ strictly ascending evolution; the Elite genome is also checkpointed to `Brain/Br
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1
 (the base receptor marker) are protected so a lineage can never lose all STDP in one flip.
+
+**Lamarckian consolidation (generational memory).** Before mutation, the birth path
+(`neuromorphic_engine.py` ~L498–521) re-walks the child's copied genome exactly as
+`decode_genome` does and, for every hidden/output synapse, overwrites the weight byte with a
+50/50 blend of (a) the parent's initial DNA-encoded weight and (b) the weight the parent
+**learned via STDP** this lifetime (`global_conn_weight`, re-encoded `+128`). Acquired
+plasticity is therefore partially heritable — a Lamarckian channel layered on top of the
+Baldwin-style lifetime learning of §1.5. The 50/50 constants are currently hardcoded inline
+(a Rule 17 target for DNA-encoding).
 
 ### 2.7 The Oracle Uplink & Curriculum
 The user can broadcast an 8-bit character (sensed on inputs 7–14) and read back the Elite's

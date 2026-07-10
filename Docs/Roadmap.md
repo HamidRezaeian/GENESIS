@@ -41,34 +41,48 @@ then superseded; the source files for the first three no longer exist in the rep
 - ✅ Elite Ark reseed on extinction (Rule 14) + `Brain.npz` checkpoint.
 - ✅ WebSocket dashboard (:8085): RAM canvas, Brain Analyzer, Oracle terminal, curriculum.
 - ✅ Crowding sensor + protected receptor header + live "screaming" telemetry (2026-07-10).
+- ✅ Living-genome cosmic radiation, graded STDP, synaptic-density viscosity, Lamarckian
+     weight consolidation, fossil-pool crossover (HGT) reseed (2026-07-10).
+- ✅ **Honest raw-cycle metabolism** — neuron update = 1 cycle, activity-gated STDP-update
+     cost; removes the arbitrary `0.1` idle discount so Rule 7 efficiency is selected
+     *emergently* (Result.md Exp 3); `sense()` hoisted out of the sub-step loop → ~3× faster
+     simulator (2026-07-10).
 
 ## Part C — Forward Roadmap (from the 2026-07-10 critical review)
 
-### 🔴 P1 — Physics correctness
-- [ ] **Fix cosmic radiation** so it targets *allocated* genomes (currently ~99% of
-      bit-flips land in unused arena; phenotype is decoded once at spawn) — make entropy a
-      real-time pressure, not just inheritance noise.
-- [ ] **Graded STDP:** scale `A_PLUS/A_MINUS` (raw 0–255) into the actual weight range so a
-      single spike can't slam a weight to the ±127 rail (fixes bimodal saturation).
+### 🔴 P1 — Physics correctness — ✅ DONE (2026-07-10)
+- ✅ Cosmic radiation targets *living* genomes (germline), not the empty arena.
+- ✅ Graded STDP: receptor amplitudes scaled by `STDP_SCALE` so a spike can't slam the rail.
+- ✅ Honest per-cycle metabolism (neuron update 1 cyc + activity-gated STDP cost) replacing
+     the `0.1` idle discount — the core Rule 7 efficiency-selection fix (A/B in Result.md Exp 3).
 
 ### 🟠 P2 — Toward the Prime Directive (Rule 6)
-- [ ] **Long-term memory that survives reproduction** — e.g. heritable consolidation of
-      learned weights, or an explicit recurrent/working-memory pathway (no `w_hh` matrix
-      exists today despite older docs).
-- [ ] **Per-lineage efficiency metric** (Rule 7): CPU cycles + RAM footprint at equal
-      capability, surfaced as the dashboard "IQ/efficiency" tile (currently unimplemented).
+- ✅ Long-term memory across reproduction: Lamarckian 50/50 blend of learned STDP weights
+     into offspring DNA at birth.
+- ✅ Efficiency is now *selected* emergently by honest cycle costs; `elite_iq = age/footprint`
+     is surfaced to the dashboard **observation-only** (wiring it into selection is forbidden
+     by Rule 5/9).
+- [ ] **Capability-normalised efficiency:** show that at *equal capability* the lower CPU/RAM
+      lineage wins — requires first defining a capability/task measure.
+- [ ] Explicit recurrent/working-memory pathway beyond STDP + Lamarckian consolidation.
 
 ### 🟡 P3 — Toward the Autotelic Imperative (Rules 9/10)
+- ✅ Dead-DNA fossil pool + crossover (HGT) reseed, so recovery is more bottom-up than
+     cloning a single Ark genome.
+- ✅ Viscosity keys on synaptic density (s/n), not spatial crowding — real Rule 11/13
+     sparsity pressure.
 - [ ] Reduce reliance on human-injected food/oracle/curriculum; let survival problems arise
       from agent–agent competition (predation, trade, defence).
-- [ ] Re-examine the Elite-Ark reseed vs Rule 5 (top-down resurrection) — add dead-DNA
-      fossils / horizontal gene transfer so recovery is bottom-up.
-- [ ] Make viscosity reward genuine **parallelism/code-sparsity**, not just spatial
-      crowding, so Rule 11/13 pressure is real rather than cosmetic.
+- [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
+      offspring (a phenotype is still decoded once at spawn).
 
 ### 🟢 P4 — Rule 17 constant sweep & hygiene
-- [ ] Move remaining arbitrary constants (`CYCLES_PER_EAT_GAIN`, `ATP_MAX`, threshold
-      offset `+128`, idle metabolism, `GLOBAL_CYCLE_POOL`, `initial_energy`) to
-      hardware-derived values or DNA where defensible.
-- [ ] Replace the stale `tests/` scripts (they import the deleted graph engine) with tests
-      that drive the real SNN engine (see `tests/smoke_test.py`).
+- ✅ Removed the arbitrary `0.1` idle-metabolism discount (now honest 1 cycle/neuron).
+- [ ] The energy economy is still oversized / footprint-blind: `initial_energy = 250000`,
+      `CYCLES_PER_EAT_GAIN = 1024`, `ATP_MAX = 1e6`, `GLOBAL_CYCLE_POOL = 3000`, threshold
+      offset `+128`, `SYN_DENSITY_SCALE`/`STDP_SCALE = 8`. Bring these closer to real
+      footprint scale (or DNA-encode) so efficiency bites without the deep-time buffer delay.
+- [ ] **Absolute-footprint** pressure: let contention/viscosity also rise with
+      `(n+s)/UNIVERSE_MAX`, so large *sparse* brains are not effectively free (audit finding).
+- [ ] Remove the stale `tests/sim_test.py` / `tests/verify_baseline.py` (they import the
+      deleted graph engine); `tests/smoke_test.py` is the working replacement.

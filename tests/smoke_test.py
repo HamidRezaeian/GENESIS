@@ -4,25 +4,39 @@ Drives world_tick_numba directly (no websocket thread, no infinite loop) so we c
 confirm the engine JIT-compiles and runs a few hundred ticks without crashing, and
 watch the population/energy dynamics. Used as a before/after guard around edits.
 """
-import sys, os, time
+import sys, os, time, random
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 import numpy as np
 import genesis_lab as gl
 
 
-def run(n_ticks=200, seed_pop=60):
+def run(n_ticks=200, seed_pop=300, food_rate=0.1):
     gl.seed_universe(seed_pop)
     print(f"Seeded {int(np.sum(gl.g_alive))} organisms. Compiling + running {n_ticks} ticks...")
     t0 = time.time()
     GLOBAL_CYCLE_POOL = 3000
     peak = 0
+    extinctions = 0
     for t in range(n_ticks):
         alive = int(np.sum(gl.g_alive))
         if alive == 0:
-            print(f"  tick {t}: EXTINCT")
-            break
+            # Mirror sim_loop: extinction triggers an Ark/fossil reseed rather than ending.
+            extinctions += 1
+            print(f"  tick {t}: EXTINCT #{extinctions} -> Ark reseed")
+            gl.seed_universe(300, use_ark=True)
+            continue
         peak = max(peak, alive)
+        # Food respawn, exactly as sim_loop does it (pristine-memory access = 0x55 cells).
+        whole = int(food_rate)
+        for _ in range(whole):
+            idx = random.randint(0, gl.RAM_SIZE - 1)
+            if gl.g_ram[idx] == 0x00:
+                gl.g_ram[idx] = 0x55
+        if random.random() < (food_rate - whole):
+            idx = random.randint(0, gl.RAM_SIZE - 1)
+            if gl.g_ram[idx] == 0x00:
+                gl.g_ram[idx] = 0x55
         steps = max(1, int(GLOBAL_CYCLE_POOL / max(1, alive)))
         n_alive, n_births = gl.world_tick_numba(
             gl.g_ram, gl.g_org_grid, gl.g_positions, gl.g_alive, gl.g_energy, gl.g_age,
