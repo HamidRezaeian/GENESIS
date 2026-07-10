@@ -176,13 +176,12 @@ body {
     width: 100vw;
     height: 100vh;
     display: grid;
-    grid-template-columns: 380px 1fr;
-    grid-template-rows: 90px 1fr 200px 70px;
+    grid-template-columns: 320px 1fr 500px;
+    grid-template-rows: 90px 1fr 70px;
     grid-template-areas: 
-        "header header"
-        "kpi viz"
-        "kpi term"
-        "footer footer";
+        "header header header"
+        "kpi viz term"
+        "footer footer footer";
     padding: 24px;
     gap: 24px;
 }
@@ -346,12 +345,25 @@ h1 {
     min-width: 0;
     min-height: 0;
     background: rgba(10, 15, 25, 0.6);
+    transition: all 0.3s ease;
+}
+
+.visualization-container.fullscreen-mode {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
+    z-index: 9999;
+    background: #020305;
+    border-radius: 0;
+    padding: 24px;
 }
 
 .canvas-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
@@ -360,6 +372,13 @@ h1 {
     font-size: 1rem;
     color: var(--color-cyan);
     letter-spacing: 0.1em;
+    margin: 0;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .btn-neo {
