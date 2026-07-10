@@ -1,0 +1,282 @@
+{
+  ".agents/.skill-lock.json": {
+    "mtime": 1783516580.4457526,
+    "ast_hash": "46453a4e2fb5a5b047399221cb9df929",
+    "semantic_hash": "46453a4e2fb5a5b047399221cb9df929"
+  },
+  ".agents/skills/caveman-compress/scripts/__init__.py": {
+    "mtime": 1783516580.4633162,
+    "ast_hash": "d6acae7e188357d1bc1258ce02a29811",
+    "semantic_hash": "d6acae7e188357d1bc1258ce02a29811"
+  },
+  ".agents/skills/caveman-compress/scripts/__main__.py": {
+    "mtime": 1783516580.4645429,
+    "ast_hash": "5bd0e02db4907bf4e435e5d770256fef",
+    "semantic_hash": "5bd0e02db4907bf4e435e5d770256fef"
+  },
+  ".agents/skills/caveman-compress/scripts/benchmark.py": {
+    "mtime": 1783516580.4655554,
+    "ast_hash": "07500037c8606fc9ab1832f55a5ff346",
+    "semantic_hash": "07500037c8606fc9ab1832f55a5ff346"
+  },
+  ".agents/skills/caveman-compress/scripts/cli.py": {
+    "mtime": 1783516580.4675553,
+    "ast_hash": "9ed03f4b75aae3f25ea0d9c15dbf6894",
+    "semantic_hash": "9ed03f4b75aae3f25ea0d9c15dbf6894"
+  },
+  ".agents/skills/caveman-compress/scripts/compress.py": {
+    "mtime": 1783516580.4685638,
+    "ast_hash": "1ad5157c3585b77dd4e547dd4a98bdf9",
+    "semantic_hash": "1ad5157c3585b77dd4e547dd4a98bdf9"
+  },
+  ".agents/skills/caveman-compress/scripts/detect.py": {
+    "mtime": 1783516580.4705555,
+    "ast_hash": "0609f322d0fbadc4e2fc3bf2af01a171",
+    "semantic_hash": "0609f322d0fbadc4e2fc3bf2af01a171"
+  },
+  ".agents/skills/caveman-compress/scripts/validate.py": {
+    "mtime": 1783516580.4715545,
+    "ast_hash": "5d3394df7677d1ee08f0b69bb767b38c",
+    "semantic_hash": "5d3394df7677d1ee08f0b69bb767b38c"
+  },
+  "public/app.js": {
+    "mtime": 1783667729.1252382,
+    "ast_hash": "7e78d77eddf0a13d1cb8d5d95f77e5f1",
+    "semantic_hash": "7e78d77eddf0a13d1cb8d5d95f77e5f1"
+  },
+  "skills-lock.json": {
+    "mtime": 1783516580.5192924,
+    "ast_hash": "0152cb4b60fa95b446d5186b20772c95",
+    "semantic_hash": "0152cb4b60fa95b446d5186b20772c95"
+  },
+  "src/analyze_agi.py": {
+    "mtime": 1783516580.6130035,
+    "ast_hash": "ecbf32c03aa82a2e4b586ffe01770851",
+    "semantic_hash": "ecbf32c03aa82a2e4b586ffe01770851"
+  },
+  "src/analyzer.py": {
+    "mtime": 1783516580.6130035,
+    "ast_hash": "8c97b8722f816a50200146454107da6f",
+    "semantic_hash": "8c97b8722f816a50200146454107da6f"
+  },
+  "src/books_of_genesis.py": {
+    "mtime": 1783526230.5525458,
+    "ast_hash": "4f288e12bee85c32185987b99855ae31",
+    "semantic_hash": "4f288e12bee85c32185987b99855ae31"
+  },
+  "src/brain_migration.py": {
+    "mtime": 1783516580.6140018,
+    "ast_hash": "b2dabf9960be962b565f78c21a9fdc1e",
+    "semantic_hash": "b2dabf9960be962b565f78c21a9fdc1e"
+  },
+  "src/extract_agi.py": {
+    "mtime": 1783516580.6140018,
+    "ast_hash": "bae5dab9ba1e3f10614eaeefaa3d049d",
+    "semantic_hash": "bae5dab9ba1e3f10614eaeefaa3d049d"
+  },
+  "src/genesis_lab.py": {
+    "mtime": 1783669180.1795115,
+    "ast_hash": "7a41f36a580a1f1e2795543fe2d87223",
+    "semantic_hash": "7a41f36a580a1f1e2795543fe2d87223"
+  },
+  "src/genome_extractor.py": {
+    "mtime": 1783516580.616004,
+    "ast_hash": "6f98d87bb7e2077aa8f431d7ecf4d983",
+    "semantic_hash": "6f98d87bb7e2077aa8f431d7ecf4d983"
+  },
+  "src/neuromorphic_engine.py": {
+    "mtime": 1783691799.2683446,
+    "ast_hash": "6a307de9fa4eb32f67c8cf75e6d41283",
+    "semantic_hash": "6a307de9fa4eb32f67c8cf75e6d41283"
+  },
+  "tests/sim_test.py": {
+    "mtime": 1783516580.5177073,
+    "ast_hash": "d5fe4826bb31a7b33d87cce22c853aa8",
+    "semantic_hash": "d5fe4826bb31a7b33d87cce22c853aa8"
+  },
+  "tests/verify_baseline.py": {
+    "mtime": 1783516580.6215243,
+    "ast_hash": "82189cb8514ca317275954f125cb45ab",
+    "semantic_hash": "82189cb8514ca317275954f125cb45ab"
+  },
+  ".agents/rules/Rules.md": {
+    "mtime": 1783691945.0516624,
+    "ast_hash": "144c6f894794fb4b6bcc809beb41e95e",
+    "semantic_hash": "144c6f894794fb4b6bcc809beb41e95e"
+  },
+  ".agents/skills/cavecrew/README.md": {
+    "mtime": 1783516580.4519734,
+    "ast_hash": "0a65af5636728fa3358d4356b337a146",
+    "semantic_hash": "0a65af5636728fa3358d4356b337a146"
+  },
+  ".agents/skills/cavecrew/SKILL.md": {
+    "mtime": 1783516580.4530807,
+    "ast_hash": "6ea8150438c6392a5ee0afef0a735ad4",
+    "semantic_hash": "6ea8150438c6392a5ee0afef0a735ad4"
+  },
+  ".agents/skills/caveman-commit/README.md": {
+    "mtime": 1783516580.454712,
+    "ast_hash": "2fe1d98cadbd2709a34ee3c77795a143",
+    "semantic_hash": "2fe1d98cadbd2709a34ee3c77795a143"
+  },
+  ".agents/skills/caveman-commit/SKILL.md": {
+    "mtime": 1783516580.4563277,
+    "ast_hash": "e00f68129a6f77783860a980074f97f7",
+    "semantic_hash": "e00f68129a6f77783860a980074f97f7"
+  },
+  ".agents/skills/caveman-compress/README.md": {
+    "mtime": 1783516580.4581118,
+    "ast_hash": "78d3757502badfab9db0e38724d336b3",
+    "semantic_hash": "78d3757502badfab9db0e38724d336b3"
+  },
+  ".agents/skills/caveman-compress/SECURITY.md": {
+    "mtime": 1783516580.4597065,
+    "ast_hash": "b2caed82d9d4a58c0530f7e741851224",
+    "semantic_hash": "b2caed82d9d4a58c0530f7e741851224"
+  },
+  ".agents/skills/caveman-compress/SKILL.md": {
+    "mtime": 1783516580.4613156,
+    "ast_hash": "5cfd6ee9993c9e72da6404a9841d82fd",
+    "semantic_hash": "5cfd6ee9993c9e72da6404a9841d82fd"
+  },
+  ".agents/skills/caveman-help/README.md": {
+    "mtime": 1783516580.473804,
+    "ast_hash": "f49266e99b58d33c1d40b7bf0a644ec3",
+    "semantic_hash": "f49266e99b58d33c1d40b7bf0a644ec3"
+  },
+  ".agents/skills/caveman-help/SKILL.md": {
+    "mtime": 1783516580.4758303,
+    "ast_hash": "0f7aa6d0d0ae831d099d13894d833d14",
+    "semantic_hash": "0f7aa6d0d0ae831d099d13894d833d14"
+  },
+  ".agents/skills/caveman-review/README.md": {
+    "mtime": 1783516580.4778287,
+    "ast_hash": "9777a26704850f1e091ab072f02fa10f",
+    "semantic_hash": "9777a26704850f1e091ab072f02fa10f"
+  },
+  ".agents/skills/caveman-review/SKILL.md": {
+    "mtime": 1783516580.4788308,
+    "ast_hash": "0e038c50a6bfdc9b8a307e6316c07236",
+    "semantic_hash": "0e038c50a6bfdc9b8a307e6316c07236"
+  },
+  ".agents/skills/caveman-stats/README.md": {
+    "mtime": 1783516580.4798303,
+    "ast_hash": "866dc96f332b4e2bc1f80fec878fea52",
+    "semantic_hash": "866dc96f332b4e2bc1f80fec878fea52"
+  },
+  ".agents/skills/caveman-stats/SKILL.md": {
+    "mtime": 1783516580.4818306,
+    "ast_hash": "e9966f688641209792719474f241a6ef",
+    "semantic_hash": "e9966f688641209792719474f241a6ef"
+  },
+  ".agents/skills/caveman/README.md": {
+    "mtime": 1783516580.483831,
+    "ast_hash": "c7a8a8fdab77e5bd25bf42b5c99c516c",
+    "semantic_hash": "c7a8a8fdab77e5bd25bf42b5c99c516c"
+  },
+  ".agents/skills/caveman/SKILL.md": {
+    "mtime": 1783516580.484828,
+    "ast_hash": "29958ba8f4a7c23450444f66aa9fab90",
+    "semantic_hash": "29958ba8f4a7c23450444f66aa9fab90"
+  },
+  ".agents/skills/find-skills/SKILL.md": {
+    "mtime": 1783516580.4858303,
+    "ast_hash": "7bce0b453fcb4226c9673b316e341553",
+    "semantic_hash": "7bce0b453fcb4226c9673b316e341553"
+  },
+  ".agents/skills/frontend-design/LICENSE.txt": {
+    "mtime": 1783516580.487828,
+    "ast_hash": "29256199be2a609aac596980ffc11996",
+    "semantic_hash": "29256199be2a609aac596980ffc11996"
+  },
+  ".agents/skills/frontend-design/SKILL.md": {
+    "mtime": 1783516580.4888296,
+    "ast_hash": "f5c3db69b9c6a00578301dd0cbe90253",
+    "semantic_hash": "f5c3db69b9c6a00578301dd0cbe90253"
+  },
+  ".agents/skills/kpi-dashboard-design/SKILL.md": {
+    "mtime": 1783516580.4903493,
+    "ast_hash": "b559ea04c658c08a63bd9bf7064a71be",
+    "semantic_hash": "b559ea04c658c08a63bd9bf7064a71be"
+  },
+  ".agents/skills/kpi-dashboard-design/references/details.md": {
+    "mtime": 1783516580.491901,
+    "ast_hash": "de088d34970b2cd8aacb34dd53eb4e68",
+    "semantic_hash": "de088d34970b2cd8aacb34dd53eb4e68"
+  },
+  ".agents/skills/python-performance-optimization/SKILL.md": {
+    "mtime": 1783516580.4935298,
+    "ast_hash": "9a4fd1fd8cbbd9d8fa81aeb3642c5c1c",
+    "semantic_hash": "9a4fd1fd8cbbd9d8fa81aeb3642c5c1c"
+  },
+  ".agents/skills/python-performance-optimization/references/advanced-patterns.md": {
+    "mtime": 1783516580.4945307,
+    "ast_hash": "19b6077d2a33ed92928683aa1ddf6b18",
+    "semantic_hash": "19b6077d2a33ed92928683aa1ddf6b18"
+  },
+  ".agents/skills/python-performance-optimization/references/details.md": {
+    "mtime": 1783516580.495531,
+    "ast_hash": "8d82ad52ba39fb5997f921f71d28a669",
+    "semantic_hash": "8d82ad52ba39fb5997f921f71d28a669"
+  },
+  "Books/English/01_Alphabet.txt": {
+    "mtime": 1783526198.379141,
+    "ast_hash": "1c3d60cd8a717cb5a36af9022395da8e",
+    "semantic_hash": "1c3d60cd8a717cb5a36af9022395da8e"
+  },
+  "Books/English/02_Basic_Words.txt": {
+    "mtime": 1783526208.188615,
+    "ast_hash": "cc472accf48188b770256ea668337037",
+    "semantic_hash": "cc472accf48188b770256ea668337037"
+  },
+  "Books/English/03_Phrases.txt": {
+    "mtime": 1783526210.89184,
+    "ast_hash": "c347bf996f49ca3a1f6b5119e4e1efc6",
+    "semantic_hash": "c347bf996f49ca3a1f6b5119e4e1efc6"
+  },
+  "Books/Math/01_Digits.txt": {
+    "mtime": 1783526213.2439933,
+    "ast_hash": "6245abfed39516abfd22887565fafe05",
+    "semantic_hash": "6245abfed39516abfd22887565fafe05"
+  },
+  "Books/Math/02_Addition.txt": {
+    "mtime": 1783526215.5683596,
+    "ast_hash": "02e5aab69119804889bc222e9df4576e",
+    "semantic_hash": "02e5aab69119804889bc222e9df4576e"
+  },
+  "Docs/ARD.md": {
+    "mtime": 1783698444.704033,
+    "ast_hash": "990865da3dd15a6c244d3386b4afd17a",
+    "semantic_hash": "990865da3dd15a6c244d3386b4afd17a"
+  },
+  "Docs/Article_Draft.md": {
+    "mtime": 1783692592.4610546,
+    "ast_hash": "21712af8802d50869a43ab983df34d44",
+    "semantic_hash": "21712af8802d50869a43ab983df34d44"
+  },
+  "Docs/PRD.md": {
+    "mtime": 1783692657.9640245,
+    "ast_hash": "c4dcaacba01562d13653c6bb09526233",
+    "semantic_hash": "c4dcaacba01562d13653c6bb09526233"
+  },
+  "Docs/Result.md": {
+    "mtime": 1783692294.8471425,
+    "ast_hash": "60d784d5781a9fa9da81a5c7917f9384",
+    "semantic_hash": "60d784d5781a9fa9da81a5c7917f9384"
+  },
+  "Docs/Roadmap.md": {
+    "mtime": 1783692471.8788183,
+    "ast_hash": "75dad1b8f562b71f22e225c8a436c470",
+    "semantic_hash": "75dad1b8f562b71f22e225c8a436c470"
+  },
+  "public/index.html": {
+    "mtime": 1783609036.6002676,
+    "ast_hash": "09c2e2f8f0c261c1391a83928720871c",
+    "semantic_hash": "09c2e2f8f0c261c1391a83928720871c"
+  },
+  "tests/smoke_test.py": {
+    "mtime": 1783691478.545413,
+    "ast_hash": "33c8207557e224d6a09893a1ac46857c",
+    "semantic_hash": "33c8207557e224d6a09893a1ac46857c"
+  }
+}

@@ -1,17 +1,2 @@
 .vs/
 
-# Python / Numba build artifacts
-__pycache__/
-*.pyc
-*.pyo
-*.nbc
-*.nbi
-
-# Runtime output / checkpoints
-Brain/
-Books/
-graphify-out/
-*.npz
-temp_*.py
-temp_*.json
-*.log

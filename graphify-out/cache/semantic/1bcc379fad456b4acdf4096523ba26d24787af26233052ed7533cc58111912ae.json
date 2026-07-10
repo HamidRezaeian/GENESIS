@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source": "docs_ard_genesis", "target": "rules_rules_prime_directive", "relation": "conceptually_related_to", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "Docs/PRD.md", "source_location": null, "weight": 1.0}], "hyperedges": []}
