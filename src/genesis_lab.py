@@ -6,10 +6,13 @@ import threading
 import json
 import base64
 import asyncio
-import websockets
+try:
+    import websockets  # only used by the live dashboard server (ws_main / ws_handler below)
+except ModuleNotFoundError:
+    websockets = None  # headless tests (smoke_test, self_sustain_test) don't need the server
 
 from neuromorphic_engine import (
-    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
+    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
@@ -206,25 +209,58 @@ def create_intelligent_ancestor(dna=None):
     for i in range(5):
         genes.extend([NEURON_MARKER, N_IO + i, 128, 128, 128])
         
-    # Input 1 (Bias) -> OUT_JMP_FWD (15): Strong positive (weight 5.0 -> raw 168)
-    genes.extend([GENE_MARKER, 1, 15, 168])
+    # --- Feeding + food-seeking reflex, retuned 2026-07-11 (Result.md Exp 4 follow-up) ---
+    # The original reflex could not net-gain energy by foraging (Exp 4). This version keeps the
+    # retuned metabolism (gentle drift, decisive halt-and-consume, weak reproduce) AND adds
+    # food-seeking: two new sensory inputs report local food density ahead/behind the pointer
+    # (nearby-memory scan, see neuromorphic_engine.sense), wired to steer movement toward food so
+    # foraging becomes a survival SKILL (Rule 10). Deliberate CONSUME is retained (food is not
+    # absorbed passively). Output neurons occupy indices N_INPUT..N_IO-1; the two food-sense
+    # inputs are the last two input slots. Raw byte encoding: raw = 128 + weight*STDP_SCALE(8).
+    JMP_FWD     = N_INPUT + 0
+    JMP_BCK     = N_INPUT + 1
+    CONSUME     = N_INPUT + 4
+    REPRODUCE   = N_INPUT + 5
+    FOOD_AHEAD  = N_INPUT - 2   # sensory inputs set by sense()
+    FOOD_BEHIND = N_INPUT - 1
+
+    # Search: gentle forward drift, but steer toward whichever side smells more food.
+    genes.extend([GENE_MARKER, 1, JMP_FWD, 148])             # Bias        -> JMP_FWD (+2.5) gentle drift
+    # Food-seeking wiring is gated by GENESIS_SEEKING (default on) so a blind-drift control can be
+    # A/B-tested without a source edit. Both arms still compute AND pay for the food scan; only the
+    # USE of that information differs, isolating the behavioural value of seeking.
+    if os.environ.get("GENESIS_SEEKING", "1") != "0":
+        genes.extend([GENE_MARKER, FOOD_AHEAD, JMP_FWD, 224])    # food ahead  -> JMP_FWD (+12) advance toward food
+        genes.extend([GENE_MARKER, FOOD_BEHIND, JMP_BCK, 224])   # food behind -> JMP_BCK (+12) turn back toward food
+    # On contact: halt and eat decisively.
+    genes.extend([GENE_MARKER, 3, CONSUME, 255])             # RAM byte    -> CONSUME (+~16)
+    genes.extend([GENE_MARKER, 3, JMP_FWD, 8])               # RAM byte    -> JMP_FWD (-15) fully halt on food
+    genes.extend([GENE_MARKER, 3, JMP_BCK, 8])               # RAM byte    -> JMP_BCK (-15) also halt backward on food (eat, don't wander)
+    # Reproduce only when energy is genuinely high (weak drive; no buffer-fuelled repro storm).
+    genes.extend([GENE_MARKER, 0, REPRODUCE, 176])           # Energy      -> REPRODUCE (+6)
+    genes.extend([GENE_MARKER, 1, REPRODUCE, 88])            # Bias        -> REPRODUCE (-5) raises threshold
+
+    # --- READING REFLEX (2026-07-11): echo the symbol under the pointer ---
+    # The reading eye (inputs RAM_BIT0_INPUT..+7) carries the 8 bits of the byte under the pointer;
+    # the vocal cords are outputs 6..13. Seed 8 direct copy synapses bit k -> vocal bit k so an
+    # organism standing on symbol X tends to VOCALIZE X and collect the read reward (Rules 9/10).
+    # This is the seedable/learnable copy the old analog eye made near-impossible; STDP + evolution
+    # can refine or repurpose it. VOCAL_BIT0 output index = OUT 6 -> neuron N_INPUT + 6.
+    VOCAL_BIT0 = N_INPUT + 6
+    for k in range(8):
+        # TWO max-weight copy synapses per bit. One synapse maxes at w=127, but the I/O firing
+        # threshold is v_rest + 128 (off by one), so a single copy-wire only trips its vocal bit via
+        # slow multi-step buildup + noise (unreliable echo). Two synapses (~254 > 128) drive the bit
+        # cleanly above threshold in ONE step, giving a crisp deterministic 8-bit copy (Rules 9/10).
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
     
-    # Input 3 (RAM Value) -> OUT_CONSUME (19): Strong positive (weight 15.0 -> raw 248)
-    genes.extend([GENE_MARKER, 3, 19, 248])
-    
-    # Input 3 (RAM Value) -> OUT_JMP_FWD (15): Strong negative to stop (weight -10.0 -> raw 48)
-    genes.extend([GENE_MARKER, 3, 15, 48])
-    
-    # Input 0 (Energy) -> OUT_REPRODUCE (20): Strong positive (weight 12.0 -> raw 224)
-    genes.extend([GENE_MARKER, 0, 20, 224])
-    
-    # Input 1 (Bias) -> OUT_REPRODUCE (20): Weak negative bias (weight -5.0 -> raw 88)
-    genes.extend([GENE_MARKER, 1, 20, 88])
-    
-    # Random scratchpad synapses for evolutionary raw material
+    # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
+    # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
+    # wiring cannot pollute speech and corrupt the 8-bit echo (reading fidelity, Rules 9/10).
     for i in range(5):
-        src = random.randint(0, N_IO+4)
-        dst = random.randint(N_INPUT, N_IO+4)
+        src = random.randint(0, N_IO + 4)
+        dst = random.randint(N_INPUT, N_INPUT + 5)   # action outputs only, not vocal bits
         w = random.randint(0, 255)
         genes.extend([GENE_MARKER, src, dst, w])
     
@@ -348,7 +384,7 @@ def remember_fossil(dna):
         fossil_pool.pop(0)
 
 
-def seed_universe(pop_size, use_ark=False):
+def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
     global ark_dna
     for i in range(pop_size):
         pos = -1
@@ -370,7 +406,7 @@ def seed_universe(pop_size, use_ark=False):
             dna = mutate_dna(ark_dna)
 
         ancestor = create_intelligent_ancestor(dna)
-        spawn_organism(i, pos, ancestor, initial_energy=250000.0)
+        spawn_organism(i, pos, ancestor, initial_energy=initial_energy)
 
 
 
@@ -427,6 +463,15 @@ def sim_loop():
                 seed_universe(300, use_ark=True)
             else:
                 seed_universe(300, use_ark=False)
+            # FIX (2026-07-10): reset the per-era elite age record. Previously `max_ark_age`
+            # was a persistent all-time high, initialised once before the loop and never reset,
+            # so after the first "golden era" no later organism could beat it — remember_fossil()
+            # stopped firing and the fossil pool froze onto a single lineage, reseeding every
+            # subsequent era from the same frozen genome. That was the root cause of the
+            # clockwork extinction loop with zero ascension across ~70 eras (Result.md Exp 4).
+            # Resetting per era lets each era contribute its own champion, keeping the fossil
+            # pool (and thus HGT crossover material) continuously refreshed.
+            max_ark_age = 0
             continue
             
         for i in range(MAX_ORGANISMS):

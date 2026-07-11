@@ -47,6 +47,10 @@ then superseded; the source files for the first three no longer exist in the rep
      cost; removes the arbitrary `0.1` idle discount so Rule 7 efficiency is selected
      *emergently* (Result.md Exp 3); `sense()` hoisted out of the sub-step loop → ~3× faster
      simulator (2026-07-10).
+- ✅ **Ark fossil-capture freeze fixed** (2026-07-10): `max_ark_age` was a persistent all-time
+     record set once before the loop, so after the first golden era no organism could beat it
+     and the fossil pool froze onto one lineage; now reset per era so each era contributes its
+     champion — the root cause of the Exp 4 clockwork-collapse loop.
 
 ## Part C — Forward Roadmap (from the 2026-07-10 critical review)
 
@@ -65,6 +69,16 @@ then superseded; the source files for the first three no longer exist in the rep
 - [ ] **Capability-normalised efficiency:** show that at *equal capability* the lower CPU/RAM
       lineage wins — requires first defining a capability/task measure.
 - [ ] Explicit recurrent/working-memory pathway beyond STDP + Lamarckian consolidation.
+- [ ] **Population self-sustainability (root cause of the Exp 4 collapse loop):** organisms
+      coast on the `initial_energy` seed buffer instead of closing a food→energy→reproduction
+      loop, so each identical reseeded cohort drains its buffer over a near-fixed ~8,640-tick
+      period and dies together. Shrink the seed buffer and rebalance metabolism/food so a
+      population survives on renewable income with no Ark resurrection.
+- [ ] **Reseed diversity:** cohorts are >95% identical (≤12 near-clonal fossils, shared physics
+      header); restore standing variation so eras desynchronise and selection has material.
+- [ ] **Observation-only capability probes (Rule 9 ↔ 6):** measure learning/reasoning progress
+      toward the Prime Directive without wiring rewards into selection (as `elite_iq` already
+      is) — sandbox-test the elite brain on held-out tasks that never affect survival.
 
 ### 🟡 P3 — Toward the Autotelic Imperative (Rules 9/10)
 - ✅ Dead-DNA fossil pool + crossover (HGT) reseed, so recovery is more bottom-up than
@@ -75,6 +89,10 @@ then superseded; the source files for the first three no longer exist in the rep
       from agent–agent competition (predation, trade, defence).
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
+- [ ] **Break instantaneous total wipes (Rule 10):** extinction is detected only at population
+      0 and reseeds the whole world at once — the exact anti-pattern the Tectonic-Gradient
+      Principle forbids (it prevents learning). Add spatial refugia / partial die-off so hazards
+      become gradients organisms can evolve against.
 
 ### 🟢 P4 — Rule 17 constant sweep & hygiene
 - ✅ Removed the arbitrary `0.1` idle-metabolism discount (now honest 1 cycle/neuron).
@@ -86,3 +104,14 @@ then superseded; the source files for the first three no longer exist in the rep
       `(n+s)/UNIVERSE_MAX`, so large *sparse* brains are not effectively free (audit finding).
 - [ ] Remove the stale `tests/sim_test.py` / `tests/verify_baseline.py` (they import the
       deleted graph engine); `tests/smoke_test.py` is the working replacement.
+- [ ] **Brain-size bloat ratchet:** growth-biased `mutate_dna` + Ark preserving longest-lived
+      (bloated) genomes ratchets brain size up each era (throughput ~12.5k→~4.5k ticks/s in
+      Exp 4), defeating Rule 7 efficiency selection because longevity tracks the seed buffer,
+      not efficiency; couple the fix to the seed-buffer shrink (P2).
+- ▶ **Milestone (2026-07-11):** `CYCLES_PER_EAT_GAIN` is now env-tunable (`GENESIS_EAT_GAIN`);
+      the sweep `tests/eat_gain_sweep.py` produced the **first self-sustaining foraging population
+      (Ark off, eat-gain ≥ 4096 on a food carpet)** — the eat-gain/burn wall is crossable
+      (Result.md Exp 4). Still open: choose a *principled* operating point (modest meal-value +
+      moderate density, so foraging skill closes the loop, not a fat handout) paired with a
+      food-seeking sense (Rules 5/10); then re-derive the meal-value from real reclaimed compute
+      (Rule 17) rather than a magic constant.

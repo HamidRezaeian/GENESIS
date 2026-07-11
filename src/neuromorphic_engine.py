@@ -1,12 +1,23 @@
 import numpy as np
 from numba import njit
 import random
+import os
 
 RAM_SIZE = 65536
 
-N_INPUT  = 15
+N_INPUT  = 25   # 0-14 original senses; 15-22 = 8 bits of the RAM byte under the pointer (reading
+                # eye); 23 = food-ahead, 24 = food-behind (nearby-memory scan). Grew 17->25 so the
+                # eye emits the SAME 8-bit encoding the vocal cords use, making symbol-echo a copy.
 N_OUTPUT = 14
 N_IO     = N_INPUT + N_OUTPUT
+
+RAM_BIT0_INPUT = 15   # inputs 15..22 = bit 0..7 of the byte under the pointer (the "reading eye")
+
+# Food-seeking sense (Rule 5 "seeking" / Rule 10 gradient): each tick an organism samples the RAM
+# window this many bytes ahead and behind its pointer and reports local food (0x55) density on the
+# last two input channels, so it can climb toward food instead of blundering into it. Sampling
+# 2*radius cells is real work, charged 2*radius cycles/tick in world_tick_numba (Rule 17 honest).
+FOOD_SCAN_RADIUS = 16
 
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
@@ -30,7 +41,14 @@ W_MAX   = np.float32(127.0)
 CYCLES_PER_SPIKE_CHECK = np.float32(1.0)
 CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
 CYCLES_PER_MOVE = np.float32(3.0)
-CYCLES_PER_EAT_GAIN = np.float32(1024.0)
+# Meal value: cycles gained per 0x55 food byte consumed. Default 1024, overridable via
+# GENESIS_EAT_GAIN for economy-rebalance sweeps (Roadmap P4 — this is an arbitrary Rule 17
+# constant under review: a food byte's value should ultimately reflect real reclaimed compute).
+CYCLES_PER_EAT_GAIN = np.float32(float(os.environ.get("GENESIS_EAT_GAIN", 1024.0)))
+# Read reward multiplier: a correctly-solved book symbol pays byte_value * this. Default 1.0
+# (raw byte, ~48-122). The economy currently rewards mindless food (1024) ~16x more than reading;
+# raising this flips the economy so SOLVING books becomes the path to wealth (Rules 9/10).
+READ_REWARD_SCALE = np.float32(float(os.environ.get("GENESIS_READ_SCALE", 1.0)))
 CYCLES_PER_BYTE_COPY = np.float32(1.0)
 # Honest raw-cycle accounting (Rule 15/17): one canonical executed operation costs 1 cycle,
 # the same unit already used for a synapse read (1) and a move (3). A neuron membrane update
@@ -204,8 +222,17 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, sense_b
     sense_buf[2] = 0.5
     
     addr = pos % RAM_SIZE
-    v = ram_substrate[addr] / np.float32(255.0)
+    ram_byte = ram_substrate[addr]
+    v = ram_byte / np.float32(255.0)
     sense_buf[3] = v
+
+    # Reading eye: expose the 8 bits of the byte under the pointer on inputs 15..22, in the SAME
+    # bit encoding the vocal cords (outputs 6..13 -> org_char_val) use. This makes "echo the symbol
+    # you are standing on" a simple bit-in->bit-out copy an organism can seed, learn (STDP) or
+    # evolve, instead of reconstructing 8 exact bits from a single analog scalar (Rules 9/10/15).
+    for bit in range(8):
+        if (ram_byte >> bit) & 1:
+            sense_buf[RAM_BIT0_INPUT + bit] = 1.0
     
     left_pos = (pos - 1) % RAM_SIZE
     right_pos = (pos + 1) % RAM_SIZE
@@ -221,6 +248,19 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, sense_b
     for bit in range(8):
         if oracle_val & (1 << bit):
             sense_buf[7 + bit] = 1.0
+
+    # Food-seeking sense: local food (0x55) density ahead vs behind the pointer (nearby-memory
+    # scan). Two channels on the last two input slots let an organism climb a food gradient
+    # instead of blundering. Sampling cost is charged in world_tick_numba (2*FOOD_SCAN_RADIUS).
+    food_ahead = np.float32(0.0)
+    food_behind = np.float32(0.0)
+    for k in range(1, FOOD_SCAN_RADIUS + 1):
+        if ram_substrate[(addr + k) % RAM_SIZE] == 0x55:
+            food_ahead += np.float32(1.0)
+        if ram_substrate[(addr - k + RAM_SIZE) % RAM_SIZE] == 0x55:
+            food_behind += np.float32(1.0)
+    sense_buf[N_INPUT - 2] = food_ahead / np.float32(FOOD_SCAN_RADIUS)
+    sense_buf[N_INPUT - 1] = food_behind / np.float32(FOOD_SCAN_RADIUS)
 
 
 
@@ -304,6 +344,10 @@ def world_tick_numba(
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
+
+        # Honest cost of the food-scan sample (2*radius memory reads), charged once per tick
+        # since sense() is hoisted out of the LIF sub-step loop (Rule 17).
+        total_atp += np.float32(2 * FOOD_SCAN_RADIUS)
 
         for step in range(n_lif_steps):
             if random.random() < viscosity[org]:
@@ -412,6 +456,11 @@ def world_tick_numba(
                 best_n = out_accum[o]
                 best_a = o
                 
+        # A vocal bit is set if its neuron fired at all this tick. With random scratchpad synapses
+        # kept OFF the vocal outputs and two max-weight copy synapses per bit driving each vocal
+        # neuron cleanly above threshold, only the CORRECT bits fire — so a single spike is a
+        # reliable signal and debouncing would only drop bits (the vocal neuron's 1-step refractory
+        # stops it firing every step). Clean 8-bit echo = reading reliable enough to live on.
         org_char_val = 0
         for v_idx in range(8):
             if out_accum[6 + v_idx] > 0:
@@ -427,6 +476,49 @@ def world_tick_numba(
         vocal_cords[org] = org_char_val
         energy[org] -= total_atp
 
+        # --- Stationary reading (2026-07-11): SOLVE the symbol you occupy ---
+        # The original read reward only fired inside the movement branch and checked the byte at
+        # the DESTINATION cell (predict-the-next-cell) — incompatible with an echo reflex that
+        # vocalizes the byte UNDER the pointer, and skipped entirely whenever a vocal output (not a
+        # jump) won winner-take-all. Reward reading the CURRENT cell every tick so "stand on a
+        # letter and pronounce it" is the honest book-solving event evolution can climb (Rules 9/10).
+        cur_byte = ram_substrate[pos]
+        if cur_byte >= 32 and cur_byte <= 126 and cur_byte != 0x55:
+            # PARTIAL-CREDIT reading (gradient, not cliff — Rule 10). Score bits the organism sets
+            # correctly (1 where the symbol is 1) minus bits it wrongly sets (1 where symbol is 0),
+            # so getting more bits right earns more energy and evolution/STDP can climb from partial
+            # to full reading. Silence (0) scores 0 (no spurious reward). Each net-correct bit is
+            # worth 8 * READ_REWARD_SCALE. A full exact match still counts as a true solved read
+            # (consumed + logged type 1); a nonzero miss logs type 2.
+            correct_bits = 0
+            wrong_bits = 0
+            for b in range(8):
+                out_b = (org_char_val >> b) & 1
+                tgt_b = (cur_byte >> b) & 1
+                if out_b == 1 and tgt_b == 1:
+                    correct_bits += 1
+                elif out_b == 1 and tgt_b == 0:
+                    wrong_bits += 1
+            net = correct_bits - wrong_bits
+            if net != 0:
+                energy[org] += np.float32(net) * np.float32(8.0) * READ_REWARD_SCALE
+            if org_char_val == cur_byte:
+                ram_substrate[pos] = 0x00
+                idx = read_log[0]
+                if idx < 996:
+                    read_log[idx] = 1
+                    read_log[idx+1] = org
+                    read_log[idx+2] = cur_byte
+                    read_log[0] = idx + 3
+            elif org_char_val != 0:
+                idx = read_log[0]
+                if idx < 993:
+                    read_log[idx] = 2
+                    read_log[idx+1] = org
+                    read_log[idx+2] = cur_byte
+                    read_log[idx+3] = org_char_val
+                    read_log[0] = idx + 4
+
         if best_n > 0 and best_a >= 0:
             if best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
                 npos = pos
@@ -437,33 +529,33 @@ def world_tick_numba(
                 
                 energy[org] -= CYCLES_PER_MOVE
                 if org_grid[npos] == -1:
-                    val = ram_substrate[npos]
-                    if val >= 32 and val <= 126 and val != 0x55:
-                        if org_char_val == val:
-                            energy[org] += np.float32(val)
-                            ram_substrate[npos] = 0x00
+                    # PREDICTION reward (problem-solving, Rules 6/9). The organism vocalized
+                    # org_char_val THIS tick from context; if it matches the symbol it now steps
+                    # ONTO, it ANTICIPATED the next symbol. For math text "1+1=" -> "2" that requires
+                    # COMPUTING 1+1, not echoing — the real cognitive leap above reading-aloud.
+                    # Partial credit (gradient), scaled by READ_REWARD_SCALE (solving = wealth).
+                    # Distinct from the stationary echo read; a full correct prediction logs type 3.
+                    pval = ram_substrate[npos]
+                    if pval >= 32 and pval <= 126 and pval != 0x55:
+                        pc = 0
+                        pw = 0
+                        for b in range(8):
+                            ob = (org_char_val >> b) & 1
+                            tb = (pval >> b) & 1
+                            if ob == 1 and tb == 1:
+                                pc += 1
+                            elif ob == 1 and tb == 0:
+                                pw += 1
+                        pnet = pc - pw
+                        if pnet != 0:
+                            energy[org] += np.float32(pnet) * np.float32(8.0) * READ_REWARD_SCALE
+                        if org_char_val == pval:
                             idx = read_log[0]
                             if idx < 996:
-                                read_log[idx] = 1
+                                read_log[idx] = 3
                                 read_log[idx+1] = org
-                                read_log[idx+2] = val
+                                read_log[idx+2] = pval
                                 read_log[0] = idx + 3
-                        else:
-                            if org_char_val == 0:
-                                # Null pointer trap: Thermodynamic core dump cost based on organism mass
-                                dump_cost = np.float32(org_g_count[org]) * CYCLES_PER_BYTE_COPY
-                                energy[org] -= dump_cost
-                            else:
-                                energy[org] -= np.float32(val)
-                            
-                            idx = read_log[0]
-                            if idx < 993:  # 4-element write needs idx+3 < 1000
-                                read_log[idx] = 2
-                                read_log[idx+1] = org
-                                read_log[idx+2] = val
-                                read_log[idx+3] = org_char_val
-                                read_log[0] = idx + 4
-                            
                     org_grid[pos] = -1
                     positions[org] = npos
                     org_grid[npos] = org
