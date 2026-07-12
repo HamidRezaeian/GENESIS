@@ -38,6 +38,25 @@ def inject_custom_book(ram_substrate, size, text):
             
     return start, len(book_bytes), text
 
+def inject_passage(ram_substrate, size, category, book_name):
+    """
+    Inject a whole book file as ONE contiguous passage (a "page") at a random location.
+
+    Unlike inject_curriculum_file (which scatters single-word fragments uniformly), this keeps the
+    text as a dense, contiguous readable region. The world then has real spatial structure —
+    library "pages" of symbols surrounded by empty RAM — instead of a uniform confetti flood. That
+    structure is what makes reading a navigable skill (a text-density gradient a seeking organism
+    can climb toward), i.e. a real library rather than a video-game where every tile is edible.
+    Returns (start, length, text) or None. Skips existing food (0x55) / traps (0xFF) byte-wise.
+    """
+    base_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Books")
+    file_path = os.path.join(base_dir, category, book_name + ".txt")
+    if not os.path.exists(file_path):
+        return None
+    with open(file_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    return inject_custom_book(ram_substrate, size, text)
+
 def inject_curriculum_file(ram_substrate, size, category, book_name):
     """
     Reads a book file, breaks it into words/chunks, and scatters them across the universe.

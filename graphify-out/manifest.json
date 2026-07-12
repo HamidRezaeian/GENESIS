@@ -60,9 +60,9 @@
     "semantic_hash": "8c97b8722f816a50200146454107da6f"
   },
   "src/books_of_genesis.py": {
-    "mtime": 1783526230.5525458,
-    "ast_hash": "4f288e12bee85c32185987b99855ae31",
-    "semantic_hash": "4f288e12bee85c32185987b99855ae31"
+    "mtime": 1783741214.0251884,
+    "ast_hash": "a161413fc895caf4f8c6229582c1db97",
+    "semantic_hash": "a161413fc895caf4f8c6229582c1db97"
   },
   "src/brain_migration.py": {
     "mtime": 1783516580.6140018,
@@ -75,9 +75,9 @@
     "semantic_hash": "bae5dab9ba1e3f10614eaeefaa3d049d"
   },
   "src/genesis_lab.py": {
-    "mtime": 1783669180.1795115,
-    "ast_hash": "7a41f36a580a1f1e2795543fe2d87223",
-    "semantic_hash": "7a41f36a580a1f1e2795543fe2d87223"
+    "mtime": 1783742932.4208674,
+    "ast_hash": "b35ea4d28a5c696f70d3f1cc6fdb2e92",
+    "semantic_hash": "b35ea4d28a5c696f70d3f1cc6fdb2e92"
   },
   "src/genome_extractor.py": {
     "mtime": 1783516580.616004,
@@ -85,9 +85,9 @@
     "semantic_hash": "6f98d87bb7e2077aa8f431d7ecf4d983"
   },
   "src/neuromorphic_engine.py": {
-    "mtime": 1783691799.2683446,
-    "ast_hash": "6a307de9fa4eb32f67c8cf75e6d41283",
-    "semantic_hash": "6a307de9fa4eb32f67c8cf75e6d41283"
+    "mtime": 1783738409.4415479,
+    "ast_hash": "315ff5af0bb670b98360b41dc1f3dbbb",
+    "semantic_hash": "315ff5af0bb670b98360b41dc1f3dbbb"
   },
   "tests/sim_test.py": {
     "mtime": 1783516580.5177073,
@@ -100,9 +100,9 @@
     "semantic_hash": "82189cb8514ca317275954f125cb45ab"
   },
   ".agents/rules/Rules.md": {
-    "mtime": 1783691945.0516624,
-    "ast_hash": "144c6f894794fb4b6bcc809beb41e95e",
-    "semantic_hash": "144c6f894794fb4b6bcc809beb41e95e"
+    "mtime": 1783711826.1041367,
+    "ast_hash": "7ec0784ecf5132b159e834c2603b82d5",
+    "semantic_hash": "7ec0784ecf5132b159e834c2603b82d5"
   },
   ".agents/skills/cavecrew/README.md": {
     "mtime": 1783516580.4519734,
@@ -260,14 +260,14 @@
     "semantic_hash": "c4dcaacba01562d13653c6bb09526233"
   },
   "Docs/Result.md": {
-    "mtime": 1783692294.8471425,
-    "ast_hash": "60d784d5781a9fa9da81a5c7917f9384",
-    "semantic_hash": "60d784d5781a9fa9da81a5c7917f9384"
+    "mtime": 1783738572.5094068,
+    "ast_hash": "edea1d1537fdc6c1cbd092315f1676c3",
+    "semantic_hash": "edea1d1537fdc6c1cbd092315f1676c3"
   },
   "Docs/Roadmap.md": {
-    "mtime": 1783692471.8788183,
-    "ast_hash": "75dad1b8f562b71f22e225c8a436c470",
-    "semantic_hash": "75dad1b8f562b71f22e225c8a436c470"
+    "mtime": 1783743879.51328,
+    "ast_hash": "1b17d82a978a3557b0f342e1c9489d3b",
+    "semantic_hash": "1b17d82a978a3557b0f342e1c9489d3b"
   },
   "public/index.html": {
     "mtime": 1783609036.6002676,
@@ -278,5 +278,50 @@
     "mtime": 1783691478.545413,
     "ast_hash": "33c8207557e224d6a09893a1ac46857c",
     "semantic_hash": "33c8207557e224d6a09893a1ac46857c"
+  },
+  "tests/book_economy_sweep.py": {
+    "mtime": 1783733510.75933,
+    "ast_hash": "eb99d73d181710e266a9384f8cbe707d",
+    "semantic_hash": "eb99d73d181710e266a9384f8cbe707d"
+  },
+  "tests/book_economy_sweep.sh": {
+    "mtime": 1783719776.5382683,
+    "ast_hash": "5cafac80e2b1b28e0d595c72facf838f",
+    "semantic_hash": "5cafac80e2b1b28e0d595c72facf838f"
+  },
+  "tests/book_read_test.py": {
+    "mtime": 1783738488.118901,
+    "ast_hash": "89a675b24b6c1ea068ebf2771630ad1f",
+    "semantic_hash": "89a675b24b6c1ea068ebf2771630ad1f"
+  },
+  "tests/eat_gain_sweep.py": {
+    "mtime": 1783716206.707039,
+    "ast_hash": "796b8e6ac3ede437f20a6de9797c7b90",
+    "semantic_hash": "796b8e6ac3ede437f20a6de9797c7b90"
+  },
+  "tests/forage_race.py": {
+    "mtime": 1783717554.1470675,
+    "ast_hash": "18a39ae3bd0153cee308624e71ef4349",
+    "semantic_hash": "18a39ae3bd0153cee308624e71ef4349"
+  },
+  "tests/live_book_economy_test.py": {
+    "mtime": 1783743636.2067795,
+    "ast_hash": "27d5623ec0cdd3d7ab09b0417b5a95fd",
+    "semantic_hash": "27d5623ec0cdd3d7ab09b0417b5a95fd"
+  },
+  "tests/mutate_crash_test.py": {
+    "mtime": 1783740304.522761,
+    "ast_hash": "4da142d5064220eec91be3ebc598c3f1",
+    "semantic_hash": "4da142d5064220eec91be3ebc598c3f1"
+  },
+  "tests/self_sustain_test.py": {
+    "mtime": 1783715081.0344584,
+    "ast_hash": "33f84a9a94a0d0d4d9c7d4a6172fb858",
+    "semantic_hash": "33f84a9a94a0d0d4d9c7d4a6172fb858"
+  },
+  "CLAUDE.md": {
+    "mtime": 1783747649.5128787,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   }
 }

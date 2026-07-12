@@ -11,13 +11,56 @@ try:
 except ModuleNotFoundError:
     websockets = None  # headless tests (smoke_test, self_sustain_test) don't need the server
 
+import tempfile
+
+# --- Live ECONOMY selection (2026-07-11) -----------------------------------------------------
+# The universe can run the ORIGINAL 0x55-food economy (breeds "weeds": survivors, not minds) or
+# the BOOK economy (energy earned by reading/solving curriculum symbols — the Prime Directive,
+# Rules 9/10). Food-only is a proven clockwork-collapse (Result.md Exp 4: MASS EXTINCTION every
+# ~6k ticks past 1.8M cycles, zero ascension), so `books` is the intended destination — but it
+# defaults to `food` for now because the sim_loop LIBRARY INJECTION and its self-sustain
+# verification are NOT yet finished. Flipping the default to `books` before the world actually
+# injects passages would only starve organisms faster (food worth 16, nothing to read). Opt in
+# early with GENESIS_ECONOMY=books once the injection path below is wired + verified.
+#
+# READ_REWARD_SCALE / CYCLES_PER_EAT_GAIN bake into the Numba hot path at neuromorphic_engine
+# import, so the book-economy defaults (reading is the wealth, food is bare subsistence) MUST be
+# set here, BEFORE that import. Env overrides always win (setdefault). NUMBA_CACHE_DIR is keyed by
+# the baked constants so switching economy/reward never serves a stale compiled kernel.
+GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "food").lower()
+if GENESIS_ECONOMY == "books":
+    os.environ.setdefault("GENESIS_READ_SCALE", "64")   # solving a symbol pays ~64x its correct bits
+    os.environ.setdefault("GENESIS_EAT_GAIN", "16")     # mindless 0x55 food = bare subsistence only
+
+# Book-economy world parameters (env-tunable; only consulted when GENESIS_ECONOMY=books).
+# The live loop keeps ~BOOK_TARGET_BYTES of curriculum standing in RAM by injecting contiguous
+# passages of Books/<CATEGORY>/<NAME>.txt whenever the library shrinks below target. Checked
+# every BOOK_RESTOCK_EVERY world-ticks so the count/scan cost is amortised. A MODEST seed buffer
+# (vs the 250k food-economy coast) is used so reading income — not buffer burndown — must sustain
+# life; this is the whole point (Result.md Exp 4 root cause was oversized coast buffer).
+BOOK_CATEGORY = os.environ.get("GENESIS_BOOK_CATEGORY", "English")
+BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "01_Alphabet")
+BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", "6000"))
+BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
+BOOK_SEED_ENERGY = float(os.environ.get("GENESIS_BOOK_SEED_ENERGY", "20000"))
+
+# Resolved per-organism spawn buffer: modest under the book economy (reading must pay the bills),
+# unchanged 250k coast under the legacy food economy.
+SEED_ENERGY = BOOK_SEED_ENERGY if GENESIS_ECONOMY == "books" else 5000.0
+os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
+    tempfile.gettempdir(),
+    f"genesis_numba_{GENESIS_ECONOMY}_r{os.environ.get('GENESIS_READ_SCALE', '1')}"
+    f"_e{os.environ.get('GENESIS_EAT_GAIN', '1024')}"))
+
 from neuromorphic_engine import (
-    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
+    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
-from books_of_genesis import inject_custom_book, inject_curriculum_file, get_library_books
+from books_of_genesis import (
+    inject_custom_book, inject_curriculum_file, inject_passage, get_library_books
+)
 
 g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
 for i in range(1000):
@@ -65,6 +108,10 @@ o_rec_spk_max = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float3
 g_global_rec_id = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 
 g_viscosity = np.zeros(MAX_ORGANISMS, dtype=np.float32)
+# Per-organism compute latency: how many LIF substeps a spike needs to traverse this organism's
+# wired synapse graph (set at spawn from the decoded topology; used verbatim as its steps/world-tick
+# so metabolic burn is a function of real hardware depth, never a hand-set constant).
+g_org_lif_steps = np.ones(MAX_ORGANISMS, dtype=np.int32)
 
 g_b_pos = np.zeros(BIRTH_BUF_SZ, dtype=np.int32)
 g_b_parent = np.zeros(BIRTH_BUF_SZ, dtype=np.int32)
@@ -145,8 +192,8 @@ async def ws_handler(websocket):
                             dst = g_global_conn_dst[s_ptr + i]
                             w = g_global_conn_weight[s_ptr + i]
                             
-                            src_str = f"In {src}" if src < 15 else (f"Out {src-15}" if src < 29 else f"H {src}")
-                            dst_str = f"In {dst}" if dst < 15 else (f"Out {dst-15}" if dst < 29 else f"H {dst}")
+                            src_str = f"In {src}" if src < 25 else (f"Out {src-25}" if src < 39 else f"H {src}")
+                            dst_str = f"In {dst}" if dst < 25 else (f"Out {dst-25}" if dst < 39 else f"H {dst}")
                             
                             if abs(w) > 0.1:
                                 synapses.append({"source": src_str, "target": dst_str, "weight": float(w)})
@@ -318,14 +365,33 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
         g_global_thresh, g_global_tau, g_global_rec_id,
         o_rec_v_rest, o_rec_tau_def, org_id
     )
-    
+
+    # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
+    # fire) = the substeps a spike needs to traverse THIS organism's wired graph. Stored per-organism
+    # and used verbatim as its steps/world-tick, so burn is a function of the real hardware depth and
+    # never a hand-set constant (a 1-hop echo reflex derives 2). Relaxation is bounded by n_c, which
+    # caps any recurrent cycle. Uses actual_s (the synapses actually decoded), not the allocated s_c.
+    if actual_s > 0:
+        d_src = g_global_conn_src[s_ptr:s_ptr + actual_s]
+        d_dst = g_global_conn_dst[s_ptr:s_ptr + actual_s]
+        dist = np.zeros(n_c, dtype=np.int32)
+        for _ in range(n_c):
+            prev = dist.copy()
+            np.maximum.at(dist, d_dst, dist[d_src] + 1)
+            if np.array_equal(dist, prev):
+                break
+        g_org_lif_steps[org_id] = int(dist.max()) + 1
+    else:
+        g_org_lif_steps[org_id] = 1
+
     g_positions[org_id] = pos
     g_alive[org_id] = True
     g_energy[org_id] = initial_energy
     g_age[org_id] = 0
     g_org_grid[pos] = org_id
     
-    g_viscosity[org_id] = np.float32(n_c) / np.float32(500.0) 
+    footprint = np.float32(n_c) + np.float32(s_c)
+    g_viscosity[org_id] = footprint / np.float32(1000.0) 
     
     return True
 
@@ -341,7 +407,7 @@ def mutate_dna(parent_dna):
     elif r < 0.10 and l > 8:
         idx = random.randint(8, l-1)
         del dna[idx]
-    elif r < 0.15 and l < MAX_DNA_PER_ORG - 16:
+    elif r < 0.15 and l > 8 and l < MAX_DNA_PER_ORG - 16:
         idx1 = random.randint(8, l-1)
         idx2 = random.randint(idx1, min(l, idx1+16))
         chunk = dna[idx1:idx2]
@@ -386,13 +452,28 @@ def remember_fossil(dna):
 
 def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
     global ark_dna
+    # Books economy: prefer an empty cell with readable text within seek range ("born among books")
+    # so the first cohort starts on a navigable seeking gradient instead of marooned in vacuum.
+    # Measured (tests/_m1_econ_probe.py): encounter ~0.00 -> ~0.38, reads ~0.3 -> ~55/tick. Non-book
+    # economies (and the fallback when no library-adjacent cell is free) spawn on any empty cell.
+    text_mask = (((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
+                 if GENESIS_ECONOMY == "books" else None)
     for i in range(pop_size):
         pos = -1
-        for _ in range(1000):  # bounded search; give up rather than spin on a full substrate
-            p = random.randint(0, RAM_SIZE - 1)
-            if g_org_grid[p] == -1 and g_ram[p] == 0x00:
-                pos = p
-                break
+        if text_mask is not None:
+            for _ in range(1000):
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1 and g_ram[p] == 0x00:
+                    lo = p - FOOD_SCAN_RADIUS if p - FOOD_SCAN_RADIUS > 0 else 0
+                    if text_mask[lo:p + FOOD_SCAN_RADIUS + 1].any():
+                        pos = p
+                        break
+        if pos < 0:
+            for _ in range(1000):  # bounded search; give up rather than spin on a full substrate
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1 and g_ram[p] == 0x00:
+                    pos = p
+                    break
         if pos < 0:
             break
 
@@ -424,7 +505,7 @@ def sim_loop():
         g_org_n_ptr, g_org_n_count, g_org_s_ptr, g_org_s_count,
         g_global_genome, g_org_g_ptr, g_org_g_count,
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
-        g_viscosity, global_time, 1,
+        g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, g_read_log
     )
@@ -438,10 +519,27 @@ def sim_loop():
             free_block(g_org_g_ptr[i], g_org_g_count[i], g_genome_map)
 
     print("Compilation complete. Entering Deep Time loop.")
+
+    # Pre-stock the library so the first cohort is born into a readable world (book economy only).
+    if GENESIS_ECONOMY == "books":
+        while np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55)) < BOOK_TARGET_BYTES:
+            if inject_passage(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME) is None:
+                print(f"[BOOKS] WARNING: could not inject {BOOK_CATEGORY}/{BOOK_NAME}; library empty.")
+                break
+        print(f"[BOOKS] Economy=books | library={BOOK_CATEGORY}/{BOOK_NAME} "
+              f"target={BOOK_TARGET_BYTES}B seed_energy={SEED_ENERGY:.0f} "
+              f"read_scale={os.environ.get('GENESIS_READ_SCALE')} eat_gain={os.environ.get('GENESIS_EAT_GAIN')}")
+
+    seed_universe(300, initial_energy=SEED_ENERGY)
     
-    seed_universe(300)
-    
-    GLOBAL_CYCLE_POOL = 3000
+    # World stepping is ARCHITECTURE-DERIVED (M1, 2026-07-11): each organism runs exactly as many LIF
+    # substeps per world-tick as its own synapse graph is deep (spawn_organism -> g_org_lif_steps =
+    # longest input->node path + 1 final fire). Burn scales with an organism's real computational
+    # latency; a 1-hop echo reflex costs 2, a deeper evolved brain costs more. NO hardcoded step
+    # constant and NO population-coupled pool (the old steps = GLOBAL_CYCLE_POOL/alive was un-physical
+    # AND a death-spiral: fewer alive -> more steps -> more burn -> synchronous collapse regardless of
+    # income, Result.md Exp 4). The world clock advances by the DEEPEST live brain's latency so a
+    # per-organism sub-tick STDP timestamp never collides across world-ticks.
     last_print = time.time()
     last_ws_push = time.time()
     ticks_accum = 0
@@ -460,9 +558,9 @@ def sim_loop():
             print(f"[LIF Time: {global_time}] MASS EXTINCTION! Triggering Ark Seed...")
             if ark_dna is not None:
                 print(f"  [ARK] Ascension! Reseeding with Elite DNA...")
-                seed_universe(300, use_ark=True)
+                seed_universe(300, use_ark=True, initial_energy=SEED_ENERGY)
             else:
-                seed_universe(300, use_ark=False)
+                seed_universe(300, use_ark=False, initial_energy=SEED_ENERGY)
             # FIX (2026-07-10): reset the per-era elite age record. Previously `max_ark_age`
             # was a persistent all-time high, initialised once before the loop and never reset,
             # so after the first "golden era" no later organism could beat it — remember_fossil()
@@ -493,9 +591,25 @@ def sim_loop():
             idx = random.randint(0, RAM_SIZE-1)
             if g_ram[idx] == 0x00:
                 g_ram[idx] = 0x55
-            
-        # Implement Global Cycle Pool
-        dynamic_lif_steps = max(1, int(GLOBAL_CYCLE_POOL / max(1, alive_count)))
+
+        # World-clock step = the deepest live architecture's settle time (see stepping note above).
+        # Computed BEFORE the book-restock check below, which divides by it — on the first loop
+        # iteration under GENESIS_ECONOMY=books an after-the-check assignment raised UnboundLocalError
+        # (the live book economy crashed on tick 1; food mode dodged it via and-short-circuit).
+        alive_steps = g_org_lif_steps[g_alive]
+        dynamic_lif_steps = int(alive_steps.max()) if alive_steps.size else 1
+
+        # BOOK ECONOMY (2026-07-11): keep the world stocked with readable curriculum so energy
+        # is earned by SOLVING symbols (Prime Directive, Rules 9/10), not just grazing 0x55.
+        # We maintain ~BOOK_TARGET_PASSAGES contiguous "pages" of curriculum by counting live
+        # curriculum bytes (printable, non-food, non-trap) and injecting a fresh passage whenever
+        # the library falls below target. Passages are contiguous (inject_passage) so the world
+        # has real spatial text structure a reader/seeker can navigate — not a uniform confetti
+        # flood (which would be the video-game shortcut). Only runs when GENESIS_ECONOMY=books.
+        if GENESIS_ECONOMY == "books" and (global_time // dynamic_lif_steps) % BOOK_RESTOCK_EVERY == 0:
+            printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
+            if printable < BOOK_TARGET_BYTES:
+                inject_passage(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME)
 
         n_alive, n_births = world_tick_numba(
             g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
@@ -505,7 +619,7 @@ def sim_loop():
             g_org_n_ptr, g_org_n_count, g_org_s_ptr, g_org_s_count,
             g_global_genome, g_org_g_ptr, g_org_g_count,
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
-            g_viscosity, global_time, dynamic_lif_steps,
+            g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
             g_oracle_val, g_oracle_target, voice_buf, vocal_cords, g_read_log
         )
@@ -550,6 +664,13 @@ def sim_loop():
                     guess_str = chr(guess_val) if 32 <= guess_val <= 126 else f"0x{guess_val:02X}"
                     read_events.append({"type": "fail", "org": int(g_read_log[idx+1]), "target": chr(g_read_log[idx+2]), "guess": guess_str})
                     idx += 4
+                elif log_type == 3:
+                    # Prediction hit (type 3, stride 3): organism vocalised the symbol it then
+                    # stepped ONTO. Must be drained with the correct stride — the old `else: break`
+                    # truncated the whole buffer on the first prediction, dropping every later event
+                    # AND silently hiding the project's key cognitive signal (Rules 6/9).
+                    read_events.append({"type": "predict", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
+                    idx += 3
                 else:
                     break
             g_read_log[0] = 1

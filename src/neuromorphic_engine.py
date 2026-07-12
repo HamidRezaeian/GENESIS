@@ -19,6 +19,15 @@ RAM_BIT0_INPUT = 15   # inputs 15..22 = bit 0..7 of the byte under the pointer (
 # 2*radius cells is real work, charged 2*radius cycles/tick in world_tick_numba (Rule 17 honest).
 FOOD_SCAN_RADIUS = 16
 
+# In the BOOK economy the seeking sense must climb toward READABLE SYMBOLS, not 0x55 food (which
+# is barely present under books). Baked from GENESIS_ECONOMY at import — a compile-time constant
+# inside the njit sense(), so it costs nothing at runtime; NUMBA_CACHE_DIR is economy-keyed
+# (genesis_lab) so the food and book kernels never collide. In books mode food_ahead/food_behind
+# then carry local TEXT density, and the ancestor's existing FOOD_AHEAD->JMP_FWD / FOOD_BEHIND->
+# JMP_BCK wiring becomes a text-seeking reflex for free — reading as a navigable SKILL (Rule 10),
+# not a random-walk lottery. Food mode is unchanged (scans 0x55 exactly as before).
+SEEK_TEXT = os.environ.get("GENESIS_ECONOMY", "food").lower() == "books"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -41,14 +50,15 @@ W_MAX   = np.float32(127.0)
 CYCLES_PER_SPIKE_CHECK = np.float32(1.0)
 CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
 CYCLES_PER_MOVE = np.float32(3.0)
-# Meal value: cycles gained per 0x55 food byte consumed. Default 1024, overridable via
-# GENESIS_EAT_GAIN for economy-rebalance sweeps (Roadmap P4 — this is an arbitrary Rule 17
-# constant under review: a food byte's value should ultimately reflect real reclaimed compute).
-CYCLES_PER_EAT_GAIN = np.float32(float(os.environ.get("GENESIS_EAT_GAIN", 1024.0)))
-# Read reward multiplier: a correctly-solved book symbol pays byte_value * this. Default 1.0
-# (raw byte, ~48-122). The economy currently rewards mindless food (1024) ~16x more than reading;
-# raising this flips the economy so SOLVING books becomes the path to wealth (Rules 9/10).
-READ_REWARD_SCALE = np.float32(float(os.environ.get("GENESIS_READ_SCALE", 1.0)))
+# A BYTE IS STORED ENERGY (no reward constants — 2026-07-11 "remove all game constants").
+# RAM holds numbers; in this universe a number IS a quantity of energy (cycles). So RESOLVING a
+# byte — eating food (0x55) or SOLVING a book symbol, either way writing the cell back to 0x00
+# vacuum — releases EXACTLY the byte's own value in cycles. Nothing is multiplied, nothing is
+# tuned: a food byte 0x55 pays 85, the letter 'A' pays 65, 'z' pays 122. Food and text are thereby
+# NATURALLY comparable, so reading competes with eating without a single knob (retires the old
+# CYCLES_PER_EAT_GAIN=15000 and READ_REWARD_SCALE=64 game constants — Rules 9/10/17). BITS_PER_BYTE
+# is hardware (8), used only to grade partial reads: a partial solve pays value*net_bits/8.
+BITS_PER_BYTE = np.float32(8.0)
 CYCLES_PER_BYTE_COPY = np.float32(1.0)
 # Honest raw-cycle accounting (Rule 15/17): one canonical executed operation costs 1 cycle,
 # the same unit already used for a synapse read (1) and a move (3). A neuron membrane update
@@ -152,13 +162,13 @@ def count_genes(g_ptr, g_count, g_genome):
     end = g_ptr + g_count - 3
     while i < end:
         marker = g_genome[i]
-        if marker == GENE_MARKER and i + 3 < g_count:
+        if marker == GENE_MARKER and i + 3 < g_ptr + g_count:
             s_count += 1
             i += 4
-        elif marker == NEURON_MARKER and i + 4 < g_count:
+        elif marker == NEURON_MARKER and i + 4 < g_ptr + g_count:
             h_count += 1
             i += 5
-        elif marker == RECEPTOR_MARKER and i + 9 < g_count:
+        elif marker == RECEPTOR_MARKER and i + 9 < g_ptr + g_count:
             i += 10
         else:
             i += 1
@@ -255,10 +265,19 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, sense_b
     food_ahead = np.float32(0.0)
     food_behind = np.float32(0.0)
     for k in range(1, FOOD_SCAN_RADIUS + 1):
-        if ram_substrate[(addr + k) % RAM_SIZE] == 0x55:
-            food_ahead += np.float32(1.0)
-        if ram_substrate[(addr - k + RAM_SIZE) % RAM_SIZE] == 0x55:
-            food_behind += np.float32(1.0)
+        ba = ram_substrate[(addr + k) % RAM_SIZE]
+        bb = ram_substrate[(addr - k + RAM_SIZE) % RAM_SIZE]
+        if SEEK_TEXT:
+            # Books economy: climb toward readable symbols (printable, non-food, non-empty).
+            if ba >= 32 and ba <= 126 and ba != 0x55:
+                food_ahead += np.float32(1.0)
+            if bb >= 32 and bb <= 126 and bb != 0x55:
+                food_behind += np.float32(1.0)
+        else:
+            if ba == 0x55:
+                food_ahead += np.float32(1.0)
+            if bb == 0x55:
+                food_behind += np.float32(1.0)
     sense_buf[N_INPUT - 2] = food_ahead / np.float32(FOOD_SCAN_RADIUS)
     sense_buf[N_INPUT - 1] = food_behind / np.float32(FOOD_SCAN_RADIUS)
 
@@ -273,7 +292,7 @@ def world_tick_numba(
     org_n_ptr, org_n_count, org_s_ptr, org_s_count,
     global_genome, org_g_ptr, org_g_count,
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
-    viscosity, global_time, n_lif_steps,
+    viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
     oracle_val, oracle_target, voice_buf, vocal_cords, read_log
 ):
@@ -327,10 +346,11 @@ def world_tick_numba(
         crowding = crowd_count / np.float32(33.0)
 
         # Computational viscosity (Rule 13): stall probability rises with the organism's own
-        # synaptic DENSITY (synapses per neuron), not mere spatial crowding. Dense brains
-        # stall more often, rewarding sparse, parallel topologies (the 20W paradigm).
-        code_density = np.float32(org_s_count[org]) / (np.float32(n_count) + np.float32(1.0))
-        local_viscosity = code_density / SYN_DENSITY_SCALE
+        # TOTAL HARDWARE FOOTPRINT (neurons + synapses). Dense, bloated brains stall
+        # more often, rewarding sparse, minimal architectures (the 20W paradigm).
+        # We scale by a large denominator so a typical organism (~30 neurons) has low viscosity.
+        footprint = np.float32(n_count) + np.float32(org_s_count[org])
+        local_viscosity = footprint / np.float32(1000.0)
         if local_viscosity > np.float32(0.5):
             local_viscosity = np.float32(0.5)
         viscosity[org] = local_viscosity
@@ -349,7 +369,15 @@ def world_tick_numba(
         # since sense() is hoisted out of the LIF sub-step loop (Rule 17).
         total_atp += np.float32(2 * FOOD_SCAN_RADIUS)
 
-        for step in range(n_lif_steps):
+        # Architecture-derived compute latency (no global step constant): this organism runs as many
+        # LIF substeps this world-tick as its own synapse graph is deep — computed once at spawn into
+        # org_lif_steps (longest input->node path + 1 final fire). Burn scales with real per-org
+        # computational depth; a 1-hop echo reflex runs 2, a deeper evolved brain runs (and pays) more.
+        n_steps = org_lif_steps[org]
+        if n_steps < 1:
+            n_steps = 1
+
+        for step in range(n_steps):
             if random.random() < viscosity[org]:
                 total_atp += np.float32(n_count)
                 continue
@@ -488,8 +516,11 @@ def world_tick_numba(
             # correctly (1 where the symbol is 1) minus bits it wrongly sets (1 where symbol is 0),
             # so getting more bits right earns more energy and evolution/STDP can climb from partial
             # to full reading. Silence (0) scores 0 (no spurious reward). Each net-correct bit is
-            # worth 8 * READ_REWARD_SCALE. A full exact match still counts as a true solved read
-            # (consumed + logged type 1); a nonzero miss logs type 2.
+            # A partial solve pays the byte's OWN value scaled by the fraction of bits solved:
+            # value * net_bits / 8 (BITS_PER_BYTE). A full exact match pays the whole byte value —
+            # the same energy eating that byte as food would release (a byte is stored energy, no
+            # multiplier). Full match = true solved read (consumed + logged type 1); nonzero miss
+            # logs type 2.
             correct_bits = 0
             wrong_bits = 0
             for b in range(8):
@@ -501,9 +532,12 @@ def world_tick_numba(
                     wrong_bits += 1
             net = correct_bits - wrong_bits
             if net != 0:
-                energy[org] += np.float32(net) * np.float32(8.0) * READ_REWARD_SCALE
-            if org_char_val == cur_byte:
+                energy[org] += np.float32(cur_byte) * np.float32(net) / BITS_PER_BYTE
+                # CONSUME ON ATTEMPT (2026-07-11 fix): Once an organism attempts to read a byte
+                # (by outputting ANY net-positive guess), the byte is consumed. This prevents
+                # "infinite reading money" from standing still and spamming the same character.
                 ram_substrate[pos] = 0x00
+            if org_char_val == cur_byte:
                 idx = read_log[0]
                 if idx < 996:
                     read_log[idx] = 1
@@ -622,7 +656,7 @@ def world_tick_numba(
 
                     n_births += 1
 
-        age[org] += n_lif_steps
+        age[org] += n_steps
 
         if energy[org] <= np.float32(0.0):
             alive[org] = False

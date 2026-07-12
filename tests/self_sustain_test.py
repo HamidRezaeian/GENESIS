@@ -51,7 +51,7 @@ def _world_tick(steps):
         gl.g_global_genome, gl.g_org_g_ptr, gl.g_org_g_count,
         gl.o_rec_a_plus, gl.o_rec_a_minus, gl.o_rec_tau_p, gl.o_rec_tau_m,
         gl.o_rec_v_rest, gl.o_rec_v_reset, gl.o_rec_tau_def, gl.o_rec_spk_max,
-        gl.g_viscosity, gl.global_time, steps,
+        gl.g_viscosity, gl.global_time, gl.g_org_lif_steps,  # per-org architecture-derived steps
         gl.g_b_pos, gl.g_b_parent, gl.g_b_g_start, gl.g_b_g_count, gl.g_b_genomes, gl.g_b_energy,
         gl.g_oracle_val, gl.g_oracle_target, gl.voice_buf, gl.vocal_cords, gl.g_read_log,
     )

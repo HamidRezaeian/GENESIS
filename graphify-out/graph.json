@@ -1,121 +1,7 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {
-    "hyperedges": [
-      {
-        "id": "efficiency_20w_paradigm_cluster",
-        "label": "The 20W Sparse-Parallel Efficiency Paradigm",
-        "nodes": [
-          "rules_rules_prime_directive",
-          "rules_rules_efficiency_definition",
-          "rules_rules_ann_rejection",
-          "rules_rules_computational_viscosity"
-        ],
-        "relation": "form",
-        "confidence": "INFERRED",
-        "confidence_score": 0.85,
-        "source_file": ".agents/rules/Rules.md"
-      },
-      {
-        "id": "cavecrew_locate_fix_verify_flow",
-        "label": "Cavecrew Locate-Fix-Verify Chaining Flow",
-        "nodes": [
-          "cavecrew_skill_investigator",
-          "cavecrew_skill_builder",
-          "cavecrew_skill_reviewer"
-        ],
-        "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 0.9,
-        "source_file": ".agents/skills/cavecrew/SKILL.md"
-      },
-      {
-        "id": "caveman_skill_family",
-        "label": "Caveman Token-Compression Skill Family",
-        "nodes": [
-          "caveman_skill_caveman",
-          "caveman_commit_skill_caveman_commit",
-          "caveman_review_skill_caveman_review",
-          "caveman_compress_skill_caveman_compress",
-          "caveman_stats_skill_caveman_stats",
-          "caveman_help_skill_caveman_help"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 0.9,
-        "source_file": ".agents/skills/caveman-help/SKILL.md"
-      },
-      {
-        "id": "superseded_substrate_history",
-        "label": "Architectural History of Superseded Substrates",
-        "nodes": [
-          "docs_roadmap_graph_physics",
-          "docs_roadmap_opcode_soup",
-          "docs_roadmap_2d_grid_snn",
-          "docs_ard_genome_encoded_snn"
-        ],
-        "relation": "participate_in",
-        "confidence": "INFERRED",
-        "confidence_score": 0.75,
-        "source_file": "Docs/Roadmap.md"
-      },
-      {
-        "id": "curriculum_injection_pipeline",
-        "label": "Library of Genesis Curriculum Injection",
-        "nodes": [
-          "public_index_library_of_genesis",
-          "english_01_alphabet_curriculum",
-          "english_02_basic_words_curriculum",
-          "math_01_digits_curriculum",
-          "public_index_ram_memory_dump"
-        ],
-        "relation": "participate_in",
-        "confidence": "INFERRED",
-        "confidence_score": 0.75,
-        "source_file": "public/index.html"
-      },
-      {
-        "id": "python_backend_modules",
-        "label": "Python Neuromorphic Backend Modules",
-        "nodes": [
-          "docs_ard_neuromorphic_engine",
-          "docs_ard_genesis_lab",
-          "docs_ard_books_of_genesis"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 0.95,
-        "source_file": "Docs/ARD.md"
-      },
-      {
-        "id": "coexisting_heredity_mechanisms",
-        "label": "Coexisting Baldwin/Lamarckian Heredity via STDP",
-        "nodes": [
-          "docs_ard_baldwin_learning",
-          "docs_ard_lamarckian_consolidation",
-          "docs_ard_stdp"
-        ],
-        "relation": "participate_in",
-        "confidence": "INFERRED",
-        "confidence_score": 0.85,
-        "source_file": "Docs/ARD.md"
-      },
-      {
-        "id": "emergent_efficiency_thermodynamics",
-        "label": "Emergent Efficiency from Compute Thermodynamics",
-        "nodes": [
-          "docs_ard_thermodynamics_cpu_cycles",
-          "docs_ard_computational_viscosity",
-          "docs_ard_conservation_of_compute"
-        ],
-        "relation": "participate_in",
-        "confidence": "INFERRED",
-        "confidence_score": 0.75,
-        "source_file": "Docs/ARD.md"
-      }
-    ]
-  },
+  "graph": {},
   "nodes": [
     {
       "label": "__init__.py",
@@ -124,7 +10,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_init",
-      "community": 16,
+      "community": 15,
       "norm_label": "__init__.py"
     },
     {
@@ -134,7 +20,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_init_rationale_1",
-      "community": 16,
+      "community": 15,
       "norm_label": "caveman compress scripts.  this package provides tools to compress natural lan"
     },
     {
@@ -154,7 +40,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_benchmark",
-      "community": 2,
+      "community": 6,
       "norm_label": "benchmark.py"
     },
     {
@@ -164,7 +50,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_benchmark_count_tokens",
-      "community": 2,
+      "community": 6,
       "norm_label": "count_tokens()"
     },
     {
@@ -174,7 +60,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "scripts_benchmark_benchmark_pair",
-      "community": 2,
+      "community": 6,
       "norm_label": "benchmark_pair()"
     },
     {
@@ -194,7 +80,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "scripts_benchmark_print_table",
-      "community": 2,
+      "community": 6,
       "norm_label": "print_table()"
     },
     {
@@ -204,7 +90,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "scripts_benchmark_main",
-      "community": 2,
+      "community": 6,
       "norm_label": "main()"
     },
     {
@@ -494,7 +380,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_validate",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate.py"
     },
     {
@@ -504,7 +390,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "scripts_validate_validationresult",
-      "community": 2,
+      "community": 3,
       "norm_label": "validationresult"
     },
     {
@@ -514,7 +400,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "scripts_validate_validationresult_init",
-      "community": 2,
+      "community": 3,
       "norm_label": ".__init__()"
     },
     {
@@ -524,7 +410,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "scripts_validate_validationresult_add_error",
-      "community": 2,
+      "community": 3,
       "norm_label": ".add_error()"
     },
     {
@@ -534,7 +420,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "scripts_validate_validationresult_add_warning",
-      "community": 2,
+      "community": 3,
       "norm_label": ".add_warning()"
     },
     {
@@ -544,7 +430,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "scripts_validate_read_file",
-      "community": 2,
+      "community": 3,
       "norm_label": "read_file()"
     },
     {
@@ -554,7 +440,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "scripts_validate_extract_headings",
-      "community": 2,
+      "community": 3,
       "norm_label": "extract_headings()"
     },
     {
@@ -564,7 +450,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "scripts_validate_extract_code_blocks",
-      "community": 2,
+      "community": 3,
       "norm_label": "extract_code_blocks()"
     },
     {
@@ -574,7 +460,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "scripts_validate_extract_urls",
-      "community": 2,
+      "community": 3,
       "norm_label": "extract_urls()"
     },
     {
@@ -584,7 +470,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "scripts_validate_extract_paths",
-      "community": 2,
+      "community": 3,
       "norm_label": "extract_paths()"
     },
     {
@@ -594,7 +480,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "scripts_validate_count_bullets",
-      "community": 2,
+      "community": 3,
       "norm_label": "count_bullets()"
     },
     {
@@ -604,7 +490,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "scripts_validate_extract_inline_codes",
-      "community": 2,
+      "community": 3,
       "norm_label": "extract_inline_codes()"
     },
     {
@@ -614,7 +500,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "scripts_validate_validate_headings",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_headings()"
     },
     {
@@ -624,7 +510,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "scripts_validate_validate_code_blocks",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_code_blocks()"
     },
     {
@@ -634,7 +520,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "scripts_validate_validate_urls",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_urls()"
     },
     {
@@ -644,7 +530,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "scripts_validate_validate_paths",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_paths()"
     },
     {
@@ -654,7 +540,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "scripts_validate_validate_bullets",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_bullets()"
     },
     {
@@ -664,7 +550,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "scripts_validate_validate_inline_codes",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_inline_codes()"
     },
     {
@@ -674,7 +560,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "scripts_validate_validate",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate()"
     },
     {
@@ -684,7 +570,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "scripts_validate_rationale_42",
-      "community": 2,
+      "community": 3,
       "norm_label": "line-based fenced code block extractor.      handles ``` and ~~~ fences with v"
     },
     {
@@ -694,7 +580,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "public_app",
-      "community": 4,
+      "community": 2,
       "norm_label": "app.js"
     },
     {
@@ -704,7 +590,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "public_app_canvas",
-      "community": 4,
+      "community": 2,
       "norm_label": "canvas"
     },
     {
@@ -714,7 +600,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "public_app_ctx",
-      "community": 4,
+      "community": 2,
       "norm_label": "ctx"
     },
     {
@@ -724,7 +610,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "public_app_initchart",
-      "community": 4,
+      "community": 2,
       "norm_label": "initchart()"
     },
     {
@@ -734,7 +620,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "public_app_updatechart",
-      "community": 4,
+      "community": 2,
       "norm_label": "updatechart()"
     },
     {
@@ -744,7 +630,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "public_app_initwebsocket",
-      "community": 4,
+      "community": 2,
       "norm_label": "initwebsocket()"
     },
     {
@@ -754,7 +640,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "public_app_handlestate",
-      "community": 4,
+      "community": 2,
       "norm_label": "handlestate()"
     },
     {
@@ -764,7 +650,7 @@
       "source_location": "L233",
       "_origin": "ast",
       "id": "public_app_btnanalyze",
-      "community": 4,
+      "community": 2,
       "norm_label": "btnanalyze"
     },
     {
@@ -774,7 +660,7 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "public_app_btnfullscreen",
-      "community": 4,
+      "community": 2,
       "norm_label": "btnfullscreen"
     },
     {
@@ -784,7 +670,7 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "public_app_mainviz",
-      "community": 4,
+      "community": 2,
       "norm_label": "mainviz"
     },
     {
@@ -794,7 +680,7 @@
       "source_location": "L236",
       "_origin": "ast",
       "id": "public_app_livebrainwrapper",
-      "community": 4,
+      "community": 2,
       "norm_label": "livebrainwrapper"
     },
     {
@@ -804,7 +690,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "public_app_modal",
-      "community": 4,
+      "community": 2,
       "norm_label": "modal"
     },
     {
@@ -814,7 +700,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "public_app_btnclose",
-      "community": 4,
+      "community": 2,
       "norm_label": "btnclose"
     },
     {
@@ -824,7 +710,7 @@
       "source_location": "L239",
       "_origin": "ast",
       "id": "public_app_braindata",
-      "community": 4,
+      "community": 2,
       "norm_label": "braindata"
     },
     {
@@ -834,7 +720,7 @@
       "source_location": "L282",
       "_origin": "ast",
       "id": "public_app_handlebrainstatus",
-      "community": 4,
+      "community": 2,
       "norm_label": "handlebrainstatus()"
     },
     {
@@ -844,7 +730,7 @@
       "source_location": "L566",
       "_origin": "ast",
       "id": "public_app_energyrateslider",
-      "community": 4,
+      "community": 2,
       "norm_label": "energyrateslider"
     },
     {
@@ -854,7 +740,7 @@
       "source_location": "L567",
       "_origin": "ast",
       "id": "public_app_energyrateval",
-      "community": 4,
+      "community": 2,
       "norm_label": "energyrateval"
     },
     {
@@ -864,7 +750,7 @@
       "source_location": "L586",
       "_origin": "ast",
       "id": "public_app_termin",
-      "community": 4,
+      "community": 2,
       "norm_label": "termin"
     },
     {
@@ -874,7 +760,7 @@
       "source_location": "L587",
       "_origin": "ast",
       "id": "public_app_termout",
-      "community": 4,
+      "community": 2,
       "norm_label": "termout"
     },
     {
@@ -884,7 +770,7 @@
       "source_location": "L589",
       "_origin": "ast",
       "id": "public_app_printterm",
-      "community": 4,
+      "community": 2,
       "norm_label": "printterm()"
     },
     {
@@ -894,7 +780,7 @@
       "source_location": "L623",
       "_origin": "ast",
       "id": "public_app_sethighlight",
-      "community": 4,
+      "community": 2,
       "norm_label": "sethighlight()"
     },
     {
@@ -904,7 +790,7 @@
       "source_location": "L627",
       "_origin": "ast",
       "id": "public_app_clearhighlight",
-      "community": 4,
+      "community": 2,
       "norm_label": "clearhighlight()"
     },
     {
@@ -914,7 +800,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_analyze_agi",
-      "community": 11,
+      "community": 7,
       "norm_label": "analyze_agi.py"
     },
     {
@@ -924,7 +810,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_analyze_agi_disassemble",
-      "community": 11,
+      "community": 7,
       "norm_label": "disassemble()"
     },
     {
@@ -934,7 +820,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_analyze_agi_main",
-      "community": 11,
+      "community": 7,
       "norm_label": "main()"
     },
     {
@@ -944,7 +830,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_analyzer",
-      "community": 13,
+      "community": 12,
       "norm_label": "analyzer.py"
     },
     {
@@ -954,7 +840,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_analyzer_decode_genome",
-      "community": 13,
+      "community": 12,
       "norm_label": "decode_genome()"
     },
     {
@@ -964,7 +850,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "src_analyzer_main",
-      "community": 13,
+      "community": 12,
       "norm_label": "main()"
     },
     {
@@ -974,7 +860,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_books_of_genesis",
-      "community": 8,
+      "community": 4,
       "norm_label": "books_of_genesis.py"
     },
     {
@@ -984,7 +870,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_books_of_genesis_get_library_books",
-      "community": 8,
+      "community": 4,
       "norm_label": "get_library_books()"
     },
     {
@@ -994,17 +880,27 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_books_of_genesis_inject_custom_book",
-      "community": 8,
+      "community": 4,
       "norm_label": "inject_custom_book()"
+    },
+    {
+      "label": "inject_passage()",
+      "file_type": "code",
+      "source_file": "src/books_of_genesis.py",
+      "source_location": "L41",
+      "_origin": "ast",
+      "id": "src_books_of_genesis_inject_passage",
+      "community": 4,
+      "norm_label": "inject_passage()"
     },
     {
       "label": "inject_curriculum_file()",
       "file_type": "code",
       "source_file": "src/books_of_genesis.py",
-      "source_location": "L41",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "src_books_of_genesis_inject_curriculum_file",
-      "community": 8,
+      "community": 4,
       "norm_label": "inject_curriculum_file()"
     },
     {
@@ -1014,7 +910,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_books_of_genesis_rationale_7",
-      "community": 8,
+      "community": 4,
       "norm_label": "returns a structured list of available curriculum files in the books/ directory."
     },
     {
@@ -1024,17 +920,27 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_books_of_genesis_rationale_23",
-      "community": 8,
+      "community": 4,
       "norm_label": "randomly injects a custom string (or chunk of a book) into the ram."
     },
     {
-      "label": "Reads a book file, breaks it into words/chunks, and scatters them across the uni",
+      "label": "Inject a whole book file as ONE contiguous passage (a \"page\") at a random locati",
       "file_type": "rationale",
       "source_file": "src/books_of_genesis.py",
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_books_of_genesis_rationale_42",
-      "community": 8,
+      "community": 4,
+      "norm_label": "inject a whole book file as one contiguous passage (a \"page\") at a random locati"
+    },
+    {
+      "label": "Reads a book file, breaks it into words/chunks, and scatters them across the uni",
+      "file_type": "rationale",
+      "source_file": "src/books_of_genesis.py",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "src_books_of_genesis_rationale_61",
+      "community": 4,
       "norm_label": "reads a book file, breaks it into words/chunks, and scatters them across the uni"
     },
     {
@@ -1044,7 +950,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_brain_migration",
-      "community": 17,
+      "community": 16,
       "norm_label": "brain_migration.py"
     },
     {
@@ -1054,7 +960,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_brain_migration_migrate_genomes",
-      "community": 17,
+      "community": 16,
       "norm_label": "migrate_genomes()"
     },
     {
@@ -1064,7 +970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_extract_agi",
-      "community": 11,
+      "community": 7,
       "norm_label": "extract_agi.py"
     },
     {
@@ -1074,7 +980,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_extract_agi_main",
-      "community": 11,
+      "community": 7,
       "norm_label": "main()"
     },
     {
@@ -1084,157 +990,157 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_genesis_lab",
-      "community": 3,
+      "community": 1,
       "norm_label": "genesis_lab.py"
     },
     {
       "label": "broadcast_msg()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L93",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "src_genesis_lab_broadcast_msg",
-      "community": 3,
+      "community": 1,
       "norm_label": "broadcast_msg()"
     },
     {
       "label": "ws_handler()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L97",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "src_genesis_lab_ws_handler",
-      "community": 8,
+      "community": 4,
       "norm_label": "ws_handler()"
     },
     {
       "label": "ws_main()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L175",
+      "source_location": "L221",
       "_origin": "ast",
       "id": "src_genesis_lab_ws_main",
-      "community": 3,
+      "community": 1,
       "norm_label": "ws_main()"
     },
     {
       "label": "start_ws_server()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L180",
+      "source_location": "L226",
       "_origin": "ast",
       "id": "src_genesis_lab_start_ws_server",
-      "community": 3,
+      "community": 1,
       "norm_label": "start_ws_server()"
     },
     {
       "label": "get_base_physics_header()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L186",
+      "source_location": "L232",
       "_origin": "ast",
       "id": "src_genesis_lab_get_base_physics_header",
-      "community": 3,
+      "community": 1,
       "norm_label": "get_base_physics_header()"
     },
     {
       "label": "create_intelligent_ancestor()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L199",
+      "source_location": "L245",
       "_origin": "ast",
       "id": "src_genesis_lab_create_intelligent_ancestor",
-      "community": 3,
+      "community": 1,
       "norm_label": "create_intelligent_ancestor()"
     },
     {
       "label": "spawn_organism()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L233",
+      "source_location": "L312",
       "_origin": "ast",
       "id": "src_genesis_lab_spawn_organism",
-      "community": 3,
+      "community": 1,
       "norm_label": "spawn_organism()"
     },
     {
       "label": "mutate_dna()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L296",
+      "source_location": "L375",
       "_origin": "ast",
       "id": "src_genesis_lab_mutate_dna",
-      "community": 3,
+      "community": 1,
       "norm_label": "mutate_dna()"
     },
     {
       "label": "crossover_dna()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L325",
+      "source_location": "L404",
       "_origin": "ast",
       "id": "src_genesis_lab_crossover_dna",
-      "community": 3,
+      "community": 1,
       "norm_label": "crossover_dna()"
     },
     {
       "label": "remember_fossil()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L340",
+      "source_location": "L419",
       "_origin": "ast",
       "id": "src_genesis_lab_remember_fossil",
-      "community": 3,
+      "community": 1,
       "norm_label": "remember_fossil()"
     },
     {
       "label": "seed_universe()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L351",
+      "source_location": "L430",
       "_origin": "ast",
       "id": "src_genesis_lab_seed_universe",
-      "community": 3,
+      "community": 1,
       "norm_label": "seed_universe()"
     },
     {
       "label": "sim_loop()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L377",
+      "source_location": "L456",
       "_origin": "ast",
       "id": "src_genesis_lab_sim_loop",
-      "community": 3,
+      "community": 1,
       "norm_label": "sim_loop()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L581",
+      "source_location": "L691",
       "_origin": "ast",
       "id": "src_genesis_lab_main",
-      "community": 3,
+      "community": 1,
       "norm_label": "main()"
     },
     {
       "label": "Horizontal gene transfer: keep parent A's protected physics header (bytes 0-9) a",
       "file_type": "rationale",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L326",
+      "source_location": "L405",
       "_origin": "ast",
-      "id": "src_genesis_lab_rationale_326",
-      "community": 3,
+      "id": "src_genesis_lab_rationale_405",
+      "community": 1,
       "norm_label": "horizontal gene transfer: keep parent a's protected physics header (bytes 0-9) a"
     },
     {
       "label": "Preserve a copy of an elite genome as a dead-DNA fossil for later recombination.",
       "file_type": "rationale",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L341",
+      "source_location": "L420",
       "_origin": "ast",
-      "id": "src_genesis_lab_rationale_341",
-      "community": 3,
+      "id": "src_genesis_lab_rationale_420",
+      "community": 1,
       "norm_label": "preserve a copy of an elite genome as a dead-dna fossil for later recombination."
     },
     {
@@ -1244,7 +1150,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_genome_extractor",
-      "community": 12,
+      "community": 8,
       "norm_label": "genome_extractor.py"
     },
     {
@@ -1254,7 +1160,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_genome_extractor_decompile",
-      "community": 12,
+      "community": 8,
       "norm_label": "decompile()"
     },
     {
@@ -1264,7 +1170,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_genome_extractor_extract_genome",
-      "community": 12,
+      "community": 8,
       "norm_label": "extract_genome()"
     },
     {
@@ -1274,7 +1180,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "src_genome_extractor_main",
-      "community": 12,
+      "community": 8,
       "norm_label": "main()"
     },
     {
@@ -1284,7 +1190,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_genome_extractor_rationale_54",
-      "community": 12,
+      "community": 8,
       "norm_label": "scan backward to 0, then forward to 0, extracting the block"
     },
     {
@@ -1294,78 +1200,400 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_neuromorphic_engine",
-      "community": 3,
+      "community": 1,
       "norm_label": "neuromorphic_engine.py"
     },
     {
       "label": "malloc_block()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L65",
+      "source_location": "L83",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_malloc_block",
-      "community": 3,
+      "community": 1,
       "norm_label": "malloc_block()"
     },
     {
       "label": "free_block()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L83",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_free_block",
-      "community": 3,
+      "community": 1,
       "norm_label": "free_block()"
     },
     {
       "label": "parse_receptors()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L89",
+      "source_location": "L107",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_parse_receptors",
-      "community": 3,
+      "community": 1,
       "norm_label": "parse_receptors()"
     },
     {
       "label": "count_genes()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L130",
+      "source_location": "L148",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_count_genes",
-      "community": 3,
+      "community": 1,
       "norm_label": "count_genes()"
     },
     {
       "label": "decode_genome()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L151",
+      "source_location": "L169",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_decode_genome",
-      "community": 3,
+      "community": 1,
       "norm_label": "decode_genome()"
     },
     {
       "label": "sense()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L200",
+      "source_location": "L218",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_sense",
-      "community": 3,
+      "community": 1,
       "norm_label": "sense()"
     },
     {
       "label": "world_tick_numba()",
       "file_type": "code",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L228",
+      "source_location": "L268",
       "_origin": "ast",
       "id": "src_neuromorphic_engine_world_tick_numba",
-      "community": 3,
+      "community": 1,
       "norm_label": "world_tick_numba()"
+    },
+    {
+      "label": "book_economy_sweep.py",
+      "file_type": "code",
+      "source_file": "tests/book_economy_sweep.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_book_economy_sweep_py_tests_book_economy_sweep",
+      "community": 17,
+      "norm_label": "book_economy_sweep.py"
+    },
+    {
+      "label": "Economy-flip sweep driver (Windows-friendly, no bash). Runs book_read_test.py ac",
+      "file_type": "rationale",
+      "source_file": "tests/book_economy_sweep.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_book_economy_sweep_rationale_1",
+      "community": 17,
+      "norm_label": "economy-flip sweep driver (windows-friendly, no bash). runs book_read_test.py ac"
+    },
+    {
+      "label": "book_economy_sweep.sh",
+      "file_type": "code",
+      "source_file": "tests/book_economy_sweep.sh",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "_origin": "ast",
+      "id": "tests_book_economy_sweep_sh_tests_book_economy_sweep",
+      "community": 11,
+      "norm_label": "book_economy_sweep.sh"
+    },
+    {
+      "label": "book_economy_sweep.sh script",
+      "file_type": "code",
+      "source_file": "tests/book_economy_sweep.sh",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "_origin": "ast",
+      "id": "c_users_hamid_source_repos_genesis_tests_book_economy_sweep_sh__entry",
+      "community": 11,
+      "norm_label": "book_economy_sweep.sh script"
+    },
+    {
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "tests/book_economy_sweep.sh",
+      "source_location": "L7",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "_origin": "ast",
+      "id": "tests_book_economy_sweep_run",
+      "community": 11,
+      "norm_label": "run()"
+    },
+    {
+      "label": "book_read_test.py",
+      "file_type": "code",
+      "source_file": "tests/book_read_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_book_read_test",
+      "community": 13,
+      "norm_label": "book_read_test.py"
+    },
+    {
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "tests/book_read_test.py",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "tests_book_read_test_run",
+      "community": 13,
+      "norm_label": "run()"
+    },
+    {
+      "label": "Book-reading economy test (Result.md / Rules 9-10). Do organisms gain energy by",
+      "file_type": "rationale",
+      "source_file": "tests/book_read_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_book_read_test_rationale_1",
+      "community": 13,
+      "norm_label": "book-reading economy test (result.md / rules 9-10). do organisms gain energy by"
+    },
+    {
+      "label": "eat_gain_sweep.py",
+      "file_type": "code",
+      "source_file": "tests/eat_gain_sweep.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_eat_gain_sweep",
+      "community": 18,
+      "norm_label": "eat_gain_sweep.py"
+    },
+    {
+      "label": "Economy-rebalance sweep \u2014 Result.md Exp 4 follow-up / Roadmap P4.  Even on a 100",
+      "file_type": "rationale",
+      "source_file": "tests/eat_gain_sweep.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_eat_gain_sweep_rationale_1",
+      "community": 18,
+      "norm_label": "economy-rebalance sweep \u2014 result.md exp 4 follow-up / roadmap p4.  even on a 100"
+    },
+    {
+      "label": "forage_race.py",
+      "file_type": "code",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_forage_race",
+      "community": 9,
+      "norm_label": "forage_race.py"
+    },
+    {
+      "label": "seed_patch_food()",
+      "file_type": "code",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "tests_forage_race_seed_patch_food",
+      "community": 9,
+      "norm_label": "seed_patch_food()"
+    },
+    {
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L53",
+      "_origin": "ast",
+      "id": "tests_forage_race_run",
+      "community": 9,
+      "norm_label": "run()"
+    },
+    {
+      "label": "Foraging race \u2014 does food-SEEKING beat blind drift under PATCHY food? (Result.md",
+      "file_type": "rationale",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_forage_race_rationale_1",
+      "community": 9,
+      "norm_label": "foraging race \u2014 does food-seeking beat blind drift under patchy food? (result.md"
+    },
+    {
+      "label": "Place n food bytes into contiguous patches around the given centers (empty cells",
+      "file_type": "rationale",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "tests_forage_race_rationale_45",
+      "community": 9,
+      "norm_label": "place n food bytes into contiguous patches around the given centers (empty cells"
+    },
+    {
+      "label": "live_book_economy_test.py",
+      "file_type": "code",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_live_book_economy_test",
+      "community": 10,
+      "norm_label": "live_book_economy_test.py"
+    },
+    {
+      "label": "_library_bytes()",
+      "file_type": "code",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "tests_live_book_economy_test_library_bytes",
+      "community": 10,
+      "norm_label": "_library_bytes()"
+    },
+    {
+      "label": "run_config()",
+      "file_type": "code",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "tests_live_book_economy_test_run_config",
+      "community": 10,
+      "norm_label": "run_config()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "tests_live_book_economy_test_main",
+      "community": 10,
+      "norm_label": "main()"
+    },
+    {
+      "label": "LIVE book-economy verification (Roadmap P0) \u2014 does the reading economy, as wired",
+      "file_type": "rationale",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_live_book_economy_test_rationale_1",
+      "community": 10,
+      "norm_label": "live book-economy verification (roadmap p0) \u2014 does the reading economy, as wired"
+    },
+    {
+      "label": "mutate_crash_test.py",
+      "file_type": "code",
+      "source_file": "tests/mutate_crash_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_mutate_crash_test",
+      "community": 19,
+      "norm_label": "mutate_crash_test.py"
+    },
+    {
+      "label": "Regression test for the Ark-reseed crash: `ValueError: empty range in randrange(",
+      "file_type": "rationale",
+      "source_file": "tests/mutate_crash_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_mutate_crash_test_rationale_1",
+      "community": 19,
+      "norm_label": "regression test for the ark-reseed crash: `valueerror: empty range in randrange("
+    },
+    {
+      "label": "self_sustain_test.py",
+      "file_type": "code",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test",
+      "community": 5,
+      "norm_label": "self_sustain_test.py"
+    },
+    {
+      "label": "_world_tick()",
+      "file_type": "code",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_world_tick",
+      "community": 5,
+      "norm_label": "_world_tick()"
+    },
+    {
+      "label": "_process_births()",
+      "file_type": "code",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_process_births",
+      "community": 5,
+      "norm_label": "_process_births()"
+    },
+    {
+      "label": "run_config()",
+      "file_type": "code",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L79",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_run_config",
+      "community": 5,
+      "norm_label": "run_config()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L150",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_main",
+      "community": 5,
+      "norm_label": "main()"
+    },
+    {
+      "label": "Self-sustainability experiment \u2014 Result.md Exp 4 follow-up / Roadmap P2.  CENTRA",
+      "file_type": "rationale",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_rationale_1",
+      "community": 5,
+      "norm_label": "self-sustainability experiment \u2014 result.md exp 4 follow-up / roadmap p2.  centra"
+    },
+    {
+      "label": "Call the njit world update with the exact argument list sim_loop/smoke_test use.",
+      "file_type": "rationale",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_rationale_44",
+      "community": 5,
+      "norm_label": "call the njit world update with the exact argument list sim_loop/smoke_test use."
+    },
+    {
+      "label": "Mirror sim_loop's birth handling exactly.",
+      "file_type": "rationale",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_rationale_61",
+      "community": 5,
+      "norm_label": "mirror sim_loop's birth handling exactly."
+    },
+    {
+      "label": "Run one configuration on a pristine universe; return a metrics dict.",
+      "file_type": "rationale",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L80",
+      "_origin": "ast",
+      "id": "tests_self_sustain_test_rationale_80",
+      "community": 5,
+      "norm_label": "run one configuration on a pristine universe; return a metrics dict."
     },
     {
       "label": "sim_test.py",
@@ -1374,7 +1602,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_sim_test",
-      "community": 18,
+      "community": 20,
       "norm_label": "sim_test.py"
     },
     {
@@ -1384,7 +1612,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "tests_sim_test_sim_ancestor",
-      "community": 18,
+      "community": 20,
       "norm_label": "sim_ancestor()"
     },
     {
@@ -1424,7 +1652,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_verify_baseline",
-      "community": 19,
+      "community": 21,
       "norm_label": "verify_baseline.py"
     },
     {
@@ -1434,1294 +1662,8 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "tests_verify_baseline_run_verify",
-      "community": 19,
+      "community": 21,
       "norm_label": "run_verify()"
-    },
-    {
-      "label": "Documentation Sync Workflow (Rule 1)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_docs_sync_workflow",
-      "community": 7,
-      "norm_label": "documentation sync workflow (rule 1)"
-    },
-    {
-      "label": "Intelligent Ancestor / Pre-Evolved Baseline (Rule 5)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_intelligent_ancestor",
-      "community": 1,
-      "norm_label": "intelligent ancestor / pre-evolved baseline (rule 5)"
-    },
-    {
-      "label": "Prime Directive: Human Brain Paradigm 20W (Rule 6)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_prime_directive",
-      "community": 1,
-      "norm_label": "prime directive: human brain paradigm 20w (rule 6)"
-    },
-    {
-      "label": "Definition of Efficiency: CPU Cycles + RAM (Rule 7)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_efficiency_definition",
-      "community": 7,
-      "norm_label": "definition of efficiency: cpu cycles + ram (rule 7)"
-    },
-    {
-      "label": "Autotelic Imperative (Rule 9)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_autotelic_imperative",
-      "community": 7,
-      "norm_label": "autotelic imperative (rule 9)"
-    },
-    {
-      "label": "Replication Trap / Tierra Trap Avoidance (Rule 10)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_replication_trap",
-      "community": 1,
-      "norm_label": "replication trap / tierra trap avoidance (rule 10)"
-    },
-    {
-      "label": "Rejection of Modern ANNs / Sparse Parallelism (Rule 11)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_ann_rejection",
-      "community": 1,
-      "norm_label": "rejection of modern anns / sparse parallelism (rule 11)"
-    },
-    {
-      "label": "Academic Publication Standards (Rule 12)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_academic_standards",
-      "community": 7,
-      "norm_label": "academic publication standards (rule 12)"
-    },
-    {
-      "label": "Computational Viscosity Principle / Square-Cube Law (Rule 13)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_computational_viscosity",
-      "community": 1,
-      "norm_label": "computational viscosity principle / square-cube law (rule 13)"
-    },
-    {
-      "label": "Ascension Principle / Elitism (Rule 14)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_ascension_principle",
-      "community": 1,
-      "norm_label": "ascension principle / elitism (rule 14)"
-    },
-    {
-      "label": "No-Abstraction Imperative: True Hardware Reality (Rule 15)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_no_abstraction_imperative",
-      "community": 6,
-      "norm_label": "no-abstraction imperative: true hardware reality (rule 15)"
-    },
-    {
-      "label": "Critical Rigor Mandate (Rule 16)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_critical_perspective",
-      "community": 7,
-      "norm_label": "critical rigor mandate (rule 16)"
-    },
-    {
-      "label": "Relativity / No Hardcoded Constants (Rule 17)",
-      "file_type": "rationale",
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rules_rules_no_hardcoded_constants",
-      "community": 7,
-      "norm_label": "relativity / no hardcoded constants (rule 17)"
-    },
-    {
-      "label": "cavecrew README",
-      "file_type": "document",
-      "source_file": ".agents/skills/cavecrew/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "cavecrew_readme_cavecrew",
-      "community": 5,
-      "norm_label": "cavecrew readme"
-    },
-    {
-      "label": "cavecrew Delegation Decision Guide",
-      "file_type": "document",
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "cavecrew_skill_cavecrew",
-      "community": 5,
-      "norm_label": "cavecrew delegation decision guide"
-    },
-    {
-      "label": "cavecrew-investigator Subagent",
-      "file_type": "concept",
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "cavecrew_skill_investigator",
-      "community": 5,
-      "norm_label": "cavecrew-investigator subagent"
-    },
-    {
-      "label": "cavecrew-builder Subagent",
-      "file_type": "concept",
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "cavecrew_skill_builder",
-      "community": 5,
-      "norm_label": "cavecrew-builder subagent"
-    },
-    {
-      "label": "cavecrew-reviewer Subagent",
-      "file_type": "concept",
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "cavecrew_skill_reviewer",
-      "community": 5,
-      "norm_label": "cavecrew-reviewer subagent"
-    },
-    {
-      "label": "caveman-commit README",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-commit/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_commit_readme_caveman_commit",
-      "community": 5,
-      "norm_label": "caveman-commit readme"
-    },
-    {
-      "label": "caveman-commit Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-commit/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_commit_skill_caveman_commit",
-      "community": 5,
-      "norm_label": "caveman-commit skill"
-    },
-    {
-      "label": "Conventional Commits Format",
-      "file_type": "concept",
-      "source_file": ".agents/skills/caveman-commit/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_commit_skill_conventional_commits",
-      "community": 5,
-      "norm_label": "conventional commits format"
-    },
-    {
-      "label": "caveman-compress README",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-compress/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_compress_readme_caveman_compress",
-      "community": 5,
-      "norm_label": "caveman-compress readme"
-    },
-    {
-      "label": "caveman-compress Security (Snyk False Positive)",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-compress/SECURITY.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_compress_security_snyk_false_positive",
-      "community": 5,
-      "norm_label": "caveman-compress security (snyk false positive)"
-    },
-    {
-      "label": "caveman-compress Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-compress/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_compress_skill_caveman_compress",
-      "community": 5,
-      "norm_label": "caveman-compress skill"
-    },
-    {
-      "label": "caveman-help README",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-help/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_help_readme_caveman_help",
-      "community": 5,
-      "norm_label": "caveman-help readme"
-    },
-    {
-      "label": "caveman-help Reference Card",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-help/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_help_skill_caveman_help",
-      "community": 5,
-      "norm_label": "caveman-help reference card"
-    },
-    {
-      "label": "caveman-review README",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-review/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_review_readme_caveman_review",
-      "community": 5,
-      "norm_label": "caveman-review readme"
-    },
-    {
-      "label": "caveman-review Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-review/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_review_skill_caveman_review",
-      "community": 5,
-      "norm_label": "caveman-review skill"
-    },
-    {
-      "label": "caveman-stats README",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-stats/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_stats_readme_caveman_stats",
-      "community": 5,
-      "norm_label": "caveman-stats readme"
-    },
-    {
-      "label": "caveman-stats Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman-stats/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_stats_skill_caveman_stats",
-      "community": 5,
-      "norm_label": "caveman-stats skill"
-    },
-    {
-      "label": "caveman-mode-tracker Hook",
-      "file_type": "concept",
-      "source_file": ".agents/skills/caveman-stats/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_stats_skill_mode_tracker_hook",
-      "community": 5,
-      "norm_label": "caveman-mode-tracker hook"
-    },
-    {
-      "label": "caveman README",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_readme_caveman",
-      "community": 5,
-      "norm_label": "caveman readme"
-    },
-    {
-      "label": "caveman Compression Mode Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/caveman/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_skill_caveman",
-      "community": 5,
-      "norm_label": "caveman compression mode skill"
-    },
-    {
-      "label": "Auto-Clarity Rule",
-      "file_type": "concept",
-      "source_file": ".agents/skills/caveman/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "caveman_skill_auto_clarity",
-      "community": 5,
-      "norm_label": "auto-clarity rule"
-    },
-    {
-      "label": "find-skills Discovery Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/find-skills/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "find_skills_skill_find_skills",
-      "community": 15,
-      "norm_label": "find-skills discovery skill"
-    },
-    {
-      "label": "Skills CLI (npx skills)",
-      "file_type": "concept",
-      "source_file": ".agents/skills/find-skills/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "find_skills_skill_skills_cli",
-      "community": 15,
-      "norm_label": "skills cli (npx skills)"
-    },
-    {
-      "label": "Apache License 2.0",
-      "file_type": "document",
-      "source_file": ".agents/skills/frontend-design/LICENSE.txt",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "frontend_design_license_apache_2",
-      "community": 10,
-      "norm_label": "apache license 2.0"
-    },
-    {
-      "label": "frontend-design Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/frontend-design/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "frontend_design_skill_frontend_design",
-      "community": 10,
-      "norm_label": "frontend-design skill"
-    },
-    {
-      "label": "kpi-dashboard-design Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/kpi-dashboard-design/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "kpi_dashboard_design_skill_kpi_dashboard",
-      "community": 10,
-      "norm_label": "kpi-dashboard-design skill"
-    },
-    {
-      "label": "SMART KPI Framework",
-      "file_type": "concept",
-      "source_file": ".agents/skills/kpi-dashboard-design/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "kpi_dashboard_design_skill_smart_kpi",
-      "community": 10,
-      "norm_label": "smart kpi framework"
-    },
-    {
-      "label": "KPI Dashboard Detailed Worked Examples",
-      "file_type": "document",
-      "source_file": ".agents/skills/kpi-dashboard-design/references/details.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "kpi_dashboard_design_details_worked_examples",
-      "community": 10,
-      "norm_label": "kpi dashboard detailed worked examples"
-    },
-    {
-      "label": "python-performance-optimization Skill",
-      "file_type": "document",
-      "source_file": ".agents/skills/python-performance-optimization/SKILL.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "python_performance_optimization_skill_python_perf",
-      "community": 7,
-      "norm_label": "python-performance-optimization skill"
-    },
-    {
-      "label": "Python Perf Advanced Patterns",
-      "file_type": "document",
-      "source_file": ".agents/skills/python-performance-optimization/references/advanced-patterns.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "python_performance_optimization_advanced_patterns_advanced",
-      "community": 7,
-      "norm_label": "python perf advanced patterns"
-    },
-    {
-      "label": "__slots__ Memory Optimization Pattern",
-      "file_type": "concept",
-      "source_file": ".agents/skills/python-performance-optimization/references/advanced-patterns.md",
-      "source_location": "Pattern 13",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "python_performance_optimization_advanced_patterns_slots",
-      "community": 7,
-      "norm_label": "__slots__ memory optimization pattern"
-    },
-    {
-      "label": "Python Perf Detailed Patterns (Profiling)",
-      "file_type": "document",
-      "source_file": ".agents/skills/python-performance-optimization/references/details.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "python_performance_optimization_details_patterns",
-      "community": 7,
-      "norm_label": "python perf detailed patterns (profiling)"
-    },
-    {
-      "label": "English Alphabet Curriculum",
-      "file_type": "document",
-      "source_file": "Books/English/01_Alphabet.txt",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "english_01_alphabet_curriculum",
-      "community": 9,
-      "norm_label": "english alphabet curriculum"
-    },
-    {
-      "label": "English Basic Words Curriculum",
-      "file_type": "document",
-      "source_file": "Books/English/02_Basic_Words.txt",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "english_02_basic_words_curriculum",
-      "community": 9,
-      "norm_label": "english basic words curriculum"
-    },
-    {
-      "label": "English Phrases Curriculum",
-      "file_type": "document",
-      "source_file": "Books/English/03_Phrases.txt",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "english_03_phrases_curriculum",
-      "community": 9,
-      "norm_label": "english phrases curriculum"
-    },
-    {
-      "label": "Math Digits Curriculum",
-      "file_type": "document",
-      "source_file": "Books/Math/01_Digits.txt",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "math_01_digits_curriculum",
-      "community": 9,
-      "norm_label": "math digits curriculum"
-    },
-    {
-      "label": "Math Addition Curriculum",
-      "file_type": "document",
-      "source_file": "Books/Math/02_Addition.txt",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "math_02_addition_curriculum",
-      "community": 9,
-      "norm_label": "math addition curriculum"
-    },
-    {
-      "label": "Lamarckian Consolidation (Generational Memory)",
-      "file_type": "rationale",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_lamarckian_consolidation",
-      "community": 1,
-      "norm_label": "lamarckian consolidation (generational memory)"
-    },
-    {
-      "label": "Fossil Pool with Horizontal Gene Transfer",
-      "file_type": "rationale",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_fossil_pool_hgt",
-      "community": 1,
-      "norm_label": "fossil pool with horizontal gene transfer"
-    },
-    {
-      "label": "Emergent Efficiency Selection (Thermodynamic, Not Metric)",
-      "file_type": "rationale",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_efficiency_selection",
-      "community": 7,
-      "norm_label": "emergent efficiency selection (thermodynamic, not metric)"
-    },
-    {
-      "label": "Graded Plasticity (STDP_SCALE = 8)",
-      "file_type": "rationale",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_graded_plasticity",
-      "community": 6,
-      "norm_label": "graded plasticity (stdp_scale = 8)"
-    },
-    {
-      "label": "Evolvable Neuro-Physics (DNA-Encoded Meta-Learning)",
-      "file_type": "rationale",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_evolvable_neurophysics",
-      "community": 7,
-      "norm_label": "evolvable neuro-physics (dna-encoded meta-learning)"
-    },
-    {
-      "label": "Tierra (Artificial-Life System)",
-      "file_type": "concept",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_tierra",
-      "community": 1,
-      "norm_label": "tierra (artificial-life system)"
-    },
-    {
-      "label": "Avida (Artificial-Life System)",
-      "file_type": "concept",
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_article_draft_avida",
-      "community": 1,
-      "norm_label": "avida (artificial-life system)"
-    },
-    {
-      "label": "smoke_test.py Characterisation Harness",
-      "file_type": "document",
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_result_smoke_test",
-      "community": 7,
-      "norm_label": "smoke_test.py characterisation harness"
-    },
-    {
-      "label": "Experiment 3: Efficiency-Selection Alignment (A/B)",
-      "file_type": "document",
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_result_experiment3_efficiency",
-      "community": 7,
-      "norm_label": "experiment 3: efficiency-selection alignment (a/b)"
-    },
-    {
-      "label": "Honest Raw-Cycle Accounting (1 cyc/neuron, Activity-Gated STDP)",
-      "file_type": "rationale",
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_result_honest_cycle_accounting",
-      "community": 7,
-      "norm_label": "honest raw-cycle accounting (1 cyc/neuron, activity-gated stdp)"
-    },
-    {
-      "label": "elite_iq Metric (age / footprint, Observation-Only)",
-      "file_type": "rationale",
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_result_elite_iq",
-      "community": 7,
-      "norm_label": "elite_iq metric (age / footprint, observation-only)"
-    },
-    {
-      "label": "Graph Physics Engine (deleted genesis_engine.py / DynamicBrain)",
-      "file_type": "concept",
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_roadmap_graph_physics",
-      "community": 6,
-      "norm_label": "graph physics engine (deleted genesis_engine.py / dynamicbrain)"
-    },
-    {
-      "label": "1D Opcode Soup (deleted turing_engine.py, Tierra/Avida-style)",
-      "file_type": "concept",
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_roadmap_opcode_soup",
-      "community": 1,
-      "norm_label": "1d opcode soup (deleted turing_engine.py, tierra/avida-style)"
-    },
-    {
-      "label": "2D Grid SNN (deleted 64x64 world)",
-      "file_type": "concept",
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_roadmap_2d_grid_snn",
-      "community": 6,
-      "norm_label": "2d grid snn (deleted 64x64 world)"
-    },
-    {
-      "label": "GENESIS Observation Deck (index.html)",
-      "file_type": "code",
-      "source_file": "public/index.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "public_index_dashboard",
-      "community": 1,
-      "norm_label": "genesis observation deck (index.html)"
-    },
-    {
-      "label": "The Library of Genesis (Curriculum Injector)",
-      "file_type": "concept",
-      "source_file": "public/index.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "public_index_library_of_genesis",
-      "community": 9,
-      "norm_label": "the library of genesis (curriculum injector)"
-    },
-    {
-      "label": "Oracle Terminal Comm-Link (Dashboard)",
-      "file_type": "concept",
-      "source_file": "public/index.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "public_index_oracle_terminal",
-      "community": 1,
-      "norm_label": "oracle terminal comm-link (dashboard)"
-    },
-    {
-      "label": "RAM Substrate Memory Dump Canvas",
-      "file_type": "concept",
-      "source_file": "public/index.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "public_index_ram_memory_dump",
-      "community": 1,
-      "norm_label": "ram substrate memory dump canvas"
-    },
-    {
-      "label": "GENESIS System",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Split into a Python Neuromorphic Physics Engine backend and a Vanilla-JS Observation Deck frontend, connected over a single WebSocket (ws://<host>:8085); earlier opcode/graph engines (turing_engine.py, genesis_engine.py, DynamicBrain) were deleted in favour of the genome-encoded SNN engine.",
-      "id": "docs_ard_genesis",
-      "community": 1,
-      "norm_label": "genesis system"
-    },
-    {
-      "label": "neuromorphic_engine.py",
-      "file_type": "code",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "The hot path: an SNN simulator compiled to machine code with Numba @njit(cache=True) for speed; holds the memory allocator, genome decoder, sensory encoder and world_tick_numba.",
-      "id": "docs_ard_neuromorphic_engine",
-      "community": 6,
-      "norm_label": "neuromorphic_engine.py"
-    },
-    {
-      "label": "genesis_lab.py",
-      "file_type": "code",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Owns all global state (NumPy arrays), the deep-time sim_loop, reproduction/mutation, the Elite Ark, and the asyncio/websockets server.",
-      "id": "docs_ard_genesis_lab",
-      "community": 1,
-      "norm_label": "genesis_lab.py"
-    },
-    {
-      "label": "books_of_genesis.py",
-      "file_type": "code",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_ard_books_of_genesis",
-      "community": 1,
-      "norm_label": "books_of_genesis.py"
-    },
-    {
-      "label": "The Universe (RAM Substrate)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.2",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Space is literal RAM: a 1D toroidal uint8 array of RAM_SIZE=65536 bytes (g_ram). Position is a byte address, movement is pointer arithmetic mod RAM_SIZE; food is byte 0x55, curriculum/Oracle text occupies printable ASCII 32-126.",
-      "id": "docs_ard_ram_substrate",
-      "community": 1,
-      "norm_label": "the universe (ram substrate)"
-    },
-    {
-      "label": "The Global Heap",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.3",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "No per-organism matrices: neurons, synapses and genomes for the whole universe live in flat global arrays and each organism mallocs contiguous blocks via malloc_block/free_block. Models the universe's total computational matter as one shared heap, so memory fragmentation is itself a spatial hazard.",
-      "id": "docs_ard_global_heap",
-      "community": 6,
-      "norm_label": "the global heap"
-    },
-    {
-      "label": "Genome-Encoded SNN Organism",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "A genome is a byte string parsed into three record types (receptor, neuron, synapse); every organism has a fixed I/O layer of N_INPUT=15 sensory + N_OUTPUT=14 motor neurons plus variable hidden neurons.",
-      "id": "docs_ard_genome_encoded_snn",
-      "community": 6,
-      "norm_label": "genome-encoded snn organism"
-    },
-    {
-      "label": "Receptor Protein (RECEPTOR_MARKER 195)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "A 10-byte DNA-encoded plasticity profile (A_PLUS, A_MINUS, TAU_P, TAU_M, V_REST, V_RESET, TAU_DEFAULT, SPIKE_RATE_MAX); up to MAX_RECEPTORS_PER_ORG=16 per organism.",
-      "id": "docs_ard_receptor_protein",
-      "community": 6,
-      "norm_label": "receptor protein (receptor_marker 195)"
-    },
-    {
-      "label": "Hidden Neuron (NEURON_MARKER 162)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "A 5-byte record expressing a receptor id, a threshold and a leak time-constant.",
-      "id": "docs_ard_hidden_neuron",
-      "community": 6,
-      "norm_label": "hidden neuron (neuron_marker 162)"
-    },
-    {
-      "label": "Synapse Gene (GENE_MARKER 161)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "A 4-byte synapse record (src, dst, weight) where weight maps a raw byte to float(w)-128, i.e. -128..+127.",
-      "id": "docs_ard_synapse_gene",
-      "community": 6,
-      "norm_label": "synapse gene (gene_marker 161)"
-    },
-    {
-      "label": "Leaky Integrate-and-Fire Model",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "float32 voltage: leak v += (v_rest - v)/tau, fire when v >= threshold, reset to v_reset, refractory TAU_REF=1 step; input neurons fire stochastically proportional to sensed value x SPIKE_RATE_MAX.",
-      "id": "docs_ard_leaky_integrate_and_fire",
-      "community": 6,
-      "norm_label": "leaky integrate-and-fire model"
-    },
-    {
-      "label": "STDP (Hebbian Plasticity)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "On a post-synaptic spike, pre-before-post potentiates (w += A_PLUS\u00b7e^(-\u0394t/TAU_P)) and pre-after-post depresses (w -= A_MINUS\u00b7e^(-\u0394t/TAU_M)); weights clamp to [W_MIN, W_MAX] = [-128, 127].",
-      "id": "docs_ard_stdp",
-      "community": 6,
-      "norm_label": "stdp (hebbian plasticity)"
-    },
-    {
-      "label": "Baldwin-style In-Lifetime Learning",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Lifetime STDP changes are held in the runtime weight array; behavioural adaptation acquired within a lifetime is not itself directly inherited (contrast with the Lamarckian 50/50 blend).",
-      "id": "docs_ard_baldwin_learning",
-      "community": 6,
-      "norm_label": "baldwin-style in-lifetime learning"
-    },
-    {
-      "label": "Lamarckian Consolidation",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6 / \u00a71.5",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "At reproduction the birth path (neuromorphic_engine.py ~L498-521) re-walks the child's copied genome like decode_genome and overwrites each hidden/output synapse weight byte with a 50/50 blend of the parent's initial DNA weight and the weight the parent learned via STDP this lifetime (global_conn_weight, re-encoded +128), making acquired plasticity partially heritable. The 50/50 constants are hardcoded inline (a Rule 17 target for DNA-encoding). Corrects a stale earlier claim that learned weights were never written back.",
-      "id": "docs_ard_lamarckian_consolidation",
-      "community": 6,
-      "norm_label": "lamarckian consolidation"
-    },
-    {
-      "label": "Frontend Observation Deck",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.7",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Vanilla-JS frontend (public/) rendering the 65536-byte RAM as a folded 256x256 HTML5 canvas; includes KPI tiles, an extinction chart, a D3 Brain Analyzer that decompiles the Elite genome's synapses, an Oracle Terminal, and a Library of Genesis curriculum injector.",
-      "id": "docs_ard_observation_deck",
-      "community": 1,
-      "norm_label": "frontend observation deck"
-    },
-    {
-      "label": "Sensors (15) and Motors (14)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.6",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Inputs: energy reserve, bias, crowding, RAM byte under pointer, neighbours' vocal-cord bits, and the 8 bits of the Oracle broadcast (7-14). Outputs: jumps +/-1 and +/-10, consume, reproduce, and 8 vocal-cord bits (emitted ASCII character).",
-      "id": "docs_ard_sensors_motors",
-      "community": 1,
-      "norm_label": "sensors (15) and motors (14)"
-    },
-    {
-      "label": "Thermodynamics = CPU Cycles",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Energy is execution cycles (ATP_MAX=1,000,000 ceiling) drained per action at honest raw-cycle counts (Rule 15/17): synapse transmission 1, neuron membrane update 1\u00d7n_neurons/step, activity-gated STDP update 1, movement 3, viscosity stall n_neurons; consume +1024. Neuron update was formerly discounted to 0.1\u00d7 (brain size ~10\u00d7 too cheap), so billing at true rate makes lean brains out-reproduce costly ones \u2014 Rule 7 efficiency selected emergently by thermodynamics, never a fitness metric. Costs are activity-gated to reward many sparsely-firing synapses (the 20 W paradigm, Rule 11).",
-      "id": "docs_ard_thermodynamics_cpu_cycles",
-      "community": 6,
-      "norm_label": "thermodynamics = cpu cycles"
-    },
-    {
-      "label": "Computational Viscosity (Rule 13)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.2",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Local code density in a \u00b116-byte window sets a stall probability (up to 0.5) each tick; stalled steps burn maintenance energy but do no computation, penalising dense genomes and favouring sparse topologies.",
-      "id": "docs_ard_computational_viscosity",
-      "community": 6,
-      "norm_label": "computational viscosity (rule 13)"
-    },
-    {
-      "label": "Conservation of Compute",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.3",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Per-tick LIF step budget is a global pool: steps = GLOBAL_CYCLE_POOL(3000)/population; mass replication dilutes everyone's compute, coupling population to a fixed energy budget.",
-      "id": "docs_ard_conservation_of_compute",
-      "community": 6,
-      "norm_label": "conservation of compute"
-    },
-    {
-      "label": "Cosmic Radiation (Entropy)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.4",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Two random bit-flips per tick applied inside living organisms' genomes (germline mutation) rather than the mostly-empty 5 MB arena where ~99% of flips previously landed in vacuum. Known limitation: phenotype is decoded once at spawn, so a flip alters offspring not the running brain \u2014 true in-lifetime somatic entropy is future work.",
-      "id": "docs_ard_cosmic_radiation",
-      "community": 1,
-      "norm_label": "cosmic radiation (entropy)"
-    },
-    {
-      "label": "The Elite Ark (Rule 14)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.5",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "sim_loop continuously tracks the highest-age living genome; on total extinction the universe is reseeded (300 organisms) from mutated copies of that Elite, guaranteeing strictly ascending evolution. The Elite genome is checkpointed to Brain/Brain.npz.",
-      "id": "docs_ard_elite_ark",
-      "community": 1,
-      "norm_label": "the elite ark (rule 14)"
-    },
-    {
-      "label": "Reproduction & Mutation",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Reproduce pays genome_length\u00d7CYCLES_PER_BYTE_COPY then splits remaining energy 50/50 with the child; organism dies at energy<=0. mutate_dna applies insertion/deletion/gene-duplication (5% each) else point mutations at rate 1/genome_length; receptor-marker bytes 0-1 are protected so a lineage cannot lose all STDP in one flip.",
-      "id": "docs_ard_reproduction_mutation",
-      "community": 1,
-      "norm_label": "reproduction & mutation"
-    },
-    {
-      "label": "Oracle Uplink & Curriculum",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.7",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "User can broadcast an 8-bit character (sensed on inputs 7-14), read back the Elite's vocal-cord output, and inject ASCII books as byte patterns into the substrate \u2014 a still-human-in-the-loop scaffold toward the Autotelic Imperative (Rule 9).",
-      "id": "docs_ard_oracle_uplink",
-      "community": 1,
-      "norm_label": "oracle uplink & curriculum"
-    },
-    {
-      "label": "The Autotelic Imperative (Rule 9)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.7",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "The long-term goal of a self-directed, self-teaching system that removes the human-in-the-loop curriculum scaffold.",
-      "id": "docs_ard_autotelic_imperative",
-      "community": 1,
-      "norm_label": "the autotelic imperative (rule 9)"
-    },
-    {
-      "label": "mutate_dna",
-      "file_type": "code",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_ard_mutate_dna",
-      "community": 1,
-      "norm_label": "mutate_dna"
-    },
-    {
-      "label": "decode_genome",
-      "file_type": "code",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_ard_decode_genome",
-      "community": 6,
-      "norm_label": "decode_genome"
-    },
-    {
-      "label": "world_tick_numba",
-      "file_type": "code",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "docs_ard_world_tick_numba",
-      "community": 6,
-      "norm_label": "world_tick_numba"
-    },
-    {
-      "label": "Numba @njit(cache=True)",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Ahead-of-time cached JIT compilation to machine code, used to make the SNN hot path fast.",
-      "id": "docs_ard_numba_njit",
-      "community": 6,
-      "norm_label": "numba @njit(cache=true)"
-    },
-    {
-      "label": "elite_iq Dashboard Metric",
-      "file_type": "concept",
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.1",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "elite_iq = age / footprint is observation-only and must never feed back into selection (Rule 5/9); efficiency must remain emergent from thermodynamics, not an imposed fitness metric.",
-      "id": "docs_ard_elite_iq",
-      "community": 6,
-      "norm_label": "elite_iq dashboard metric"
     }
   ],
   "links": [
@@ -4260,7 +3202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/books_of_genesis.py",
-      "source_location": "L41",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "src_books_of_genesis",
       "target": "src_books_of_genesis_inject_curriculum_file",
@@ -4274,6 +3216,16 @@
       "weight": 1.0,
       "source": "src_books_of_genesis",
       "target": "src_books_of_genesis_inject_custom_book",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/books_of_genesis.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "src_books_of_genesis",
+      "target": "src_books_of_genesis_inject_passage",
       "confidence_score": 1.0
     },
     {
@@ -4292,7 +3244,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L111",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "src_genesis_lab_ws_handler",
       "target": "src_books_of_genesis_get_library_books"
@@ -4302,9 +3254,20 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/books_of_genesis.py",
-      "source_location": "L61",
+      "source_location": "L80",
       "weight": 1.0,
       "source": "src_books_of_genesis_inject_curriculum_file",
+      "target": "src_books_of_genesis_inject_custom_book",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/books_of_genesis.py",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "src_books_of_genesis_inject_passage",
       "target": "src_books_of_genesis_inject_custom_book",
       "confidence_score": 1.0
     },
@@ -4324,7 +3287,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L119",
+      "source_location": "L165",
       "weight": 1.0,
       "source": "src_genesis_lab_ws_handler",
       "target": "src_books_of_genesis_inject_custom_book"
@@ -4336,6 +3299,27 @@
       "source_location": "L42",
       "weight": 1.0,
       "source": "src_books_of_genesis_rationale_42",
+      "target": "src_books_of_genesis_inject_passage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L488",
+      "weight": 1.0,
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_books_of_genesis_inject_passage"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/books_of_genesis.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "src_books_of_genesis_rationale_61",
       "target": "src_books_of_genesis_inject_curriculum_file",
       "confidence_score": 1.0
     },
@@ -4345,7 +3329,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L123",
+      "source_location": "L169",
       "weight": 1.0,
       "source": "src_genesis_lab_ws_handler",
       "target": "src_books_of_genesis_inject_curriculum_file"
@@ -4374,7 +3358,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L93",
+      "source_location": "L139",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_broadcast_msg",
@@ -4384,7 +3368,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L199",
+      "source_location": "L245",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_create_intelligent_ancestor",
@@ -4394,7 +3378,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L325",
+      "source_location": "L404",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_crossover_dna",
@@ -4404,7 +3388,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L186",
+      "source_location": "L232",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_get_base_physics_header",
@@ -4414,7 +3398,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L581",
+      "source_location": "L691",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_main",
@@ -4424,7 +3408,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L296",
+      "source_location": "L375",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_mutate_dna",
@@ -4434,7 +3418,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L340",
+      "source_location": "L419",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_remember_fossil",
@@ -4444,7 +3428,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L351",
+      "source_location": "L430",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_seed_universe",
@@ -4454,7 +3438,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L377",
+      "source_location": "L456",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_sim_loop",
@@ -4464,7 +3448,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L233",
+      "source_location": "L312",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_spawn_organism",
@@ -4474,7 +3458,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L180",
+      "source_location": "L226",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_start_ws_server",
@@ -4484,7 +3468,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L97",
+      "source_location": "L143",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_ws_handler",
@@ -4494,7 +3478,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L175",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "src_genesis_lab",
       "target": "src_genesis_lab_ws_main",
@@ -4505,7 +3489,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L562",
+      "source_location": "L672",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_genesis_lab_broadcast_msg",
@@ -4516,7 +3500,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L184",
+      "source_location": "L230",
       "weight": 1.0,
       "source": "src_genesis_lab_start_ws_server",
       "target": "src_genesis_lab_ws_main",
@@ -4527,7 +3511,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L203",
+      "source_location": "L249",
       "weight": 1.0,
       "source": "src_genesis_lab_create_intelligent_ancestor",
       "target": "src_genesis_lab_get_base_physics_header",
@@ -4538,7 +3522,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L372",
+      "source_location": "L451",
       "weight": 1.0,
       "source": "src_genesis_lab_seed_universe",
       "target": "src_genesis_lab_create_intelligent_ancestor",
@@ -4549,7 +3533,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L373",
+      "source_location": "L452",
       "weight": 1.0,
       "source": "src_genesis_lab_seed_universe",
       "target": "src_genesis_lab_spawn_organism",
@@ -4560,7 +3544,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L488",
+      "source_location": "L598",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_genesis_lab_spawn_organism",
@@ -4572,7 +3556,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L236",
+      "source_location": "L315",
       "weight": 1.0,
       "source": "src_genesis_lab_spawn_organism",
       "target": "src_neuromorphic_engine_count_genes"
@@ -4583,7 +3567,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L244",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "src_genesis_lab_spawn_organism",
       "target": "src_neuromorphic_engine_free_block"
@@ -4594,7 +3578,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L239",
+      "source_location": "L318",
       "weight": 1.0,
       "source": "src_genesis_lab_spawn_organism",
       "target": "src_neuromorphic_engine_malloc_block"
@@ -4605,7 +3589,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L268",
+      "source_location": "L347",
       "weight": 1.0,
       "source": "src_genesis_lab_spawn_organism",
       "target": "src_neuromorphic_engine_parse_receptors"
@@ -4615,7 +3599,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L368",
+      "source_location": "L447",
       "weight": 1.0,
       "source": "src_genesis_lab_seed_universe",
       "target": "src_genesis_lab_mutate_dna",
@@ -4626,7 +3610,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L470",
+      "source_location": "L580",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_genesis_lab_mutate_dna",
@@ -4636,9 +3620,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L326",
+      "source_location": "L405",
       "weight": 1.0,
-      "source": "src_genesis_lab_rationale_326",
+      "source": "src_genesis_lab_rationale_405",
       "target": "src_genesis_lab_crossover_dna",
       "confidence_score": 1.0
     },
@@ -4647,7 +3631,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L368",
+      "source_location": "L447",
       "weight": 1.0,
       "source": "src_genesis_lab_seed_universe",
       "target": "src_genesis_lab_crossover_dna",
@@ -4657,9 +3641,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L341",
+      "source_location": "L420",
       "weight": 1.0,
-      "source": "src_genesis_lab_rationale_341",
+      "source": "src_genesis_lab_rationale_420",
       "target": "src_genesis_lab_remember_fossil",
       "confidence_score": 1.0
     },
@@ -4668,7 +3652,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L438",
+      "source_location": "L536",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_genesis_lab_remember_fossil",
@@ -4679,7 +3663,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/genesis_lab.py",
-      "source_location": "L381",
+      "source_location": "L460",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_genesis_lab_seed_universe",
@@ -4691,7 +3675,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L400",
+      "source_location": "L479",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_neuromorphic_engine_free_block"
@@ -4702,7 +3686,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/genesis_lab.py",
-      "source_location": "L383",
+      "source_location": "L462",
       "weight": 1.0,
       "source": "src_genesis_lab_sim_loop",
       "target": "src_neuromorphic_engine_world_tick_numba"
@@ -4773,7 +3757,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L130",
+      "source_location": "L148",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_count_genes",
@@ -4783,7 +3767,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L151",
+      "source_location": "L169",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_decode_genome",
@@ -4793,7 +3777,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L83",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_free_block",
@@ -4803,7 +3787,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L65",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_malloc_block",
@@ -4813,7 +3797,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L89",
+      "source_location": "L107",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_parse_receptors",
@@ -4823,7 +3807,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L200",
+      "source_location": "L218",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_sense",
@@ -4833,7 +3817,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L228",
+      "source_location": "L268",
       "weight": 1.0,
       "source": "src_neuromorphic_engine",
       "target": "src_neuromorphic_engine_world_tick_numba",
@@ -4844,7 +3828,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L538",
+      "source_location": "L630",
       "weight": 1.0,
       "source": "src_neuromorphic_engine_world_tick_numba",
       "target": "src_neuromorphic_engine_free_block",
@@ -4855,10 +3839,317 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/neuromorphic_engine.py",
-      "source_location": "L303",
+      "source_location": "L343",
       "weight": 1.0,
       "source": "src_neuromorphic_engine_world_tick_numba",
       "target": "src_neuromorphic_engine_sense",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/book_economy_sweep.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_book_economy_sweep_rationale_1",
+      "target": "tests_book_economy_sweep_py_tests_book_economy_sweep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/book_economy_sweep.sh",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_book_economy_sweep_sh_tests_book_economy_sweep",
+      "target": "c_users_hamid_source_repos_genesis_tests_book_economy_sweep_sh__entry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/book_economy_sweep.sh",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "tests_book_economy_sweep_sh_tests_book_economy_sweep",
+      "target": "tests_book_economy_sweep_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/book_economy_sweep.sh",
+      "source_location": "L10",
+      "weight": 1.0,
+      "context": "call",
+      "source": "c_users_hamid_source_repos_genesis_tests_book_economy_sweep_sh__entry",
+      "target": "tests_book_economy_sweep_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/book_read_test.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "tests_book_read_test",
+      "target": "tests_book_read_test_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/book_read_test.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_book_read_test_rationale_1",
+      "target": "tests_book_read_test",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/eat_gain_sweep.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_eat_gain_sweep_rationale_1",
+      "target": "tests_eat_gain_sweep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "tests_forage_race",
+      "target": "tests_forage_race_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "tests_forage_race",
+      "target": "tests_forage_race_seed_patch_food",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_forage_race_rationale_1",
+      "target": "tests_forage_race",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "tests_forage_race_rationale_45",
+      "target": "tests_forage_race_seed_patch_food",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/forage_race.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "tests_forage_race_run",
+      "target": "tests_forage_race_seed_patch_food",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "tests_live_book_economy_test",
+      "target": "tests_live_book_economy_test_library_bytes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "tests_live_book_economy_test",
+      "target": "tests_live_book_economy_test_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "tests_live_book_economy_test",
+      "target": "tests_live_book_economy_test_run_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_live_book_economy_test_rationale_1",
+      "target": "tests_live_book_economy_test",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "tests_live_book_economy_test_run_config",
+      "target": "tests_live_book_economy_test_library_bytes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/live_book_economy_test.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "tests_live_book_economy_test_main",
+      "target": "tests_live_book_economy_test_run_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/mutate_crash_test.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_mutate_crash_test_rationale_1",
+      "target": "tests_mutate_crash_test",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L150",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test",
+      "target": "tests_self_sustain_test_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test",
+      "target": "tests_self_sustain_test_process_births",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test",
+      "target": "tests_self_sustain_test_run_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test",
+      "target": "tests_self_sustain_test_world_tick",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_rationale_1",
+      "target": "tests_self_sustain_test",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_rationale_44",
+      "target": "tests_self_sustain_test_world_tick",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_run_config",
+      "target": "tests_self_sustain_test_world_tick",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_rationale_61",
+      "target": "tests_self_sustain_test_process_births",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L115",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_run_config",
+      "target": "tests_self_sustain_test_process_births",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_main",
+      "target": "tests_self_sustain_test_run_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/self_sustain_test.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "tests_self_sustain_test_rationale_80",
+      "target": "tests_self_sustain_test_run_config",
       "confidence_score": 1.0
     },
     {
@@ -4900,1390 +4191,8 @@
       "source": "tests_verify_baseline",
       "target": "tests_verify_baseline_run_verify",
       "confidence_score": 1.0
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_docs_sync_workflow",
-      "target": "rules_rules_academic_standards"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_fossil_pool_hgt",
-      "target": "rules_rules_intelligent_ancestor"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_opcode_soup",
-      "target": "rules_rules_intelligent_ancestor"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_intelligent_ancestor",
-      "target": "rules_rules_ascension_principle"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_ard_computational_viscosity",
-      "target": "rules_rules_prime_directive"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/PRD.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_ard_genesis",
-      "target": "rules_rules_prime_directive"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_lamarckian_consolidation",
-      "target": "rules_rules_prime_directive"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_ann_rejection",
-      "target": "rules_rules_prime_directive"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_efficiency_definition",
-      "target": "rules_rules_prime_directive"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_efficiency_selection",
-      "target": "rules_rules_efficiency_definition"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_elite_iq",
-      "target": "rules_rules_efficiency_definition"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_honest_cycle_accounting",
-      "target": "rules_rules_efficiency_definition"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": ".agents/skills/python-performance-optimization/references/advanced-patterns.md",
-      "source_location": "Pattern 13",
-      "weight": 1.0,
-      "source": "python_performance_optimization_advanced_patterns_slots",
-      "target": "rules_rules_efficiency_definition"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_elite_iq",
-      "target": "rules_rules_autotelic_imperative"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_avida",
-      "target": "rules_rules_replication_trap"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_tierra",
-      "target": "rules_rules_replication_trap"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_opcode_soup",
-      "target": "rules_rules_replication_trap"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_computational_viscosity",
-      "target": "rules_rules_replication_trap"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_academic_standards",
-      "target": "docs_article_draft_efficiency_selection"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/rules/Rules.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_academic_standards",
-      "target": "docs_result_experiment3_efficiency"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_2d_grid_snn",
-      "target": "rules_rules_no_abstraction_imperative"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "rules_rules_critical_perspective",
-      "target": "docs_result_experiment3_efficiency"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_evolvable_neurophysics",
-      "target": "rules_rules_no_hardcoded_constants"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_honest_cycle_accounting",
-      "target": "rules_rules_no_hardcoded_constants"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "cavecrew_readme_cavecrew",
-      "target": "cavecrew_skill_cavecrew"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "cavecrew_skill_cavecrew",
-      "target": "cavecrew_skill_builder"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "cavecrew_skill_cavecrew",
-      "target": "cavecrew_skill_investigator"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "cavecrew_skill_cavecrew",
-      "target": "cavecrew_skill_reviewer"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "cavecrew_skill_cavecrew",
-      "target": "caveman_skill_caveman"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": "Chaining patterns",
-      "weight": 1.0,
-      "source": "cavecrew_skill_investigator",
-      "target": "cavecrew_skill_builder"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/cavecrew/SKILL.md",
-      "source_location": "Chaining patterns",
-      "weight": 1.0,
-      "source": "cavecrew_skill_builder",
-      "target": "cavecrew_skill_reviewer"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-commit/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_commit_readme_caveman_commit",
-      "target": "caveman_commit_skill_caveman_commit"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-commit/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_commit_skill_caveman_commit",
-      "target": "caveman_commit_skill_conventional_commits"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-help/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_help_skill_caveman_help",
-      "target": "caveman_commit_skill_caveman_commit"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-compress/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_compress_readme_caveman_compress",
-      "target": "caveman_compress_security_snyk_false_positive"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-compress/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_compress_readme_caveman_compress",
-      "target": "caveman_compress_skill_caveman_compress"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-compress/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_compress_readme_caveman_compress",
-      "target": "caveman_readme_caveman"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": ".agents/skills/caveman-compress/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_compress_skill_caveman_compress",
-      "target": "caveman_skill_caveman"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.7,
-      "source_file": ".agents/skills/caveman-compress/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_compress_skill_caveman_compress",
-      "target": "caveman_stats_skill_caveman_stats"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-help/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_help_skill_caveman_help",
-      "target": "caveman_compress_skill_caveman_compress"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-help/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_help_readme_caveman_help",
-      "target": "caveman_help_skill_caveman_help"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-help/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_help_skill_caveman_help",
-      "target": "caveman_review_skill_caveman_review"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-help/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_help_skill_caveman_help",
-      "target": "caveman_skill_caveman"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-review/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_review_readme_caveman_review",
-      "target": "caveman_review_skill_caveman_review"
-    },
-    {
-      "relation": "implements",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": ".agents/skills/caveman-review/SKILL.md",
-      "source_location": "Auto-Clarity",
-      "weight": 1.0,
-      "source": "caveman_review_skill_caveman_review",
-      "target": "caveman_skill_auto_clarity"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-stats/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_stats_readme_caveman_stats",
-      "target": "caveman_stats_skill_caveman_stats"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman-stats/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_stats_skill_caveman_stats",
-      "target": "caveman_stats_skill_mode_tracker_hook"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_readme_caveman",
-      "target": "caveman_skill_caveman"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/caveman/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "caveman_skill_caveman",
-      "target": "caveman_skill_auto_clarity"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/find-skills/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "find_skills_skill_find_skills",
-      "target": "find_skills_skill_skills_cli"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/frontend-design/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "frontend_design_skill_frontend_design",
-      "target": "frontend_design_license_apache_2"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": ".agents/skills/kpi-dashboard-design/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "kpi_dashboard_design_skill_kpi_dashboard",
-      "target": "frontend_design_skill_frontend_design"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/kpi-dashboard-design/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "kpi_dashboard_design_skill_kpi_dashboard",
-      "target": "kpi_dashboard_design_details_worked_examples"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/kpi-dashboard-design/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "kpi_dashboard_design_skill_kpi_dashboard",
-      "target": "kpi_dashboard_design_skill_smart_kpi"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/python-performance-optimization/SKILL.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "python_performance_optimization_skill_python_perf",
-      "target": "python_performance_optimization_details_patterns"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/python-performance-optimization/references/advanced-patterns.md",
-      "source_location": "Pattern 13",
-      "weight": 1.0,
-      "source": "python_performance_optimization_advanced_patterns_advanced",
-      "target": "python_performance_optimization_advanced_patterns_slots"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".agents/skills/python-performance-optimization/references/details.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "python_performance_optimization_details_patterns",
-      "target": "python_performance_optimization_advanced_patterns_advanced"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_library_of_genesis",
-      "target": "english_01_alphabet_curriculum"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Books/English/03_Phrases.txt",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "english_03_phrases_curriculum",
-      "target": "english_02_basic_words_curriculum"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_library_of_genesis",
-      "target": "english_02_basic_words_curriculum"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_library_of_genesis",
-      "target": "english_03_phrases_curriculum"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Books/Math/02_Addition.txt",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "math_02_addition_curriculum",
-      "target": "math_01_digits_curriculum"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_library_of_genesis",
-      "target": "math_01_digits_curriculum"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_library_of_genesis",
-      "target": "math_02_addition_curriculum"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_lamarckian_consolidation",
-      "target": "docs_ard_reproduction_mutation"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_fossil_pool_hgt",
-      "target": "docs_ard_elite_ark"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_efficiency_selection",
-      "target": "docs_result_experiment3_efficiency"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.7,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_elite_iq",
-      "target": "docs_article_draft_efficiency_selection"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Article_Draft.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_article_draft_graded_plasticity",
-      "target": "docs_ard_stdp"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_opcode_soup",
-      "target": "docs_article_draft_tierra"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_smoke_test",
-      "target": "docs_ard_neuromorphic_engine"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_smoke_test",
-      "target": "docs_result_experiment3_efficiency"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_experiment3_efficiency",
-      "target": "docs_result_elite_iq"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/Result.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_result_experiment3_efficiency",
-      "target": "docs_result_honest_cycle_accounting"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_graph_physics",
-      "target": "docs_ard_genome_encoded_snn"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_opcode_soup",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/Roadmap.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_roadmap_2d_grid_snn",
-      "target": "docs_ard_genome_encoded_snn"
-    },
-    {
-      "relation": "implements",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_dashboard",
-      "target": "docs_ard_observation_deck"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_dashboard",
-      "target": "public_index_library_of_genesis"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_dashboard",
-      "target": "public_index_oracle_terminal"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_dashboard",
-      "target": "public_index_ram_memory_dump"
-    },
-    {
-      "relation": "implements",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "public/index.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "public_index_ram_memory_dump",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_genesis",
-      "target": "docs_ard_books_of_genesis"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_genesis",
-      "target": "docs_ard_genesis_lab"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_genesis",
-      "target": "docs_ard_neuromorphic_engine"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71",
-      "weight": 1.0,
-      "source": "docs_ard_genesis",
-      "target": "docs_ard_observation_deck"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "weight": 1.0,
-      "source": "docs_ard_lamarckian_consolidation",
-      "target": "docs_ard_neuromorphic_engine"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_neuromorphic_engine",
-      "target": "docs_ard_decode_genome"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_neuromorphic_engine",
-      "target": "docs_ard_genome_encoded_snn"
-    },
-    {
-      "relation": "implements",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "weight": 1.0,
-      "source": "docs_ard_neuromorphic_engine",
-      "target": "docs_ard_leaky_integrate_and_fire"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_neuromorphic_engine",
-      "target": "docs_ard_numba_njit"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_neuromorphic_engine",
-      "target": "docs_ard_world_tick_numba"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_genesis_lab",
-      "target": "docs_ard_elite_ark"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_genesis_lab",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_genesis_lab",
-      "target": "docs_ard_reproduction_mutation"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.7",
-      "weight": 1.0,
-      "source": "docs_ard_books_of_genesis",
-      "target": "docs_ard_oracle_uplink"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.1",
-      "weight": 1.0,
-      "source": "docs_ard_books_of_genesis",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.4",
-      "weight": 1.0,
-      "source": "docs_ard_cosmic_radiation",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.3",
-      "weight": 1.0,
-      "source": "docs_ard_global_heap",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.7",
-      "weight": 1.0,
-      "source": "docs_ard_observation_deck",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.7",
-      "weight": 1.0,
-      "source": "docs_ard_oracle_uplink",
-      "target": "docs_ard_ram_substrate"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.3",
-      "weight": 1.0,
-      "source": "docs_ard_global_heap",
-      "target": "docs_ard_genome_encoded_snn"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "weight": 1.0,
-      "source": "docs_ard_genome_encoded_snn",
-      "target": "docs_ard_hidden_neuron"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "weight": 1.0,
-      "source": "docs_ard_genome_encoded_snn",
-      "target": "docs_ard_receptor_protein"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "weight": 1.0,
-      "source": "docs_ard_genome_encoded_snn",
-      "target": "docs_ard_synapse_gene"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.6",
-      "weight": 1.0,
-      "source": "docs_ard_sensors_motors",
-      "target": "docs_ard_genome_encoded_snn"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.1",
-      "weight": 1.0,
-      "source": "docs_ard_thermodynamics_cpu_cycles",
-      "target": "docs_ard_genome_encoded_snn"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "weight": 1.0,
-      "source": "docs_ard_hidden_neuron",
-      "target": "docs_ard_receptor_protein"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.4",
-      "weight": 1.0,
-      "source": "docs_ard_stdp",
-      "target": "docs_ard_receptor_protein"
-    },
-    {
-      "relation": "implements",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "weight": 1.0,
-      "source": "docs_ard_hidden_neuron",
-      "target": "docs_ard_leaky_integrate_and_fire"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "weight": 1.0,
-      "source": "docs_ard_leaky_integrate_and_fire",
-      "target": "docs_ard_synapse_gene"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "weight": 1.0,
-      "source": "docs_ard_stdp",
-      "target": "docs_ard_synapse_gene"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "weight": 1.0,
-      "source": "docs_ard_stdp",
-      "target": "docs_ard_leaky_integrate_and_fire"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5",
-      "weight": 1.0,
-      "source": "docs_ard_baldwin_learning",
-      "target": "docs_ard_stdp"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "weight": 1.0,
-      "source": "docs_ard_lamarckian_consolidation",
-      "target": "docs_ard_stdp"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.5 / \u00a72.6",
-      "weight": 1.0,
-      "source": "docs_ard_lamarckian_consolidation",
-      "target": "docs_ard_baldwin_learning"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "weight": 1.0,
-      "source": "docs_ard_lamarckian_consolidation",
-      "target": "docs_ard_decode_genome"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "weight": 1.0,
-      "source": "docs_ard_lamarckian_consolidation",
-      "target": "docs_ard_reproduction_mutation"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.7",
-      "weight": 1.0,
-      "source": "docs_ard_observation_deck",
-      "target": "docs_ard_elite_ark"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a71.6",
-      "weight": 1.0,
-      "source": "docs_ard_sensors_motors",
-      "target": "docs_ard_oracle_uplink"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.2",
-      "weight": 1.0,
-      "source": "docs_ard_computational_viscosity",
-      "target": "docs_ard_thermodynamics_cpu_cycles"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.3",
-      "weight": 1.0,
-      "source": "docs_ard_conservation_of_compute",
-      "target": "docs_ard_thermodynamics_cpu_cycles"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.1",
-      "weight": 1.0,
-      "source": "docs_ard_thermodynamics_cpu_cycles",
-      "target": "docs_ard_elite_iq"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.4",
-      "weight": 1.0,
-      "source": "docs_ard_reproduction_mutation",
-      "target": "docs_ard_cosmic_radiation"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.5",
-      "weight": 1.0,
-      "source": "docs_ard_elite_ark",
-      "target": "docs_ard_reproduction_mutation"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.6",
-      "weight": 1.0,
-      "source": "docs_ard_reproduction_mutation",
-      "target": "docs_ard_mutate_dna"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Docs/ARD.md",
-      "source_location": "\u00a72.7",
-      "weight": 1.0,
-      "source": "docs_ard_oracle_uplink",
-      "target": "docs_ard_autotelic_imperative"
     }
   ],
-  "hyperedges": [
-    {
-      "id": "efficiency_20w_paradigm_cluster",
-      "label": "The 20W Sparse-Parallel Efficiency Paradigm",
-      "nodes": [
-        "rules_rules_prime_directive",
-        "rules_rules_efficiency_definition",
-        "rules_rules_ann_rejection",
-        "rules_rules_computational_viscosity"
-      ],
-      "relation": "form",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": ".agents/rules/Rules.md"
-    },
-    {
-      "id": "cavecrew_locate_fix_verify_flow",
-      "label": "Cavecrew Locate-Fix-Verify Chaining Flow",
-      "nodes": [
-        "cavecrew_skill_investigator",
-        "cavecrew_skill_builder",
-        "cavecrew_skill_reviewer"
-      ],
-      "relation": "participate_in",
-      "confidence": "EXTRACTED",
-      "confidence_score": 0.9,
-      "source_file": ".agents/skills/cavecrew/SKILL.md"
-    },
-    {
-      "id": "caveman_skill_family",
-      "label": "Caveman Token-Compression Skill Family",
-      "nodes": [
-        "caveman_skill_caveman",
-        "caveman_commit_skill_caveman_commit",
-        "caveman_review_skill_caveman_review",
-        "caveman_compress_skill_caveman_compress",
-        "caveman_stats_skill_caveman_stats",
-        "caveman_help_skill_caveman_help"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 0.9,
-      "source_file": ".agents/skills/caveman-help/SKILL.md"
-    },
-    {
-      "id": "superseded_substrate_history",
-      "label": "Architectural History of Superseded Substrates",
-      "nodes": [
-        "docs_roadmap_graph_physics",
-        "docs_roadmap_opcode_soup",
-        "docs_roadmap_2d_grid_snn",
-        "docs_ard_genome_encoded_snn"
-      ],
-      "relation": "participate_in",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/Roadmap.md"
-    },
-    {
-      "id": "curriculum_injection_pipeline",
-      "label": "Library of Genesis Curriculum Injection",
-      "nodes": [
-        "public_index_library_of_genesis",
-        "english_01_alphabet_curriculum",
-        "english_02_basic_words_curriculum",
-        "math_01_digits_curriculum",
-        "public_index_ram_memory_dump"
-      ],
-      "relation": "participate_in",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "public/index.html"
-    },
-    {
-      "id": "python_backend_modules",
-      "label": "Python Neuromorphic Backend Modules",
-      "nodes": [
-        "docs_ard_neuromorphic_engine",
-        "docs_ard_genesis_lab",
-        "docs_ard_books_of_genesis"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 0.95,
-      "source_file": "Docs/ARD.md"
-    },
-    {
-      "id": "coexisting_heredity_mechanisms",
-      "label": "Coexisting Baldwin/Lamarckian Heredity via STDP",
-      "nodes": [
-        "docs_ard_baldwin_learning",
-        "docs_ard_lamarckian_consolidation",
-        "docs_ard_stdp"
-      ],
-      "relation": "participate_in",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "Docs/ARD.md"
-    },
-    {
-      "id": "emergent_efficiency_thermodynamics",
-      "label": "Emergent Efficiency from Compute Thermodynamics",
-      "nodes": [
-        "docs_ard_thermodynamics_cpu_cycles",
-        "docs_ard_computational_viscosity",
-        "docs_ard_conservation_of_compute"
-      ],
-      "relation": "participate_in",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "Docs/ARD.md"
-    }
-  ],
-  "built_at_commit": "08ecb64d191a51cd1894b2b1bdc22821bb3be8bd"
+  "hyperedges": [],
+  "built_at_commit": "39e0e6c22a1c893791d292561a475264f81fa362"
 }

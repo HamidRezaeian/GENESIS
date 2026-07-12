@@ -51,8 +51,60 @@ then superseded; the source files for the first three no longer exist in the rep
      record set once before the loop, so after the first golden era no organism could beat it
      and the fossil pool froze onto one lineage; now reset per era so each era contributes its
      champion — the root cause of the Exp 4 clockwork-collapse loop.
+- ✅ **Ark-reseed crash fixed** (2026-07-11): `mutate_dna` duplication branch called
+     `random.randint(8, l-1)` with no `l > 8` guard (its sibling insert/delete branches have it),
+     so a genome of length exactly 8 — the floor the deletion branch shrinks to — raised
+     `ValueError: empty range in randrange(8, 8)` the moment an Ark reseed recombined a short
+     fossil (observed live at LIF Time ≈ 3.79M). Added the `l > 8` guard; proven by
+     `tests/mutate_crash_test.py` (20,000 calls on lengths 8–12, zero crashes).
 
 ## Part C — Forward Roadmap (from the 2026-07-10 critical review)
+
+### 🔴 P0 — Wire the book-reading economy into the LIVE sim (2026-07-11)
+**Wiring DONE + verified; sustain BLOCKED on navigation (2026-07-11 pass 2).** `genesis_lab.py`
+now has a full `GENESIS_ECONOMY=books` path: it pre-stocks + restocks a contiguous-passage library
+(`inject_passage`, `BOOK_TARGET_BYTES`), pays reading (`READ_SCALE=64`) with food at subsistence
+(`EAT_GAIN=16`), and seeds a modest 20k buffer — all gated so the default `food` path is byte-for-byte
+unchanged (zero regression). Verified headless with `tests/live_book_economy_test.py` (Ark OFF, no
+0x55 food). RESULT: reading works and income scales with library density (correct_reads 16→275 across
+3k→24k standing bytes) — but **no config self-sustains**; every cohort dies at ~42–56 ticks on the
+seed buffer. ROOT CAUSE (proven, not guessed): `seed_universe` spawns organisms only on empty (`0x00`)
+cells, i.e. **born in the gaps *between* passages, off the text**; with no text-seeking sense they
+rarely reach a page, so read rate is ~20× lower than the 90%-flood control (645 reads at 61% coverage
+vs ~18,000 at flood). A uniform flood sustains but is the video-game shortcut. **Therefore the real
+next lever is a TEXT-SEEKING SENSE** (mirror the food-scan: printable-symbol density ahead/behind →
+inputs; passages CLUSTER so — unlike uniform food — they yield a real ±16 gradient to climb) so a
+sparse, navigable library can feed minds. Until then default stays `food`. Files: `inject_passage`
+(books_of_genesis), book params + injection in `genesis_lab.py`, `tests/live_book_economy_test.py`.
+
+**▶ UPDATE (2026-07-11 pass 3 — M1, largely addressed; see Result Exp 6).** The live books path was
+first found *dead-on-arrival* — a `dynamic_lif_steps` use-before-assignment crashed `sim_loop` on
+tick 1 in books mode (fixed). Then the predicted text-seeking lever was built: (1) the seek-scan now
+targets **printable symbols** in books mode (`SEEK_TEXT`), reusing the ancestor's food-seek wiring;
+(2) `seed_universe` **spawns readers in the library** (empty cells with text in ±`FOOD_SCAN_RADIUS`).
+Encounter `0.00→0.38`, reads `0.3→55/tick`. The remaining burn wall was closed by making compute
+**architecture-derived** — per-organism LIF steps = the organism's synapse-graph depth (retires the
+`GLOBAL_CYCLE_POOL/alive` pool + its death-spiral). Efficiency now selects emergently (mean depth
+8→2). Cohorts live ~700–1000 world-ticks on reading income. **Still open (P0 residual):** cohorts
+*spatially leak* — offspring + restocked passages drift from readers — shrinking to a ~23-org pod.
+Next: spatial co-location (restock near population / offspring born in library) + reclaimed-compute
+read value. Diagnostic: `tests/_m1_econ_probe.py`.
+
+
+The 2026-07-11 breakthrough — **life by reading** (organisms sustain purely on energy from
+solving book-symbols; 95%+ echo accuracy, food off) — lives **only in the test harness**
+(`tests/book_read_test.py`). The live `genesis_lab.py` still runs the **old 0x55-food economy**
+and therefore still exhibits the Exp 4 clockwork collapse: the 2026-07-11 run pinned Pop at
+300/600 with a MASS EXTINCTION every ~6,000 ticks continuously past 1.8M cycles — weeds that
+don't even self-sustain, exactly the loop we diagnosed. **The mind-making economy is proven but
+unplugged.** To wire it in: (a) seed the reading eye + echo reflex into the *live* ancestor
+(already in `create_intelligent_ancestor`; confirm it is active in the live path); (b) make the
+live world inject the Books curriculum as the primary energy source with `READ_SCALE` high and
+`EAT_GAIN` at bare subsistence (or off); (c) the density sweep showed sustenance needs ~60% text
+with *no seeking* — so either flood text or first give organisms a **text-seeking sense**
+(reuse the food-seek pattern) so sparse books are navigable; (d) surface reads/predictions on the
+:8085 dashboard. Fork to decide with the user: seed a working reader (fast, Rule 5) vs. force
+reading to **evolve** from scratch under the read-economy (the real Rule 9 test, slow).
 
 ### 🔴 P1 — Physics correctness — ✅ DONE (2026-07-10)
 - ✅ Cosmic radiation targets *living* genomes (germline), not the empty arena.
@@ -96,9 +148,10 @@ then superseded; the source files for the first three no longer exist in the rep
 
 ### 🟢 P4 — Rule 17 constant sweep & hygiene
 - ✅ Removed the arbitrary `0.1` idle-metabolism discount (now honest 1 cycle/neuron).
-- [ ] The energy economy is still oversized / footprint-blind: `initial_energy = 250000`,
-      `CYCLES_PER_EAT_GAIN = 1024`, `ATP_MAX = 1e6`, `GLOBAL_CYCLE_POOL = 3000`, threshold
-      offset `+128`, `SYN_DENSITY_SCALE`/`STDP_SCALE = 8`. Bring these closer to real
+- [ ] The energy economy is still footprint-blind and hand-tuned: `SEED_ENERGY = 5000` food /
+      `20000` books (was `initial_energy = 250000`), `CYCLES_PER_EAT_GAIN = 15000` food / `16`
+      books (was `1024`; env `GENESIS_EAT_GAIN`), `ATP_MAX = 1e6`, `GLOBAL_CYCLE_POOL = 3000`,
+      threshold offset `+128`, `SYN_DENSITY_SCALE`/`STDP_SCALE = 8`. Bring these closer to real
       footprint scale (or DNA-encode) so efficiency bites without the deep-time buffer delay.
 - [ ] **Absolute-footprint** pressure: let contention/viscosity also rise with
       `(n+s)/UNIVERSE_MAX`, so large *sparse* brains are not effectively free (audit finding).

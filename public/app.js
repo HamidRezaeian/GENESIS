@@ -350,6 +350,9 @@ function handleBrainStatus(data) {
                 if (n === 5) return '🔊 Voice-Mid';
                 if (n === 6) return '🔊 Voice-Hi';
                 if (n >= 7 && n <= 14) return '📡 Oracle b' + (n-7);
+                if (n >= 15 && n <= 22) return '👁 Eye b' + (n-15);
+                if (n === 23) return '🧭 Food Fwd';
+                if (n === 24) return '🧭 Food Bck';
                 return id;
             }
             if (id.startsWith('Out')) {
@@ -375,6 +378,9 @@ function handleBrainStatus(data) {
                 if (n === 3) return 'The raw value of the RAM byte the organism’s pointer is currently sitting on, normalised to 0..1.';
                 if (n >= 4 && n <= 6) return 'Auditory channel: OR-combined vocal-cord bits emitted by the immediate left/right neighbours (low/mid/high group).';
                 if (n >= 7 && n <= 14) return 'Oracle uplink: bit ' + (n-7) + ' of the 8-bit character currently broadcast into the universe by the user terminal.';
+                if (n >= 15 && n <= 22) return 'Reading eye: bit ' + (n-15) + ' of the RAM byte under the pointer.';
+                if (n === 23) return 'Food Ahead: density of free energy (0x55) in the forward path.';
+                if (n === 24) return 'Food Behind: density of free energy (0x55) in the backward path.';
                 return 'Sensory input from the environment.';
             }
             if (id.startsWith('Out')) {
@@ -417,19 +423,37 @@ function handleBrainStatus(data) {
             .attr('d', 'M0,-5L10,0L0,5')
             .attr('fill', d => d === 'end-excitatory' ? '#00FF9D' : '#FF0055');
             
-        // gradients
+        // gradients and filters
         const defs = svgElement.select('defs');
         const gradIn = defs.append('radialGradient').attr('id', 'grad-input');
-        gradIn.append('stop').attr('offset', '0%').attr('stop-color', '#00E5FF');
-        gradIn.append('stop').attr('offset', '100%').attr('stop-color', '#007A99');
+        gradIn.append('stop').attr('offset', '0%').attr('stop-color', 'hsl(186, 100%, 50%)');
+        gradIn.append('stop').attr('offset', '100%').attr('stop-color', 'hsl(186, 100%, 20%)');
         
         const gradOut = defs.append('radialGradient').attr('id', 'grad-output');
-        gradOut.append('stop').attr('offset', '0%').attr('stop-color', '#FF4E00');
-        gradOut.append('stop').attr('offset', '100%').attr('stop-color', '#992E00');
+        gradOut.append('stop').attr('offset', '0%').attr('stop-color', 'hsl(18, 100%, 50%)');
+        gradOut.append('stop').attr('offset', '100%').attr('stop-color', 'hsl(18, 100%, 20%)');
 
         const gradHid = defs.append('radialGradient').attr('id', 'grad-hidden');
-        gradHid.append('stop').attr('offset', '0%').attr('stop-color', '#D055FF');
-        gradHid.append('stop').attr('offset', '100%').attr('stop-color', '#7A00B2');
+        gradHid.append('stop').attr('offset', '0%').attr('stop-color', 'hsl(276, 100%, 50%)');
+        gradHid.append('stop').attr('offset', '100%').attr('stop-color', 'hsl(276, 100%, 20%)');
+
+        function createGlow(id) {
+            const filter = defs.append('filter')
+                .attr('id', id)
+                .attr('x', '-50%').attr('y', '-50%')
+                .attr('width', '200%').attr('height', '200%');
+            filter.append('feGaussianBlur')
+                .attr('stdDeviation', '3')
+                .attr('result', 'coloredBlur');
+            const feMerge = filter.append('feMerge');
+            feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+            feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+        }
+        createGlow('glow-input');
+        createGlow('glow-output');
+        createGlow('glow-hidden');
+        createGlow('glow-excitatory');
+        createGlow('glow-inhibitory');
 
         const g = svgElement.append('g');
         const zoom = d3.zoom()
@@ -451,7 +475,7 @@ function handleBrainStatus(data) {
             .attr('stroke', d => d.weight > 0 ? 'rgba(0,255,157,0.7)' : 'rgba(255,0,85,0.7)')
             .attr('stroke-width', d => Math.max(1.5, Math.min(8, Math.abs(d.weight))))
             .attr('marker-end', d => d.weight > 0 ? 'url(#end-excitatory)' : 'url(#end-inhibitory)')
-            .style('filter', 'drop-shadow(0 0 3px rgba(255,255,255,0.3))')
+            .attr('filter', d => d.weight > 0 ? 'url(#glow-excitatory)' : 'url(#glow-inhibitory)')
             .style('cursor', 'pointer')
             .on('click', (e, d) => showInfo(`<b>SYNAPSE</b><br/>From: ${getFriendlyName(d.source.id || d.source)}<br/>To: ${getFriendlyName(d.target.id || d.target)}<br/>Weight: <span style="color:${d.weight > 0 ? '#00FF9D' : '#FF0055'}">${d.weight.toFixed(4)}</span><br/><br/><span style="color:#aaa; font-size: 0.9em; max-width: 250px; display:inline-block;">${d.weight > 0 ? 'Excitatory: Increases the probability of the target node firing.' : 'Inhibitory: Suppresses the probability of the target node firing.'}</span>`));
 
@@ -467,7 +491,11 @@ function handleBrainStatus(data) {
             })
             .attr('stroke', '#111')
             .attr('stroke-width', 2)
-            .style('filter', 'drop-shadow(0 0 6px rgba(255,255,255,0.4))')
+            .attr('filter', d => {
+                if (d.type === 'input') return 'url(#glow-input)';
+                if (d.type === 'output') return 'url(#glow-output)';
+                return 'url(#glow-hidden)';
+            })
             .style('cursor', 'pointer')
             .on('click', (e, d) => showInfo(`<b>NODE: ${getFriendlyName(d.id)}</b><br/>Layer: ${d.type.toUpperCase()}<br/>ID: ${d.id}<br/><br/><span style="color:#aaa; font-size: 0.9em; max-width: 250px; display:inline-block; line-height: 1.4;">${getNodeDescription(d.id)}</span>`))
             .call(d3.drag()

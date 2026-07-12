@@ -88,7 +88,9 @@ operation debits one cycle (Rule 15/17), with no arbitrary discounts:
   `1 × n_neurons` per step** (`CYCLES_PER_NEURON_UPDATE`), **STDP weight update `1`**
   (`CYCLES_PER_STDP_UPDATE`, charged only when a synapse actually potentiates or depresses —
   activity-gated), movement `3`, and a viscosity stall costs `n_neurons` cycles.
-- **Consume** a `0x55` food byte → `+CYCLES_PER_EAT_GAIN = 1024`.
+- **Consume** a `0x55` food byte → `+CYCLES_PER_EAT_GAIN` (default **15,000**, env-tunable via
+  `GENESIS_EAT_GAIN`; the `books` economy sets it to **16** so mindless grazing is bare
+  subsistence). *This meal value is an un-derived Rule 17 constant still under review (Roadmap P4).*
 - **Reproduce**: pay `genome_length × CYCLES_PER_BYTE_COPY` to copy the genome, then split
   the remaining energy in half with the child. An organism dies when energy `≤ 0`.
 
@@ -107,9 +109,19 @@ Each tick, local code density in a ±16-byte window sets a stall probability (up
 Stalled steps still burn maintenance energy but do no computation, penalising dense
 genomes and (in principle) favouring sparse topologies.
 
-### 2.3 Conservation of Compute
-The per-tick LIF step budget is a global pool: `steps = GLOBAL_CYCLE_POOL(3000) / population`.
-Mass replication dilutes everyone's compute, coupling population to a fixed energy budget.
+### 2.3 Architecture-Derived Compute Latency
+Each organism runs, per world-tick, exactly as many LIF substeps as its own synapse graph is
+**deep** — the longest input→node path plus one final membrane fire, computed at spawn from the
+decoded topology (`g_org_lif_steps`). Metabolic burn (1 cycle/neuron/substep) therefore scales with
+an organism's real computational latency: a 1-hop echo reflex costs 2 substeps, a deeper evolved
+brain costs proportionally more. This replaces an earlier population-coupled step *pool*
+(`steps = GLOBAL_CYCLE_POOL / population`), which was un-physical — an organism's burn depended on
+how many *others* were alive — and a death-spiral: as a population fell, each survivor ran more
+steps and burned faster, forcing synchronous collapse regardless of income. Consequence: **Rule 7
+efficiency is selected emergently** — deeper, costlier brains are out-reproduced by leaner ones with
+no imposed constant or fitness term (measured: a books cohort's mean depth selects 8→2). The world
+clock advances each tick by the deepest live brain's latency so sub-tick STDP timestamps never
+collide across ticks.
 
 ### 2.4 Cosmic Radiation (Entropy)
 Each tick, two random bit-flips are applied **inside the genomes of living organisms**

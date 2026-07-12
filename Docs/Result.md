@@ -220,7 +220,9 @@ lush — energy runs away to the cap with no selective margin, the opposite fail
 target is a *modest* meal-value at *moderate* food density — a regime where organisms survive only
 by foraging well — so that a food-seeking sense (Rules 5/10) and efficiency (Rule 7) become
 thermodynamic necessities rather than luxuries. The default `CYCLES_PER_EAT_GAIN` remains 1024
-(unchanged); the sweep used the env override only.
+(unchanged); the sweep used the env override only. **[Correction 2026-07-11: the code default was
+later raised to `15000` (`GENESIS_EAT_GAIN`), and the `books` economy sets `16`; the sentence above
+reflects the state at the time of Exp 4.]**
 
 **Food-seeking sense (added 2026-07-11; `neuromorphic_engine.sense`, `N_INPUT` 15→17).** To make
 foraging a survival *skill* (Rule 10) rather than luck, two sensory inputs now report local food
@@ -285,6 +287,46 @@ structure), which is the open research programme, not a hand-wiring.
 
 ---
 
+## 🧪 Experiment 6 — Live Book Economy: Reading as a Navigable Skill + Honest Compute (M1)
+**Objective (Roadmap P0/M1):** make the LIVE `sim_loop` book economy *self-sustain* on reading — not
+the 90 %-flood harness — with all costs derived from hardware, no game constants.
+
+**Live-path crash (found + fixed).** The `GENESIS_ECONOMY=books` sim_loop had never actually run: the
+book-restock check divided by `dynamic_lif_steps` one statement *before* it was assigned, so books
+mode raised `UnboundLocalError` on tick 1 (food mode dodged it via `and` short-circuit). The test
+harnesses reimplement the loop body, so they never exercised it — a live path can rot uncaught.
+
+**Measured collapse (`tests/_m1_econ_probe.py`).** With the crash fixed, books still died at tick ~43:
+`enc_frac ≈ 0.00` — organisms almost never stand on text. Text is injected as *contiguous passages*;
+`seed_universe` spawns on empty cells scattered away from them; the seeking sense hunted `0x55` food
+(near-absent in books). Income ≈ 0, pure seed-buffer burndown (~460/tick).
+
+**Two structural fixes (skill, not flood).** (1) **Text-seeking** — in books mode the ahead/behind
+seek-scan (`sense`, `SEEK_TEXT` baked from economy) targets printable symbols, so the ancestor's
+existing `FOOD_AHEAD→JMP` wiring becomes a text-seeker for free. (2) **Born-in-library** —
+`seed_universe` (books) spawns on empty cells with text within ±`FOOD_SCAN_RADIUS`. Together:
+`enc_frac 0.00→0.38`, correct reads `0.3→55/tick`, predictions appear. Reading income now fires at
+scale — but burn still exceeded it.
+
+**Architecture-derived compute (the honest metabolism).** The dominant burn was the
+`steps = GLOBAL_CYCLE_POOL/alive` pool — un-physical (an organism's burn depended on how many *others*
+were alive) and a death-spiral. Replaced with **per-organism LIF steps = the organism's own
+synapse-graph depth** (longest input→node path +1, computed at spawn). **Result:** efficiency
+selection *emerges* — deep ancestors (mean depth 8) burn ~4× and are culled; the population selects
+down to **depth-2 echo readers** carrying *high* energy (21–27 k, above seed). A cohort now lives
+~700–1000 world-ticks on reading income (vs instant collapse), Rule 7 arising from physics with no
+imposed step constant.
+
+**Honest limit (still open).** Not yet full-population sustain: cohorts **spatially leak** — offspring
+are born at the parent's drifting position and restocked passages land at random cells, so readers and
+text diffuse apart over generations (`enc_frac` decays), shrinking the population to a small (~23)
+stable reader pod before the Ark reseeds. The next levers are **spatial co-location** (restock near
+the population / offspring born in the library) and a **reclaimed-compute read value** (derive the
+read reward from RAM actually freed, retiring the `READ_SCALE` knob) — closing the loop without magic
+multipliers.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
 - **Learning efficacy:** STDP + Lamarckian memory are implemented, but we have not yet
@@ -301,6 +343,12 @@ Honest gaps between the engine's *capacity* and demonstrated *emergence*:
   clockwork extinction/Ark loop with no ascension. The root-cause `max_ark_age` freeze is fixed
   (2026-07-10); population self-sustainability and the instantaneous total-wipe dynamic remain
   open.
+
+## 6. Critical Audit Fixes (2026-07-11)
+A rigorous architectural review identified and fixed three critical engine flaws that compromised open-ended evolution:
+1. **Infinite Reading Money:** The stationary reading reward did not consume the byte unless the read was a perfect match, allowing organisms to stand still and farm partial-credit energy forever without foraging. Fixed by consuming the byte on *any* vocalization attempt, forcing physical exploration of text.
+2. **Hidden Neuron Ablation Bug:** A fragile boundary check in `count_genes` meant that any organism allocated past the start of the RAM heap counted zero genes. This meant all late-born organisms were spawned with zero hidden neurons, effectively crippling them.
+3. **Viscosity Bloat Ratchet:** The computational viscosity formula penalised synaptic *density* (synapses/neuron) rather than hardware footprint. This perverse incentive rewarded organisms that bloated with idle, disconnected neurons to lower their density. Viscosity is now strictly driven by total footprint `(neurons + synapses)`.
 
 ## 4. Conclusion
 The current neuromorphic engine is a working substrate: genome-encoded SNNs learn in-lifetime,

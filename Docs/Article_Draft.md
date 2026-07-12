@@ -53,7 +53,8 @@ server module (`genesis_lab.py`), with a vanilla-JS dashboard over WebSocket (:8
 - **Space = RAM.** A toroidal `uint8` array of `RAM_SIZE = 65,536` bytes. An organism's
   position is a byte address; motor actions are pointer jumps of ±1 or ±10 (mod `RAM_SIZE`).
 - **Food = memory.** The byte `0x55`, seeded into empty cells; consuming one yields
-  `CYCLES_PER_EAT_GAIN = 1024` cycles.
+  `CYCLES_PER_EAT_GAIN` cycles (default `15,000`, env-tunable `GENESIS_EAT_GAIN`; the `books`
+  economy drops it to `16` so reading — not grazing — is the path to wealth).
 - **Global heap.** Neurons, synapses and genomes for the whole universe occupy flat global
   arrays (capacities 5×10⁵ neurons, 2×10⁶ synapses, 5×10⁶ genome bytes); each organism
   `malloc`s contiguous blocks. Fragmentation is itself a spatial hazard.
