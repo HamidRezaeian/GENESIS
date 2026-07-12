@@ -83,7 +83,8 @@ def seed_in_library(pop, radius=16):
 
 def main():
     random.seed(1234); np.random.seed(1234)
-    # prestock library (mirror sim_loop / live test)
+    # prestock library (mirror sim_loop / live test): scattered pages so readers spread out (one
+    # contiguous shelf + 300 orgs = crowding collapse). Restock uses regrow_passage (renew locally).
     while lib_bytes() < TARGET:
         if bog.inject_passage(gl.g_ram, gl.RAM_SIZE, CATEGORY, NAME) is None:
             print("[WARN] cannot inject; library empty"); break
@@ -109,7 +110,7 @@ def main():
             print(f"{t:>5}  EXTINCT")
             break
         if lib_bytes() < TARGET:
-            bog.inject_passage(gl.g_ram, gl.RAM_SIZE, CATEGORY, NAME)
+            bog.regrow_passage(gl.g_ram, gl.RAM_SIZE, CATEGORY, NAME)
 
         gl.g_read_log[0] = 1
         steps = int(gl.g_org_lif_steps[gl.g_alive].max())  # world clock = deepest live brain (per-org depth)

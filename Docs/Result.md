@@ -327,6 +327,316 @@ multipliers.
 
 ---
 
+## 🧪 Experiment 7 — Remove ALL Game Constants: One Derived Matter↔Energy Exchange (2026-07-11)
+
+**Directive.** "All game constants must be removed." The economy still ran on invented numbers:
+`CYCLES_PER_EAT_GAIN` (a food byte = 15,000 cycles from nowhere), `READ_REWARD_SCALE` (×64), a loose
+`×8` per-bit read payout, and `SEED_ENERGY` (5,000/20,000). Each is "game design," not raw-hardware
+physics.
+
+**One derivation retires all four.** A RAM cell is an 8-bit register: it holds one of `2**8 = 256`
+microstates. Its energy content = that capacity, `CELL_STATES = 2**BITS_PER_BYTE = 256`. Every
+matter→energy event pays this one rate: **eating** a `0x55` cell reclaims the whole cell (`+256`);
+**solving** a symbol reclaims the fraction of bits resolved (`+(net_bits/8)×256`, a gradient — Rule 10);
+the abiogenesis **seed** is a founder's own footprint (genome+neurons+synapses) valued at
+`CELL_STATES`/cell. No multipliers, no per-economy knobs, no `GENESIS_EAT_GAIN`/`READ_SCALE` env. Food
+and text share one currency; reading can only out-earn grazing *emergently* (chained predictions +
+dense text), never by a rigged payout.
+
+**Measured (books, `_m1_econ_probe.py`), the honest arc:**
+- **Exchange-rate-1 first attempt** (a byte pays its literal value, 0x55→85): **EXTINCT tick 2.** Face
+  value (0–255) is far below per-tick burn — the old 15,000 was the hidden exchange rate all along.
+- **CELL_STATES = 256, tiny seed (one cell):** still **EXTINCT tick 3** — 256 seed = ~1.6 ticks of
+  runway (burn ~161/tick), founders die before navigating onto text (`corr/t = 0`), even at 61 %
+  density. The blocker was seed, not the rate.
+- **CELL_STATES + body-footprint seed (~57 k):** population **lives 550 ticks, reads well (peak 58
+  correct/tick), and efficiency selects emergently — mean depth 7.65 → 2.0** (Rule 7 intact with zero
+  magic). BUT `dE/t` is persistently **negative (~−150/tick)**: per-org reading income (~0.17 reads/tick
+  × 256 ≈ 44) < per-tick burn (~161), so it **coasts down the seed and dies** — Exp-4 coast-collapse,
+  now with literacy and no constant hiding it.
+
+**What Exp 7 proves + exposes.** The game constants are gone; the physics is internally consistent
+(every reward/seed traced to byte width). Removing the multiplier did NOT break reading or efficiency
+selection — both survive on honest currency. It **exposed the true wall:** a full read (256) is less
+than the **flat membrane burn** (`CYCLES_PER_NEURON_UPDATE × n_count` ≈ 125 for 44 neurons × depth).
+That `1 cycle/neuron/step` is hardware-honest but **clock-driven, not the event-driven 20 W paradigm
+(Rule 11)** — it charges idle neurons. The clean next lever (needs a design call) is an **activity-gated
+membrane** (charge only neurons that spike, as STDP already is), which would let sparse reading pay for
+a sparse brain and shift Rule 7 selection from "fewer neurons" to "fewer spikes." Food mode still runs
+without error (smoke_test coasts on its own 250 k default seed, unaffected).
+
+---
+
+## 🧪 Experiment 8 — Event-Driven Membrane: The 20 W Paradigm Made Literal (2026-07-12)
+
+**Directive.** "Do whatever it takes to reach the goal by modeling the human brain; amend the rules if
+they contain errors." Exp 7 exposed the last clock-driven tax: the membrane charged `1 cycle × n_count`
+**every step for every neuron, including idle ones**. That is not how a 20 W brain (or event-driven
+neuromorphic silicon) works — its energy is dominated by the **action potential** (depolarise + restore
+the ion gradient), while an unfired neuron draws ~nothing. The flat charge was a modelling error against
+Rule 11, not honest physics.
+
+**The fix (one line of physics).** Count action potentials per step (`n_spiked`) and charge the membrane
+per **spike**, not per neuron: `total_atp += CYCLES_PER_NEURON_UPDATE × n_spiked`. Forward-prop (synapse
+reads) and STDP were already spike-gated, so this makes the *entire* metabolism event-driven. No new
+constant — the same `1 cycle` unit, now billed on the real energy event.
+
+**Measured (books, `_m1_econ_probe.py`, `SEED_MODE=lib`, 9 % text density):**
+- **Before (flat membrane, Exp 7):** coast-collapse, dead ~tick 550, `dE/t ≈ −150`.
+- **After (spike-gated):** population **grows 300 → 358** (tick 75), **stabilises ~260, survives to
+  tick ~1449** (2.6× longer) with births replacing deaths. Early epochs read **37–45 correct/tick** —
+  reading is now **net-positive while on text**. Efficiency still selects (depth 8.5 → 2.0, Rule 7 intact
+  on the new "fewer spikes" axis). Food mode unaffected (smoke_test final pop 358).
+
+**What Exp 8 proves + exposes.** Event-driven metabolism flips the books economy from **terminal to
+survivable** with zero tuning — an organism standing on text funds itself. It also cleanly exposes the
+**next** wall, now a *different* mechanism: the kill is no longer burn but **`enc_frac → 0`** — the
+colony drifts OFF the sparse static text into vacuum, reads nothing, and dies of starvation-in-the-desert.
+Burn-limited → **encounter/seeking-limited** (Rule 10). Worse, spike-gating makes Rule 7 select *so* hard
+for the cheap depth-2 echo reflex that it discards the deeper seek-and-halt skill: **cheap-drifter
+out-reproduces competent-reader** because drifting isn't fatal *faster* than complexity is expensive.
+
+**Spatial follow-ups (measured, 2026-07-12).** Two honest levers were tried against `enc_frac` collapse:
+- **Offspring born in the library** (`find_birth_pos`, books mode): a child mallocs its body on a
+  text-adjacent free cell near the parent, not scattered into vacuum. *Result: neutral* (~1449→1490
+  ticks) — conceptually right and kept, but not the bottleneck.
+- **Library regrows in place** (`regrow_passage`): reading is **destructive** (a solved byte → `0x00`),
+  and the restocker was teleporting fresh pages to random cells — so the colony ate a vacuum hole
+  around itself while its food reappeared across the ring. Regrowing the next passage *adjacent to
+  existing text* (renew where grazed, like a field) **doubled mid-game read rate** (corr/t ~5–8 vs
+  ~2–4) and encounter (~0.04 vs ~0.01). Kept in the live loop. *But over-concentrating (one contiguous
+  shelf + 300 seeded organisms) causes crowding collapse* — so prestock stays scattered, only restock
+  regrows.
+
+**The deep wall is evolutionary, not spatial.** All three levers only *delay* the same end: the
+population converges to **depth-2 echo-only reflexes that have lost the seek circuit**, then drifts off
+text and starves. Root cause: the echo wiring is redundant (2 synapses/bit × 8 bits) but each **seek
+synapse is singular**, so mutation erodes seeking far faster than echoing; and because founders are
+*born on text*, seeking carries no immediate selective advantage to protect it. By the time a grazed-out
+colony *needs* to navigate back to text, the trait is already gone. This is the genuine Rule 9 frontier —
+**reading/foraging must be kept under continuous selection (or evolve), not seeded once and eroded** —
+and it is orthogonal to the (now-fixed) metabolism. Verified: live books `sim_loop` runs clean with all
+three changes (no crash, Ark-reseed cycles as before); food-mode `smoke_test` unaffected (final pop 358).
+
+**Testing the mechanism + finding the real cap (2026-07-12).** Two further probes:
+- **Redundant seek wiring** (2 synapses/direction, mirroring the redundant echo): *confirmed the
+  mechanism* — `enc_frac` and read rate now hold ~2× longer (corr/t ~4–5 through tick 850 vs decaying to
+  ~2), because seeking survives mutation like echoing does. Kept (honest, symmetric, improves survival);
+  food mode unaffected (`smoke_test` pop 347). But collapse is only delayed, not stopped.
+- **Density sweep** (9 % → 37 % text): the decisive result — **`enc_frac` stayed ~0.05 even at 37 %
+  density** (4× the text barely moved encounter). The cap is NOT density: because reading is
+  **destructive**, an organism is *always standing on the vacuum it just ate*, so encounter is capped by
+  the rate of *stepping onto fresh unread text*, which a spread-out population cannot sustain. Mean energy
+  bleeds because the ~95 % not-currently-on-fresh-text pay their spike cost with no income.
+
+**Net.** Exp 8's metabolism fix is real and kept (terminal → survivable); the spatial + wiring levers are
+honest improvements and kept. But full self-sustain is blocked by a **structural** property of the reading
+model itself: destructive reading + sparse-spread population caps encounter income below break-even at any
+tractable density. The next levers are genuine design decisions on the *reading model* — e.g. a "graze
+along the line" head that reliably steps symbol-to-symbol (the type-3 prediction path, currently ~0), or a
+non-destructive read with a different anti-farming rule (diminishing returns on re-reading) so a reader can
+hold position — not another metabolism or placement tweak.
+
+---
+
+## 🧪 Experiment 9 — The Reading MODEL: Graze-Along-the-Line + Non-Destructive Read (2026-07-12)
+
+**Hypothesis.** Exp 8 left a wall the docs called *structural*: destructive reading + a stationary
+head means a reader is always standing on the vacuum it just ate, so `enc_frac` was capped ~0.05 at
+**any** density. The fix is not more metabolism or placement — it is the *reading model itself*.
+
+**Change (engine, `neuromorphic_engine.py`).** Reading is now a **saccade**. A successful decode
+(`net>0`) advances the read head +1 onto the adjacent cell (forward, the direction text is laid
+down), so a reader **walks the passage symbol-to-symbol** instead of freezing. That single move also
+removes the need for destructive reading: the old byte-consume was purely an anti-farm hack ("don't
+stand still spamming one char"), and the saccade makes it redundant — a rewarded read moves the head
+*off* the cell, so re-reading it means walking the entire 65 536-cell ring back (never net-positive).
+So reading is now **non-destructive**: a book is not burned by being read (brain-honest), a following
+reader gets the same text (many students, one book), and the library is never strip-mined. **No new
+constant** — the step is unit adjacency, the cost is the existing `CYCLES_PER_MOVE` (3), trivially
+net-positive against a read (≤256). Only a real decode sweeps, so *walking the library requires
+actually reading it* (Rule 9). This supersedes the Exp 7 "consume on attempt" anti-farm (§6.1).
+
+**Measured (M1 econ probe, Ark OFF = terminal, library `English/01_Alphabet`).**
+
+| metric | pre-graze (Exp 8) | graze, density 0.09 | graze, density 0.37 |
+|---|---|---|---|
+| `enc_frac` (on-text fraction) | ~0.05 (capped, density-invariant) | **0.70–0.76** sustained | **0.40–0.68** sustained |
+| corr reads / tick | ~5 (collapsed) | ~130 sustained | ~120 sustained |
+| `pred/t` (type-3 prediction) | ~0 | 4–16 | **up to 44** |
+| library bytes | strip-mined | **intact (6016, never depletes)** | **intact (24 015)** |
+| mean-energy trend (back half) | bleed to extinction | slow decline (transit-limited) | **RISING 42k→44k, dE/t > 0** |
+
+- **The structural cap is gone.** `enc_frac` went from a density-invariant ~0.05 to 0.4–0.76 that
+  *responds to the world* — readers now walk lines and stay on fresh text.
+- **The prediction path came alive.** Type-3 "anticipate the next symbol" reads were ~0 for the whole
+  project; grazing readers moving forward onto text they vocalized now log `pred/t` up to 44 — the
+  real cognitive leap above reading-aloud, emergent, unrewarded by any special multiplier.
+- **The wall is now density-TRACTABLE, not structural.** At 9 % density the colony still slowly
+  declines (a grazer finishes a passage then crosses long vacuum to the next, earning nothing in
+  transit — `enc_frac` ~0.5, the off-text half starves). At **37 % density the economy is net-positive**:
+  mean energy *rises* 42k→44k over the back 600 ticks and `dE/t` is positive, the surviving population
+  self-sustaining on reading income while settling to the library's carrying capacity (~165). The old
+  cap was dead at *any* density; reading income now scales with text supply, as a real reading ecology
+  should.
+- **Efficiency still selected (Rule 7):** wrong reads `att/t` fall 100 → ~1 and depth trims 8.3 → 2.0
+  as the population evolves clean, cheap reading.
+
+**No regressions.** All three modules compile; food-mode `smoke_test` unaffected (pop 300 → 353, peak
+368 — graze excludes `0x55`, food path untouched); the **live `sim_loop`** (GENESIS_ECONOMY=books)
+runs crash-free through the graze path (reads active, no traceback). The live loop still mass-extincts,
+but that is the *separate, pre-existing* Ark/deep-time collapse loop (Exp 4: monoculture reseed +
+total-wipe), not the reading economy — which self-sustains in the honest Ark-OFF terminal probe.
+
+**Net.** The books economy is no longer capped by a structural encounter dead-end. With graze +
+non-destructive reading it is a genuine reading ecology: readers walk intact books, anticipate the
+next symbol, and — given adequate text density — live and accumulate energy on reading income alone,
+with efficiency and prediction both emerging from the physics. Remaining open: population-level
+sustain at *low* density (passage-to-passage transit cost) and the orthogonal deep-time/Ark collapse.
+
+---
+
+## 🧪 Experiment 10 — Dissolving the Total-Wipe Oscillator + Autotelic Peer Prediction (2026-07-12)
+
+Two changes attacking the Exp 4 deep-time collapse from opposite ends: **(A) a refugium** that
+converts the instantaneous total wipe into a Rule-10 gradient, and **(B) a zero-sum peer-prediction
+economy** — the first true-autotelic (Rule 9) energy source, where a survival problem arises from
+agent–agent interaction rather than human curriculum. Both verified on the **live `sim_loop`**
+(Live-Loop rule: measured on the real path, never a reimplemented harness).
+
+**A. Refugium (Tier B, `genesis_lab.seed_refuge`).** Extinction was detected only at population 0,
+which reseeded the whole world as 300 synchronised clones — the exact instantaneous total wipe Rule 10
+forbids (it makes evolution a clockwork oscillator with discrete, non-overlapping eras). The refugium
+tops the living population back up to a small floor from the hall-of-fame gene bank *before* it can
+hit 0. The floor is **derived, not a game constant**: `len(fossil_pool)` — one living representative
+per banked lineage (≤ `FOSSIL_POOL_MAX = 12`) — so the refuge expresses exactly the standing diversity
+the Ark holds. Each germ is an independent fossil recombination (diverse, not monoculture) and pays
+its own way at `SEED_ENERGY`, so it **softens death into a gradient, it does not clamp population or
+guarantee survival** (Rule 5-clean: reintroduces genes, imposes no fitness).
+
+**Measured (live loop, `GENESIS_ECONOMY=books`, 9 % density, `GENESIS_MAX_TICKS=120000`):**
+
+| metric | Tier A baseline (6-era probe) | + refugium (Tier B) |
+|---|---|---|
+| total wipes (`MASS EXTINCTION`) | **6** by LIF ~96k | **0** through LIF 120k |
+| collapse mode | 300→0 clockwork, synchronised | continuous gradient (`refuge_events=51`) |
+| population continuity | discrete era resets | rolling pop, overlapping ages |
+| `pool_top_ages` ratchet (Tier A) | held | held `[20332,19734,18538,…]` |
+
+The clockwork total-wipe oscillator is **dissolved**: over a *longer* span than the baseline's 6
+wipes, the refugium produced **zero** total extinctions and 51 soft gradient top-ups instead.
+
+**Honest limit exposed.** The population rides *at* the floor (`pop=12`) in every tested config —
+books 9 %, and even books at **37 % density** (`BOOK_TARGET_BYTES=24000`, Exp 9's self-sustaining
+point): `pop=12, refuge_events=435, ext=0`. So Exp 9's 37 % net-positive result was **harness-only
+(Ark-OFF, controlled)** and does **not** transfer to the live loop — the live spatial drift keeps the
+economy net-negative at every density tried. The refugium does its scoped job (cliff → gradient) but
+**does not, and should not, make a net-negative economy net-positive**; it is a safety net, not a
+clamp (it only *adds* organisms below the floor, so a net-positive economy would grow past 12 and the
+refuge would fall silent). Live-loop self-sustain remains the real orthogonal blocker.
+
+**B. Peer prediction (autotelic, `GENESIS_PEER=1`, `neuromorphic_engine.world_tick_numba`).** An
+organism that vocalises the byte a **neighbour** is emitting has predicted it (from the voice sensed
+on inputs 4–6); it reclaims the matched bits' state-space `(net/8)×CELL_STATES` **from that
+neighbour** — `energy[predictor] += g; energy[speaker] −= g`, clamped to the speaker's holdings.
+**Zero-sum by construction ⇒ unfarmable** (no free energy is minted; you can only take what a
+neighbour holds). The only way to earn is to out-model a neighbour and the only defence is to be
+*unpredictable* — a Red-Queen arms race toward informative signalling (proto-language), with no
+human-authored text and no imposed fitness. It **redistributes** energy (selects for communication)
+rather than adding it (sustenance stays the reading/refugium economy's job). Compile-time gated, so
+food/books pay nothing when off; `NUMBA_CACHE_DIR` keyed on it so kernels never collide.
+
+**Measured (live loop, `GENESIS_ECONOMY=food GENESIS_PEER=1`):** peer-prediction events fire
+continuously (`peer=50–332` per 5 s interval), crash-free, `ext=0`, energy conserved by construction
+(logged as read-log type 4; dashboard "peer" events). **Wiring verified; emergence not.** Whether the
+arms race actually grows a communication code is unproven — it needs a net-positive economy plus many
+generations of evolution to show, i.e. it is gated behind the same live-sustain blocker above. This
+is the **first Rule-9 agent–agent survival problem** in the substrate (Roadmap P3), a foundation, not
+a demonstrated language.
+
+**No regressions.** Both modules `py_compile` clean; peer path is dead-code-eliminated when off;
+refugium changes only the extinction path (the Live-Loop-Test-Gap harnesses never call `sim_loop`).
+The default `food` economy now also survives as a gradient (`ext=0`) instead of clockwork wiping.
+
+---
+
+## 🧪 Experiment 11 — The Live Economy Goes Net-Positive: Contiguity Was the Lever (2026-07-12)
+
+Exp 10 left one blocker: the live `sim_loop` was net-negative at every density, so the colony rode
+the refuge floor (`pop=12`) while Exp 9's net-positive reading was "harness-only". This experiment
+**closes that blocker** — the live loop now sustains a full colony on reading income alone — and the
+root cause turned out to be neither the exchange rate nor reproduction, but **world structure**.
+
+**The hunt (measured, `tests/_m1_econ_probe.py` + throwaway `/tmp` division probes).**
+1. *Not an energy shortage.* On-text organisms sit **rich** (40–60k energy, `ATP_MAX`=1M). The colony
+   declines while mean energy is roughly conserved — marginal organisms die, a fat core persists.
+2. *Not encounter-by-density.* Raising text density 37 %→76 % made decline **worse** (300→105 vs
+   300→153), not better — more text just means more mis-reads (net-negative reads) and crowding.
+3. *Reproduction looked throttled* (native `OUT_REPRODUCE` rarely wins winner-take-all: ~0.3
+   births/epoch while ~280/300 organisms could afford it — a classic Tierra non-breeder trap). But
+   forcing energy-triggered cell-division **boom-busts to extinction**: non-destructive reading (Exp 9)
+   made text infinite food, so there is *no carrying-capacity brake* and any division mechanic
+   converts the seed buffer into an overshoot → collapse.
+4. *The honest mitosis threshold never fires.* At `2 × body-energy` (2 × footprint × `CELL_STATES`,
+   the derived cost of building a second body) **no organism ever qualifies** — they coast 59k→17k,
+   net-*negative*. So reproduction was never the bind; **income < burn** was.
+
+**Cause: "confetti" library.** A reading organism saccades +1 symbol-to-symbol along text it decodes
+(Exp 9). The library was many short passages (the 52-byte alphabet file, tiled at random anchors), so
+a reader walks to the **end of a fragment and steps into vacuum**, earning nothing while it crosses
+the gap to the next fragment. Half the colony is thus always in transit (`enc_frac`~0.5), and that
+**idle off-text burn — not the exchange rate — is what kept the economy net-negative at every
+density.** Readers could not out-earn the gaps.
+
+**Fix: one contiguous scroll (pure world structure, no reward change).** `inject_contiguous_library`
+lays the *same bytes* as a single continuous scroll pinned at a fixed centred start (restocked in
+place). A saccading reader almost never leaves the text: `enc_frac` **0.5 → 0.98**. Reading income
+finally exceeds metabolism and the colony grows on reading alone (native reproduction) to carrying
+capacity. Arguably *more* faithful to reading an actual book (continuous lines) than word-confetti.
+
+**Two supporting fixes surfaced by the hunt:**
+- **Event-driven sensing (Rule 11, same principle as the Exp 8 membrane fix).** The old flat
+  `2*FOOD_SCAN_RADIUS` (=32 cycles/tick, ~40 % of the metabolic floor) charged every organism every
+  tick *including* the ~50 % of ticks spent off-text — a clock-driven von-Neumann tax that also
+  **double-charged** (the seeking sense's only job is to drive input neurons 23–24, already billed
+  per-spike by the event-driven membrane). Removed (not retuned): survivor economy flips coast-down →
+  break-even.
+- **On-text seeding (the live-only bug).** `seed_universe` / `seed_refuge` required `g_ram[p]==0x00`
+  to place an organism — a food-economy holdover ("don't spawn on food you'd instantly eat"). A solid
+  scroll has **no interior `0x00` cells**, so that rule pushed the entire cohort off the scroll into
+  vacuum where it starved. This is why the *probe* (which places organisms directly on the block)
+  thrived at 600 while the first *live* run still hit floor-12. Placement now keys on org-grid
+  **occupancy** (stand ON the page and read it), not the byte beneath — the real constraint.
+
+**Measured (live `sim_loop`, Live-Loop rule — the real path, not a harness):**
+
+| config | before (Exp 10) | after (Exp 11) |
+|---|---|---|
+| books, 37 % (`TARGET=24000`), ~117k ticks | `pop=12`, `refuge≈435`, net-negative | **`pop=596–600/600`, `refuge=0`, `ext=0`** |
+| books, 9 % (`TARGET=6000`), ~80k ticks | `pop=12` (floor) | **`pop=591–600/600`, `refuge=0`, `ext=0`** |
+
+`refuge=0` is the headline: the safety net **never fires** because the colony sustains itself. Exp 9's
+net-positive reading now **transfers to the live loop**. Density was never the variable — the scroll is
+a fixed block regardless of the surrounding vacuum; **contiguity was the lever.**
+
+**Honest limits.**
+- *Reproduction path.* Growth here rides the engine's native `OUT_REPRODUCE`, which fires once
+  organisms are genuinely net-positive. Custom energy-triggered division was tested and **shelved** —
+  without a carrying-capacity brake it overshoots. The chosen crowd-cost regulator (Rule 11/13) works
+  in-probe but is **held**, not shipped: contiguity + native reproduction produces no overshoot to
+  brake, and crowd cost only thinned a healthy 600-colony to ~43 with no benefit at `enc`=0.98.
+- *Carrying capacity = the org array cap (600), not a food limit.* Non-destructive reading means the
+  scroll is infinite food, so population is space-limited. A real food-scarcity carrying capacity
+  (below the array cap) is future work if a logistic ceiling is wanted.
+- *Peer prediction is incompatible for now.* Under the thriving colony, `GENESIS_PEER=1` **collapses
+  it back to floor-12**: zero-sum predation drains victims faster than the arms race evolves a defence,
+  culling the population before defensive signalling can emerge. Peer is default-OFF (opt-in), so the
+  shipped net-positive economy is unaffected — but the Rule-9 autotelic layer now needs either a
+  gentler (non-lethal) predation coupling or a much larger sustained population before it can run
+  without extinguishing its own substrate. Recorded, not yet solved.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
 - **Learning efficacy:** STDP + Lamarckian memory are implemented, but we have not yet
@@ -338,25 +648,41 @@ Honest gaps between the engine's *capacity* and demonstrated *emergence*:
   is still unproven because capability itself is unmeasured. `elite_iq` remains
   observation-only by design (wiring it into selection would violate Rule 5/9).
 - **Autotelic end-state (Rule 9):** food/oracle/curriculum are still human-supplied
-  scaffolds; agent-generated survival problems are future work.
-- **Deep-time robustness (Rules 10/14):** characterised in Exp 4 and found *negative* — a
-  clockwork extinction/Ark loop with no ascension. The root-cause `max_ark_age` freeze is fixed
-  (2026-07-10); population self-sustainability and the instantaneous total-wipe dynamic remain
-  open.
+  scaffolds. **First agent-generated survival problem now exists** — zero-sum peer prediction
+  (Exp 10B), where organisms earn by out-modelling neighbours, no human text. Wiring verified;
+  emergence of a communication code unproven (gated behind live-loop self-sustain).
+- **Deep-time robustness (Rules 10/14):** the Exp 4 clockwork loop is structurally dissolved
+  — the `max_ark_age` freeze is fixed (2026-07-10), the fossil pool ratchets as a hall-of-fame
+  (Tier A), and the **instantaneous total wipe is replaced by a refugium gradient** (Exp 10A:
+  `ext` 6→0, continuous rolling population). **The economy beneath it is now net-positive too**
+  (Exp 11): with a contiguous library the live loop sustains `pop=596–600/600` with `refuge=0`,
+  `ext=0` at both 9 % and 37 % density — the population no longer rides the refuge floor. What
+  remains open on top of a sustaining economy: (a) does the colony *ascend* (rising `elite_age`/
+  capability) over long deep time, not merely persist; (b) a food-scarcity carrying capacity below
+  the 600 array cap, if a logistic ceiling is wanted; (c) a peer-prediction coupling that does not
+  extinguish its own substrate (Exp 11 found `GENESIS_PEER=1` collapses the thriving colony).
 
 ## 6. Critical Audit Fixes (2026-07-11)
 A rigorous architectural review identified and fixed three critical engine flaws that compromised open-ended evolution:
-1. **Infinite Reading Money:** The stationary reading reward did not consume the byte unless the read was a perfect match, allowing organisms to stand still and farm partial-credit energy forever without foraging. Fixed by consuming the byte on *any* vocalization attempt, forcing physical exploration of text.
+1. **Infinite Reading Money:** The stationary reading reward did not consume the byte unless the read was a perfect match, allowing organisms to stand still and farm partial-credit energy forever without foraging. Originally fixed by consuming the byte on *any* vocalization attempt. **Superseded by Exp 9 (2026-07-12):** the graze-along-the-line saccade advances the head off the cell on every rewarded read, so re-reading requires walking the whole 65 536-cell ring — the movement *is* the anti-farm, and reading is now non-destructive (the byte-consume was removed). Same guarantee (no standing-still farm), but the library is no longer strip-mined.
 2. **Hidden Neuron Ablation Bug:** A fragile boundary check in `count_genes` meant that any organism allocated past the start of the RAM heap counted zero genes. This meant all late-born organisms were spawned with zero hidden neurons, effectively crippling them.
 3. **Viscosity Bloat Ratchet:** The computational viscosity formula penalised synaptic *density* (synapses/neuron) rather than hardware footprint. This perverse incentive rewarded organisms that bloated with idle, disconnected neurons to lower their density. Viscosity is now strictly driven by total footprint `(neurons + synapses)`.
 
 ## 4. Conclusion
 The current neuromorphic engine is a working substrate: genome-encoded SNNs learn in-lifetime,
 reproduce with heritable topology **and** partially-heritable learned weights, and are held in
-bounded population dynamics by a thermodynamic compute budget. However, deep-time
-characterisation (Exp 4) shows the substrate is **not yet self-sustaining**: it settles into a
-clockwork extinction/Ark loop with no ascension, driven by a now-fixed fossil-pool freeze plus
-monoculture reseeding, an instantaneous total-wipe dynamic (contra Rule 10), and a brain-size
-bloat ratchet. It provides the physical preconditions for emergent cognition, but establishing
-self-sustaining, ascending populations — and then demonstrating that cognition — is the open
-research programme in `Roadmap.md`.
+bounded population dynamics by a thermodynamic compute budget. The Exp 4 deep-time collapse loop
+is now **structurally dismantled**: the fossil-pool freeze is fixed, the pool ratchets as a
+hall-of-fame (Tier A), and the instantaneous total wipe is replaced by a **refugium gradient**
+(Exp 10A — `ext` 6→0, continuous rolling population, contra the old clockwork). A first
+**agent-generated survival problem** (zero-sum peer prediction, Exp 10B) provides a Rule-9
+autotelic pressure with no human curriculum. **The layer beneath the oscillator is now solved too**
+(Exp 11): the live economy is **net-positive** — with a contiguous library instead of scattered
+passages, `enc_frac` rises 0.5→0.98, reading income exceeds metabolism, and the live loop sustains a
+full `596–600/600` colony with the refugium never firing (`refuge=0`, `ext=0`) at both tested
+densities. Exp 9's reading economy now transfers to the live path; the root cause was world structure
+(confetti transit gaps), not the exchange rate. The frontier moves up the stack: from *"can the
+colony survive?"* (yes) to **"does it ascend?"** — whether capability/`elite_age` rises over long deep
+time on a sustaining substrate, and whether the peer arms race can run without a lethal-predation
+coupling that collapses its own population (Exp 11's open peer finding). Those are the next research
+questions in `Roadmap.md`.

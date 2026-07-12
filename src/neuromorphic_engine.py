@@ -28,6 +28,14 @@ FOOD_SCAN_RADIUS = 16
 # not a random-walk lottery. Food mode is unchanged (scans 0x55 exactly as before).
 SEEK_TEXT = os.environ.get("GENESIS_ECONOMY", "food").lower() == "books"
 
+# PEER PREDICTION (autotelic, Rules 9/6) — compile-time gate baked into world_tick_numba. When on,
+# an organism that vocalizes the byte a NEIGHBOUR is emitting reclaims the matched bits' state-space
+# FROM that neighbour (zero-sum energy transfer, unfarmable by construction). Roadmap P3: survival
+# problems from agent-agent competition, no human curriculum. Read inside the njit as a constant, so
+# it is DEAD-CODE-ELIMINATED when off (food/books pay nothing). genesis_lab keys NUMBA_CACHE_DIR on
+# it so the peer and non-peer kernels never share a compiled cache.
+PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -50,15 +58,18 @@ W_MAX   = np.float32(127.0)
 CYCLES_PER_SPIKE_CHECK = np.float32(1.0)
 CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
 CYCLES_PER_MOVE = np.float32(3.0)
-# A BYTE IS STORED ENERGY (no reward constants — 2026-07-11 "remove all game constants").
-# RAM holds numbers; in this universe a number IS a quantity of energy (cycles). So RESOLVING a
-# byte — eating food (0x55) or SOLVING a book symbol, either way writing the cell back to 0x00
-# vacuum — releases EXACTLY the byte's own value in cycles. Nothing is multiplied, nothing is
-# tuned: a food byte 0x55 pays 85, the letter 'A' pays 65, 'z' pays 122. Food and text are thereby
-# NATURALLY comparable, so reading competes with eating without a single knob (retires the old
-# CYCLES_PER_EAT_GAIN=15000 and READ_REWARD_SCALE=64 game constants — Rules 9/10/17). BITS_PER_BYTE
-# is hardware (8), used only to grade partial reads: a partial solve pays value*net_bits/8.
+# MATTER<->ENERGY EXCHANGE, DERIVED FROM THE BYTE (no reward constants — 2026-07-11 "remove all
+# game constants"). A RAM cell is an 8-bit register: it holds one of 2**8 microstates. FULLY
+# resolving a cell — eating a food byte, or SOLVING all 8 bits of a symbol, either way collapsing
+# the cell back to 0x00 vacuum — reclaims its whole state-space and releases 2**BITS_PER_BYTE = 256
+# cycles. That single number is the honest exchange rate between reclaimed matter and energy: it is
+# the cell's information capacity, not a tuned payout. It retires the old CYCLES_PER_EAT_GAIN=15000
+# and READ_REWARD_SCALE=64 game constants (Rules 9/10/17). Partial reads are graded (Rule 10): a
+# solve that gets net_bits of 8 right pays (net_bits / BITS_PER_BYTE) * CELL_STATES. Reading beats
+# grazing not by any multiplier but EMERGENTLY — a reader chains predictions across a passage and
+# lives where text is dense, while a grazer reclaims one isolated food cell at a time.
 BITS_PER_BYTE = np.float32(8.0)
+CELL_STATES   = np.float32(256.0)   # 2 ** 8 — microstates in one 8-bit RAM cell = its energy content
 CYCLES_PER_BYTE_COPY = np.float32(1.0)
 # Honest raw-cycle accounting (Rule 15/17): one canonical executed operation costs 1 cycle,
 # the same unit already used for a synapse read (1) and a move (3). A neuron membrane update
@@ -365,9 +376,22 @@ def world_tick_numba(
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
 
-        # Honest cost of the food-scan sample (2*radius memory reads), charged once per tick
-        # since sense() is hoisted out of the LIF sub-step loop (Rule 17).
-        total_atp += np.float32(2 * FOOD_SCAN_RADIUS)
+        # EVENT-DRIVEN SENSING (Rule 11, 2026-07-12 — same principle as the Exp 8 membrane fix).
+        # The old model charged a FLAT 2*FOOD_SCAN_RADIUS (=32) cycles EVERY tick to EVERY organism
+        # as "the food-scan memory reads". That is a clock-driven von-Neumann tax, and it double-
+        # charged: the seeking sense's only job is to drive the two seeking input neurons (food_ahead
+        # / food_behind, inputs 23-24), whose transduction ALREADY costs one cycle per spike through
+        # the event-driven membrane charge below (total_atp += CYCLES_PER_NEURON_UPDATE * n_spiked).
+        # On a 20W neuromorphic substrate a receptor draws energy when it FIRES, not on a background
+        # clock, so the honest sensory cost is exactly those input-neuron spikes — not a flat 32/tick
+        # levied whether or not the organism is even near text. Measured (tests/_m1_econ_probe.py +
+        # /tmp division probes): this flat tax was ~40% of the metabolic floor and, being paid every
+        # tick INCLUDING the ~50% of ticks an organism spends off-text earning nothing, was the single
+        # dominant reason the reading economy stayed net-negative at every density (a reader could not
+        # out-earn its own idle scan tax across the transit gaps between passages). Folding it into the
+        # per-spike membrane cost (i.e. billing sensing only when a sensory neuron actually transduces)
+        # flips the survivor economy from a coast-down to break-even/positive without any reward
+        # inflation or new constant — the flat charge is simply removed, not retuned.
 
         # Architecture-derived compute latency (no global step constant): this organism runs as many
         # LIF substeps this world-tick as its own synapse graph is deep — computed once at spawn into
@@ -385,7 +409,15 @@ def world_tick_numba(
             # Zero current spike buffer
             for i in range(n_count):
                 curr_spk_buf[i] = False
-                
+
+            # Event-driven metabolism (Rule 11): count the action potentials this step. On a 20W
+            # neuromorphic substrate the dominant energy draw is the spike itself (depolarisation +
+            # restoring the ion gradient), NOT an idle membrane — an unfired neuron on event-driven
+            # hardware clocks nothing. So the honest per-step burn is charged per SPIKE, not per
+            # neuron (see the membrane charge below), shifting Rule 7 selection from "fewer neurons"
+            # to "fewer spikes per useful output" — a sparse-firing brain is cheap even if large.
+            n_spiked = 0
+
             t_now = global_time + step
             
             n_ptr = org_n_ptr[org]
@@ -411,6 +443,7 @@ def world_tick_numba(
                     if random.random() < sense_buf[n] * spike_val:
                         curr_spk_buf[n] = True
                         global_t_last[n_ptr + n] = t_now
+                        n_spiked += 1
                 else:
                     if global_ref[n_ptr + n] > 0:
                         global_ref[n_ptr + n] -= 1
@@ -428,7 +461,8 @@ def world_tick_numba(
                             global_v[n_ptr + n] = o_rec_v_reset[org, r_idx]
                             global_ref[n_ptr + n] = TAU_REF
                             global_t_last[n_ptr + n] = t_now
-                            
+                            n_spiked += 1
+
                             if n >= N_INPUT and n < N_IO:
                                 out_idx = n - N_INPUT
                                 out_accum[out_idx] += 1
@@ -466,11 +500,15 @@ def world_tick_numba(
                         global_conn_weight[s_ptr + c] = w
                         total_atp += CYCLES_PER_STDP_UPDATE
 
-            # Membrane update for every neuron this step is real executed work: charge the
-            # honest 1 cycle/neuron (was an arbitrary 0.1 discount that made brain size cost
-            # ~10x too little to matter). This is the emergent thermodynamic pressure that
-            # makes a cheaper brain reproductively fitter (Rule 7) — not a top-down fitness term.
-            total_atp += CYCLES_PER_NEURON_UPDATE * n_count
+            # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
+            # fired this step, not per neuron present. On a 20W neuromorphic substrate the spike
+            # (depolarise + restore the ion gradient) is the real energy event; an idle neuron
+            # draws ~nothing. Forward-prop (synapse reads) and STDP are already spike-gated above,
+            # so this was the last clock-driven tax — it charged every idle neuron every step and
+            # made a sparse brain's flat membrane burn exceed its reading income (Result Exp 7).
+            # Gating it on n_spiked makes a large-but-sparse-firing brain cheap and reading pay,
+            # and shifts Rule 7 selection from "fewer neurons" to "fewer spikes per useful output".
+            total_atp += CYCLES_PER_NEURON_UPDATE * np.float32(n_spiked)
 
             # Pointer swap buffers
             temp = prev_spk_buf
@@ -504,23 +542,67 @@ def world_tick_numba(
         vocal_cords[org] = org_char_val
         energy[org] -= total_atp
 
+        # --- PEER PREDICTION (autotelic, Rules 9/6): a survival problem from agent-agent interaction ---
+        # Roadmap P3 literally: "let survival problems arise from agent-agent competition (predation,
+        # trade, defence)." An organism that vocalizes the byte a NEIGHBOUR is currently emitting has
+        # PREDICTED that neighbour (from the voice it sensed on inputs 4-6). It reclaims the matched
+        # bits' state-space FROM the speaker: energy[predictor] += g, energy[speaker] -= g. This is
+        # ZERO-SUM by construction (no free energy is minted), so it is UNFARMABLE — you can only take
+        # what a neighbour holds, and the only way to earn is to out-model a neighbour while the only
+        # defence is to be UNpredictable: a Red-Queen arms race toward informative signalling
+        # (proto-language), with NO human-authored curriculum and NO imposed fitness (energy just
+        # flows on the prediction event). It REDISTRIBUTES energy rather than adding it, so it selects
+        # for communication without inflating the population's budget (sustenance stays the reading/
+        # refugium economy's job). Dead-code-eliminated unless GENESIS_PEER=1.
+        if PEER_PREDICT and org_char_val != 0:
+            for side in range(2):
+                npos = (pos - 1 + RAM_SIZE) % RAM_SIZE if side == 0 else (pos + 1) % RAM_SIZE
+                nb = org_grid[npos]
+                if nb != -1 and nb != org and alive[nb]:
+                    nb_char = vocal_cords[nb]
+                    if nb_char != 0:
+                        pc = 0
+                        pw = 0
+                        for b in range(8):
+                            ob = (org_char_val >> b) & 1
+                            tb = (nb_char >> b) & 1
+                            if ob == 1 and tb == 1:
+                                pc += 1
+                            elif ob == 1 and tb == 0:
+                                pw += 1
+                        pnet = pc - pw
+                        if pnet > 0:
+                            g = np.float32(pnet) / BITS_PER_BYTE * CELL_STATES
+                            if g > energy[nb]:
+                                g = energy[nb]          # cannot drain more than the speaker holds
+                            if g > np.float32(0.0):
+                                energy[org] += g
+                                energy[nb] -= g
+                                idx = read_log[0]
+                                if idx < 996:
+                                    read_log[idx] = 4
+                                    read_log[idx+1] = org
+                                    read_log[idx+2] = nb_char
+                                    read_log[0] = idx + 3
+
         # --- Stationary reading (2026-07-11): SOLVE the symbol you occupy ---
         # The original read reward only fired inside the movement branch and checked the byte at
         # the DESTINATION cell (predict-the-next-cell) — incompatible with an echo reflex that
         # vocalizes the byte UNDER the pointer, and skipped entirely whenever a vocal output (not a
         # jump) won winner-take-all. Reward reading the CURRENT cell every tick so "stand on a
         # letter and pronounce it" is the honest book-solving event evolution can climb (Rules 9/10).
+        grazed = False
         cur_byte = ram_substrate[pos]
         if cur_byte >= 32 and cur_byte <= 126 and cur_byte != 0x55:
             # PARTIAL-CREDIT reading (gradient, not cliff — Rule 10). Score bits the organism sets
             # correctly (1 where the symbol is 1) minus bits it wrongly sets (1 where symbol is 0),
             # so getting more bits right earns more energy and evolution/STDP can climb from partial
             # to full reading. Silence (0) scores 0 (no spurious reward). Each net-correct bit is
-            # A partial solve pays the byte's OWN value scaled by the fraction of bits solved:
-            # value * net_bits / 8 (BITS_PER_BYTE). A full exact match pays the whole byte value —
-            # the same energy eating that byte as food would release (a byte is stored energy, no
-            # multiplier). Full match = true solved read (consumed + logged type 1); nonzero miss
-            # logs type 2.
+            # A solve reclaims the fraction of the cell's state-space it resolved: (net_bits / 8) *
+            # CELL_STATES. A full 8-bit match reclaims the whole cell (256) — the same energy eating
+            # that cell as food releases (one honest exchange rate, no multiplier). Partial credit is
+            # a gradient (Rule 10). Full match = true solved read (consumed + logged type 1); nonzero
+            # miss logs type 2.
             correct_bits = 0
             wrong_bits = 0
             for b in range(8):
@@ -532,11 +614,34 @@ def world_tick_numba(
                     wrong_bits += 1
             net = correct_bits - wrong_bits
             if net != 0:
-                energy[org] += np.float32(cur_byte) * np.float32(net) / BITS_PER_BYTE
-                # CONSUME ON ATTEMPT (2026-07-11 fix): Once an organism attempts to read a byte
-                # (by outputting ANY net-positive guess), the byte is consumed. This prevents
-                # "infinite reading money" from standing still and spamming the same character.
-                ram_substrate[pos] = 0x00
+                energy[org] += np.float32(net) / BITS_PER_BYTE * CELL_STATES
+                # GRAZE-ALONG-THE-LINE (2026-07-12, the reading MODEL). A successful read is a
+                # SACCADE: the eye decodes the fixated symbol, then sweeps to the NEXT one. Advance
+                # the head +1 onto the adjacent cell (forward — the direction text is laid down) so
+                # a reader WALKS the passage symbol-to-symbol. This replaces both the old stationary
+                # freeze AND destructive reading:
+                #   * Old freeze: the reader ate its cell then sat on the 0x00 vacuum it made, so
+                #     enc_frac was capped ~0.05 at ANY density (the structural encounter wall).
+                #   * Destructive read was ONLY an anti-farm hack ("don't stand still spamming one
+                #     char for infinite energy"). The saccade makes it redundant: a rewarded read
+                #     moves the head OFF the cell, so re-reading the same cell means walking the
+                #     entire 65536-cell ring back to it — never net-positive. The saccade IS the
+                #     anti-farm, so reading is now NON-DESTRUCTIVE: a book is not burned by being
+                #     read (brain-honest), and a following reader gets the same text (many students,
+                #     one book). The library stops being strip-mined, so the economy is no longer
+                #     supply-throttled by the regrow rate.
+                # No new constant: step is unit adjacency, cost is the existing CYCLES_PER_MOVE (3),
+                # trivially net-positive against a read (up to 256). Blocked only by occupancy.
+                # Only a real decode (net>0) sweeps — silence/miss keeps the head still, so walking
+                # the library REQUIRES actually reading it (the Rule 9 selection pressure).
+                nx = (pos + 1) % RAM_SIZE
+                if org_grid[nx] == -1:
+                    energy[org] -= CYCLES_PER_MOVE
+                    org_grid[pos] = -1
+                    positions[org] = nx
+                    org_grid[nx] = org
+                    pos = nx
+                    grazed = True
             if org_char_val == cur_byte:
                 idx = read_log[0]
                 if idx < 996:
@@ -554,7 +659,7 @@ def world_tick_numba(
                     read_log[0] = idx + 4
 
         if best_n > 0 and best_a >= 0:
-            if best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
+            if (not grazed) and best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
                 npos = pos
                 if best_a == OUT_JMP_FWD: npos = (pos + 1) % RAM_SIZE
                 elif best_a == OUT_JMP_BCK: npos = (pos - 1 + RAM_SIZE) % RAM_SIZE
@@ -567,7 +672,7 @@ def world_tick_numba(
                     # org_char_val THIS tick from context; if it matches the symbol it now steps
                     # ONTO, it ANTICIPATED the next symbol. For math text "1+1=" -> "2" that requires
                     # COMPUTING 1+1, not echoing — the real cognitive leap above reading-aloud.
-                    # Partial credit (gradient), scaled by READ_REWARD_SCALE (solving = wealth).
+                    # Partial credit (gradient): reclaims (pnet/8) * CELL_STATES of the predicted cell.
                     # Distinct from the stationary echo read; a full correct prediction logs type 3.
                     pval = ram_substrate[npos]
                     if pval >= 32 and pval <= 126 and pval != 0x55:
@@ -582,7 +687,7 @@ def world_tick_numba(
                                 pw += 1
                         pnet = pc - pw
                         if pnet != 0:
-                            energy[org] += np.float32(pnet) * np.float32(8.0) * READ_REWARD_SCALE
+                            energy[org] += np.float32(pnet) / BITS_PER_BYTE * CELL_STATES
                         if org_char_val == pval:
                             idx = read_log[0]
                             if idx < 996:
@@ -597,7 +702,10 @@ def world_tick_numba(
             elif best_a == OUT_CONSUME:
                 val = ram_substrate[pos]
                 if val == 0x55:
-                    energy[org] += CYCLES_PER_EAT_GAIN
+                    # Eating fully reclaims the cell -> its whole state-space, CELL_STATES (256), the
+                    # same energy a full 8-bit solve of any cell pays. No CYCLES_PER_EAT_GAIN
+                    # multiplier — food and text share one honest exchange rate.
+                    energy[org] += CELL_STATES
                     ram_substrate[pos] = 0x00
                     if energy[org] > ATP_MAX:
                         energy[org] = ATP_MAX

@@ -1,0 +1,893 @@
+{
+  "nodes": [
+    {
+      "id": "src_genesis_lab",
+      "label": "genesis_lab.py",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_broadcast_msg",
+      "label": "broadcast_msg()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L146",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_ws_handler",
+      "label": "ws_handler()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L150",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_ws_main",
+      "label": "ws_main()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L228",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_start_ws_server",
+      "label": "start_ws_server()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L233",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_get_base_physics_header",
+      "label": "get_base_physics_header()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L239",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_create_intelligent_ancestor",
+      "label": "create_intelligent_ancestor()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L252",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_spawn_organism",
+      "label": "spawn_organism()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L326",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_mutate_dna",
+      "label": "mutate_dna()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L418",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_crossover_dna",
+      "label": "crossover_dna()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L447",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_remember_fossil",
+      "label": "remember_fossil()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L462",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_seed_universe",
+      "label": "seed_universe()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L486",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_find_birth_pos",
+      "label": "find_birth_pos()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L531",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_seed_refuge",
+      "label": "seed_refuge()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L556",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_sim_loop",
+      "label": "sim_loop()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L608",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_main",
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L923",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_rationale_448",
+      "label": "Horizontal gene transfer: keep parent A's protected physics header (bytes 0-9) a",
+      "file_type": "rationale",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L448",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_rationale_463",
+      "label": "Preserve an elite genome as a dead-DNA fossil for later recombination (HGT).",
+      "file_type": "rationale",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L463",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_rationale_532",
+      "label": "Where a child mallocs its body. Search outward from the parent for the nearest F",
+      "file_type": "rationale",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L532",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_genesis_lab_rationale_557",
+      "label": "Living seed-bank germination (Rule 10 gradient, 2026-07-12). Drop up to `n` foss",
+      "file_type": "rationale",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L557",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine",
+      "label": "neuromorphic_engine.py",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_malloc_block",
+      "label": "malloc_block()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L104",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_free_block",
+      "label": "free_block()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L122",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_parse_receptors",
+      "label": "parse_receptors()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L128",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_count_genes",
+      "label": "count_genes()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L169",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_decode_genome",
+      "label": "decode_genome()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L190",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_sense",
+      "label": "sense()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L239",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_neuromorphic_engine_world_tick_numba",
+      "label": "world_tick_numba()",
+      "file_type": "code",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L298",
+      "_origin": "ast"
+    }
+  ],
+  "edges": [
+    {
+      "source": "src_genesis_lab",
+      "target": "numpy",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "time",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "random",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "threading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "base64",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "asyncio",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "websockets",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "tempfile",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "neuromorphic_engine",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "books_of_genesis",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_broadcast_msg",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_ws_handler",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_ws_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L228",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_start_ws_server",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L233",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_get_base_physics_header",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L239",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_create_intelligent_ancestor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L252",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_spawn_organism",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L326",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_mutate_dna",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L418",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_crossover_dna",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L447",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_remember_fossil",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L462",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_seed_universe",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L486",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_find_birth_pos",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L531",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_seed_refuge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L556",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_sim_loop",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L608",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab",
+      "target": "src_genesis_lab_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L923",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_start_ws_server",
+      "target": "src_genesis_lab_ws_main",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L237",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_create_intelligent_ancestor",
+      "target": "src_genesis_lab_get_base_physics_header",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L256",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_universe",
+      "target": "src_genesis_lab_mutate_dna",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L521",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_universe",
+      "target": "src_genesis_lab_crossover_dna",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L521",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_universe",
+      "target": "src_genesis_lab_create_intelligent_ancestor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L527",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_universe",
+      "target": "src_genesis_lab_spawn_organism",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L528",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_refuge",
+      "target": "src_genesis_lab_mutate_dna",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L599",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_refuge",
+      "target": "src_genesis_lab_crossover_dna",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L599",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_refuge",
+      "target": "src_genesis_lab_create_intelligent_ancestor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L602",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_seed_refuge",
+      "target": "src_genesis_lab_spawn_organism",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L603",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_seed_universe",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L612",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_seed_refuge",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L677",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_remember_fossil",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L732",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_mutate_dna",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L785",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_find_birth_pos",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L798",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_spawn_organism",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L800",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_genesis_lab_broadcast_msg",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L887",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_rationale_448",
+      "target": "src_genesis_lab_crossover_dna",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L448",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_rationale_463",
+      "target": "src_genesis_lab_remember_fossil",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L463",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_rationale_532",
+      "target": "src_genesis_lab_find_birth_pos",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L532",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_rationale_557",
+      "target": "src_genesis_lab_seed_refuge",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L557",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "numpy",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "numba",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "random",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_malloc_block",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_free_block",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_parse_receptors",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L128",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_count_genes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L169",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_decode_genome",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_sense",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L239",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine",
+      "target": "src_neuromorphic_engine_world_tick_numba",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L298",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine_world_tick_numba",
+      "target": "src_neuromorphic_engine_sense",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L374",
+      "weight": 1.0
+    },
+    {
+      "source": "src_neuromorphic_engine_world_tick_numba",
+      "target": "src_neuromorphic_engine_free_block",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/neuromorphic_engine.py",
+      "source_location": "L759",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_spawn_organism",
+      "target": "src_neuromorphic_engine_count_genes",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L329",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_spawn_organism",
+      "target": "src_neuromorphic_engine_malloc_block",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L332",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_spawn_organism",
+      "target": "src_neuromorphic_engine_free_block",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L337",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_spawn_organism",
+      "target": "src_neuromorphic_engine_parse_receptors",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L361",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_spawn_organism",
+      "target": "src_neuromorphic_engine_decode_genome",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L371",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_neuromorphic_engine_world_tick_numba",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L614",
+      "weight": 1.0
+    },
+    {
+      "source": "src_genesis_lab_sim_loop",
+      "target": "src_neuromorphic_engine_free_block",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/genesis_lab.py",
+      "source_location": "L631",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

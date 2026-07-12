@@ -3,168 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS | Neuromorphic Evolution</title>
-    <link rel="stylesheet" href="styles.css?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+    <title>GENESIS — Neuromorphic Evolution</title>
+    <meta name="description" content="Real-time observation deck for the GENESIS neuromorphic evolution simulator">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <div class="ambient-glow"></div>
-
-    <main class="dashboard-container">
-        <!-- Header -->
-        <header class="glass-panel main-header">
-            <div class="logo-area">
-                <div class="pulse-ring"></div>
-                <h1>GENESIS <span class="badge">SNN ENGINE</span></h1>
+    <div id="app">
+        <!-- Top Bar -->
+        <header id="topbar">
+            <div class="topbar-left">
+                <div class="status-dot" id="status-dot"></div>
+                <h1>GENESIS</h1>
+                <span class="tag">SNN ENGINE</span>
             </div>
-            <div class="subtitle">NEUROMORPHIC ECOLOGY & DEEP TIME SIMULATOR</div>
+            <div class="topbar-right">
+                <div class="topbar-stat">
+                    <span class="stat-label">TICK</span>
+                    <span class="stat-value mono" id="val-tick">0</span>
+                </div>
+                <div class="topbar-stat">
+                    <span class="stat-label">POP</span>
+                    <span class="stat-value mono" id="val-pop">0<span class="dim">/600</span></span>
+                </div>
+                <div class="topbar-stat">
+                    <span class="stat-label">EXT</span>
+                    <span class="stat-value mono" id="val-ext">0</span>
+                </div>
+                <div class="topbar-stat">
+                    <span class="stat-label">SPEED</span>
+                    <span class="stat-value mono" id="val-speed">—</span>
+                </div>
+            </div>
         </header>
 
-        <!-- Main Visualization (Center) -->
-        <section class="visualization-container glass-panel" id="main-viz">
-            <div class="canvas-header">
-                <h2>RAM SUBSTRATE MEMORY DUMP (Rule 15)</h2>
-                <div class="controls">
-                    <button id="btn-fullscreen" class="btn-neo" style="padding: 4px 12px; font-size: 0.8rem; background: rgba(178,0,255,0.1); border-color: #B200FF; color: #B200FF;">FULL SCREEN</button>
-                    <button id="btn-analyze" class="btn-neo" style="padding: 4px 12px; font-size: 0.8rem; background: rgba(0,255,157,0.1); border-color: #00FF9D; color: #00FF9D;">ANALYZE BRAIN</button>
-                </div>
-            </div>
-            <div class="viz-layout" style="display: flex; flex-direction: row; flex-grow: 1; overflow: hidden; gap: 20px;">
-                <div class="canvas-wrapper" id="wrapper-ram" style="flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid rgba(0,255,157,0.2); padding: 10px; align-items: center; justify-content: center;">
-                    <canvas id="ramCanvas" width="256" height="256" style="width: 100%; max-width: 100%; max-height: 100%; height: auto; image-rendering: pixelated; object-fit: contain;"></canvas>
-                </div>
-                <div class="canvas-wrapper" id="wrapper-live-brain" style="flex: 1; display: none; flex-direction: column; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid rgba(0,255,157,0.2); padding: 10px;">
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <h3 style="color: #00FF9D; font-size: 1rem; margin: 0; font-family: 'Orbitron', sans-serif;">LIVE ARK ELITE NEURAL TOPOLOGY</h3>
-                        <div id="live-brain-stats" style="color: #fff; font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; margin-top: 5px;">Waiting for Ark...</div>
+        <!-- Main Content -->
+        <main id="content">
+            <!-- Left: RAM Canvas -->
+            <section id="ram-section">
+                <div class="section-head">
+                    <h2>RAM Substrate</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-ghost" id="btn-brain">Brain</button>
+                        <button class="btn btn-ghost" id="btn-fullscreen">Expand</button>
                     </div>
-                    <svg id="live-brain-svg" style="flex-grow: 1; width: 100%; height: 100%;"></svg>
                 </div>
-            </div>
-        </section>
-
-        <!-- KPI Grid (Left) -->
-        <aside class="kpi-panel glass-panel">
-            <div class="kpi-card highlight-cyan">
-                <div class="kpi-label">DEEP TIME CYCLES</div>
-                <div class="kpi-value neo-text" id="val-cycles">0</div>
-            </div>
-            <div class="kpi-card highlight-green">
-                <div class="kpi-label">ACTIVE POPULATION</div>
-                <div class="kpi-value" id="val-pop">0 <span class="dim">/ 5000</span></div>
-            </div>
-            <div class="kpi-card highlight-red">
-                <div class="kpi-label">ECOLOGICAL OVERSHOOTS</div>
-                <div class="kpi-value" id="val-extinctions">0</div>
-            </div>
-            <div class="kpi-card highlight-purple">
-                <div class="kpi-label">ELITE LIFESPAN (MAX AGE)</div>
-                <div class="kpi-value" id="val-maxage">0 <span class="dim">ticks</span></div>
-            </div>
-            <div class="kpi-card highlight-cyan">
-                <div class="kpi-label">ELITE BRAIN IQ</div>
-                <div class="kpi-value" id="val-iq">0 <span class="dim">%</span></div>
-            </div>
-            <div class="kpi-card highlight-green">
-                <div class="kpi-label">CURRENT AVG LIFESPAN</div>
-                <div class="kpi-value" id="val-avgage">0 <span class="dim">ticks</span></div>
-            </div>
-            
-            <div class="chart-container" style="flex: 0 0 200px; margin-top: 10px; padding: 10px; border: 1px solid rgba(255, 0, 85, 0.2); border-radius: 8px;">
-                <canvas id="extinctionChart"></canvas>
-            </div>
-        </aside>
-
-        <!-- Bottom Right Area -->
-        <div style="grid-area: term; display: flex; flex-direction: column; gap: 15px; min-height: 0;">
-            
-            <!-- Library Container -->
-            <section class="terminal-container" style="flex: 0 0 auto; background: rgba(10, 15, 20, 0.85); border: 1px solid rgba(0, 255, 157, 0.2); box-shadow: 0 0 20px rgba(0, 255, 157, 0.05); border-radius: 8px;">
-                <div class="terminal-header" style="border-bottom: 1px solid rgba(0, 255, 157, 0.2); padding: 8px 15px; color: #00FF9D; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">
-                    <span>THE LIBRARY OF GENESIS</span>
+                <div class="canvas-frame" id="canvas-frame">
+                    <canvas id="ramCanvas" width="256" height="256"></canvas>
                 </div>
-                <div style="padding: 10px; color: #888; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
-                    Inject logical curriculum files into the RAM to teach the organisms.
-                </div>
-                <div style="padding: 0 10px; display: flex; flex-direction: column; gap: 8px;">
-                    <select id="library-select" style="background: rgba(0,0,0,0.5); border: 1px solid #333; color: #00FF9D; padding: 6px; outline: none; font-family: inherit; font-size: 0.8rem;">
-                        <option value="">Loading Library...</option>
-                    </select>
-                    <button id="btn-inject-lib" class="btn-neo" style="width: 100%; font-size: 0.8rem; padding: 6px;">INJECT CURRICULUM</button>
-                    <div style="display: flex; gap: 5px; margin-top: 5px;">
-                        <input type="text" id="custom-book-input" placeholder="Custom text..." style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #00FF9D; padding: 6px; outline: none; font-family: inherit; font-size: 0.8rem;">
-                        <button id="btn-inject-custom" class="btn-neo" style="font-size: 0.8rem; padding: 6px 10px;">INJECT</button>
-                    </div>
+                <div class="legend-bar">
+                    <span class="legend-item" data-type="energy"><i style="background:#34d399"></i>Energy</span>
+                    <span class="legend-item" data-type="trap"><i style="background:#f43f5e"></i>Trap</span>
+                    <span class="legend-item" data-type="ip"><i style="background:#60a5fa"></i>Organism</span>
+                    <span class="legend-item" data-type="voice"><i style="background:#facc15"></i>Voice</span>
+                    <span class="legend-item" data-type="book"><i style="background:#a78bfa"></i>Book</span>
                 </div>
             </section>
 
-            <!-- Environmental Controls -->
-            <section class="terminal-container" style="flex: 0 0 auto; background: rgba(10, 15, 20, 0.85); border: 1px solid rgba(0, 255, 157, 0.2); box-shadow: 0 0 20px rgba(0, 255, 157, 0.05); border-radius: 8px;">
-                <div class="terminal-header" style="border-bottom: 1px solid rgba(0, 255, 157, 0.2); padding: 8px 15px; color: #00FF9D; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">
-                    <span>ENVIRONMENTAL PHYSICS (Rule 10)</span>
-                </div>
-                <div style="padding: 10px; color: #888; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
-                    Control the spontaneous generation of free energy (0x55). Lower values induce starvation, forcing organisms to learn.
-                </div>
-                <div style="padding: 0 10px 10px 10px; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">
-                        <span>Free Energy Spawn Rate:</span>
-                        <span id="energy-rate-val" style="color: #00FF9D; font-weight: bold;">10.0%</span>
+            <!-- Right Column -->
+            <aside id="sidebar">
+                <!-- KPI Cards -->
+                <div class="card-grid">
+                    <div class="kpi-card">
+                        <span class="kpi-label">Elite Age</span>
+                        <span class="kpi-value mono" id="val-elite-age">0</span>
                     </div>
-                    <input type="range" id="energy-rate-slider" min="0" max="1000" value="100" step="1" style="width: 100%; accent-color: #00FF9D;">
-                </div>
-            </section>
-
-            <!-- Oracle Terminal (Bottom Right) -->
-            <section class="terminal-container" style="flex: 1 1 auto;">
-                <div class="terminal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>INTERSPECIES COMM-LINK / ORACLE</span>
-                        <span class="pulse-ring" style="width:8px; height:8px;"></span>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Elite IQ</span>
+                        <span class="kpi-value mono" id="val-elite-iq">0%</span>
                     </div>
-                    <label style="font-size: 0.75rem; color: #888; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-right: 10px;">
-                        <input type="checkbox" id="filter-success" style="accent-color: #00FF9D;"> Show Success
-                    </label>
-                </div>
-                <div class="terminal-output" id="term-out">
-                    <div class="term-line sys">Connection established. Listening to Elite Genome Vocal Cords...</div>
-                </div>
-                <div class="terminal-input-row">
-                    <span>></span>
-                    <input type="text" class="terminal-input" id="term-in" placeholder="Broadcast to universe..." autocomplete="off">
-                </div>
-            </section>
-            
-        </div>
-
-        <!-- Footer / Legend -->
-        <footer class="glass-panel footer-legend">
-            <div class="legend-item" id="leg-energy" style="cursor: pointer; user-select: none; transition: transform 0.1s;"><span class="swatch" style="background: #00FF9D; box-shadow: 0 0 8px #00FF9D;"></span> 0x55 (ENERGY)</div>
-            <div class="legend-item" id="leg-trap" style="cursor: pointer; user-select: none; transition: transform 0.1s;"><span class="swatch" style="background: #FF0055; box-shadow: 0 0 8px #FF0055;"></span> 0xFF (TRAP)</div>
-            <div class="legend-item" id="leg-ip" style="cursor: pointer; user-select: none; transition: transform 0.1s;"><span class="swatch" style="background: #0088FF; box-shadow: 0 0 8px #0088FF;"></span> SNN IP POINTER</div>
-            <div class="legend-item" id="leg-voice" style="cursor: pointer; user-select: none; transition: transform 0.1s;"><span class="swatch" style="background: #FFE600; box-shadow: 0 0 10px #FFE600;"></span> VOICE EMISSION</div>
-            <div class="legend-item" id="leg-book" style="cursor: pointer; user-select: none; transition: transform 0.1s;"><span class="swatch" style="background: #A855F7; box-shadow: 0 0 10px #A855F7;"></span> CURRICULUM (BOOKS)</div>
-        </footer>
-
-        <!-- Brain Analyzer Modal -->
-        <div id="brain-modal" class="modal-overlay hidden">
-            <div class="modal-content glass-panel glow-panel" style="width: 90vw; max-width: 1200px; height: 90vh; display: flex; flex-direction: column;">
-                <div class="modal-header">
-                    <h2>🧠 SNN ARCHITECTURE & SYNAPTIC WEIGHTS</h2>
-                    <button id="btn-close-modal" class="btn-neo btn-close">&times;</button>
-                </div>
-                <div class="modal-body" id="brain-data" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;">
-                    <div id="brain-stats" style="flex: 0 0 auto; margin-bottom: 10px;">
-                        <p>Fetching synaptic data from the Ark...</p>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Avg Age</span>
+                        <span class="kpi-value mono" id="val-avg-age">0</span>
                     </div>
-                    <svg id="brain-svg" style="flex-grow: 1; width: 100%; height: 100%; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(0, 255, 157, 0.2);"></svg>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Refuges</span>
+                        <span class="kpi-value mono" id="val-refuges">0</span>
+                    </div>
                 </div>
+
+                <!-- Extinction Chart -->
+                <div class="panel" id="chart-panel">
+                    <div class="section-head"><h2>Era Lifespan</h2></div>
+                    <div class="chart-wrap"><canvas id="extinctionChart"></canvas></div>
+                </div>
+
+                <!-- Environment Controls -->
+                <div class="panel">
+                    <div class="section-head"><h2>Environment</h2></div>
+                    <div class="control-row">
+                        <label class="control-label">Energy Rate</label>
+                        <span class="mono" id="energy-rate-val">10.0%</span>
+                    </div>
+                    <input type="range" id="energy-rate-slider" class="slider" min="0" max="1000" value="100" step="1">
+                </div>
+
+                <!-- Library -->
+                <div class="panel">
+                    <div class="section-head"><h2>Library</h2></div>
+                    <select id="library-select" class="select"><option value="">Loading…</option></select>
+                    <button class="btn btn-primary btn-full" id="btn-inject-lib">Inject Curriculum</button>
+                    <div class="input-row">
+                        <input type="text" id="custom-book-input" class="input" placeholder="Custom text…">
+                        <button class="btn btn-primary" id="btn-inject-custom">Inject</button>
+                    </div>
+                </div>
+
+                <!-- Oracle Terminal -->
+                <div class="panel terminal-panel">
+                    <div class="section-head">
+                        <h2>Oracle Terminal</h2>
+                        <label class="check-label"><input type="checkbox" id="filter-success"> Success only</label>
+                    </div>
+                    <div class="terminal-output" id="term-out">
+                        <div class="t-line t-sys">Listening for Elite Vocal Cords…</div>
+                    </div>
+                    <div class="terminal-input-row">
+                        <span class="prompt">›</span>
+                        <input type="text" class="terminal-input" id="term-in" placeholder="Broadcast…" autocomplete="off">
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Brain Modal -->
+    <div id="brain-modal" class="modal hidden">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2>Neural Topology</h2>
+                <button class="btn btn-ghost" id="btn-close-modal">✕</button>
+            </div>
+            <div class="modal-body" id="brain-data">
+                <div id="brain-stats"><p class="dim">Extracting Elite DNA from the Ark…</p></div>
+                <svg id="brain-svg"></svg>
             </div>
         </div>
-    </main>
+    </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js"></script>
 </body>
 </html>

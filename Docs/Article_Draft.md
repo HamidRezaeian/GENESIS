@@ -52,9 +52,18 @@ server module (`genesis_lab.py`), with a vanilla-JS dashboard over WebSocket (:8
 ### 2.1 The Substrate
 - **Space = RAM.** A toroidal `uint8` array of `RAM_SIZE = 65,536` bytes. An organism's
   position is a byte address; motor actions are pointer jumps of ±1 or ±10 (mod `RAM_SIZE`).
-- **Food = memory.** The byte `0x55`, seeded into empty cells; consuming one yields
-  `CYCLES_PER_EAT_GAIN` cycles (default `15,000`, env-tunable `GENESIS_EAT_GAIN`; the `books`
-  economy drops it to `16` so reading — not grazing — is the path to wealth).
+- **Food = memory.** The byte `0x55`, seeded into empty cells; consuming one reclaims the cell for
+  `CELL_STATES = 2⁸ = 256` cycles — the same derived matter↔energy rate a fully-solved book symbol
+  pays (an 8-bit cell's microstate capacity). There is no separate meal constant: food and text share
+  one currency, and reading out-earns grazing only by chaining predictions across dense text, not by a
+  multiplier.
+- **Reading = a saccade over intact text.** Unlike food, a book symbol is *not* consumed by being
+  read. A successful decode advances the reading head one cell forward, so an organism **walks a
+  passage symbol-to-symbol** — a moving eye. That motion is its own anti-farm (to re-read a cell an
+  organism must circle the entire 65,536-byte ring, never worth it), so the text can stay intact: a
+  book is not destroyed by reading it, and many readers can pass over the same passage. This makes the
+  encounter economy scale with text density rather than hitting a structural cap, and lets a
+  next-symbol *prediction* skill emerge from organisms reading forward along a line.
 - **Global heap.** Neurons, synapses and genomes for the whole universe occupy flat global
   arrays (capacities 5×10⁵ neurons, 2×10⁶ synapses, 5×10⁶ genome bytes); each organism
   `malloc`s contiguous blocks. Fragmentation is itself a spatial hazard.
@@ -85,9 +94,11 @@ choices enforce biological and evolutionary fidelity:
 ### 2.4 Thermodynamics
 Energy is CPU cycles, drawn per action from a reserve capped at `ATP_MAX = 10⁶`, and every
 cost is an **honest raw-cycle count** — one executed operation debits one cycle, with no
-arbitrary discounts: synapse transmission 1, **neuron membrane update 1 × n_neurons per
-step**, **STDP weight update 1** (activity-gated — charged only when a synapse actually
-potentiates or depresses), movement 3, and a viscosity stall costs `n_neurons`. Reproduction
+arbitrary discounts: synapse transmission 1, **neuron membrane update 1 × n_spiked per
+step** (event-driven — charged per action potential fired, not per neuron present: on a 20 W
+substrate the spike is the energy event and an idle neuron draws ~nothing), **STDP weight
+update 1** (activity-gated — charged only when a synapse actually potentiates or depresses),
+movement 3, and a viscosity stall costs `n_neurons`. Reproduction
 costs `genome_length` cycles to copy the genome, then splits the remaining energy in half
 with the child; an organism dies at energy ≤ 0.
 - **Emergent efficiency selection (Rule 7).** Because neural work is billed at its true rate,
@@ -177,8 +188,17 @@ deleted; those claims do not transfer to the current substrate and have been rem
 2. **Real-time entropy:** re-decode or otherwise expose living phenotypes to radiation, so
    error-correction is selected in-lifetime, not only in the germline.
 3. **Autotelic transition (Rule 9):** replace human-supplied food/oracle/curriculum with
-   agent-generated survival problems (predation, trade, defence).
+   agent-generated survival problems (predation, trade, defence). *A first such problem now
+   exists — zero-sum peer prediction (`GENESIS_PEER`): an organism drains a neighbour's energy
+   by vocalising the byte the neighbour emits, an unfarmable info-predation that selects for
+   communication with no human text. Verified firing on the live loop; emergence of a
+   communication code remains to be demonstrated (gated behind a net-positive live economy).*
 4. **Efficiency selection (Rule 7):** show that, at equal capability, lower CPU/RAM lineages
    win, using the newly-exposed efficiency metric.
-5. **Deep-time robustness:** characterise stability across millions of ticks and many
-   Ark/fossil recovery cycles.
+5. **Deep-time robustness:** the clockwork extinction/Ark loop is now structurally dissolved —
+   a hall-of-fame fossil ratchet preserves all-time elites across eras, and a **refugium**
+   replaces the instantaneous total wipe with a Rule-10 gradient (measured live: total
+   extinctions 6 → 0 over a longer span, continuous rolling population). The residual is the
+   economy beneath it: the live loop is net-negative at every density tried, so the population
+   rides the refuge floor rather than ascending — reproducing a **self-sustaining live economy**
+   (so far only shown in an Ark-OFF harness) is the open blocker.

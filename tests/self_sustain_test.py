@@ -68,11 +68,7 @@ def _process_births(n_births):
                 break
         if slot == -1:
             continue
-        child_pos = gl.g_b_pos[i]
-        offset = 1
-        while gl.g_org_grid[child_pos] != -1 and offset < 100:
-            child_pos = (gl.g_b_pos[i] + offset) % gl.RAM_SIZE
-            offset += 1
+        child_pos = gl.find_birth_pos(gl.g_b_pos[i])
         gl.spawn_organism(slot, child_pos, child_dna, initial_energy=gl.g_b_energy[i])
 
 

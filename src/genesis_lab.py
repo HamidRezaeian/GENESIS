@@ -19,18 +19,16 @@ import tempfile
 # Rules 9/10). Food-only is a proven clockwork-collapse (Result.md Exp 4: MASS EXTINCTION every
 # ~6k ticks past 1.8M cycles, zero ascension), so `books` is the intended destination — but it
 # defaults to `food` for now because the sim_loop LIBRARY INJECTION and its self-sustain
-# verification are NOT yet finished. Flipping the default to `books` before the world actually
-# injects passages would only starve organisms faster (food worth 16, nothing to read). Opt in
-# early with GENESIS_ECONOMY=books once the injection path below is wired + verified.
-#
-# READ_REWARD_SCALE / CYCLES_PER_EAT_GAIN bake into the Numba hot path at neuromorphic_engine
-# import, so the book-economy defaults (reading is the wealth, food is bare subsistence) MUST be
-# set here, BEFORE that import. Env overrides always win (setdefault). NUMBA_CACHE_DIR is keyed by
-# the baked constants so switching economy/reward never serves a stale compiled kernel.
+# verification are NOT yet finished. Opt in early with GENESIS_ECONOMY=books once the injection
+# path below is wired + verified.
 GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "food").lower()
-if GENESIS_ECONOMY == "books":
-    os.environ.setdefault("GENESIS_READ_SCALE", "64")   # solving a symbol pays ~64x its correct bits
-    os.environ.setdefault("GENESIS_EAT_GAIN", "16")     # mindless 0x55 food = bare subsistence only
+# No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
+# worth CELL_STATES=2**8 cycles, so eating food (full cell -> 256) and solving a symbol ((bits/8)*256)
+# pay the SAME honest exchange rate in the engine — no GENESIS_READ_SCALE / GENESIS_EAT_GAIN
+# multipliers to set. NUMBA_CACHE_DIR is keyed only by economy (which bytes the world stocks). The
+# only difference
+# between economies is WHICH bytes the world stocks (0x55 food vs printable curriculum) and what the
+# seeking sense climbs toward (baked from GENESIS_ECONOMY in neuromorphic_engine.sense).
 
 # Book-economy world parameters (env-tunable; only consulted when GENESIS_ECONOMY=books).
 # The live loop keeps ~BOOK_TARGET_BYTES of curriculum standing in RAM by injecting contiguous
@@ -42,24 +40,27 @@ BOOK_CATEGORY = os.environ.get("GENESIS_BOOK_CATEGORY", "English")
 BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "01_Alphabet")
 BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", "6000"))
 BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
-BOOK_SEED_ENERGY = float(os.environ.get("GENESIS_BOOK_SEED_ENERGY", "20000"))
 
-# Resolved per-organism spawn buffer: modest under the book economy (reading must pay the bills),
-# unchanged 250k coast under the legacy food economy.
-SEED_ENERGY = BOOK_SEED_ENERGY if GENESIS_ECONOMY == "books" else 5000.0
+# Seed energy is ARCHITECTURE-DERIVED, not a set number: the sentinel -1 tells spawn_organism to
+# gift each founder exactly its own CONSTRUCTION COST (genome bytes + neurons + synapses, 1 cycle
+# each). Same rule for both economies — no 5000/20000 hand-set seed. (Reproduced offspring already
+# inherit energy/2 from the parent, so only the very first cohort consults this.)
+SEED_ENERGY = -1.0
+# Peer-prediction (autotelic) is a compile-time branch inside world_tick_numba, so the JIT cache
+# must NOT share a kernel across peer on/off — fold it into the economy-keyed cache dir.
+PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
-    tempfile.gettempdir(),
-    f"genesis_numba_{GENESIS_ECONOMY}_r{os.environ.get('GENESIS_READ_SCALE', '1')}"
-    f"_e{os.environ.get('GENESIS_EAT_GAIN', '1024')}"))
+    tempfile.gettempdir(), f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}"))
 
 from neuromorphic_engine import (
-    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
+    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
 from books_of_genesis import (
-    inject_custom_book, inject_curriculum_file, inject_passage, get_library_books
+    inject_custom_book, inject_curriculum_file, inject_passage, regrow_passage,
+    inject_contiguous_library, get_library_books
 )
 
 g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
@@ -129,9 +130,12 @@ g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
 
 ark_dna = None
-fossil_pool = []          # dead-DNA fossils of past elites, for horizontal gene transfer
+fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
 FOSSIL_POOL_MAX = 12
+ARK_MAX_ERAS = int(os.environ.get("GENESIS_MAX_ERAS", "0"))  # 0 = run forever; >0 stops after N extinctions (ascension probe)
+ARK_MAX_TICKS = int(os.environ.get("GENESIS_MAX_TICKS", "0"))  # 0 = run forever; >0 stops after N LIF-ticks (continuous-regime probe: refugium makes total wipes rare, so era-count may never trip)
 num_extinctions = 0
+num_refuge = 0
 ext_history = []
 max_ark_age = 0
 global_avg_age = 0
@@ -277,8 +281,15 @@ def create_intelligent_ancestor(dna=None):
     # A/B-tested without a source edit. Both arms still compute AND pay for the food scan; only the
     # USE of that information differs, isolating the behavioural value of seeking.
     if os.environ.get("GENESIS_SEEKING", "1") != "0":
+        # REDUNDANT seek wiring (2 synapses/direction), mirroring the redundant echo copy-synapses.
+        # A single seek synapse is erased by one point mutation, so under event-driven metabolism the
+        # cheap depth-2 echo-only reflex out-selects seekers and the trait vanishes before a grazed-out
+        # colony needs it (Result Exp 8: enc_frac -> 0, evolutionary seek-loss). Doubling gives seeking
+        # the same mutational robustness as echoing so foraging survives selection (Rules 9/10).
         genes.extend([GENE_MARKER, FOOD_AHEAD, JMP_FWD, 224])    # food ahead  -> JMP_FWD (+12) advance toward food
+        genes.extend([GENE_MARKER, FOOD_AHEAD, JMP_FWD, 224])
         genes.extend([GENE_MARKER, FOOD_BEHIND, JMP_BCK, 224])   # food behind -> JMP_BCK (+12) turn back toward food
+        genes.extend([GENE_MARKER, FOOD_BEHIND, JMP_BCK, 224])
     # On contact: halt and eat decisively.
     genes.extend([GENE_MARKER, 3, CONSUME, 255])             # RAM byte    -> CONSUME (+~16)
     genes.extend([GENE_MARKER, 3, JMP_FWD, 8])               # RAM byte    -> JMP_FWD (-15) fully halt on food
@@ -386,7 +397,17 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
 
     g_positions[org_id] = pos
     g_alive[org_id] = True
-    g_energy[org_id] = initial_energy
+    # Seed energy is ARCHITECTURE-DERIVED (2026-07-11 "remove all game constants"): pass
+    # initial_energy < 0 and the abiogenesis gift is the energy EMBODIED IN THE ORGANISM'S OWN
+    # SUBSTANCE — its whole footprint (genome bytes + neurons + synapses) valued at the universal
+    # exchange rate CELL_STATES (2**8 per cell). A founder is born holding exactly the matter-energy
+    # it is built from, the same currency reading and eating pay; nothing hand-set (no 5000/20000).
+    # It self-corrects: a lineage that fails to earn income halves its energy every reproduction
+    # (child gets energy/2) and dies out, so a big body is no free coast — it must pay for itself.
+    if initial_energy < 0:
+        g_energy[org_id] = np.float32(g_count + n_c + actual_s) * CELL_STATES
+    else:
+        g_energy[org_id] = initial_energy
     g_age[org_id] = 0
     g_org_grid[pos] = org_id
     
@@ -439,39 +460,53 @@ def crossover_dna(a, b):
     return np.array(child, dtype=np.uint8)
 
 
-def remember_fossil(dna):
-    """Preserve a copy of an elite genome as a dead-DNA fossil for later recombination."""
+def remember_fossil(dna, age=0):
+    """Preserve an elite genome as a dead-DNA fossil for later recombination (HGT).
+    The pool is a bounded HALL OF FAME keyed on survival: when full, evict the
+    LOWEST-fitness fossil (shortest-lived), never FIFO. FIFO (the old pop(0)) discarded
+    all-time champions as soon as 12 newer-but-weaker era-champions arrived, so — with
+    max_ark_age reset per era — the gene bank quality random-walked and a reseed could
+    regress below a past golden era. That was the real root of the zero-ascension
+    clockwork loop (Result Exp 4): unfreezing the pool in 2026-07-10 also deleted the
+    quality ratchet. Evict-worst makes the pool monotonic — the best genomes ever seen
+    survive across arbitrarily many eras, so every Ark reseed starts from the all-time
+    elite, not merely the most recent. Survival age is the selection signal (emergent
+    thermodynamic fitness, Rule 7); no imposed fitness function."""
     key = dna.tobytes()
-    for f in fossil_pool:
-        if f.tobytes() == key:
+    for i in range(len(fossil_pool)):
+        if fossil_pool[i][1].tobytes() == key:
+            if age > fossil_pool[i][0]:          # same genome re-elite'd older: raise its record
+                fossil_pool[i] = (int(age), fossil_pool[i][1])
             return
-    fossil_pool.append(np.array(dna, copy=True))
+    fossil_pool.append((int(age), np.array(dna, copy=True)))
     if len(fossil_pool) > FOSSIL_POOL_MAX:
-        fossil_pool.pop(0)
+        worst = min(range(len(fossil_pool)), key=lambda k: fossil_pool[k][0])
+        fossil_pool.pop(worst)
 
 
 def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
     global ark_dna
-    # Books economy: prefer an empty cell with readable text within seek range ("born among books")
-    # so the first cohort starts on a navigable seeking gradient instead of marooned in vacuum.
-    # Measured (tests/_m1_econ_probe.py): encounter ~0.00 -> ~0.38, reads ~0.3 -> ~55/tick. Non-book
-    # economies (and the fallback when no library-adjacent cell is free) spawn on any empty cell.
-    text_mask = (((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
-                 if GENESIS_ECONOMY == "books" else None)
+    # Books economy: seed the cohort STANDING ON the contiguous scroll (Exp 11). An organism occupies
+    # an org_grid slot, which is independent of the RAM byte beneath it, so it can sit directly on a
+    # text cell and read it — that is the whole point. The old placement demanded g_ram[p]==0x00 (a
+    # food-economy holdover: don't spawn on the food you'd instantly eat), but the scroll is SOLID
+    # text with no interior 0x00 cells, so that rule pushed the entire cohort off the scroll into the
+    # surrounding vacuum where it starved (the live-loop floor-12 collapse Exp 11 chased). We now
+    # place on org_grid-free TEXT cells (born on the page), falling back to any free cell only when
+    # the scroll is fully occupied. Non-book economies keep spawning on empty 0x00 cells as before.
+    books = (GENESIS_ECONOMY == "books")
     for i in range(pop_size):
         pos = -1
-        if text_mask is not None:
-            for _ in range(1000):
+        if books:
+            for _ in range(2000):
                 p = random.randint(0, RAM_SIZE - 1)
-                if g_org_grid[p] == -1 and g_ram[p] == 0x00:
-                    lo = p - FOOD_SCAN_RADIUS if p - FOOD_SCAN_RADIUS > 0 else 0
-                    if text_mask[lo:p + FOOD_SCAN_RADIUS + 1].any():
-                        pos = p
-                        break
+                if g_org_grid[p] == -1 and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55:
+                    pos = p
+                    break
         if pos < 0:
             for _ in range(1000):  # bounded search; give up rather than spin on a full substrate
                 p = random.randint(0, RAM_SIZE - 1)
-                if g_org_grid[p] == -1 and g_ram[p] == 0x00:
+                if g_org_grid[p] == -1 and (g_ram[p] == 0x00 or (books and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55)):
                     pos = p
                     break
         if pos < 0:
@@ -480,9 +515,14 @@ def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
         dna = None
         if use_ark and len(fossil_pool) >= 2:
             # Bottom-up recovery: recombine two fossils (HGT), then mutate — not a clone of
-            # a single "God genome" (softens the Rule 5 top-down-resurrection tension).
+            # a single "God genome" (softens the Rule 5 top-down-resurrection tension). Each of
+            # the 300 draws an INDEPENDENT random fossil pair, so the reseed cohort is a diverse
+            # gene-shuffle of the all-time hall of fame, not a monoculture that shares one fatal
+            # failure mode and re-collapses synchronously (Result Exp 4 clockwork loop).
             f1, f2 = random.sample(fossil_pool, 2)
-            dna = mutate_dna(crossover_dna(f1, f2))
+            dna = mutate_dna(crossover_dna(f1[1], f2[1]))
+        elif use_ark and len(fossil_pool) == 1:
+            dna = mutate_dna(fossil_pool[0][1])
         elif use_ark and ark_dna is not None:
             dna = mutate_dna(ark_dna)
 
@@ -490,9 +530,85 @@ def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
         spawn_organism(i, pos, ancestor, initial_energy=initial_energy)
 
 
+def find_birth_pos(parent_pos, search_max=100):
+    """Where a child mallocs its body. Search outward from the parent for the nearest FREE cell.
+    In the books economy, PREFER a free cell whose ±FOOD_SCAN_RADIUS window already holds text, so
+    a reading lineage's offspring are born IN the library (like a dividing cell staying in tissue)
+    instead of exported into vacuum. Without this, each birth pushes a child off the bounded passage
+    into the gaps, so births outpace text-seeking and the colony drifts off its food (Result Exp 8:
+    enc_frac collapses during the birth storm). Falls back to the nearest free cell (old behaviour)
+    when no text-adjacent slot is free within the search window, and in the food economy always."""
+    first_free = -1
+    for offset in range(1, search_max):
+        p = (parent_pos + offset) % RAM_SIZE
+        if g_org_grid[p] != -1:
+            continue
+        if first_free < 0:
+            first_free = p
+        if not SEEK_TEXT:
+            return p
+        lo = p - FOOD_SCAN_RADIUS if p - FOOD_SCAN_RADIUS > 0 else 0
+        hi = p + FOOD_SCAN_RADIUS + 1
+        window = g_ram[lo:hi]
+        if ((window >= 32) & (window <= 126) & (window != 0x55)).any():
+            return p          # born in the library
+    return first_free if first_free >= 0 else parent_pos
+
+
+def seed_refuge(n):
+    """Living seed-bank germination (Rule 10 gradient, 2026-07-12). Drop up to `n` fossil-derived
+    organisms into free slots at DISPERSED positions, topping the population back up to a small floor
+    BEFORE it can crash to 0 and trigger the wholesale 300-clone reset. That instantaneous total wipe
+    is the exact Tectonic-Gradient violation (Roadmap P3) that prevents learning: every era restarts
+    from one synchronised cohort, so evolution is a clockwork oscillator with no continuity. The
+    refuge converts the cliff into a GRADIENT — eras overlap, standing diversity persists, selection
+    never resets. Each germ is an INDEPENDENT fossil recombination (diverse, not a monoculture) and
+    pays its own way at SEED_ENERGY, so a net-negative economy still bleeds continuously; the refuge
+    softens death into a gradient, it does NOT clamp population or guarantee survival. Rule 14 gene-
+    bank material; Rule 5-clean (reintroduces genes, imposes no fitness). Returns count germinated."""
+    if not fossil_pool:
+        return 0
+    # Germinate refuge organisms STANDING ON the contiguous scroll in books mode (Exp 11), same as
+    # seed_universe — a solid scroll has no interior 0x00 cells, so requiring vacuum stranded every
+    # germ off-text. org_grid occupancy, not the RAM byte, is the real placement constraint.
+    books = (GENESIS_ECONOMY == "books")
+    born = 0
+    for _i in range(n):
+        slot = -1
+        for j in range(MAX_ORGANISMS):
+            if not g_alive[j]:
+                slot = j
+                break
+        if slot < 0:
+            break
+        pos = -1
+        if books:
+            for _ in range(2000):
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1 and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55:
+                    pos = p
+                    break
+        if pos < 0:
+            for _ in range(1000):
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1 and (g_ram[p] == 0x00 or (books and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55)):
+                    pos = p
+                    break
+        if pos < 0:
+            break
+        if len(fossil_pool) >= 2:
+            f1, f2 = random.sample(fossil_pool, 2)
+            dna = mutate_dna(crossover_dna(f1[1], f2[1]))
+        else:
+            dna = mutate_dna(fossil_pool[0][1])
+        ancestor = create_intelligent_ancestor(dna)
+        spawn_organism(slot, pos, ancestor, initial_energy=SEED_ENERGY)
+        born += 1
+    return born
+
 
 def sim_loop():
-    global global_time, ark_dna, num_extinctions, ext_history, max_ark_age, global_avg_age
+    global global_time, ark_dna, num_extinctions, num_refuge, ext_history, max_ark_age, global_avg_age
     print("Pre-compiling world_tick_numba (JIT warmup)...")
     
     seed_universe(1, use_ark=False)
@@ -520,15 +636,16 @@ def sim_loop():
 
     print("Compilation complete. Entering Deep Time loop.")
 
-    # Pre-stock the library so the first cohort is born into a readable world (book economy only).
+    # Pre-stock the library as ONE CONTIGUOUS SCROLL (Result Exp 11, 2026-07-12) rather than many
+    # scattered short passages. A saccading reader (Exp 9) walks +1 along text it decodes; on a
+    # contiguous scroll it almost never steps off into vacuum, so encounter rises ~0.5 -> ~0.98 and
+    # reading income finally beats metabolism (the scattered "confetti" gaps, not the exchange rate,
+    # were what kept the economy net-negative). Pure world structure — no reward constant changed.
     if GENESIS_ECONOMY == "books":
-        while np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55)) < BOOK_TARGET_BYTES:
-            if inject_passage(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME) is None:
-                print(f"[BOOKS] WARNING: could not inject {BOOK_CATEGORY}/{BOOK_NAME}; library empty.")
-                break
-        print(f"[BOOKS] Economy=books | library={BOOK_CATEGORY}/{BOOK_NAME} "
-              f"target={BOOK_TARGET_BYTES}B seed_energy={SEED_ENERGY:.0f} "
-              f"read_scale={os.environ.get('GENESIS_READ_SCALE')} eat_gain={os.environ.get('GENESIS_EAT_GAIN')}")
+        if inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES) is None:
+            print(f"[BOOKS] WARNING: could not inject {BOOK_CATEGORY}/{BOOK_NAME}; library empty.")
+        print(f"[BOOKS] Economy=books | library={BOOK_CATEGORY}/{BOOK_NAME} (contiguous scroll) "
+              f"target={BOOK_TARGET_BYTES}B seed={int(CELL_STATES)}(one cell) currency=CELL_STATES({int(CELL_STATES)}/cell)")
 
     seed_universe(300, initial_energy=SEED_ENERGY)
     
@@ -549,13 +666,41 @@ def sim_loop():
     
     while True:
         alive_count = np.sum(g_alive)
-        
+
+        # REFUGIUM (Rule 10 — gradient not cliff, 2026-07-12). Before the colony can crash to 0 and
+        # trigger the wholesale 300-clone reset (an instantaneous total wipe — the Tectonic-Gradient
+        # violation that prevents learning, Roadmap P3), top the living population back up to a small
+        # floor from the hall-of-fame gene bank. The floor is DERIVED, not a game constant: one living
+        # representative per banked lineage (len(fossil_pool), <= FOSSIL_POOL_MAX), so the refuge
+        # expresses exactly the standing diversity the Ark holds. Result: eras OVERLAP and the
+        # clockwork total-wipe oscillator (Result Exp 4) dissolves into a continuous, desynchronised
+        # population; selection never resets. Germs still must earn (SEED_ENERGY), so death becomes a
+        # gradient, not abolished (a net-negative economy bleeds continuously instead of clock-wiping).
+        refuge_floor = len(fossil_pool)
+        if 0 < alive_count < refuge_floor:
+            got = seed_refuge(refuge_floor - int(alive_count))
+            if got > 0:
+                num_refuge += 1
+                alive_count += got
+
+        # Continuous-regime probe stop: with the refugium in place total wipes are rare, so the
+        # ARK_MAX_ERAS extinction-count bound may never trip — bound the probe by LIF-time instead.
+        if ARK_MAX_TICKS and global_time >= ARK_MAX_TICKS:
+            print(f"[PROBE] stop at LIF Time {global_time} | pop={int(alive_count)} "
+                  f"extinctions={num_extinctions} refuge_events={num_refuge} "
+                  f"| pool_top_ages={sorted((a for a, _ in fossil_pool), reverse=True)[:8]}")
+            return
+
         if alive_count == 0:
             num_extinctions += 1
             ext_history.append({'tick': global_time, 'rate': num_extinctions})
             if len(ext_history) > 100: ext_history.pop(0)
             
-            print(f"[LIF Time: {global_time}] MASS EXTINCTION! Triggering Ark Seed...")
+            print(f"[LIF Time: {global_time}] MASS EXTINCTION #{num_extinctions}! "
+                  f"era_peak_age={int(max_ark_age)} "
+                  f"pool={len(fossil_pool)} "
+                  f"pool_top_ages={sorted((a for a, _ in fossil_pool), reverse=True)[:5]} "
+                  f"Triggering Ark Seed...")
             if ark_dna is not None:
                 print(f"  [ARK] Ascension! Reseeding with Elite DNA...")
                 seed_universe(300, use_ark=True, initial_energy=SEED_ENERGY)
@@ -568,8 +713,18 @@ def sim_loop():
             # subsequent era from the same frozen genome. That was the root cause of the
             # clockwork extinction loop with zero ascension across ~70 eras (Result.md Exp 4).
             # Resetting per era lets each era contribute its own champion, keeping the fossil
-            # pool (and thus HGT crossover material) continuously refreshed.
+            # pool (and thus HGT crossover material) continuously refreshed. FIX (2026-07-12):
+            # the ratchet that this reset used to break is now preserved by remember_fossil's
+            # evict-worst hall-of-fame instead of by an all-time age bar — so per-era freshness
+            # AND cross-era quality both hold (fixes zero-ascension without re-freezing the pool).
             max_ark_age = 0
+            # Bounded-era instrumentation: run the REAL deep-time loop for N extinctions then
+            # stop, so ascension (pool_top_ages trend across eras) is measured on the live path,
+            # never a reimplemented harness (Live-Loop-Test-Gap rule). 0 = run forever (default).
+            if ARK_MAX_ERAS and num_extinctions >= ARK_MAX_ERAS:
+                print(f"[ARK-PROBE] stop after {num_extinctions} eras "
+                      f"| final pool_top_ages={sorted((a for a, _ in fossil_pool), reverse=True)[:8]}")
+                return
             continue
             
         for i in range(MAX_ORGANISMS):
@@ -578,7 +733,7 @@ def sim_loop():
                 start = g_org_g_ptr[i]
                 count = g_org_g_count[i]
                 ark_dna = np.array(g_global_genome[start:start+count], copy=True)
-                remember_fossil(ark_dna)
+                remember_fossil(ark_dna, max_ark_age)
                 if random.random() < 0.001:
                     print(f"  [ARK] New Elite Preserved (Age: {max_ark_age})")
 
@@ -599,17 +754,17 @@ def sim_loop():
         alive_steps = g_org_lif_steps[g_alive]
         dynamic_lif_steps = int(alive_steps.max()) if alive_steps.size else 1
 
-        # BOOK ECONOMY (2026-07-11): keep the world stocked with readable curriculum so energy
-        # is earned by SOLVING symbols (Prime Directive, Rules 9/10), not just grazing 0x55.
-        # We maintain ~BOOK_TARGET_PASSAGES contiguous "pages" of curriculum by counting live
-        # curriculum bytes (printable, non-food, non-trap) and injecting a fresh passage whenever
-        # the library falls below target. Passages are contiguous (inject_passage) so the world
-        # has real spatial text structure a reader/seeker can navigate — not a uniform confetti
-        # flood (which would be the video-game shortcut). Only runs when GENESIS_ECONOMY=books.
+        # BOOK ECONOMY (2026-07-11): keep the world stocked with readable curriculum so energy is
+        # earned by SOLVING symbols (Prime Directive, Rules 9/10), not just grazing 0x55. The library
+        # is ONE CONTIGUOUS SCROLL (Exp 11) pinned at a fixed centred start; restock re-lays it IN
+        # PLACE so the continuous text a saccading reader walks never fragments into confetti (the
+        # gaps that kept the economy net-negative). Exp 9 reading is non-destructive so the scroll
+        # rarely depletes — this restock only repairs cells lost to food-spawn (0x55) or births
+        # overwriting the block edges. Only runs when GENESIS_ECONOMY=books.
         if GENESIS_ECONOMY == "books" and (global_time // dynamic_lif_steps) % BOOK_RESTOCK_EVERY == 0:
             printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
             if printable < BOOK_TARGET_BYTES:
-                inject_passage(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME)
+                inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES)
 
         n_alive, n_births = world_tick_numba(
             g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
@@ -636,14 +791,11 @@ def sim_loop():
             
             if slot != -1:
                 child_energy = g_b_energy[i]
-                
-                # Find an empty slot near the parent for the child
-                child_pos = g_b_pos[i]
-                offset = 1
-                while g_org_grid[child_pos] != -1 and offset < 100: # Search up to 100 tiles away
-                    child_pos = (g_b_pos[i] + offset) % RAM_SIZE
-                    offset += 1
-                
+
+                # Find an empty slot near the parent for the child — books mode prefers a
+                # text-adjacent cell so the lineage stays in the library (see find_birth_pos).
+                child_pos = find_birth_pos(g_b_pos[i])
+
                 spawn_organism(slot, child_pos, child_dna, initial_energy=child_energy)
                 
         global_time += dynamic_lif_steps
@@ -670,6 +822,12 @@ def sim_loop():
                     # truncated the whole buffer on the first prediction, dropping every later event
                     # AND silently hiding the project's key cognitive signal (Rules 6/9).
                     read_events.append({"type": "predict", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
+                    idx += 3
+                elif log_type == 4:
+                    # Peer prediction (type 4, stride 3): organism drained a neighbour by vocalising
+                    # its byte (autotelic info-predation). Must be drained with its own stride or the
+                    # old `else: break` would truncate the buffer on the first peer event.
+                    read_events.append({"type": "peer", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
                 else:
                     break
@@ -723,18 +881,36 @@ def sim_loop():
                     "orgs": [int(g_positions[i]) for i in range(MAX_ORGANISMS) if g_alive[i]],
                     "screaming_orgs": screaming,
                     "terminal": terminal_text,
-                    "read_events": read_events
+                    "read_events": read_events,
+                    "num_refuge": int(num_refuge)
                 }
                 asyncio.run_coroutine_threadsafe(broadcast_msg(json.dumps(data)), ws_loop)
             last_ws_push = now
 
         if now - last_print >= 5.0:
             universe_n = np.sum(g_neuron_map)
-            
+
             ages = g_age[g_alive]
             global_avg_age = int(np.mean(ages)) if len(ages) > 0 else 0
-            
-            print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s | Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n}")
+
+            # Tally read-log event types since the last drain (headless telemetry — the ws push also
+            # drains this, so with a browser open the counts show on the dashboard instead). Reads
+            # = solved current symbol, pred = anticipated next symbol, peer = drained a neighbour.
+            r_success = r_fail = r_pred = r_peer = 0
+            k = 1
+            while k < g_read_log[0]:
+                t = g_read_log[k]
+                if t == 1:   r_success += 1; k += 3
+                elif t == 2: r_fail += 1;    k += 4
+                elif t == 3: r_pred += 1;    k += 3
+                elif t == 4: r_peer += 1;    k += 3
+                else: break
+            g_read_log[0] = 1
+
+            print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
+                  f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
+                  f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} "
+                  f"| ext={num_extinctions} refuge={num_refuge}")
             
             if ark_dna is not None:
                 brain_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain")
@@ -744,6 +920,21 @@ def sim_loop():
             ticks_accum = 0
             last_print = now
 
+def start_http_server():
+    """Serve public/ on http://0.0.0.0:8081 so the dashboard loads from localhost:8081."""
+    import http.server
+    public_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public")
+
+    class QuietHandler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=public_dir, **kwargs)
+        def log_message(self, format, *args):
+            pass  # silence per-request noise
+
+    server = http.server.HTTPServer(("0.0.0.0", 8081), QuietHandler)
+    print("HTTP Server running on http://localhost:8081")
+    server.serve_forever()
+
 def main():
     print(f"Allocating RAM Substrate: {RAM_SIZE} Bytes")
     t = threading.Thread(target=sim_loop, daemon=True)
@@ -751,8 +942,11 @@ def main():
     
     ws_t = threading.Thread(target=start_ws_server, daemon=True)
     ws_t.start()
+
+    http_t = threading.Thread(target=start_http_server, daemon=True)
+    http_t.start()
     
-    print("Physics Engine running. Open public/index.html in your browser.")
+    print("Physics Engine running. Open http://localhost:8081 in your browser.")
     try:
         while True:
             time.sleep(1)
@@ -761,3 +955,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
