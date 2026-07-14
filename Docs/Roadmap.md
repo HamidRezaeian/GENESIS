@@ -136,6 +136,44 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
       600 array cap (non-destructive reading = infinite food). Residual: does the colony *ascend*
       (capability over deep time), a food-scarcity ceiling below 600 if wanted, and a non-lethal peer
       coupling (P3).
+- 🟠 **"Does it ascend?" — measured NO; economy made information-honest, blocker isolated to
+      ABUNDANCE (Exp 12, 2026-07-13).** Direct live measurement of the Exp 11 colony: it survives but
+      **decays** — brain sheds 7.7 % (`Universe N` 25 918→23 929) and prediction dies by tick ≈62k.
+      **Root cause:** echo-reading paid full `CELL_STATES` for naming the byte *under* the pointer,
+      which is already on the reading-eye inputs — a **zero-surprise bit-copy** any reflex farms
+      forever, so capability is never selected and Rule-7 efficiency grinds the brain down. **Fix (no
+      new constant):** reward only **predicting the next, unsensed cell** (`pos+1`); echo now pays
+      nothing (0 surprise → 0 energy), so comprehension *is* the income (Rules 6/9). This **cliffs
+      cold** on repeat-free text (`01_Alphabet`, `03_Phrases` → `pop=12`, `reads=0`) — a random genome
+      predicts nothing — so it is bootstrapped by a **graded difficulty curriculum** `00_Graded`
+      (run-length ramp `10→5→3→2→1`; on a run "next = current", so an echo reflex is already a correct
+      predictor and seeds income). Result: survival restored (`pop≈600`, `refuge=0`), prediction kept
+      **alive** (0–10 vs echo's death-to-0), brain **no longer sheds** (flat ~24 500) — a strictly
+      better substrate. **But still no ascent:** `reads` drifts 78→58, `pred` flat over 400k ticks.
+      **Isolated blocker = ABUNDANCE:** 600 orgs on a 10 %-full scroll means easy text is plentiful, so
+      nothing forces an organism up the difficulty ramp; efficiency even trims the unused capability.
+      The gradient is in the text; the *pressure* is not. **Next lever = scarcity/competition** — a
+      carrying capacity below the array cap so cracking harder symbols is the only way to eat, which
+      promotes the "food-scarcity ceiling below 600" item from a nicety to the load-bearing mechanism
+      for ascension. **Three constant-free scarcity levers were tried and FAILED (measured, Exp 12.7):**
+      (1) higher density/crowding on `00_Graded` (33 %) — `reads` stays ~85, `pred`~0; the existing
+      event-driven crowding cost is too weak and a *flat* crowding charge is forbidden (it is the
+      von-Neumann scan tax retired in Exp 11, Rule 11); (2) spatial scarcity (`00_Frontier`: small easy
+      nursery + large hard frontier) — **cliffs** (`pop=12`), because the graze-along-the-line saccade
+      means an org *cannot camp* easy text: it walks off the nursery into the hard wall and starves.
+      Root tension: **non-destructive reading = infinite resource = no carrying capacity**, and every
+      simple scarcity collides with the saccade-walk (walls cliff), event-driven honesty (no flat tax),
+      or re-opens transit-starvation (destructive reading + a regen constant). **(3) Finite per-tick
+      information (Exp 13): BUILT + FAILED — and the failure is decisive.** Dividing the prediction
+      reward by `crowd_count` (±16 readers) collapsed the colony (`pop=12`) because reading is
+      **spatially exclusive** — each org reads its OWN cell (`pos+1`), so neighbours don't contend for
+      the same information; the ±16 split is a crowding tax in disguise that kills the bootstrap, while
+      the *honest* same-target-cell split is `n=1` almost always and never triggers. **Structural
+      conclusion:** non-destructive, spatially-exclusive, saccade-walked text reading is intrinsically
+      an **infinite, uncontested resource** — a carrying capacity cannot be imposed without relaxing a
+      load-bearing constraint. **Ascent therefore routes through PEER competition, not text scarcity**
+      (see P3): peer prediction is the only genuinely scarce, contested (zero-sum) resource — the text
+      economy's job is survival (done), the peer economy's job is ascent, if made non-lethal.
 - [ ] **Reseed diversity:** cohorts are >95% identical (≤12 near-clonal fossils, shared physics
       header); restore standing variation so eras desynchronise and selection has material.
 - [ ] **Observation-only capability probes (Rule 9 ↔ 6):** measure learning/reasoning progress
@@ -160,6 +198,68 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      emerge. Peer is default-OFF so the shipped economy is unaffected, but the autotelic layer now
      needs a **non-lethal predation coupling** (drain a fraction, or a much larger sustained pop)
      before it can run. Still human-supplied otherwise: food/oracle/books.
+- 🟡 **Non-lethal peer coupling — the autotelic layer now RUNS without self-extinguishing (Exp 14,
+     2026-07-13).** The lethality is fixed with a **derived, constant-free floor**: peer predation may
+     skim only the speaker's **surplus above body-subsistence** (footprint × `CELL_STATES`, the same
+     quantity as the abiogenesis seed), never pushing it below the cost of its own body. Still zero-sum
+     and unfarmable; the Red-Queen race is now over reproductive *surplus*, not survival. **Measured
+     live** (`00_Graded`, `GENESIS_PEER=1`, ~456k ticks): colony **SURVIVES** (`pop=600`, `refuge=0`) —
+     Exp 11's collapse is gone — and **self-organises into a peer economy** (`peer` 21→135, text `reads`
+     110→28: orgs shift from reading text to predicting each other). **BUT it plateaus, not ascends:**
+     `peer` settles ~135, `Universe N` flat over 300k ticks — the zero-sum race equilibrates without
+     capability rising. Peer stays **default-OFF** (now *safe* to run but it replaces rather than
+     improves the reading economy).
+- ✅ **Observation-only signal-diversity probe — plateau is NOT a degenerate code (Exp 15, 2026-07-13).**
+     Built the Rule-9↔6 probe (Shannon entropy of vocal bytes per window, `Hpeer`/`Hread`+`nd`, pure
+     telemetry, never wired to selection) and **measured to ~3.1 M ticks** (~7× deeper than Exp 14). The
+     degenerate-code guess is **falsified**: `Hpeer` ≈ **3.8 bits / ~19 distinct signals**, rock-stable,
+     *richer* than the reading channel (`Hread` ≈ 1.4 / 8). Capability stays flat not because signals are
+     poor but because peer prediction is **spatially confounded with reading** — a neighbour's vocal byte
+     is guessable from the predictor's own reading eye, so the task is **solvable without modelling the
+     other agent**. **Corrected ascent lever (b′):** *decouple the peer target from the predictor's own
+     sensory field* — predict a neighbour's *future* signal / *hidden-state*-driven action, not its
+     current shared-text read — so out-modelling a *mind* (theory-of-mind), not re-reading a *page*,
+     becomes the only way to win. (Supersedes the old (a)/(b) plan above.)
+- 🟡 **(b′) theory-of-mind coupling built — sustains but does NOT ascend (Exp 16, 2026-07-13).**
+     Implemented the corrected lever: peer prediction now pays only for *surprise* — score the neighbour's
+     FRESH byte against the frozen `vocal_prev` (t−1, what was sensed) and reward **only the bits that
+     CHANGED**, so echoing a sensed voice earns 0 and only anticipating a change earns (mirrors the Exp 12
+     reading fix; no new constant, zero-sum, non-lethal floor retained). Caught + reverted a reading-killer
+     (also sensing `vocal_prev` collapsed the colony to `pop=12/reads=0`; live 3-input compressed voice
+     sense is too lossy to farm, so kept). **Measured live** (`00_Graded`, `GENESIS_PEER=1`, ~1.9 M ticks):
+     the colony **slowly bleeds to a LOWER stable plateau** (`pop` 600→282, `Universe N` 26k→12.4k — brain
+     HALVED — then level; `refuge=0`, `ext=0`) — it does not ascend, it re-equilibrates *smaller*. Cause:
+     graded text is built from **long same-letter runs** (for the reading bootstrap), so neighbours seldom
+     change signal → the anticipatable-change income is rare (`peer` 0–45) → can't fund the brain vs Rule-7
+     shedding. **The blocker moved from the coupling to the SUBSTRATE:** reading-bootstrap wants long
+     predictable runs, peer-ascent wants frequent signal change — opposite statistics. (b′) is the right
+     coupling but needs a varying substrate / a hidden-state peer target. Default reading economy (peer-OFF)
+     re-verified sustaining with all Exp 16 shared-code changes in place. **Next:** give the peer channel a
+     high-change substrate or couple the target to a neighbour's hidden internal state (not its long-run
+     reading output).
+- ❌ **High-change-substrate branch CLOSED (Exp 17, 2026-07-13).** Tested branch (2) directly — feed the
+     working (b′) coupling a higher-change book (zero code change, new book + `GENESIS_BOOK_NAME`). Both
+     candidates **cliffed reading cold** (`pop=12`, `reads=0`): `00_Churn` (long `ABCDEFGHIJ` succession
+     body) and `00_Churn2` (uniform run-2 body). Reading sustains ONLY on long low-change runs — any
+     frequent change makes the saccade-walker hit a mispredicted transition every ~1–2 cells and starve
+     before bootstrap. But long runs are exactly what starves peer (Exp 16). **The two economies make
+     opposite, incompatible demands on the same bytes** → no shared reading/peer scroll can satisfy both.
+     Diagnostic books removed; `00_Graded` still default. **Only remaining ascent route = branch (1):**
+     decouple the peer target to a neighbour's HIDDEN internal state (next action / movement / energy
+     trend), a separate constant-free hidden-but-modellable channel that can be high-change without
+     touching the reading scroll. That new mechanism is the next build.
+- ⚠️ **Branch (1) BUILT — sustains + ignites income but does NOT ascend (Exp 18, 2026-07-13).** Peer
+     target decoupled from the shared scroll to the neighbour's **hidden motor action** `best_a∈{0..5}`
+     (one-hot `1<<best_a`, surprise-gated, precision-graded `1/s_bits/8×CELL_STATES`, non-lethal floor;
+     no new constant). Live 1.84 M ticks (`GENESIS_PEER=1`, `00_Graded`): colony **sustains**
+     (`pop=569–600`, `ext=0 refuge=0`) and peer income **ignites** (`peer=1–44`, vs ≈0 in Exp 16) —
+     but `Hpeer≈0/nd1` (thin **monomorphic** "predict-the-jump" code), `Universe N` −6.6 % then levels
+     ~24500. Decoupling was **necessary** (killed the confound + starvation) but **insufficient**: the
+     hidden action is *itself* low-entropy in a reading monoculture (everyone saccades). **Blocker moved
+     from confound/starvation to LOW TARGET ENTROPY** — a theory-of-mind economy cannot ascend without
+     behavioural diversity to model. **Next lever (unbuilt): Red-Queen** — reward the *prey* for being
+     unpredictable (anti-prediction / evasion income) so a predator's improving model meets an evolving
+     policy, pumping action entropy. Peer default-OFF; peer-OFF baseline re-verified — no regression.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

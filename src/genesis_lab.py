@@ -2,6 +2,7 @@ import numpy as np
 import time
 import random
 import os
+import math
 import threading
 import json
 import base64
@@ -37,7 +38,16 @@ GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "food").lower()
 # (vs the 250k food-economy coast) is used so reading income — not buffer burndown — must sustain
 # life; this is the whole point (Result.md Exp 4 root cause was oversized coast buffer).
 BOOK_CATEGORY = os.environ.get("GENESIS_BOOK_CATEGORY", "English")
-BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "01_Alphabet")
+# Default curriculum is the GRADED difficulty ramp (Result Exp 12, 2026-07-13). Since reading now
+# pays for PREDICTING the next (unsensed) symbol rather than ECHOING the sensed one under the
+# pointer (the information-economy fix in neuromorphic_engine.py), a cold-start colony of random
+# genomes needs a bootstrap foothold: a run of repeated characters, where a trivial echo reflex is
+# ALREADY a correct next-symbol predictor, so prediction income can begin. Measured live: the old
+# repeat-free 01_Alphabet (strict letter/space alternation, no two like symbols adjacent) CLIFFS the
+# prediction economy (pop -> refuge floor 12, reads=0); 00_Graded (run-length ramp 10->5->3->2->1)
+# bootstraps on its runs and SUSTAINS (pop 596-600, refuge=0) while the shrinking-run frontier
+# demands progressively real sequence-modeling (Rule 10 gradient, now in the TEXT difficulty).
+BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "00_Graded")
 BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", "6000"))
 BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
 
@@ -62,6 +72,16 @@ from books_of_genesis import (
     inject_custom_book, inject_curriculum_file, inject_passage, regrow_passage,
     inject_contiguous_library, get_library_books
 )
+import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + monotonic hall-of-fame)
+
+# Persistent brain checkpoint. Written continuously from the live hall-of-fame; carries an ENGINE
+# FINGERPRINT so it self-heals across code changes (a stale-layout file is auto-archived and rebuilt,
+# never manually deleted). Opt-in RESUME (default OFF, mirrors the peer default-OFF discipline) seeds a
+# run's founders from the accumulated best-ever bank so capability compounds across sessions; OFF keeps
+# every experiment's clean cold-start intact.
+BRAIN_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain", "Brain.npz")
+RESUME_BRAIN = os.environ.get("GENESIS_RESUME", "0") == "1"
 
 g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
 for i in range(1000):
@@ -126,6 +146,19 @@ g_oracle_val = 0
 g_oracle_target = -1
 voice_buf = np.zeros(10, dtype=np.uint8)
 vocal_cords = np.zeros(MAX_ORGANISMS, dtype=np.int32)
+# Previous-tick snapshot of vocal_cords (Exp 15). Only written when GENESIS_PEER=1 (the snapshot
+# inside world_tick is compile-time gated), used so peer prediction scores the neighbour's NEXT
+# emission against what was sensed last tick (pay for surprise, not for echoing a sensed voice).
+vocal_prev = np.zeros(MAX_ORGANISMS, dtype=np.int32)
+# Neighbour HIDDEN-STATE peer channel (Exp 18, branch 1). action_now[org] = the motor action an
+# organism DECIDED this tick (best_a, 0..5, or -1 for none); action_prev is its previous-tick
+# snapshot. Unlike the vocal byte, an organism's chosen action is on NO sensory input of any
+# neighbour and depends on that neighbour's own energy/brain/occupancy, so it cannot be read off
+# the shared scroll — predicting it demands modelling the neighbour's policy (theory-of-mind), and
+# it CHANGES far more often than a long text run (attacking the Exp 16 starvation). Only written
+# when GENESIS_PEER=1 (compile-time gated inside world_tick). Init -1 = "no action decided".
+action_now  = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
+action_prev = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
 g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
 
@@ -623,9 +656,9 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, g_read_log
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log
     )
-    
+
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
             g_alive[i] = False
@@ -647,7 +680,27 @@ def sim_loop():
         print(f"[BOOKS] Economy=books | library={BOOK_CATEGORY}/{BOOK_NAME} (contiguous scroll) "
               f"target={BOOK_TARGET_BYTES}B seed={int(CELL_STATES)}(one cell) currency=CELL_STATES({int(CELL_STATES)}/cell)")
 
-    seed_universe(300, initial_energy=SEED_ENERGY)
+    # RESUME (opt-in, GENESIS_RESUME=1). Seed the founder cohort from the persistent best-ever
+    # hall-of-fame so capability compounds across sessions instead of cold-starting every run. The
+    # checkpoint is fingerprint-checked: an incompatible-layout Brain.npz is NOT loaded (load_brain
+    # returns ok=False), so a code change can never resurrect a scrambled brain — the stale file is
+    # archived + rebuilt on the first save. Populating fossil_pool is enough: seed_universe(use_ark=True)
+    # draws diverse fossil crossovers from it. Default OFF preserves every experiment's clean cold-start.
+    resumed = False
+    if RESUME_BRAIN:
+        info = brain_io.load_brain(BRAIN_PATH)
+        if info["ok"] and info["entries"]:
+            for age, g in info["entries"]:
+                remember_fossil(g, age)
+            resumed = len(fossil_pool) > 0
+            best = max((a for a, _ in fossil_pool), default=0)
+            print(f"[BRAIN] RESUME: seeded {len(fossil_pool)} champions from Brain.npz "
+                  f"(best survival-age={best}, saved@tick={info['saved_at_tick']}).")
+        else:
+            print(f"[BRAIN] RESUME requested but checkpoint not usable ({info['reason']}); "
+                  f"cold-starting. A fresh Brain.npz will be written under the current fingerprint.")
+
+    seed_universe(300, use_ark=resumed, initial_energy=SEED_ENERGY)
     
     # World stepping is ARCHITECTURE-DERIVED (M1, 2026-07-11): each organism runs exactly as many LIF
     # substeps per world-tick as its own synapse graph is deep (spawn_organism -> g_org_lif_steps =
@@ -776,7 +829,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, g_read_log
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log
         )
         
         for i in range(n_births):
@@ -897,26 +950,67 @@ def sim_loop():
             # drains this, so with a browser open the counts show on the dashboard instead). Reads
             # = solved current symbol, pred = anticipated next symbol, peer = drained a neighbour.
             r_success = r_fail = r_pred = r_peer = 0
+            # OBSERVATION-ONLY signal-diversity histograms (Rules 9<->6: NEVER wired to selection).
+            # peer_hist: the vocal byte that WON each peer prediction this window; read_hist: the byte
+            # each solved comprehension (type-1) read named. Built from the already-drained read_log
+            # (pure telemetry), used only to print entropy below, never fed back into energy/selection.
+            peer_hist = {}
+            read_hist = {}
             k = 1
             while k < g_read_log[0]:
                 t = g_read_log[k]
-                if t == 1:   r_success += 1; k += 3
+                if t == 1:
+                    r_success += 1
+                    c = int(g_read_log[k+2]); read_hist[c] = read_hist.get(c, 0) + 1
+                    k += 3
                 elif t == 2: r_fail += 1;    k += 4
                 elif t == 3: r_pred += 1;    k += 3
-                elif t == 4: r_peer += 1;    k += 3
+                elif t == 4:
+                    r_peer += 1
+                    c = int(g_read_log[k+2]); peer_hist[c] = peer_hist.get(c, 0) + 1
+                    k += 3
                 else: break
             g_read_log[0] = 1
+
+            # --- OBSERVATION-ONLY signal-diversity probe (Exp 15, Rules 9<->6: NEVER selects) ---
+            # Shannon entropy (bits) of the distribution of vocal signals in each channel this window.
+            # Tests the Exp 14 plateau hypothesis directly: if the peer race has collapsed onto a
+            # DEGENERATE code, a handful of byte values carry all the traffic -> H_peer -> ~0 with a
+            # tiny distinct-count (nd). A rich / escalating proto-language keeps many distinct
+            # informative signals in play -> H_peer stays high (ceiling = log2(alphabet)). H_read is
+            # the same measure for the comprehension channel as a live baseline. Pure telemetry:
+            # computed from the drained read_log, printed only, never fed to energy/reproduction.
+            def _entropy(hist):
+                tot = 0
+                for v in hist.values(): tot += v
+                if tot == 0: return 0.0, 0
+                h = 0.0
+                for v in hist.values():
+                    p = v / tot
+                    h -= p * math.log2(p)
+                return h, len(hist)
+            h_peer, nd_peer = _entropy(peer_hist)
+            h_read, nd_read = _entropy(read_hist)
 
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} "
+                  f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} "
                   f"| ext={num_extinctions} refuge={num_refuge}")
             
+            # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
+            # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk
+            # record (monotonic: champions never regress), and if the engine fingerprint changed since
+            # the last write it archives the stale file and rebuilds automatically — no manual delete.
+            hof = [(a, g) for (a, g) in fossil_pool]
             if ark_dna is not None:
-                brain_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain")
-                os.makedirs(brain_dir, exist_ok=True)
-                np.savez(os.path.join(brain_dir, "Brain.npz"), genome=ark_dna)
-                
+                hof.append((int(max_ark_age), ark_dna))
+            if hof:
+                _, archived = brain_io.save_brain(BRAIN_PATH, hof, global_time, FOSSIL_POOL_MAX)
+                if archived is not None:
+                    print(f"  [BRAIN] Engine architecture changed since last checkpoint — archived stale "
+                          f"{os.path.basename(archived)} and rebuilt Brain.npz under the new fingerprint.")
+
             ticks_accum = 0
             last_print = now
 

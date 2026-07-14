@@ -1,121 +1,88 @@
-import numpy as np
+"""Brain.npz inspector — reads the self-describing checkpoint (brain_io) faithfully.
+
+The OLD analyzer hardcoded a Phase-2 fixed-offset layout (N_INPUT=7/N_HIDDEN=16/N_OUTPUT=6,
+`data['genomes']`/`data['alive']`) that the engine hasn't used in a long time — it decoded live
+genomes as garbage. This version imports the ENGINE'S OWN marker logic (`count_genes`) and the
+`brain_io` loader, so it can never desync from the running code: it checks the stored fingerprint,
+tells you plainly if a checkpoint predates a code change, and reports each champion's real topology
+straight from its bytes.
+
+Usage:  python analyzer.py [path/to/Brain.npz]
+"""
+
 import os
 import sys
+import numpy as np
 from collections import Counter
 
-# Architecture constants
-N_INPUT = 7
-N_HIDDEN = 16
-N_OUTPUT = 6
-GENOME_SZ = 256
+import brain_io
+from neuromorphic_engine import count_genes, N_INPUT, N_OUTPUT, N_IO
 
-G_WIH_START = 0
-G_WIH_LEN = N_INPUT * N_HIDDEN
-G_WHO_START = G_WIH_START + G_WIH_LEN
-G_WHO_LEN = N_HIDDEN * N_OUTPUT
-G_THR_START = G_WHO_START + G_WHO_LEN
-G_TAU_START = G_THR_START + N_HIDDEN
-
-INPUT_LABELS = [
-    "Food Here", "Food N", "Food S", "Food E", "Food W", "Self Energy", "Crowding"
-]
-
-OUTPUT_LABELS = [
-    "Move North", "Move South", "Move East", "Move West", "Eat Food", "Reproduce"
-]
-
-def decode_genome(genome):
-    w_ih = np.zeros((N_INPUT, N_HIDDEN), dtype=np.float32)
-    w_ho = np.zeros((N_HIDDEN, N_OUTPUT), dtype=np.float32)
-    thresh_h = np.zeros(N_HIDDEN, dtype=np.float32)
-    tau_h = np.zeros(N_HIDDEN, dtype=np.float32)
-
-    for i in range(N_INPUT):
-        for h in range(N_HIDDEN):
-            w_ih[i, h] = (float(genome[G_WIH_START + i * N_HIDDEN + h]) - 128.0) / 64.0
-
-    for h in range(N_HIDDEN):
-        for o in range(N_OUTPUT):
-            w_ho[h, o] = (float(genome[G_WHO_START + h * N_OUTPUT + o]) - 128.0) / 64.0
-
-    for h in range(N_HIDDEN):
-        thresh_h[h] = -58.0 + (float(genome[G_THR_START + h]) / 255.0) * 16.0
-
-    for h in range(N_HIDDEN):
-        tau_h[h] = 10.0 + (float(genome[G_TAU_START + h]) / 255.0) * 30.0
-
-    return w_ih, w_ho, thresh_h, tau_h
 
 def main():
     if len(sys.argv) > 1:
         brain_path = sys.argv[1]
     else:
-        brain_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain", "Brain.npz")
-        
-    print(f"Loading Fossil Record from: {brain_path}")
-    
-    try:
-        data = np.load(brain_path)
-    except Exception as e:
-        print(f"Failed to load brain data: {e}")
-        return
-        
-    genomes = data['genomes']
-    alive = data['alive']
-    
-    active_genomes = [bytes(genomes[i]) for i in range(len(alive)) if alive[i]]
-    pop_size = len(active_genomes)
-    print(f"Total Alive Organisms: {pop_size}")
-    
-    if pop_size == 0:
-        print("Universe is completely extinct at the moment of snapshot.")
-        return
-        
-    counter = Counter(active_genomes)
-    num_species = len(counter)
-    dom_bytes, dom_count = counter.most_common(1)[0]
-    dom_genome = np.frombuffer(dom_bytes, dtype=np.uint8)
-    
-    print(f"Total Unique Species: {num_species}")
-    print(f"Dominant Species Population: {dom_count} ({(dom_count/pop_size)*100:.1f}%)")
-    print(f"Dominant DNA Hex: {dom_bytes.hex()[:60]}...")
-    
-    # Decode the brain
-    w_ih, w_ho, thresh_h, tau_h = decode_genome(dom_genome)
-    
-    print("\n" + "="*50)
-    print(" DOMINANT SNN ARCHITECTURE & SYNAPTIC WEIGHTS")
-    print("="*50)
-    
-    print("\n[ Hidden Neurons Properties ]")
-    for h in range(N_HIDDEN):
-        print(f"  H{h:02d} | Threshold: {thresh_h[h]:.2f} mV | Tau: {tau_h[h]:.1f} ms")
-        
-    print("\n[ Strong Sensory -> Hidden Synapses (|w| > 0.5) ]")
-    found_ih = False
-    for i in range(N_INPUT):
-        for h in range(N_HIDDEN):
-            if abs(w_ih[i, h]) > 0.5:
-                found_ih = True
-                sign = "+++" if w_ih[i, h] > 0 else "---"
-                print(f"  {INPUT_LABELS[i]:<12} -> H{h:02d} : {w_ih[i, h]:+5.2f}  {sign}")
-    if not found_ih: print("  (No strong sensory synapses)")
+        brain_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain", "Brain.npz")
 
-    print("\n[ Strong Hidden -> Motor Synapses (|w| > 0.5) ]")
-    found_ho = False
-    for h in range(N_HIDDEN):
-        for o in range(N_OUTPUT):
-            if abs(w_ho[h, o]) > 0.5:
-                found_ho = True
-                sign = "+++" if w_ho[h, o] > 0 else "---"
-                print(f"  H{h:02d} -> {OUTPUT_LABELS[o]:<12} : {w_ho[h, o]:+5.2f}  {sign}")
-    if not found_ho: print("  (No strong motor synapses)")
-    
-    print("\n[ Biological Analysis ]")
-    print("Evolution operates by randomly mutating these weights in the Ark.")
-    print("Over generations, we expect specific sensory inputs (like 'Food Here')")
-    print("to strongly excite 'Eat Food', while 'Crowding' might excite 'Move'.")
-    print("="*50)
+    print(f"Loading Brain checkpoint: {brain_path}")
+    info = brain_io.load_brain(brain_path)
+    cur = brain_io.current_fingerprint()
+
+    if not info["ok"]:
+        print(f"\n[!] Checkpoint not usable under the current engine — reason: {info['reason']}")
+        if info["reason"] == "missing":
+            print("    No file yet. Run the sim; a fresh self-describing Brain.npz will be written.")
+        elif info["reason"] == "legacy-format":
+            print("    This is a pre-fingerprint checkpoint (old bare `genome=`/`genomes=`/`memory=`).")
+            print("    The sim will archive it and rebuild on the next save — no manual delete needed.")
+        elif info["reason"] == "fingerprint-mismatch":
+            print("    The code's genome layout changed since this file was written. Stored vs current:")
+            stored = info["stored_fp"] or {}
+            keys = sorted(set(stored) | set(cur))
+            for k in keys:
+                s, c = stored.get(k, "—"), cur.get(k, "—")
+                flag = "" if s == c else "   <-- CHANGED"
+                print(f"      {k:<22} stored={s!s:<8} current={c!s:<8}{flag}")
+            print("    The sim will archive it and rebuild automatically on the next save.")
+        return
+
+    entries = info["entries"]
+    print(f"\nEngine fingerprint (matches this code): "
+          f"N_INPUT={cur['N_INPUT']} N_OUTPUT={cur['N_OUTPUT']} N_IO={cur['N_IO']} "
+          f"fp={brain_io.fingerprint_hash(cur)}")
+    print(f"Saved at LIF tick: {info['saved_at_tick']:,}")
+    print(f"Hall-of-fame champions on record: {len(entries)}")
+
+    if not entries:
+        print("Checkpoint is empty (no champions banked yet).")
+        return
+
+    # Species stats across the banked champions.
+    by_bytes = Counter(g.tobytes() for _, g in entries)
+    print(f"Distinct genomes: {len(by_bytes)}")
+
+    # Sort by survival age (fitness) descending — brain_io already writes them that way.
+    ranked = sorted(entries, key=lambda ag: ag[0], reverse=True)
+
+    print("\n" + "=" * 68)
+    print(" HALL OF FAME (survival-age = emergent thermodynamic fitness, Rule 7)")
+    print("=" * 68)
+    print(f" {'rank':<5}{'age':>10}{'bytes':>8}{'neurons':>9}{'synapses':>10}   dna[:24]")
+    for rank, (age, g) in enumerate(ranked):
+        g = np.asarray(g, dtype=np.uint8)
+        s_count, h_count = count_genes(0, len(g), g)   # engine's own marker walk — never stale
+        total_neurons = N_IO + int(h_count)            # I/O neurons + decoded hidden
+        print(f" {rank:<5}{age:>10}{len(g):>8}{total_neurons:>9}{int(s_count):>10}   "
+              f"{g[:24].tobytes().hex()}")
+
+    print("=" * 68)
+    best_age, best_g = ranked[0]
+    bs, bh = count_genes(0, len(best_g), np.asarray(best_g, dtype=np.uint8))
+    print(f"Champion: survival-age={best_age}, {N_IO + int(bh)} neurons ({N_IO} I/O + {int(bh)} hidden), "
+          f"{int(bs)} synapses, {len(best_g)} genome bytes.")
+
 
 if __name__ == "__main__":
     main()

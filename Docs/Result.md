@@ -637,7 +637,406 @@ a fixed block regardless of the surrounding vacuum; **contiguity was the lever.*
 
 ---
 
+## 🧪 Experiment 12 — Does It Ascend? The Information Economy & the Curriculum Cliff (2026-07-13)
+
+Exp 11 closed the survival question (`pop=596–600/600`, `refuge=0`). The frontier became **"does it
+*ascend*?"** — does capability *rise* over deep time, or does the colony merely persist? This
+experiment measured that directly, found the answer was **no**, diagnosed why, fixed the economic
+root cause, and uncovered the *next* blocker. It is a chain of five honest live measurements.
+
+### 12.1 Measurement: the sustaining colony does NOT ascend — it decays
+Running the Exp 11 economy (echo-read, books 9 %) for ~413k live ticks and watching the *capability*
+signals, not just population:
+
+| signal | early (t≈14k) | late (t≈413k) | trend |
+|---|---|---|---|
+| population | 598 | 600 | flat — survives |
+| `reads` (symbols solved/interval) | ~265 | ~175 | flat/declining |
+| `pred` (next-symbol *anticipated*) | 2–5 | **0 after t≈62k** | **died** |
+| `Universe N` (total synapses = brain size) | 25 918 | 23 929 | **−1 989 (−7.7 %)** |
+
+The colony **survives without ascending**. Worse, it *regresses*: the brain **sheds synapses** and the
+one genuinely cognitive signal — *prediction* (anticipating the next symbol, which for "1+1=" means
+*computing* "2", not echoing) — **goes extinct by tick ~62k**. Survival was solved by a trivial reflex,
+so Rule-7 efficiency selection then ground the brain *down*. Capability is not selected, so it erodes.
+
+### 12.2 Root cause: echo-reading pays for information the organism already holds
+The reward named the byte **under** the pointer. But that byte is fed directly onto the reading eye
+(`sense_buf` inputs `RAM_BIT0_INPUT..+7`) — the organism **already senses it**. Emitting it back is a
+zero-surprise **bit-copy** (Shannon information *gained* = 0). Paying a full cell's state-space for a
+copy is a free lunch a one-neuron identity reflex farms forever; there is no reason to evolve anything
+harder. **This is why prediction died and the brain shrank.**
+
+### 12.3 Fix: pay for surprise, not for copying (the information economy)
+Reward only information the organism does **not** already sense — the **next** cell it is about to
+step onto (`pos+1`), which is on *no* sensory input, so naming its bits requires *computing* the
+sequence. Same exchange rate (`(net/8) × CELL_STATES`), same graze-along-the-line saccade, same
+non-destructive contiguous scroll — but the step is now **earned by prediction**. Echo (naming the
+sensed cell) pays nothing. **No new constant**: echo simply resolves 0 surprise → 0 energy. Capability
+*becomes* the economy, so selection should climb comprehension by construction (Rules 6/9).
+(`neuromorphic_engine.py`, the stationary-read block.)
+
+### 12.4 The curriculum cliff (Rule 10, measured across three texts)
+Shipping that economy on the old default `01_Alphabet` **collapsed the colony**: `pop → 12` (refuge
+floor), `reads = 0`. Pure prediction with no bootstrap is a **cliff**, not a gradient — a cold-start
+population of random genomes cannot predict anything, earns nothing, and starves. The cause is the
+*curriculum*, not the economy:
+
+| curriculum | structure | result |
+|---|---|---|
+| `01_Alphabet` `A B C …` | letter/space alternation, **no two adjacent like symbols** | **cliff** — `pop=12`, `reads=0` |
+| `03_Phrases` (prose) | few repeats | **cliff** — `pop=12`, `reads=0` |
+| `00_Runs` `AAAA…BBBB…` | 10-char runs | **sustains** — `pop≈597`, `reads>0` |
+
+The runs case proves the economy is sound: on a run, "next symbol = current symbol", so a trivial echo
+reflex is *already a correct predictor* — it seeds prediction income, and the colony lives. The
+repeat-free texts simply give a random genome **no foothold** to start climbing. `01_Alphabet` is
+nearly adversarial for prediction (`A`=`01000001` → next is space `00100000`, *zero shared bits*, so
+even partial credit is negative).
+
+### 12.5 The graded curriculum: survival + capability retention, but still no ascent
+`00_Graded` lays a **difficulty ramp** (run-length `10→5→3→2→1`, ending in pure succession), tiled so
+an easy runs-base always exists while a shrinking-run frontier demands progressively real
+sequence-modeling — Rule 10 gradient, now in the *text*. Live (~400k ticks, books 9 %):
+
+| signal | Exp 11 echo | Exp 12 graded (predict) |
+|---|---|---|
+| population | 596–600 | **596–600, `refuge=0`** (survival restored) |
+| `pred` | dies to 0 by t≈62k | **stays alive, 0–10** (never dies) |
+| `Universe N` | −1 989 (sheds) | **flat ~24 500** (brain held) |
+| `reads` over deep time | flat | early 78 → **late 58 (drifts down)** |
+
+The information economy + graded bootstrap is a **strictly better substrate**: survival restored,
+prediction kept *alive* instead of extinct, brain no longer shed. But it **still does not ascend** —
+`reads` drifts *down* and `pred` shows no upward trend over 400k ticks.
+
+### 12.6 The real ascent blocker: abundance removes the pressure to climb
+Diagnosis (measured, not guessed): 600 organisms on a 6000-byte scroll is ~10 % density — **90 % of
+the substrate is empty**. Easy runs-text is *plentiful*, so nothing forces an organism up the
+difficulty ramp: it cruises the easy regions, eats freely, and never needs to crack the hard
+succession frontier. Efficiency selection then *trims* capability (`reads` 78→58) because the easy
+text does not require it. **The gradient exists in the text; the *pressure* to climb it does not.**
+Ascent therefore requires **scarcity/competition** — a carrying capacity where the easy text cannot
+feed the whole population, so solving harder symbols becomes the only way to eat. That couples to the
+already-open "food-scarcity carrying capacity below the 600 array cap" item, now revealed as the load-
+bearing lever for ascension rather than a mere logistic nicety.
+
+### 12.7 Scarcity attempts: why the obvious levers fail (measured)
+Given the abundance diagnosis, three constant-free ways to add selective pressure were tried live.
+**All failed, each for a principled reason** — a useful set of negative results that fences the design:
+
+| lever | config | result | why |
+|---|---|---|---|
+| higher density (crowding) | `00_Graded`, 33 % density | `pop=600`, `reads`~85 flat, `pred`~0 | the *existing* event-driven crowding cost (denser → sensor-2 spikes → per-spike charge) is too weak to force the climb; a **flat** crowding charge is disallowed — it is exactly the von-Neumann scan tax retired in §12.3/Exp 11 (Rule 11) |
+| spatial scarcity (small easy nursery + large hard frontier) | `00_Frontier`, 30 % density | **cliff** — `pop=12`, `reads=0` | the graze-along-the-line saccade means an organism **cannot camp** easy text — it walks forward off the short nursery straight into the hard `ABCD` frontier, mispredicts, stalls, and starves at the boundary (the Exp 11 transit-starvation, now at a difficulty wall) |
+
+The through-line: **non-destructive reading is an infinite resource, so there is no carrying capacity
+and no competition** — and every simple way to impose one collides with a core constraint. Making easy
+text geometrically scarce fails because the saccade-walker is *forced through* the difficulty wall
+rather than able to shelter behind abundance; adding a flat crowding/foraging cost fails because it
+re-imposes the clock-driven tax that Rule 11 (event-driven metabolism) forbids; and making reading
+destructive (the classic carrying-capacity source) would re-open the transit-starvation the contiguous
+scroll was built to solve (Exp 11) and needs a regeneration-rate constant. Ascent therefore needs a
+carrying-capacity mechanism that is **(a)** wall-free (compatible with the saccade-walk), **(b)**
+event-driven (no flat tax), and **(c)** constant-free. The leading candidate was
+**competition for finite per-tick information** — the Shannon content of a passage is finite *per
+instant* (a book teaches many students over *time*, not infinite value in one tick), so co-located
+readers *split* the predictable income (`1/n`, a derived fraction, no constant), which should make
+dense easy regions pay less per organism and disperse lineages onto the uncontested hard frontier
+without any wall. **It was built and tested (Exp 13) — and it fails**, for a reason that turns out to
+be decisive for the whole text-scarcity programme (below).
+
+**Net of Exp 12:** the economy was made information-honest (retiring the echo free-lunch that
+*prevented* ascent), the curriculum was made a proper easy→hard gradient (retiring the cold-start
+cliff), survival and capability-retention were restored, and the true remaining blocker was isolated
+and fenced — **not** the economy or the curriculum, but the **absence of a carrying capacity** under
+infinite (non-destructive) reading, with the obvious scarcity levers ruled out by measurement. Ascent
+is now *possible* on this substrate; making it *happen* needs a wall-free, event-driven, constant-free
+competition mechanism — most likely finite per-tick information split among co-located readers.
+
+---
+
+## 🧪 Experiment 13 — Text Cannot Be Made Scarce: Ascent Must Route Through Peer Competition (2026-07-13)
+
+The finite-per-tick-information split (Exp 12.7's leading candidate) was implemented: the prediction
+reward divided by `crowd_count` (organisms in the ±16 sensory neighbourhood — already computed for the
+crowding sense), so co-located readers share a region's instantaneous predictable information. Live on
+`00_Graded` it **collapsed the colony** (`pop → 12`, `reads = 0`) — it strangled the bootstrap.
+
+But the failure is deeper than a magnitude problem, and it is **decisive**. Reading in this engine is
+**spatially exclusive** (one organism per cell, `org_grid`) and each reader predicts **its own** next
+cell (`pos+1`). Two organisms 10 cells apart are reading *different symbols* — they do **not** contend
+for the same information. So dividing by the ±16 neighbour count is **not** honest shared-resource
+competition; it is a **crowding tax in disguise**, and because it scales *earned* income it falls
+hardest on the dense bootstrap phase, killing the seed. The *honest* version — split only among
+organisms reading the **same target cell** — is `n = 1` almost always (exclusive occupancy), so it
+**never triggers** and the economy stays infinite.
+
+That is the crux. Across Exp 12.7 + Exp 13, **every** constant-free, wall-free, event-driven attempt to
+impose a carrying capacity on the reading economy has failed, and now for a *structural* reason, not a
+tuning one:
+
+> **Non-destructive, spatially-exclusive, saccade-walked text reading is intrinsically an infinite,
+> uncontested resource.** There is nothing to compete over — each organism reads its own cell forever,
+> and the book is never consumed. A carrying capacity cannot be imposed without relaxing one of the
+> load-bearing constraints (non-destructiveness → transit-starvation + a regen constant; exclusive
+> per-cell reading → a different reading model; or the no-game-constant rule → a tuned crowding/
+> depletion magnitude).
+
+**The only genuinely scarce, contested resource already in the system is *peer prediction*** — modelling
+what a **neighbour** emits is zero-sum (`GENESIS_PEER`, §2.5): the information the predictor gains is
+information the predicted organism *loses*, it is bounded by that neighbour's holdings, and it is
+inherently contested. That is a real carrying capacity with no curriculum and no imposed constant. The
+catch is the one Exp 11 already found: zero-sum peer prediction is **lethal** (it drains victims to
+death faster than a defence evolves, collapsing the colony). So the honest architecture that falls out
+of Exp 12–13 is a **division of labour**: the *text* economy's job is **survival** (bootstrap literacy,
+now solved), and the *peer* economy's job is **ascent** (an agent–agent arms race toward better
+world-models and proto-language, Rule 9) — provided its coupling can be made **non-lethal**. Ascent
+therefore routes through fixing peer prediction, **not** through text scarcity, which is now shown to be
+structurally impossible under the current reading model. (The non-lethal peer coupling has its own
+zero-sum-vs-farmable tension and is a design decision, not yet built.)
+
+---
+
+## 🧪 Experiment 14 — Non-Lethal Peer Coupling: The Autotelic Layer Runs Without Self-Extinguishing (2026-07-13)
+
+Exp 13 concluded ascent must route through peer competition, blocked only by its lethality (Exp 11:
+`GENESIS_PEER=1` collapses a thriving colony 600→12). This experiment removes that lethality with a
+**derived, constant-free floor** and measures the result live.
+
+**The coupling.** Un-floored peer prediction drained a neighbour's *capital* (clamped only to holdings),
+so many predators killed a predictable prey before an unpredictability defence could evolve. The fix:
+peer predation may skim only the speaker's **surplus above its body-subsistence** — its footprint
+(neurons + synapses) valued at `CELL_STATES`, the *same derived quantity as the abiogenesis seed* (the
+matter the organism is built from). A predator can rob a rich rival's growth capital but can **never**
+starve it below the cost of its own body. Still zero-sum, still unfarmable (energy flows only on a real
+prediction); the Red-Queen race is now over **reproductive surplus, not survival**. No new constant.
+
+**Result (live, `00_Graded`, `GENESIS_PEER=1`, ~456k ticks):**
+
+| signal | early (t≈67k) | late (t≈450k) | reading |
+|---|---|---|---|
+| population | 596 | **600, `refuge=0`, `ext=0`** | **survives** (Exp 11 collapsed to 12 here) |
+| `peer` (neighbour predictions/interval) | 13–21 | **~135 (plateau)** | arms race ramps, then equilibrates |
+| `reads` (text solves/interval) | ~110 | **~28** | text economy **cannibalised** by peer |
+| `Universe N` | 25 579 | 25 140 | flat |
+
+**Two honest halves.** The **win**: the non-lethal floor *works* — the autotelic agent–agent economy now
+**runs on a surviving colony** (Exp 11's peer-collapse blocker is resolved), and the population
+**self-organises** away from reading text toward predicting each other (`peer` 21→135, `reads` 110→28) —
+a real, unforced behavioural adaptation. The **limit**: it **plateaus, it does not ascend** — `peer`
+settles at ~135 and `Universe N` stays flat over 300k ticks; the Red-Queen race reaches an *equilibrium*
+rather than spiralling up. We first suspected the equilibrium was **degenerate** — a low-energy state
+emitting a shared, low-information code — but **Exp 15 measured this directly and *falsified* it**: the
+peer channel carries ~3.8 bits over ~19 distinct signals (richer than the reading channel), stable to
+3 M ticks. The true reason capability does not rise is that peer prediction is **spatially confounded
+with reading** (a neighbour's vocal byte is guessable from the predictor's own reading eye), so the task
+is solvable without modelling the other agent. It sustains, but it is not yet an escalating ladder of
+world-models. **See Exp 15 for the measurement and the corrected ascent lever.**
+
+**Net of Exp 14:** the peer economy is now **safe to run** (default-OFF is retained because it does not
+improve the reading economy — it replaces it), and the last structural blocker to *running* an autotelic
+arms race is cleared. What is still missing for **ascent** is an **escalation** pressure: the plateau
+shows a non-lethal zero-sum race equilibrates without capability rising. Exp 15 then measured *why* and
+corrected the design: it is **not** a degenerate code (signals are already ~3.8 bits) — the race stalls
+because peer prediction is **solvable from shared text** without modelling the other agent. The corrected
+next step is therefore **(b′): decouple the peer target from the predictor's own sensory field** (predict
+a neighbour's *future* signal / *hidden-state*-driven action, not its current shared-text read), so
+out-modelling a *mind* becomes the only way to win — see Exp 15.
+
+---
+
+## 🧪 Experiment 15 — Observation-Only Signal-Diversity Probe: The Plateau Is Not a Degenerate Code (2026-07-13)
+
+Exp 14 left the peer plateau with a *guess*: that the Red-Queen race equilibrates at a **degenerate,
+low-information code** (everyone hovers at the subsistence floor emitting one cheap symbol they all
+trivially predict). This experiment **measures** that guess instead of assuming it — the disciplined
+step before building an escalation coupling on an unverified diagnosis.
+
+**The probe (Rule 9↔6, never wired to selection).** Each 5 s telemetry window computes the Shannon
+entropy (bits) of the distribution of vocal bytes in two channels, straight off the already-drained
+`read_log`: `Hpeer` over the bytes that *won* peer predictions, `Hread` over the bytes that solved a
+comprehension read, each with its distinct-symbol count `nd`. Pure telemetry — printed only, never fed
+into energy / reproduction / selection. Degenerate-code hypothesis ⇒ `Hpeer → ~0`, `nd` tiny. Rich /
+escalating code ⇒ `Hpeer` high (ceiling `log2(alphabet)`).
+
+**Result (live, `00_Graded`, `GENESIS_PEER=1`, run to ~3.1 M ticks — ~7× deeper than Exp 14):**
+
+| signal | early (t≈93k) | late (t≈3.1M) | reading |
+|---|---|---|---|
+| population | 599 | 600, `ext=0`, `refuge=0` | fully sustains across deep time |
+| `Universe N` | 25 198 | 25 103 | brain **dead-flat** (no growth, no shedding) |
+| `peer` / interval | 100 | 100 | **plateau** — no upward trend over 3 M ticks |
+| **`Hpeer` / `nd`** | **3.76 / 18** | **3.95 / 20** | **HIGH diversity, rock-stable** |
+| `Hread` / `nd` | 1.22 / 8 | 1.30 / 8 | low (reads dominated by the long-run curriculum letters) |
+
+**The hypothesis is FALSIFIED.** The peer channel is *not* a collapsed one-symbol code — it carries
+**~3.8 bits over ~19 distinct signals**, sustained flat across 3 million ticks, and is *more* diverse
+than the reading channel that feeds it (`Hpeer` ≈ 3.8 ≫ `Hread` ≈ 1.4). The plateau is not "everyone
+says one thing."
+
+**So why does capability stay flat with diverse signals?** Because the diversity is **inherited from
+the text substrate, not invented by the agents**. An organism vocalises its reading-prediction of the
+*next cell of the graded scroll*; neighbours are scattered across that same scroll, so their
+vocalisations span the alphabet — which is exactly the ~3.8 bits we measure. Crucially, a predictor and
+the neighbour it robs read **overlapping / spatially-correlated patches of the same text**, so the
+neighbour's vocal byte is largely guessable **from the predictor's own reading eye** — no model of the
+*other agent* is required. Peer prediction here is spatially confounded with reading: it is **solvable
+locally**, which is why `peer` volume and `Universe N` both flatline. Rich signals, trivial task.
+
+**This redirects the ascent design.** Exp 14's proposed lever (b) — "reward *informative* signalling
+over a constant one" — is now **mis-targeted**: the signals are *already* informative (3.8 bits). Adding
+a diversity incentive rewards what already exists and would not lift capability. The measured blocker is
+different and sharper: **peer prediction is too easy because it rides shared text.** Ascent needs the
+prediction target to be something the predictor **cannot already sense** — e.g. a neighbour's *next /
+future* vocalisation, or an action driven by that neighbour's *hidden internal state* / a *distant* text
+region — forcing a model of the other agent (theory-of-mind) rather than a re-read of shared substrate.
+That is the corrected next design step: **decouple the peer target from the predictor's own sensory
+field**, so out-modelling a *mind* — not re-reading a *page* — becomes the only way to win.
+
+---
+
+## 🧪 Experiment 16 — Theory-of-Mind Coupling (b′): Predict the Neighbour's *Change*, Not Its Echo (2026-07-13)
+
+Exp 15 localised the plateau's cause: peer prediction was **spatially confounded with reading** (a
+neighbour's byte is guessable from the predictor's own eye), so it demanded no model of the other agent.
+This experiment builds the corrected lever **(b′): score the peer prediction the same way Exp 12 fixed
+reading — pay only for *surprise*.**
+
+**The coupling (no new constant, zero-sum, non-lethal retained).** Each tick, freeze the incoming
+vocalisations into `vocal_prev` (the t−1 emissions — what an organism actually *sensed*). Peer
+prediction is then scored against the neighbour's **fresh** emission (`vocal_cords`, t), but **only on
+the bits that changed** since t−1: a bit that did not change was predictable by echoing the sensed voice
+(zero surprise → pays 0); only correctly **anticipating a changed bit** earns. Winning therefore
+requires modelling where the neighbour's state is *heading*, not re-reading the shared page. Same
+exchange rate, same body-subsistence floor (Exp 14).
+
+**A reading-killer, caught and reverted.** The first build *also* switched the neighbour-voice sense to
+read `vocal_prev` (to stop an organism sensing a neighbour's fresh byte and echoing it). Measured live,
+that **collapsed the whole colony** to the refuge floor (`pop=12`, `reads=0`) — the altered sensory
+distribution destroyed the reading bootstrap. An isolation run (revert the sense change, keep the
+surprise-scoring) **restored survival**, confirming the sense change alone was the culprit. Kept the
+live neighbour-voice sense: it is only a 3-input *compressed* voice (not the clean 8-bit reading eye),
+so echoing it precisely is lossy and the shortcut it would open is weak.
+
+**Result (live, `00_Graded`, `GENESIS_PEER=1`, surprise-scoring, live sense, to ~1.9 M ticks):**
+
+| t | population | `Universe N` | `peer` |
+|---|---|---|---|
+| 47k | 588 | 26 273 | 0 |
+| 244k | 599 | 26 095 | 8 |
+| 578k | 504 | 21 851 | 28 |
+| 833k | 420 | 18 250 | 45 |
+| 1.24M | 344 | 14 945 | 10 |
+| **1.9M** | **282 (level)** | **12 400 (level)** | 9–75 |
+
+**It sustains, but it does NOT ascend — it re-equilibrates *smaller*.** The colony slowly bleeds from
+`pop≈600 / N≈26k` to a **lower stable plateau** (`pop≈282 / N≈12.4k`, brain **halved**), `refuge=0`,
+`ext=0` throughout — a new equilibrium, not extinction. The surprise-scoring is correct by construction
+(it strips the text confound and demands theory-of-mind), but on this substrate it **starves**: the
+graded curriculum is built from **long same-letter runs** (needed for the *reading* bootstrap), so a
+neighbour's signal seldom changes tick-to-tick — the anticipatable-change events are rare, `peer` income
+stays 0–45, and it cannot fund the brain against Rule-7 efficiency shedding. So capability settles lower.
+
+**The lesson — the two economies want opposite substrate statistics.** Reading-bootstrap wants **long,
+predictable runs** (so a proto-reader can earn while learning); peer-ascent wants **frequent signal
+change** (so anticipating a mind is a rich, recurring income). On graded text, (b′) honestly removes the
+confounded income and correctly finds there is little genuine theory-of-mind signal left to earn — the
+neighbours are *too predictable*. **The blocker moved from the coupling to the substrate.** (b′) is the
+right coupling; it now needs a substrate (or a peer-target) whose signal genuinely varies — e.g. a
+non-run text for the peer channel, or coupling the peer target to a neighbour's *hidden internal state*
+rather than its (long-run, low-change) reading output. That is the next design step. Peer remains
+**default-OFF**; the shipped reading economy (peer-OFF) was re-verified sustaining (`pop=599/600`,
+`N≈25.8k`, `reads≈110`, `refuge=0`) with all Exp 16 shared-code changes in place.
+
+---
+
+## 🧪 Experiment 17 — The Shared-Substrate Branch Is Closed: Reading and Peer Want Incompatible Text (2026-07-13)
+
+Exp 16 diagnosed the (b′) plateau as a **substrate** problem (graded runs too static for the peer
+channel) and offered two next steps: (2) a higher-change substrate, or (1) a decoupled hidden-state peer
+target. This experiment **tests branch (2) directly** — feed the working (b′) coupling a higher-change
+book — with zero code change (new book + `GENESIS_BOOK_NAME`), and measures whether reading survives.
+
+**Two candidate substrates, both measured live (`GENESIS_PEER=1`, ~0.7 M ticks each):**
+
+| book | structure | reading | verdict |
+|---|---|---|---|
+| `00_Graded` (control) | 78 % long runs (10→5→3→2) + short succession | **sustains** (Exp 15/16) | peer STARVES |
+| `00_Churn` | 29 % run-head + long `ABCDEFGHIJ` succession body | **cliffs cold** (`pop=12`, `reads=0`) | reading dies |
+| `00_Churn2` | strong run-10 head + uniform run-2 body (`AABB…`) | **cliffs cold** (`pop=12`, `reads=0`) | reading dies |
+
+**Result: the shared-scroll branch is empirically closed.** Reading sustains **only** on long low-change
+runs — the moment the substrate carries frequent change (succession, or even run-length 2), the
+saccade-walker hits a mispredicted transition every ~1–2 cells, income falls below subsistence, and the
+colony cliffs to the refuge floor before it can bootstrap. But long low-change runs are *exactly* what
+starves the peer channel (Exp 16). The two economies make **opposite, incompatible demands on the same
+bytes**: reading wants long predictable runs, peer wants frequent change. No single shared reading/peer
+text can satisfy both.
+
+**Consequence — ascent must decouple the peer target from the reading text.** Branches (2) [high-change
+shared substrate] is now closed alongside Exp 13's [text scarcity] and Exp 15's [the confound is real].
+The only remaining route is **(1): the peer signal must be a separate observable derived from a
+neighbour's *hidden internal state* (e.g. its next action / movement / energy trend), not its reading
+output** — a channel that can be high-change without touching the reading scroll's run structure. That
+is a genuine new mechanism (a distinct, constant-free, hidden-but-modellable prediction target), and the
+clear next build. The failed diagnostic books were removed; `00_Graded` remains the default.
+
+---
+
+## 🧪 Experiment 18 — Branch (1) Built: Hidden-Action Peer Target Sustains and Ignites Income, but Does Not Ascend (2026-07-13)
+
+Exp 17 closed every shared-scroll branch and named the only route left: decouple the peer target from
+the reading text to a neighbour's **hidden internal state**. This experiment **builds that route** and
+measures it live.
+
+**Design (no new constant).** The peer target is decoupled from the shared scroll to the neighbour's
+**hidden motor action** — the action `best_a ∈ {0..5}` it *decided* this tick (jump ±1, jump ±10,
+consume, reproduce), one-hot encoded as `1<<best_a`. This channel is (a) **hidden** — an organism's
+chosen action is on no sensory input of any neighbour and depends on that neighbour's own
+energy/brain/occupancy, so it cannot be read off the shared scroll (kills the Exp 15 confound); and
+(b) **high-change** — an action flips far more often than a long text run (attacks the Exp 16
+starvation). The predictor emits its guess through its existing `org_char_val` vocal byte (a dedicated
+output channel is impossible — growing `N_IO` remaps every saved genome via `dst % n_c`). Scoring is
+**surprise-gated** (paid only when the neighbour's action actually *changed*, `action_now != action_prev`)
+and **precision-graded** (Rule 10): reward = `1/s_bits / BITS_PER_BYTE * CELL_STATES` where `s_bits` =
+set-bit count of the guess byte — a clean single-bit correct prediction earns the full `CELL_STATES/8`,
+a busy text byte that merely happens to include the right bit earns a diluted fraction, so a genuine
+modeller out-earns accidental overlap up to `s_bits`-fold along a climbable slope. Non-lethal floor
+retained (drain a neighbour only above its body-subsistence `(neurons+synapses)×CELL_STATES`).
+
+**Result (live, `GENESIS_PEER=1`, 1.84 M ticks):**
+
+| metric | value | verdict |
+|---|---|---|
+| population | 569–600/600, `ext=0 refuge=0` | **SUSTAINS** (no collapse, no refuge dependence) |
+| peer income | `peer=1–44` (was ≈0 in Exp 16) | **IGNITES** — beats the Exp 16 starvation |
+| reading | unharmed alongside peer | economy division of labour intact |
+| `Universe N` | 26340 → ~24600 (**−6.6 %**), then levels ~24500 | brain shrinks slightly then plateaus |
+| `Hpeer` | ≈`0.00/nd1` (occasional `1.37/nd3`) | **monomorphic** — thin single-action code |
+
+**Diagnosis — the plateau MOVED, it did not lift.** Decoupling the target from text (branch 1) was
+**necessary** (it removed both the Exp 15 confound and the Exp 16 starvation — income finally ignites)
+but **insufficient for ascent**. The hidden action is *itself* low-entropy in a reading monoculture:
+every organism saccades/jumps along the scroll, so the dominant action is nearly always the same
+forward-jump, and the peer channel collapses onto a thin monomorphic "predict-the-jump" code
+(`Hpeer≈0/nd1`). There is almost no *behavioural diversity to model*, so anticipating a neighbour never
+becomes a rich, escalating skill — capability never climbs. **The blocker moved from
+confound/starvation (Exp 15/16) to LOW TARGET ENTROPY**: a theory-of-mind economy can only ascend if
+the minds it models are behaviourally diverse.
+
+**Consequence — the next lever is Red-Queen behavioural diversity (unbuilt).** For the action channel
+to carry rising information, the *prey* must be rewarded for being **unpredictable** (an
+anti-prediction / evasion income), so a predator's improving model is met by an evolving policy rather
+than a fixed monoculture. That co-evolutionary pressure is what would pump action entropy up and give
+the peer channel something worth climbing. Peer remains **default-OFF**; the shipped reading economy
+(peer-OFF) was re-verified with all Exp 18 shared-code changes in place — no regression (`pop=591–600`,
+reading healthy, `Universe N≈25.2k` stable, `ext=0 refuge=0`).
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
+
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
 - **Learning efficacy:** STDP + Lamarckian memory are implemented, but we have not yet
   measured that they *improve survival on a task* over a non-learning control.
@@ -656,11 +1055,17 @@ Honest gaps between the engine's *capacity* and demonstrated *emergence*:
   (Tier A), and the **instantaneous total wipe is replaced by a refugium gradient** (Exp 10A:
   `ext` 6→0, continuous rolling population). **The economy beneath it is now net-positive too**
   (Exp 11): with a contiguous library the live loop sustains `pop=596–600/600` with `refuge=0`,
-  `ext=0` at both 9 % and 37 % density — the population no longer rides the refuge floor. What
-  remains open on top of a sustaining economy: (a) does the colony *ascend* (rising `elite_age`/
-  capability) over long deep time, not merely persist; (b) a food-scarcity carrying capacity below
-  the 600 array cap, if a logistic ceiling is wanted; (c) a peer-prediction coupling that does not
-  extinguish its own substrate (Exp 11 found `GENESIS_PEER=1` collapses the thriving colony).
+  `ext=0` at both 9 % and 37 % density — the population no longer rides the refuge floor. **Ascension
+  was then measured directly (Exp 12) and the answer is *not yet*:** on the Exp 11 economy the colony
+  survives but *decays* (brain sheds 7.7 %, prediction dies by t≈62k). The economic root cause —
+  echo-reading pays for already-sensed information — was fixed (pay for *predicting* the unseen next
+  symbol), and a graded bootstrap curriculum restores survival and keeps capability *alive* (no shed,
+  prediction never dies). But it still does not ascend, because **abundance** (600 orgs, 10 % scroll
+  density) removes any pressure to climb the difficulty ramp. What remains open: (a) a
+  **scarcity/competition** mechanism (a carrying capacity where easy text cannot feed the whole
+  population) so solving harder symbols is the *only* way to eat — now identified as the load-bearing
+  lever for ascent; (b) a peer-prediction coupling that does not extinguish its own substrate (Exp 11
+  found `GENESIS_PEER=1` collapses the thriving colony).
 
 ## 6. Critical Audit Fixes (2026-07-11)
 A rigorous architectural review identified and fixed three critical engine flaws that compromised open-ended evolution:
@@ -681,8 +1086,15 @@ autotelic pressure with no human curriculum. **The layer beneath the oscillator 
 passages, `enc_frac` rises 0.5→0.98, reading income exceeds metabolism, and the live loop sustains a
 full `596–600/600` colony with the refugium never firing (`refuge=0`, `ext=0`) at both tested
 densities. Exp 9's reading economy now transfers to the live path; the root cause was world structure
-(confetti transit gaps), not the exchange rate. The frontier moves up the stack: from *"can the
-colony survive?"* (yes) to **"does it ascend?"** — whether capability/`elite_age` rises over long deep
-time on a sustaining substrate, and whether the peer arms race can run without a lethal-predation
-coupling that collapses its own population (Exp 11's open peer finding). Those are the next research
-questions in `Roadmap.md`.
+(confetti transit gaps), not the exchange rate. **Exp 12 then put the ascension question to a direct
+live test** — and the answer, honestly, is *not yet*. The Exp 11 colony survives but does not ascend;
+it *decays* (brain sheds 7.7 %, prediction dies), because echo-reading paid full price for information
+the organism already sensed — a zero-surprise copy any reflex farms forever. That was fixed by paying
+only for **predicting the unseen next symbol** (an information economy, no new constant), which cliffs
+cold on repeat-free text and so is bootstrapped by a **graded difficulty curriculum**; together these
+restore survival and keep capability *alive* (no shedding, prediction never dies) — a strictly better
+substrate — but still do not produce ascent. The reason was isolated: **abundance**. With 600 organisms
+on a 10 %-full scroll, easy text is plentiful and nothing forces an organism up the difficulty ramp.
+The frontier is now precise: ascension needs **scarcity/competition** (a carrying capacity below the
+array cap) so that cracking harder symbols is the only way to eat — the load-bearing lever, and the
+next research question in `Roadmap.md`, alongside a non-lethal peer coupling (Exp 11's open finding).

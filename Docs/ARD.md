@@ -94,8 +94,10 @@ operation debits one cycle (Rule 15/17), with no arbitrary discounts:
   2**BITS_PER_BYTE = 256`: a RAM cell is an 8-bit register holding one of 256 microstates, worth
   256 cycles of state-space. **Eating** a `0x55` food byte reclaims the whole cell → `+256` and
   collapses it to `0x00` vacuum (food is consumed — metabolism). **Solving** a book symbol pays the
-  fraction of bits resolved → `+(net_bits / 8) × 256` (a full 8-bit echo pays the same 256 as eating;
-  partial credit is a gradient, Rule 10). This single number **retired the game constants
+  fraction of bits resolved → `+(net_bits / 8) × 256` (a full 8-bit match pays the same 256 as eating;
+  partial credit is a gradient, Rule 10). *What counts as "solving" changed in Exp 12 — it is now
+  **predicting the next, unsensed symbol**, not echoing the sensed one; see the reading-model bullet
+  below.* This single number **retired the game constants
   `CYCLES_PER_EAT_GAIN` (15,000) and `READ_REWARD_SCALE` (64)** — food and text share one honest
   currency and reading out-earns grazing only *emergently* (chained predictions across a passage,
   living where text is dense), never by a multiplier (2026-07-11 "remove all game constants";
@@ -111,6 +113,18 @@ operation debits one cycle (Rule 15/17), with no arbitrary discounts:
   encounter economy, previously capped by a density-invariant structural wall (a stationary reader
   always stood on the vacuum it ate), is now **density-tractable** — reading income scales with text
   supply.
+- **Reading pays for PREDICTION, not echo** (the information economy, Result Exp 12, 2026-07-13).
+  The saccade above originally scored the vocalisation against the byte **under** the pointer (echo).
+  But that byte is already on the reading-eye inputs (`sense_buf[RAM_BIT0_INPUT..+7]`), so echoing it
+  is a **zero-surprise bit-copy** (Shannon information gained = 0) — a free lunch a one-neuron identity
+  reflex farms forever. Measured consequence: the colony *survived but never ascended* — prediction
+  died by tick ≈62k and the brain **shed 7.7 % of its synapses** (Rule-7 efficiency grinding a
+  reflex down). The reward now scores the vocalisation against the **next** cell (`pos+1`), which is on
+  **no** sensory input, so naming its bits requires *computing* the sequence, not copying the eye. Same
+  rate, same saccade, same non-destructive scroll; echo now pays nothing (0 surprise → 0 energy) and
+  **no new constant** is introduced. Capability *becomes* the income, so comprehension is selected by
+  construction (Rules 6/9). This economy **cliffs cold on repeat-free text** (a random genome cannot
+  predict anything), so it is bootstrapped by a graded curriculum (§2.7).
 - **Sensing is event-driven** (Rule 11, Result Exp 11, 2026-07-12). An earlier revision charged a
   flat `2 × FOOD_SCAN_RADIUS = 32` cycles/tick to *every* organism *every* tick as "the food-scan
   memory reads". That was a clock-driven von-Neumann tax (~40 % of the metabolic floor) paid even
@@ -127,6 +141,15 @@ operation debits one cycle (Rule 15/17), with no arbitrary discounts:
   `enc_frac` to ~0.98; reading income then exceeds metabolism and the live `sim_loop` sustains
   `pop=596–600/600` on reading alone (refugium never fires) at both 9 % and 37 % density. Carrying
   capacity is the organism-array cap (non-destructive reading = infinite food), not a food limit.
+- **Ascension is not yet achieved** (Result Exp 12, 2026-07-13). On the information economy + graded
+  curriculum the colony survives and **retains** capability (prediction stays alive, brain no longer
+  sheds) — a strictly better substrate than the echo economy — but capability does not *rise* over
+  deep time (`reads` drifts 78→58, `pred` flat). The isolated cause is **abundance**: at ~10 % scroll
+  density, 90 % of the substrate is empty, so easy text is plentiful and nothing forces an organism up
+  the difficulty ramp; efficiency selection even trims capability the easy text does not require. The
+  gradient exists in the curriculum; the *pressure* to climb it does not. Ascent needs a
+  **scarcity/competition** carrying capacity (below the array cap) so that solving harder symbols is
+  the only way to eat — the current frontier (see `Roadmap.md` P2).
 - **Reproduce**: pay `genome_length × CYCLES_PER_BYTE_COPY` to copy the genome, then split
   the remaining energy in half with the child. An organism dies when energy `≤ 0`. The abiogenesis
   **seed** is likewise derived — a founder is born holding its own footprint (`genome + neurons +
@@ -192,11 +215,46 @@ catastrophic fallback.
 **Peer prediction (autotelic, `GENESIS_PEER=1`, 2026-07-12).** An optional zero-sum energy
 transfer in `world_tick_numba`: an organism that vocalises the byte a **neighbour** is emitting
 reclaims the matched bits' `CELL_STATES` **from that neighbour** (`energy[predictor] += g;
-energy[speaker] −= g`, clamped to holdings). No free energy is minted (unfarmable), so it is a
+energy[speaker] −= g`). No free energy is minted (unfarmable), so it is a
 Rule-9 agent–agent survival problem — out-model a neighbour, or be unpredictable — a Red-Queen
 push toward proto-language, with no human curriculum. It redistributes energy (selects for
-communication), it is not a food source. Compile-time gated (dead-code-eliminated when off);
-verified firing crash-free, emergence not yet demonstrated.
+communication), it is not a food source. Compile-time gated (dead-code-eliminated when off).
+
+**Non-lethal coupling (Result Exp 14, 2026-07-13).** The original drain was clamped only to the
+speaker's holdings, so it was **lethal** — Exp 11 measured `GENESIS_PEER=1` collapsing a thriving
+colony 600→12 (predators drained a predictable prey to death before an unpredictability defence could
+evolve, extinguishing the substrate). The drain is now floored at the speaker's **body-subsistence** —
+its footprint (neurons + synapses) × `CELL_STATES`, the *same derived quantity as the abiogenesis
+seed*, so `g` may skim only `energy[speaker] − footprint×CELL_STATES` (the growth *surplus*) and can
+**never** push the speaker below the cost of its own body. Peer stays zero-sum and unfarmable but the
+Red-Queen race is now over reproductive surplus, not survival, so it cannot self-extinguish. **Measured
+live** (`00_Graded`, ~456k ticks): the colony **survives** (`pop=600`, `refuge=0`) and self-organises
+into a peer economy (`peer` 21→135, text `reads` 110→28) — but it **plateaus rather than ascends**. The
+plateau was **probed observation-only in Exp 15** (Shannon entropy of vocal bytes, Rule 9↔6, never wired
+to selection, measured to ~3.1 M ticks): the plateau is **not** a degenerate code — `Hpeer` ≈ 3.8 bits
+over ~19 distinct signals, *richer* than the reading channel. Capability stays flat because peer
+prediction is **spatially confounded with reading** (a neighbour's byte is guessable from the predictor's
+own eye), so it is solvable without modelling the other agent. Peer is retained **default-OFF**: it is
+now *safe* to run but replaces rather than improves the reading economy. Ascent now needs the peer target
+**decoupled from the predictor's own sensory field** (predict a neighbour's *future* / *hidden-state*
+signal, not its shared-text read) so theory-of-mind, not re-reading, wins (§ Roadmap P3, Exp 15).
+
+**Branch (1) built — the hidden-action peer target (Exp 18, 2026-07-13).** The peer target is decoupled
+from the shared scroll to the neighbour's **hidden motor action** `best_a ∈ {0..5}` (one-hot `1<<best_a`):
+hidden (on no neighbour's sensory input, so un-readable off the scroll → kills the Exp 15 confound) and
+high-change (flips faster than a text run → attacks the Exp 16 starvation). The guess rides the existing
+`org_char_val` vocal byte (a dedicated channel is impossible — growing `N_IO` remaps every saved genome
+via `dst % n_c`); scoring is surprise-gated (`action_now≠action_prev`) and precision-graded
+(`1/s_bits/BITS_PER_BYTE×CELL_STATES` — a clean single-bit guess earns full `CELL_STATES/8`, a busy byte
+a diluted fraction; Rule 10 slope, no new constant). Measured live (1.84 M ticks): the colony **sustains**
+(`pop=569–600`, `ext=0 refuge=0`) and peer income **ignites** (`peer=1–44`, vs ≈0 in Exp 16) — but does
+**not ascend**: `Hpeer≈0/nd1` (a thin **monomorphic** "predict-the-jump" code), `Universe N` −6.6 % then
+level. Decoupling was necessary (removed the confound and the starvation) but **insufficient**: the hidden
+action is itself low-entropy in a reading monoculture, so there is almost no behavioural diversity to
+model. **The blocker moved from confound/starvation to low target entropy** — a theory-of-mind economy can
+only ascend if the modelled minds are behaviourally diverse (next lever: Red-Queen anti-prediction income
+on the prey). Peer stays **default-OFF**; the peer-OFF baseline was re-verified with all Exp 18 shared-code
+changes in place — no regression.
 
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
@@ -229,3 +287,15 @@ net-positive (§2.1). Organisms are seeded and germinate **standing on** the scr
 org-grid *occupancy*, not a `0x00`-vacuum requirement (a food-economy holdover that, on a solid scroll
 with no interior vacuum, stranded the whole cohort off-text: the live-only bug behind the earlier
 floor-12 collapse).
+
+**Curriculum *difficulty* is now load-bearing, not just layout** (Result Exp 12, 2026-07-13). Once
+reading pays for *predicting* the next symbol (§2.1), the text must present a **difficulty gradient a
+cold-start genome can climb** (Rule 10). A repeat-free text is a cliff: a random reflex predicts
+nothing and the colony starves (measured: `01_Alphabet` and `03_Phrases` → `pop=12`, `reads=0`). The
+default curriculum is therefore `Books/English/00_Graded.txt` — a **run-length ramp** (`10→5→3→2→1`,
+ending in pure succession) tiled end-to-end. Its runs bootstrap prediction (on a run "next = current",
+so a trivial echo reflex is already a correct predictor and earns), while the shrinking-run frontier
+demands progressively real sequence-modeling. This restores survival under the prediction economy
+(`pop≈600`, `refuge=0`) and keeps capability alive — but does **not** by itself produce ascent, because
+under abundance nothing forces organisms up the ramp (§2.1, `Roadmap.md` P2). The old `01_Alphabet`
+etc. remain in the library as harder, no-bootstrap texts.

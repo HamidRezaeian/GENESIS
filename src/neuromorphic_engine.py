@@ -236,7 +236,7 @@ def decode_genome(
     return s_idx
 
 @njit(cache=True)
-def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, sense_buf):
+def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_prev, sense_buf):
     sense_buf.fill(0.0)
     sense_buf[0] = energy / ATP_MAX
     sense_buf[1] = 0.5
@@ -259,6 +259,11 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, sense_b
     right_pos = (pos + 1) % RAM_SIZE
     
     voice_acc = 0
+    # Neighbour-voice sense (inputs 4-6): live vocal_cords. NOTE (Exp 15 isolation): this is the
+    # neighbour's compressed 3-input voice, NOT the clean 8-bit reading eye, so echoing a sensed
+    # neighbour byte precisely is lossy — the within-tick "sense-fresh-then-echo" shortcut the peer
+    # surprise-score guards against is weak here, so sensing live (not vocal_prev) is kept to avoid
+    # disturbing the reading economy. The peer block below still scores against the frozen vocal_prev.
     if org_grid[left_pos] != -1: voice_acc |= vocal_cords[org_grid[left_pos]]
     if org_grid[right_pos] != -1: voice_acc |= vocal_cords[org_grid[right_pos]]
     
@@ -305,7 +310,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, read_log
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -332,6 +337,16 @@ def world_tick_numba(
                 global_genome[org_g_ptr[o] + byte_off] ^= (1 << r_bit)
                 break
             tries += 1
+
+    # PEER_PREDICT (Exp 15 fix): freeze this tick's incoming vocalizations (t-1 emissions) BEFORE any
+    # organism overwrites vocal_cords below. vocal_prev is then the stable "what a neighbour said last
+    # tick" used both for sensing (above) and for the peer surprise-score (a neighbour's byte that has
+    # NOT changed since t-1 was predictable by echo and pays nothing). Compile-time gated -> the copy
+    # is dead-code-eliminated when peer is off, so the verified default economy is untouched.
+    if PEER_PREDICT:
+        for i in range(vocal_cords.shape[0]):
+            vocal_prev[i] = vocal_cords[i]
+            action_prev[i] = action_now[i]     # Exp 18: freeze last tick's motor decision (hidden target)
 
     for org in range(max_org):
         if not alive[org]:
@@ -371,7 +386,7 @@ def world_tick_numba(
         # not within the step loop, and sense() is deterministic (no RNG). So compute it ONCE
         # per tick instead of re-scanning neighbours every step — a pure engine speedup with
         # identical dynamics, so the simulator itself needs less hardware for the same physics.
-        sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, sense_buf)
+        sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, vocal_prev, sense_buf)
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
@@ -517,10 +532,19 @@ def world_tick_numba(
 
         best_a = -1
         best_n = 0
-        for o in range(6): 
+        for o in range(6):
             if out_accum[o] > best_n:
                 best_n = out_accum[o]
                 best_a = o
+
+        # Exp 18 (branch 1): record the motor action this organism DECIDED this tick as its hidden
+        # peer-prediction target. best_a is the winning motor output (0..5) or -1 for none; it is on
+        # NO neighbour's sensory input, so a predictor can only anticipate it by modelling this
+        # organism's policy. Written before the peer block so a neighbour already stepped this tick
+        # exposes its FRESH decision (t), while a not-yet-stepped neighbour still holds t-1 in
+        # action_now until it overwrites here. Compile-time gated with the rest of the peer economy.
+        if PEER_PREDICT:
+            action_now[org] = best_a
                 
         # A vocal bit is set if its neuron fired at all this tick. With random scratchpad synapses
         # kept OFF the vocal outputs and two max-weight copy synapses per bit driving each vocal
@@ -544,70 +568,117 @@ def world_tick_numba(
 
         # --- PEER PREDICTION (autotelic, Rules 9/6): a survival problem from agent-agent interaction ---
         # Roadmap P3 literally: "let survival problems arise from agent-agent competition (predation,
-        # trade, defence)." An organism that vocalizes the byte a NEIGHBOUR is currently emitting has
-        # PREDICTED that neighbour (from the voice it sensed on inputs 4-6). It reclaims the matched
-        # bits' state-space FROM the speaker: energy[predictor] += g, energy[speaker] -= g. This is
-        # ZERO-SUM by construction (no free energy is minted), so it is UNFARMABLE — you can only take
-        # what a neighbour holds, and the only way to earn is to out-model a neighbour while the only
-        # defence is to be UNpredictable: a Red-Queen arms race toward informative signalling
-        # (proto-language), with NO human-authored curriculum and NO imposed fitness (energy just
-        # flows on the prediction event). It REDISTRIBUTES energy rather than adding it, so it selects
-        # for communication without inflating the population's budget (sustenance stays the reading/
-        # refugium economy's job). Dead-code-eliminated unless GENESIS_PEER=1.
+        # trade, defence)." An organism reclaims a neighbour's energy-state by PREDICTING that
+        # neighbour's signal (zero-sum: energy[predictor] += g, energy[speaker] -= g; no free energy is
+        # minted, so UNFARMABLE — you can only take what a neighbour holds). It selects for out-modelling
+        # neighbours while the only defence is to be UNpredictable: a Red-Queen arms race toward
+        # informative signalling (proto-language), no human curriculum, no imposed fitness. Dead-code-
+        # eliminated unless GENESIS_PEER=1.
+        #
+        # EXP 18 — DECOUPLE THE TARGET TO A NEIGHBOUR'S HIDDEN ACTION (branch 1, 2026-07-13). Exps
+        # 15-17 closed every route that kept the peer target ON THE SHARED SCROLL: scoring a
+        # neighbour's vocal byte (its reading output) is spatially confounded with reading — predator
+        # and prey read overlapping text so the prey's byte is guessable from the predator's own eye
+        # (Exp 15); the surprise-gated version then STARVES on the long low-change runs that reading
+        # needs (Exp 16); and no single substrate can be both low-change (for reading) and high-change
+        # (for peer) at once (Exp 17). The only route left is to predict something the predictor does
+        # NOT share: the neighbour's MOTOR ACTION (action_now = best_a). A chosen action is on NO
+        # neighbour's sensory input and depends on that neighbour's PRIVATE energy/brain/occupancy, so
+        # it cannot be read off the page — anticipating it demands modelling the neighbour's policy
+        # (genuine theory-of-mind) — and it changes far more often than a text run, so income is dense
+        # (removing the Exp 16 starvation cause). The action is one-hot (bit = action index) and the
+        # organism's SAME vocal byte is scored against it: growing N_OUTPUT for a dedicated channel
+        # would scramble every genome (a connection decodes as dst % n_c, n_c = N_IO + hidden), so the
+        # actuator stays shared — but the TARGET is now text-INDEPENDENT, which is where the confound
+        # lived. PRECISION-GRADED SCORING separates the two economies at the emission: pay the correct
+        # action bit DILUTED by the emission's bit-count (1/s_bits), so a clean single-bit predictor
+        # earns the full per-bit rate while a busy printable text byte (reading emission) that only
+        # ACCIDENTALLY overlaps the text-independent action bit earns a small diluted fraction — a
+        # genuine action-modeller out-earns text-overlap up to s_bits-fold, and shedding stray bits is
+        # a climbable slope (not the all-or-nothing cliff of the first build, which never ignited).
+        # Surprise-gated (only a CHANGED action, unpredictable by inertia, pays). Constant-free: a bit-
+        # count ratio times the existing CELL_STATES/BITS_PER_BYTE rate. Zero-sum, non-lethal floor.
+        # No new constant.
         if PEER_PREDICT and org_char_val != 0:
             for side in range(2):
                 npos = (pos - 1 + RAM_SIZE) % RAM_SIZE if side == 0 else (pos + 1) % RAM_SIZE
                 nb = org_grid[npos]
                 if nb != -1 and nb != org and alive[nb]:
-                    nb_char = vocal_cords[nb]
-                    if nb_char != 0:
-                        pc = 0
-                        pw = 0
-                        for b in range(8):
-                            ob = (org_char_val >> b) & 1
-                            tb = (nb_char >> b) & 1
-                            if ob == 1 and tb == 1:
-                                pc += 1
-                            elif ob == 1 and tb == 0:
-                                pw += 1
-                        pnet = pc - pw
-                        if pnet > 0:
-                            g = np.float32(pnet) / BITS_PER_BYTE * CELL_STATES
-                            if g > energy[nb]:
-                                g = energy[nb]          # cannot drain more than the speaker holds
+                    a_now = action_now[nb]       # neighbour's FRESH motor decision (t) if it stepped this tick
+                    a_prev = action_prev[nb]     # its previous decision (t-1)
+                    # Only a CHANGED, real action carries surprise: an unchanged/none decision is
+                    # predictable by inertia (or the neighbour has not stepped yet -> a_now == a_prev).
+                    if a_now >= 0 and a_now != a_prev:
+                        if (org_char_val >> a_now) & 1:   # organism asserted the neighbour's newly-taken action
+                            s_bits = 0
+                            for b in range(8):
+                                if (org_char_val >> b) & 1:
+                                    s_bits += 1
+                            # PRECISION-GRADED (Rule 10 gradient, not a cliff). The first build penalised
+                            # every OTHER asserted bit (pnet = 1 - extra); that was all-or-nothing — an
+                            # organism earned NOTHING until it emitted exactly one specific action bit and
+                            # nothing else, an unreachable cliff (measured: peer income stayed ~0, the
+                            # channel never ignited). Instead pay the correct-action bit DILUTED by the
+                            # emission's total bit-count (1/s_bits): a clean single-bit assertion earns the
+                            # full per-bit rate, a busy byte that merely INCLUDES the right bit earns a
+                            # fraction, so shedding stray bits is a climbable slope. A genuine action-modeller
+                            # (clean emission) still out-earns a reader whose busy printable byte only
+                            # ACCIDENTALLY overlaps the (text-independent) action bit, by up to s_bits-fold —
+                            # so modelling is selected, not text-overlap. Constant-free: a bit-count ratio
+                            # times the existing CELL_STATES/BITS_PER_BYTE rate.
+                            g = np.float32(1.0) / np.float32(s_bits) / BITS_PER_BYTE * CELL_STATES
                             if g > np.float32(0.0):
-                                energy[org] += g
-                                energy[nb] -= g
-                                idx = read_log[0]
-                                if idx < 996:
-                                    read_log[idx] = 4
-                                    read_log[idx+1] = org
-                                    read_log[idx+2] = nb_char
-                                    read_log[0] = idx + 3
+                                # NON-LETHAL floor (Exp 14): skim only surplus above body-subsistence
+                                # (footprint * CELL_STATES = the abiogenesis seed value), never starving
+                                # the speaker below the cost of its own body. No new constant.
+                                nb_floor = (np.float32(org_n_count[nb]) + np.float32(org_s_count[nb])) * CELL_STATES
+                                drainable = energy[nb] - nb_floor
+                                if g > drainable:
+                                    g = drainable       # never push the speaker below body-subsistence
+                                if g > np.float32(0.0):
+                                    energy[org] += g
+                                    energy[nb] -= g
+                                    idx = read_log[0]
+                                    if idx < 996:
+                                        read_log[idx] = 4
+                                        read_log[idx+1] = org
+                                        read_log[idx+2] = (1 << a_now)   # the action bit that was predicted
+                                        read_log[0] = idx + 3
 
-        # --- Stationary reading (2026-07-11): SOLVE the symbol you occupy ---
-        # The original read reward only fired inside the movement branch and checked the byte at
-        # the DESTINATION cell (predict-the-next-cell) — incompatible with an echo reflex that
-        # vocalizes the byte UNDER the pointer, and skipped entirely whenever a vocal output (not a
-        # jump) won winner-take-all. Reward reading the CURRENT cell every tick so "stand on a
-        # letter and pronounce it" is the honest book-solving event evolution can climb (Rules 9/10).
+        # --- Reading = PREDICT THE NEXT SYMBOL (2026-07-12, the information-economy fix) ---
+        # HONEST INFORMATION ECONOMY (Result Exp 12). The earlier model rewarded ECHO: name the
+        # byte UNDER the pointer. But that byte is already fed to the reading eye (sense_buf inputs
+        # RAM_BIT0_INPUT..+7) — the organism already SENSES it, so emitting it back is a zero-surprise
+        # bit-copy (Shannon information GAINED = 0). Paying full CELL_STATES for a copy let a trivial
+        # identity reflex farm the library forever: evolution climbed to "echo + saccade" and then
+        # STOPPED. Measured live (Exp 12 probe, books 9%, ~413k ticks): prediction (the real
+        # comprehension signal) died to zero by tick ~62k, and the brain SHED synapses
+        # (Universe N 25918 -> 23929, -7.7%) because survival was already solved by a reflex and
+        # Rule-7 efficiency then ground the brain DOWN. The colony survived without ever ASCENDING.
+        #
+        # FIX: pay only for information the organism does NOT already sense — the NEXT cell it is
+        # about to step onto. pos+1 is on NO sensory input, so naming its bits requires COMPUTING
+        # the sequence (for "A B C" -> anticipate the increment; for "1+1=" -> compute "2"), not
+        # copying the eye. Same exchange rate ((net/8)*CELL_STATES), same graze-along-the-line
+        # saccade, same non-destructive contiguous scroll that Exp 11 proved sustains the colony —
+        # but the STEP is now EARNED BY PREDICTION. Echo (naming the sensed cell) pays nothing; only
+        # anticipation earns. Capability becomes the economy itself, so selection climbs comprehension
+        # by construction (Rules 6/9). No new constant: echo simply stops paying (0 surprise -> 0
+        # energy) and the existing prediction rate does all the work.
+        # PARTIAL CREDIT (Rule 10 gradient, not cliff): score bits set correctly (1 where the target
+        # is 1) minus bits set wrongly (1 where target is 0). Consecutive glyphs share high bits, so
+        # a half-right guess still earns — a climbable slope from silence -> partial -> exact
+        # prediction. Silence (0) scores 0 (no spurious reward). Full 8-bit match logs type 1
+        # (a solved prediction); a nonzero wrong guess logs type 2 (miss).
         grazed = False
-        cur_byte = ram_substrate[pos]
-        if cur_byte >= 32 and cur_byte <= 126 and cur_byte != 0x55:
-            # PARTIAL-CREDIT reading (gradient, not cliff — Rule 10). Score bits the organism sets
-            # correctly (1 where the symbol is 1) minus bits it wrongly sets (1 where symbol is 0),
-            # so getting more bits right earns more energy and evolution/STDP can climb from partial
-            # to full reading. Silence (0) scores 0 (no spurious reward). Each net-correct bit is
-            # A solve reclaims the fraction of the cell's state-space it resolved: (net_bits / 8) *
-            # CELL_STATES. A full 8-bit match reclaims the whole cell (256) — the same energy eating
-            # that cell as food releases (one honest exchange rate, no multiplier). Partial credit is
-            # a gradient (Rule 10). Full match = true solved read (consumed + logged type 1); nonzero
-            # miss logs type 2.
+        nxt = (pos + 1) % RAM_SIZE
+        next_byte = ram_substrate[nxt]
+        if next_byte >= 32 and next_byte <= 126 and next_byte != 0x55:
             correct_bits = 0
             wrong_bits = 0
             for b in range(8):
                 out_b = (org_char_val >> b) & 1
-                tgt_b = (cur_byte >> b) & 1
+                tgt_b = (next_byte >> b) & 1
                 if out_b == 1 and tgt_b == 1:
                     correct_bits += 1
                 elif out_b == 1 and tgt_b == 0:
@@ -615,46 +686,33 @@ def world_tick_numba(
             net = correct_bits - wrong_bits
             if net != 0:
                 energy[org] += np.float32(net) / BITS_PER_BYTE * CELL_STATES
-                # GRAZE-ALONG-THE-LINE (2026-07-12, the reading MODEL). A successful read is a
-                # SACCADE: the eye decodes the fixated symbol, then sweeps to the NEXT one. Advance
-                # the head +1 onto the adjacent cell (forward — the direction text is laid down) so
-                # a reader WALKS the passage symbol-to-symbol. This replaces both the old stationary
-                # freeze AND destructive reading:
-                #   * Old freeze: the reader ate its cell then sat on the 0x00 vacuum it made, so
-                #     enc_frac was capped ~0.05 at ANY density (the structural encounter wall).
-                #   * Destructive read was ONLY an anti-farm hack ("don't stand still spamming one
-                #     char for infinite energy"). The saccade makes it redundant: a rewarded read
-                #     moves the head OFF the cell, so re-reading the same cell means walking the
-                #     entire 65536-cell ring back to it — never net-positive. The saccade IS the
-                #     anti-farm, so reading is now NON-DESTRUCTIVE: a book is not burned by being
-                #     read (brain-honest), and a following reader gets the same text (many students,
-                #     one book). The library stops being strip-mined, so the economy is no longer
-                #     supply-throttled by the regrow rate.
-                # No new constant: step is unit adjacency, cost is the existing CYCLES_PER_MOVE (3),
-                # trivially net-positive against a read (up to 256). Blocked only by occupancy.
-                # Only a real decode (net>0) sweeps — silence/miss keeps the head still, so walking
-                # the library REQUIRES actually reading it (the Rule 9 selection pressure).
-                nx = (pos + 1) % RAM_SIZE
-                if org_grid[nx] == -1:
+                # SACCADE onto the cell just predicted (the reading MODEL). Only a net-positive
+                # PREDICTION sweeps the eye +1 onto the adjacent cell, so WALKING the scroll REQUIRES
+                # anticipating it (the Rule 9 selection pressure — a reader who cannot predict cannot
+                # advance and cannot eat). Non-destructive (a book is not burned by being read; many
+                # students, one book), unit-adjacency, cost = existing CYCLES_PER_MOVE. Blocked only
+                # by occupancy. The forward sweep also lands the eye ON the predicted cell, so next
+                # tick it must predict pos+2 to keep moving — comprehension compounds along the line.
+                if org_grid[nxt] == -1:
                     energy[org] -= CYCLES_PER_MOVE
                     org_grid[pos] = -1
-                    positions[org] = nx
-                    org_grid[nx] = org
-                    pos = nx
+                    positions[org] = nxt
+                    org_grid[nxt] = org
+                    pos = nxt
                     grazed = True
-            if org_char_val == cur_byte:
+            if org_char_val == next_byte:
                 idx = read_log[0]
                 if idx < 996:
                     read_log[idx] = 1
                     read_log[idx+1] = org
-                    read_log[idx+2] = cur_byte
+                    read_log[idx+2] = next_byte
                     read_log[0] = idx + 3
             elif org_char_val != 0:
                 idx = read_log[0]
                 if idx < 993:
                     read_log[idx] = 2
                     read_log[idx+1] = org
-                    read_log[idx+2] = cur_byte
+                    read_log[idx+2] = next_byte
                     read_log[idx+3] = org_char_val
                     read_log[0] = idx + 4
 
