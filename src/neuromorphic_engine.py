@@ -36,6 +36,20 @@ SEEK_TEXT = os.environ.get("GENESIS_ECONOMY", "food").lower() == "books"
 # it so the peer and non-peer kernels never share a compiled cache.
 PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
 
+# RED-QUEEN (autotelic prey-defence, Rules 9/6) — the OTHER half of the peer duel, compile-time gated
+# for DCE exactly like PEER_PREDICT. Exp 18 found the predator half (predict a neighbour's hidden
+# action) SUSTAINS but never ASCENDS: in a reading monoculture everyone saccades, so the action
+# target is monomorphic (Hpeer~0/nd1) and "predict-the-jump" is trivial — theory-of-mind has no
+# behavioural diversity to model. Red-Queen closes the arms race by paying the PREY: when a neighbour
+# COMMITS a clean single-bit wager on this organism's action and guesses WRONG, the mispredicted
+# organism reclaims that predictor's staked energy (zero-sum: evader += g, failed-predictor -= g; no
+# minting, unfarmable — a predictor only loses by wagering, and a mis-wagering predator is selected
+# against, so no stable collusion). Selection now pushes prey to be UNpredictable -> pumps action
+# entropy -> gives the Exp 18 predator side something rich to model -> escalation. Only meaningful
+# WITH the predator economy, so the branch lives inside the PEER_PREDICT block (no effect if peer
+# off). genesis_lab folds it into NUMBA_CACHE_DIR so the kernels never share a compiled cache.
+RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -600,6 +614,14 @@ def world_tick_numba(
         # count ratio times the existing CELL_STATES/BITS_PER_BYTE rate. Zero-sum, non-lethal floor.
         # No new constant.
         if PEER_PREDICT and org_char_val != 0:
+            # Count the emission's asserted bits ONCE (org_char_val is fixed across both neighbours):
+            # the predator reward dilutes by it, and the Red-Queen prey-defence fires only on a CLEAN
+            # single-bit wager (s_bits == 1 = a committed bet on exactly ONE action), so a busy multi-bit
+            # reading byte is never treated as a confident guess and is never Red-Queen-penalised.
+            s_bits = 0
+            for b in range(8):
+                if (org_char_val >> b) & 1:
+                    s_bits += 1
             for side in range(2):
                 npos = (pos - 1 + RAM_SIZE) % RAM_SIZE if side == 0 else (pos + 1) % RAM_SIZE
                 nb = org_grid[npos]
@@ -610,10 +632,6 @@ def world_tick_numba(
                     # predictable by inertia (or the neighbour has not stepped yet -> a_now == a_prev).
                     if a_now >= 0 and a_now != a_prev:
                         if (org_char_val >> a_now) & 1:   # organism asserted the neighbour's newly-taken action
-                            s_bits = 0
-                            for b in range(8):
-                                if (org_char_val >> b) & 1:
-                                    s_bits += 1
                             # PRECISION-GRADED (Rule 10 gradient, not a cliff). The first build penalised
                             # every OTHER asserted bit (pnet = 1 - extra); that was all-or-nothing — an
                             # organism earned NOTHING until it emitted exactly one specific action bit and
@@ -643,6 +661,38 @@ def world_tick_numba(
                                         read_log[idx] = 4
                                         read_log[idx+1] = org
                                         read_log[idx+2] = (1 << a_now)   # the action bit that was predicted
+                                        read_log[0] = idx + 3
+                        elif RED_QUEEN and s_bits == 1:
+                            # --- RED-QUEEN PREY DEFENCE (Exp 19, the prey half of the duel) ---
+                            # org made a CLEAN single-bit wager (confidently bet exactly one action) and
+                            # the neighbour took a DIFFERENT one -> the mispredicted PREY (nb) reclaims the
+                            # predator's stake (zero-sum: prey += g, failed predator -= g). No energy is
+                            # minted, so it is unfarmable by construction — a predator can only LOSE by
+                            # wagering wrong, so being confidently wrong is selected against while being
+                            # UNpredictable is selected FOR. That is the missing arms-race pressure: Exp 18
+                            # showed the predator side alone SUSTAINS but never ascends because a reading
+                            # monoculture gives a monomorphic action target (Hpeer~0/nd1) — nothing to
+                            # model. Paying prey for evasion pumps ACTION ENTROPY, which in turn gives the
+                            # predator side real diversity to out-model: the two halves escalate each other.
+                            # The stake is the SAME per-bit rate a CORRECT clean wager would have won
+                            # (s_bits == 1 -> CELL_STATES/BITS_PER_BYTE), so winning and losing a one-bit
+                            # bet are symmetric — no new constant. Non-lethal: capped at the PREDATOR's
+                            # surplus above ITS OWN body-subsistence floor, so a wrong guess never pushes the
+                            # predator into debt (it can only stake what it holds above its body cost).
+                            g = np.float32(1.0) / np.float32(s_bits) / BITS_PER_BYTE * CELL_STATES
+                            if g > np.float32(0.0):
+                                org_floor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
+                                stakeable = energy[org] - org_floor
+                                if g > stakeable:
+                                    g = stakeable       # a predator only stakes surplus above its own body
+                                if g > np.float32(0.0):
+                                    energy[nb] += g
+                                    energy[org] -= g
+                                    idx = read_log[0]
+                                    if idx < 996:
+                                        read_log[idx] = 5
+                                        read_log[idx+1] = nb             # the EVADER that got paid
+                                        read_log[idx+2] = (1 << a_now)   # the action the predator MISSED
                                         read_log[0] = idx + 3
 
         # --- Reading = PREDICT THE NEXT SYMBOL (2026-07-12, the information-economy fix) ---

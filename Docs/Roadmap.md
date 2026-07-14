@@ -260,6 +260,21 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      behavioural diversity to model. **Next lever (unbuilt): Red-Queen** — reward the *prey* for being
      unpredictable (anti-prediction / evasion income) so a predator's improving model meets an evolving
      policy, pumping action entropy. Peer default-OFF; peer-OFF baseline re-verified — no regression.
+- ❌ **Red-Queen branch CLOSED — rewarding unpredictability does NOT ascend + the Exp 18 premise was an
+     artifact (Exp 19, 2026-07-13).** Built the prey half of the duel (`GENESIS_REDQUEEN`, default-OFF):
+     a predictor's **clean single-bit wager** that misses transfers its stake to the mispredicted prey
+     (zero-sum, unfarmable, non-lethal, same `CELL_STATES/BITS_PER_BYTE` rate, no new constant). Added an
+     observation-only **`Hact`** probe (live action distribution). Live A/B (books, matched windows):
+     both configs **sustain** (`pop≈595`, `ext=0 refuge=0`); **neither ascends** (`Universe N` decays then
+     levels in both); mean `Hact` **1.75** (Red-Queen) vs **1.82** (peer-only) — unpredictability income
+     **does not raise** action entropy, if anything lowers it; evasion income stays thin (`evade≈42/100k`)
+     because precision-graded predator income lets predators earn *without* committing a clean wager, so
+     they dodge the penalty and the duel goes quiet. **`Hact` exposes the Exp 18 error:** the action
+     distribution is already `nd6` (not monomorphic — the `Hpeer≈0/nd1` was only *winning-prediction*
+     entropy; only the modal action is monetizable, the rest are present-but-noisy). **Redirect:** ascent
+     needs a **structured, modelable (predictable-but-hard-to-compute)** target — *compressible complexity*
+     the predictor is rewarded for learning to compute — **not** raw surprise. Red-Queen default-OFF;
+     peer-OFF baseline byte-identical + re-verified healthy. `Hact` probe retained.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

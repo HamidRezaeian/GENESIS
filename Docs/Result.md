@@ -1035,6 +1035,60 @@ reading healthy, `Universe N≈25.2k` stable, `ext=0 refuge=0`).
 
 ---
 
+## 🧪 Experiment 19 — Red-Queen Prey Defence: Rewarding Unpredictability Does Not Ascend, and Corrects the Exp 18 Diagnosis (2026-07-13)
+
+Exp 18 named the next lever: pay the **prey** for being unpredictable so the predator's improving
+model meets an evolving policy (a Red-Queen arms race that pumps action entropy). This experiment
+**builds and A/B-tests that lever** — and returns a clean negative that reframes the whole frontier.
+
+**Design (no new constant, non-lethal, default-OFF).** A new compile-time flag `GENESIS_REDQUEEN`
+adds the *prey half* of the peer duel inside the existing peer block. When a predictor emits a **clean
+single-bit wager** (`s_bits == 1` = a committed bet on exactly one action) and the neighbour took a
+**different** changed action, the mispredicted prey **reclaims the predictor's stake** (zero-sum:
+`energy[prey] += g`, `energy[failed_predictor] -= g`). The stake is the *same* per-bit rate a correct
+clean wager would have won (`CELL_STATES/BITS_PER_BYTE`), so winning and losing a one-bit bet are
+symmetric. It is **unfarmable by construction** — a predator can only lose by wagering, and a
+mis-wagering predator is selected against, so no free energy is minted and no stable collusion pays.
+Non-lethal: capped at the predator's surplus above *its own* body-subsistence floor. Gated to clean
+single-bit wagers so a busy multi-bit reading byte is never treated as a confident guess (reading is
+never penalised). A new **observation-only `Hact` probe** (Rules 9↔6, never selects) reads the live
+motor-action distribution straight from `action_now` — the exact quantity the ascent thesis is about.
+
+**Result (live A/B, books economy, matched windows):**
+
+| metric | peer-only (Exp 18) | peer + Red-Queen | verdict |
+|---|---|---|---|
+| population | 593–600/600, `ext=0 refuge=0` | 592–600/600, `ext=0 refuge=0` | **both SUSTAIN** (Red-Queen no regression) |
+| `Universe N` | 26360 → ~24100, slow decay then level | 26337 → ~25130, slow decay then level | **neither ASCENDS** |
+| mean `Hact` | **1.82**/nd6 | **1.75**/nd6 | Red-Queen **does not raise** action entropy — equal-or-lower |
+| evasion income | — | `evade≈42` per 100 k ticks (thin) | mechanism ignites but too weak to shift selection |
+| peer income | ignites in bursts, thins to 0 | same | `peer→0` in **both** by ~25–40 k (Exp 18 plateau, not a Red-Queen effect) |
+
+**Diagnosis — the Exp 18 premise was a measurement artifact.** Exp 18 read "low target entropy" off
+`Hpeer≈0/nd1` and concluded the actions were *monomorphic*. The direct `Hact` probe shows they are
+**not**: the living action distribution is `nd6` (all ~6 actions in play), `Hact≈1.8`. The `Hpeer≈0/nd1`
+measured only the entropy of *winning peer predictions* — monomorphic because only the **modal** action
+(the dominant saccade/jump) is predictable *enough to monetize*, while the other five are already
+present but too **noisy** to model profitably. So behavioural diversity was never the shortage.
+Rewarding *more* unpredictability therefore cannot help — and empirically does not (`Hact` if anything
+dips 1.82→1.75): adding noise to an already-noisy policy makes it **less** modelable, not more. The
+evasion channel also stayed thin because the precision-graded predator income lets a predator earn from
+busy multi-bit bytes **without ever committing** a clean single-bit wager, so predators simply dodge the
+penalty and the duel goes quiet rather than escalating.
+
+**Consequence — the frontier is redirected (branch CLOSED).** Ascent does **not** route through
+raw unpredictability. The load-bearing insight: a theory-of-mind economy climbs only when the target is
+**structured, complex, and *modelable* — predictable-in-principle but hard to compute** — not when it is
+merely high-entropy. Red-Queen maximises the wrong quantity (surprise), when what selection needs is
+*compressible complexity* the predictor is rewarded for learning to compute (e.g. a target that is a
+deterministic **function of the neighbour's history/state**, so out-modelling it is a real, climbable
+skill). Red-Queen is kept **default-OFF** (compile-time DCE'd when off; the peer-OFF reading economy is
+byte-identical and was re-verified healthy — `pop=596–599`, `Universe N≈26.2k` stable, `ext=0 refuge=0`).
+The `Hact` probe is retained: it is the honest action-entropy metric that exposed the artifact. Branches
+now closed: text-scarcity (13), degenerate-code (15), high-change-substrate (17), raw-unpredictability (19).
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

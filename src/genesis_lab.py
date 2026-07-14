@@ -59,8 +59,13 @@ SEED_ENERGY = -1.0
 # Peer-prediction (autotelic) is a compile-time branch inside world_tick_numba, so the JIT cache
 # must NOT share a kernel across peer on/off — fold it into the economy-keyed cache dir.
 PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
+# Red-Queen (autotelic prey-defence, Exp 19) is a second compile-time branch INSIDE the peer block,
+# so its kernel must not share a cache with peer-only either. Fold it into the economy-keyed cache dir
+# alongside the peer flag (mirrors the peer default-OFF discipline).
+RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
-    tempfile.gettempdir(), f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}"))
+    tempfile.gettempdir(),
+    f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"))
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
@@ -882,6 +887,12 @@ def sim_loop():
                     # old `else: break` would truncate the buffer on the first peer event.
                     read_events.append({"type": "peer", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
+                elif log_type == 5:
+                    # Red-Queen evasion (type 5, stride 3, Exp 19): org[idx+1] is the PREY that got paid
+                    # for taking an action a neighbour confidently mis-predicted. Same stride as peer;
+                    # needs its own arm so the first evasion event doesn't truncate the drain.
+                    read_events.append({"type": "evade", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
+                    idx += 3
                 else:
                     break
             g_read_log[0] = 1
@@ -949,7 +960,7 @@ def sim_loop():
             # Tally read-log event types since the last drain (headless telemetry — the ws push also
             # drains this, so with a browser open the counts show on the dashboard instead). Reads
             # = solved current symbol, pred = anticipated next symbol, peer = drained a neighbour.
-            r_success = r_fail = r_pred = r_peer = 0
+            r_success = r_fail = r_pred = r_peer = r_evade = 0
             # OBSERVATION-ONLY signal-diversity histograms (Rules 9<->6: NEVER wired to selection).
             # peer_hist: the vocal byte that WON each peer prediction this window; read_hist: the byte
             # each solved comprehension (type-1) read named. Built from the already-drained read_log
@@ -969,6 +980,7 @@ def sim_loop():
                     r_peer += 1
                     c = int(g_read_log[k+2]); peer_hist[c] = peer_hist.get(c, 0) + 1
                     k += 3
+                elif t == 5: r_evade += 1;   k += 3
                 else: break
             g_read_log[0] = 1
 
@@ -992,10 +1004,24 @@ def sim_loop():
             h_peer, nd_peer = _entropy(peer_hist)
             h_read, nd_read = _entropy(read_hist)
 
+            # --- ASCENT PROBE (Exp 19, observation-only, Rules 9<->6: NEVER selects) ---
+            # Shannon entropy of the LIVE motor-action distribution across the colony (best_a, 0..5),
+            # sampled straight from action_now. This is the exact quantity Exp 18 identified as the
+            # ascent blocker: theory-of-mind cannot climb while the action target is monomorphic
+            # (a reading monoculture -> everyone saccades -> Hact ~ 0/nd1). Red-Queen pays prey to be
+            # UNpredictable, so its whole thesis is that Hact RISES over deep time toward log2(6)~2.58.
+            # Pure telemetry: read off the state array, printed only, never fed to energy/reproduction.
+            act_hist = {}
+            if PEER_PREDICT:
+                for i in range(MAX_ORGANISMS):
+                    if g_alive[i] and action_now[i] >= 0:
+                        a = int(action_now[i]); act_hist[a] = act_hist.get(a, 0) + 1
+            h_act, nd_act = _entropy(act_hist)
+
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
-                  f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} "
-                  f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} "
+                  f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
+                  f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
                   f"| ext={num_extinctions} refuge={num_refuge}")
             
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium

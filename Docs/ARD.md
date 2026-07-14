@@ -256,6 +256,25 @@ only ascend if the modelled minds are behaviourally diverse (next lever: Red-Que
 on the prey). Peer stays **default-OFF**; the peer-OFF baseline was re-verified with all Exp 18 shared-code
 changes in place — no regression.
 
+**Red-Queen prey defence built and closed — unpredictability is the wrong target (Exp 19, 2026-07-13).**
+The prey half of the duel (`GENESIS_REDQUEEN`, default-OFF): a predictor's **clean single-bit wager**
+(`s_bits==1`) that misses transfers its stake to the mispredicted prey (zero-sum `prey += g`,
+`failed_predictor -= g`; unfarmable — a predator only loses by wagering; non-lethal on the predictor; same
+`CELL_STATES/BITS_PER_BYTE` rate, no new constant). A new observation-only **`Hact`** probe reads the live
+`action_now` distribution (Rules 9↔6, never selects). Live A/B (books, matched windows): both configs
+**sustain** (`pop≈595`, `ext=0 refuge=0`); **neither ascends** (`Universe N` decays then levels in both);
+mean `Hact` **1.75** (Red-Queen) vs **1.82** (peer-only) — the evasion income **does not raise** action
+entropy (if anything lowers it) and stays thin (`evade≈42/100k`), because the precision-graded predator
+income lets a predator earn from busy multi-bit bytes **without** committing a clean wager, so it dodges the
+penalty and the duel goes quiet. Crucially, `Hact` **refutes the Exp 18 premise**: the action distribution
+is already `nd6` (not monomorphic — `Hpeer≈0/nd1` measured only *winning-prediction* entropy; only the
+modal action is monetizable, the other five are present-but-noisy). So behavioural diversity was never the
+shortage. **Redirect:** a theory-of-mind economy ascends only when the target is **structured and
+modelable — predictable-in-principle but hard to compute** (*compressible complexity* the predictor is
+rewarded to learn), **not** when it is merely high-entropy; adding surprise to an already-noisy policy makes
+it *less* modelable. Red-Queen stays **default-OFF** (compile-time DCE'd; peer-OFF path byte-identical and
+re-verified healthy); the `Hact` probe is retained as the honest action-entropy metric.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1
