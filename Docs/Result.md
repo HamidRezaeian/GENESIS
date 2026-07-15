@@ -1156,6 +1156,72 @@ raw-unpredictability (19), **complexity-without-scarcity (20)**.
 
 ---
 
+## 🧪 Experiment 21 — The Peer-Target Design Space Is Exhausted on This Substrate: Behavioral Expression, Not the Coupling, Is the Ceiling (2026-07-14, design-space result)
+
+Exps 15–20 converged on a precise specification for the ascent lever: a **peer** target (the only scarce
+resource, Exp 13/20) that is **compressible complexity** (Exp 19) — a deterministic function of a
+neighbour's *private* state that is predictable-in-principle but hard to compute, decoupled from the shared
+text (Exp 15/17), with dense income (Exp 16) and no reflex ceiling (Exp 18). This experiment attacks that
+specification **as a design problem before any build**, using an adversarial design-and-refute panel (five
+independent target proposals from divergent seed angles — future-action, running-aggregate, future-position,
+energy-trend, iterated-map — each then attacked by independent scarcity/confound and depth/constant-free
+refutation lenses instructed to default to *refuted* under uncertainty).
+
+**Result: all five candidate targets are FATAL — unanimous, every one reducing to branch 18.** The
+proposals were concrete and clever (a k-step displacement integral, a hidden action-history shift register,
+an action-kicked LFSR map, a stall-pattern positional wager). Each refutation is independent, yet they
+converge on **one root cause**, which is the actual finding of the experiment:
+
+**The data-processing inequality caps theory-of-mind at the action-stream's own entropy — measured at
+`Hact ≈ 1.8 bits` (Exp 19), hard-ceilinged by `N_OUTPUT = 6`.** Any deterministic function of a neighbour's
+hidden state — a shift register, an integral, an LFSR, an aggregate — can carry *at most*
+`I(model; action-stream)` bits of predictable-but-hard content. Since the ultimate source is a 6-way motor
+argmax (`log2(6) = 2.58` bits absolute ceiling, ~1.8 realised), every proposed target merely **re-encrypts
+the same low-entropy stream**; none *co-evolves new complexity*. Three structural traps make this concrete,
+and every design hit at least one:
+
+1. **Width ≠ depth.** A shift-register / sliding-window target stores N past events *in parallel* — N
+   independent Exp-18 reflexes, not an N-deep computation. Predicting bit *k* never requires first solving
+   bits `0..k-1` (they are frozen past events, not an unrolled chain). "Each older bit needs one more step of
+   forward-simulation" is dominated by "remember the newest parity and replay it into the deeper slots" — a
+   bounded-state reflex at exactly the Exp-18 ceiling.
+2. **Monoculture erases the variance to model.** In the only regime the colony *survives* (reading
+   monoculture on low-change text), all private states converge, so any deterministic function of them is
+   monomorphic across the population → "bet the population mode" is a zero-model reflex. The only regime with
+   real cross-agent variance (heterogeneous competence / hard text) is the one the colony **cannot survive
+   in** (the Exp 17/20 incompatibility wall). Scarcity of *energy* is not scarcity of *skill*: unbounded
+   predictors can all correctly bet the mode, so the task has no carrying capacity (branch 20).
+3. **The `net>0` reward gate is farmable.** Against a target that is pseudorandom w.r.t. any emission,
+   `E[net⁺] > 0` for a *constant-byte* reflex → a dense, free, zero-sum skim with no modelling, which
+   reproduces the "sustains-but-never-ascends" pattern exactly. Making the score symmetric to remove the
+   lottery instead zeroes expected channel income and starves peer-specialists (Exp-16 bleed). Both horns
+   are fatal.
+
+**Diagnosis — the ceiling is the behavioral-expression bandwidth, not the peer coupling.** All 21
+experiments unify here: peer prediction *is* the right scarce channel, but **you cannot model a mind richer
+than that mind can act**, and a GENESIS organism's entire expressible behavior is a 6-way motor argmax plus
+an 8-bit vocal byte. There is no room for a deep policy to *express* depth, so there is nothing deep to
+predict. The lever was never a cleverer target function; it is **widening what an organism can express** so
+that behavior *can* carry open-ended information.
+
+**Sharpening — supply vs. demand (the fork for the next build).** A crucial nuance the panel did not
+resolve: Exp 19 measured `Hact ≈ 1.8` with all six actions present (`nd6`) but *skewed* — the colony is
+**not saturating the ~2.58 bits it already has**. So the ceiling may be a **demand** problem (no task
+rewards diverse behavior — the reading monoculture funnels everyone to forward-saccade) rather than a
+**supply** problem (too few action bits). If demand-limited, simply *adding* action bits (widening
+`N_OUTPUT`) supplies unused capacity and will not help; the lever is a task/environment that **demands** rich
+behavior. If supply-limited, the repertoire itself must grow. Distinguishing these is a cheap, pre-build live
+probe (does `Hact` climb toward 2.58 under an environment that pays for behavioral diversity?), and it gates
+which substrate change is worth the genome-decode risk. **No engine change was made this experiment** — it is
+a design-space negative that redirects the frontier from *"what should peers predict?"* (exhausted) to
+*"how can an organism's behavior become worth predicting?"* Candidate substrate levers (unbuilt, a genuine
+fork): (a) widen/compositionalise the action space; (b) a structured/stigmergic environment where agents
+build open-ended artifacts in RAM and peers predict what a neighbour *built*, not its motor bits. Branches
+now closed: text-scarcity (13), degenerate-code (15), high-change-substrate (17), raw-unpredictability (19),
+complexity-without-scarcity (20), **peer-target-on-6-action-substrate (21)**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

@@ -295,6 +295,30 @@ self-generate ascent. Ascent must route through PEER, with a compressible-comple
 and the frontier probe are kept as reusable instruments; the peer-OFF `00_Graded` baseline was re-verified
 over ~3 M ticks with all Exp 20 shared-code changes in place — no regression.
 
+**Peer-target design space exhausted — the ceiling is behavioral expression, not the coupling (Exp 21,
+2026-07-14, design-space result, no engine change).** An adversarial design-and-refute panel proposed five
+independent compressible-complexity peer targets and attacked each with independent scarcity/confound and
+depth/constant-free lenses; **all five were fatal, unanimously reducing to branch 18.** The convergent root
+cause is information-theoretic: by the data-processing inequality, any deterministic function of a
+neighbour's hidden state can carry at most `I(model; action-stream)` bits, and the action stream's entropy
+was measured at `Hact ≈ 1.8 bits` (Exp 19), hard-ceilinged by `N_OUTPUT = 6` (`log2 6 = 2.58` absolute). A
+shift register, integral, LFSR, or aggregate merely **re-encrypts that low-entropy stream** — none evolves
+new complexity. Three traps recur: width ≠ depth (a window is N parallel Exp-18 reflexes, not an N-deep
+chain); a behavioral monoculture erases the cross-agent variance a model would exploit (and the only regime
+with variance is the unsurvivable one, the Exp 17/20 wall); and a `net > 0` payout gate is farmable by a
+constant-byte reflex. **The unifying architectural conclusion: an organism cannot be modelled more richly
+than it can act, and a GENESIS phenotype's expressible behavior is a 6-way motor argmax plus an 8-bit vocal
+byte — no room to express depth, hence nothing deep to predict.** The frontier therefore redirects from *what
+should peers predict* (exhausted) to *how an organism's behavior can become worth predicting* — i.e. widening
+behavioral expression. A supply-vs-demand nuance gates the next build: Exp 19 saw `Hact ≈ 1.8 < 2.58` with
+all six actions present but skewed, so the colony does **not** saturate the repertoire it already has,
+implying the ceiling may be demand-limited (no task rewards diverse behavior) rather than supply-limited
+(too few action bits). A cheap pre-build probe (does `Hact` climb toward 2.58 under an environment that pays
+for behavioral diversity?) distinguishes these and decides whether the substrate lever should be (a)
+widening/compositionalising the action space or (b) a structured/stigmergic environment where agents build
+RAM artifacts and peers predict what a neighbour *built*. Both are genome-decode-sensitive changes, which is
+exactly the forward-compatibility case `brain_io` was built to absorb.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

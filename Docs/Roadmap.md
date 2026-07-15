@@ -292,6 +292,28 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      qualitatively (Exp 20) harder.** Reconfirms: **ascent must route through PEER**, with a **compressible-
      complexity** target (Exp 19). `00_Ascent` + frontier probe kept as instruments; peer-OFF `00_Graded`
      baseline re-verified over ~3 M ticks — no regression. Branches closed: 13, 15, 17, 19, **20**.
+- ❌ **Peer-target design space EXHAUSTED on the current substrate — the ceiling is behavioral expression,
+     not the coupling (Exp 21, 2026-07-14, design-space result, NO engine change).** Adversarial
+     design-and-refute panel: 5 independent compressible-complexity peer-target proposals (future-action,
+     running-aggregate, future-position, energy-trend, iterated-map), each attacked by independent
+     scarcity/confound + depth/constant-free lenses → **all 5 FATAL, unanimous, every one reducing to
+     branch 18.** Root cause (data-processing inequality): theory-of-mind is capped at the action-stream's
+     own entropy = **`Hact≈1.8 bits` (Exp 19), hard-ceilinged by `N_OUTPUT=6`** (`log2 6=2.58` absolute).
+     Every target (shift register / integral / LFSR / aggregate) just **re-encrypts the same low-entropy
+     stream** — none co-evolves new complexity. Three traps each design hit: (1) width≠depth (a window is N
+     parallel Exp-18 reflexes, not an N-deep chain); (2) monoculture erases cross-agent variance, and the
+     only regime with variance is unsurvivable (Exp 17/20 wall); (3) the `net>0` gate is farmable by a
+     constant-byte reflex. **Unifying verdict: you cannot model a mind richer than it can act — a 6-way
+     motor argmax + 8-bit vocal byte has no room to express depth, so there is nothing deep to predict. The
+     lever is WIDENING BEHAVIORAL EXPRESSION, not a cleverer target.** Sharpening for the next build
+     (supply vs demand): Exp 19 saw `Hact≈1.8 < 2.58` with all 6 actions present but skewed → the colony
+     does NOT saturate the actions it has, so the ceiling may be DEMAND-limited (no task rewards diverse
+     behavior) not SUPPLY-limited (too few bits). Cheap pre-build probe: does `Hact` climb toward 2.58 under
+     an environment that pays for behavioral diversity? Gates which substrate change is worth the
+     genome-decode risk. Candidate levers (unbuilt fork): (a) widen/compositionalise the action space;
+     (b) structured/stigmergic environment where agents build RAM artifacts and peers predict what a
+     neighbour BUILT. Frontier redirected from "what should peers predict?" (exhausted) to "how does an
+     organism's behavior become worth predicting?" Branches closed: 13, 15, 17, 19, 20, **21**.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was
