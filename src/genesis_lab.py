@@ -84,6 +84,12 @@ os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
 # NOT a kernel change, so the njit cache is unaffected and the default (niche OFF) food economy is
 # byte-identical. Derives its spacing from LONG_JUMP_STRIDE (no new constant).
 NICHE_JUMP = os.environ.get("GENESIS_NICHE", "0") == "1"
+# Reading depletion (Exp 24 Wall-1 lever). Compile-time branch inside world_tick (fuel-bounds the
+# reading payout), so its kernel must not share a cache with the minted default. GENESIS_DEPLETE_REGROW
+# = fuel restored per cell per restock cadence (default = CELL_STATES = full refill each restock, i.e.
+# the gentlest bound; lower values tighten scarcity). Derived from CELL_STATES, no new constant.
+DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
+os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "")
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
@@ -193,6 +199,12 @@ action_now  = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
 action_prev = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
 g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
+
+# Exp 24 per-cell reading-fuel reservoir (Wall-1). Bounds minted reading income when GENESIS_DEPLETE=1;
+# initialised full (CELL_STATES per cell) so a fresh scroll pays normally until drawn down. Regrown on
+# the restock cadence in the main loop. Unused (never drawn from) when DEPLETE is off.
+g_read_fuel = np.full(RAM_SIZE, float(CELL_STATES), dtype=np.float32)
+DEPLETE_REGROW = float(os.environ.get("GENESIS_DEPLETE_REGROW", str(CELL_STATES)))
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
@@ -688,7 +700,7 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel
     )
 
     for i in range(MAX_ORGANISMS):
@@ -858,6 +870,16 @@ def sim_loop():
             printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
             if printable < BOOK_TARGET_BYTES:
                 inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES)
+        # Exp 24 Wall-1: regrow the reading-fuel reservoir EVERY loop iteration (continuous renewal),
+        # capped at CELL_STATES. Gating this on the slow restock cadence (dynamic_lif_steps *
+        # BOOK_RESTOCK_EVERY ticks) starved the colony — a cell held only ~CELL_STATES/per-read = 8
+        # reads then stayed dead for thousands of ticks. Continuous regrow makes DEPLETE_REGROW the
+        # honest per-iteration renewal rate = the sustained income ceiling per occupied cell: high
+        # (=CELL_STATES) barely binds; low tightens the carrying capacity. Derived from CELL_STATES,
+        # no new constant; a cheap vectorised op, only when DEPLETE is on.
+        if DEPLETE:
+            np.minimum(g_read_fuel + np.float32(DEPLETE_REGROW), np.float32(CELL_STATES),
+                       out=g_read_fuel)
 
         n_alive, n_births = world_tick_numba(
             g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
@@ -869,7 +891,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel
         )
         
         for i in range(n_births):

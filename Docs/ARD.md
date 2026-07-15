@@ -354,6 +354,30 @@ artifacts, not a fixed gait menu) as the favoured substrate lever, with Exp 23 a
 structure is a real handle on the distribution. `GENESIS_NICHE` and `GENESIS_FOOD_RATE` are kept as
 instruments; the default economy is byte-identical and was re-verified with no regression.
 
+**Stigmergy design space names two walls; bounding reading income breaks Wall 1 (Exp 24, 2026-07-14).** An
+adversarial workflow vetted five stigmergy economies against all prior lessons; all five were fatal, but they
+converged on two structural walls. **Wall 1:** reading income is *minted* on a non-destructive infinite
+scroll, so any authored, royalty-charging cell is strictly dominated by the free book — builders earn nothing
+and building is selected out (lessons 13/22). **Wall 2:** the single vocal byte is confounded with the shared
+text (peer-adjacency = reading-adjacency, so a neighbour's "authored" byte is readable from the predictor's
+own eye) and cannot simultaneously serve reading-prediction and an independent register (lessons 15/17/21);
+moreover a flat royalty is maximised by predictability, not depth, so the economy selects against complexity
+(18/20). Wall 1 was then attacked directly as a physics change: `GENESIS_DEPLETE` (default-OFF, no new
+constant, byte-identical when off) makes reading draw from a finite per-cell fuel reservoir (`read_fuel`,
+cap = `CELL_STATES`) instead of minting, with the driver regrowing `GENESIS_DEPLETE_REGROW` per iteration.
+Live, at a mid regrow rate (~`CELL_STATES/2`) a **carrying capacity forms for the first time in the project**
+— population oscillates 400–598 rather than pinning at the 600 cap, action entropy rises to the highest
+sustained level measured (`Hact ≈ 1.2–2.5` vs ~0.8 for the minted eat-monoculture), and the colony sustains
+100k+ ticks without extinction; tighter bounds cold-cliff (the founder bootstrap needs near-full income, the
+Exp-20 bootstrap-vs-scarcity tension on the energy axis). So the infinite-uncontested-resource wall is not a
+property of the substrate but a consequence of *minting*, and it is breakable. This is the missing
+precondition for the stigmergy class — with reading no longer an infinite free substitute, an authored
+economy is no longer dominated — so the next build is a stigmergy economy layered on bounded reading, using
+the vetting's escape recipe (destructive/rivalrous built cells, an authored value decoupled from the reading
+eye, and depth that pays more per cell rather than a flat royalty). `GENESIS_DEPLETE` and
+`GENESIS_DEPLETE_REGROW` are kept as instruments; the default economy is byte-identical and was re-verified
+with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

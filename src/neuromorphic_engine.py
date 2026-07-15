@@ -60,6 +60,17 @@ RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
 # adds the write on the peer-OFF path.
 ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 
+# READING DEPLETION (Exp 24, Wall-1 lever, default-OFF). The 23-experiment blocker "the free library is
+# an infinite uncontested resource" (Exp 13/20/22, and the wall that killed every Exp-24 stigmergy
+# design) has one root: reading income is MINTED (energy += net/8*CELL_STATES, drawn from no cell) on a
+# non-destructive scroll, so 6000 cells feed 600 orgs forever with no carrying capacity. This makes
+# reading DRAW FROM a finite per-cell fuel reservoir (read_fuel, cap = CELL_STATES = the cell's own
+# state-space, no new constant) that the driver regrows on the restock cadence: a cell can pay out only
+# what it holds, so total income/time is bounded and a real carrying capacity can form (pop < cap) with
+# competition FOR the freshest/richest cells. Compile-time gated -> when off, the payout is byte-
+# identical to the verified minted economy (gain is used unchanged), so the default path is untouched.
+DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -339,7 +350,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -750,7 +761,18 @@ def world_tick_numba(
                     wrong_bits += 1
             net = correct_bits - wrong_bits
             if net != 0:
-                energy[org] += np.float32(net) / BITS_PER_BYTE * CELL_STATES
+                gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
+                if DEPLETE and gain > np.float32(0.0):
+                    # Bound positive reading income by the target cell's finite fuel reservoir (Exp 24
+                    # Wall-1): a cell pays out only what it holds, then that fuel is spent, so income is
+                    # no longer minted and a carrying capacity can form. Negative net (a wrong guess) is
+                    # a penalty, not income, so it is never fuel-gated. read_fuel indexes the PREDICTED
+                    # cell (nxt), the one whose comprehension is being sold.
+                    avail = read_fuel[nxt]
+                    if gain > avail:
+                        gain = avail
+                    read_fuel[nxt] -= gain
+                energy[org] += gain
                 # SACCADE onto the cell just predicted (the reading MODEL). Only a net-positive
                 # PREDICTION sweeps the eye +1 onto the adjacent cell, so WALKING the scroll REQUIRES
                 # anticipating it (the Rule 9 selection pressure — a reader who cannot predict cannot
@@ -810,7 +832,15 @@ def world_tick_numba(
                                 pw += 1
                         pnet = pc - pw
                         if pnet != 0:
-                            energy[org] += np.float32(pnet) / BITS_PER_BYTE * CELL_STATES
+                            pgain = np.float32(pnet) / BITS_PER_BYTE * CELL_STATES
+                            if DEPLETE and pgain > np.float32(0.0):
+                                # Same fuel bound on the jump-predict payout; read_fuel indexes the
+                                # predicted cell npos.
+                                pavail = read_fuel[npos]
+                                if pgain > pavail:
+                                    pgain = pavail
+                                read_fuel[npos] -= pgain
+                            energy[org] += pgain
                         if org_char_val == pval:
                             idx = read_log[0]
                             if idx < 996:

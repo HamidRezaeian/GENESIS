@@ -351,6 +351,30 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      structure moves Hact. `GENESIS_NICHE`+`GENESIS_FOOD_RATE` kept as instruments (default OFF/0.1); default
      byte-identical, no regression (killed a 3rd rogue leftover sim mid-run — leftover sims are the standing
      hazard, always verify procs clean before a live A/B).
+- ✅ **Stigmergy design space names two WALLS; bounding reading income BREAKS Wall 1 + forms a carrying
+     capacity (Exp 24, 2026-07-14).** (A) Adversarial workflow vetted 5 stigmergy economies (trails,
+     construct-consume, external-memory, niche-construction, minimal-write) × 2 refute lenses → ALL 5 FATAL,
+     0 survivors, but converge on TWO named walls: **WALL 1** = reading income is MINTED on a non-destructive
+     infinite scroll, so any AUTHORED royalty-charging cell is strictly dominated by the free book → builders
+     earn nothing → building selected out (lessons 13/22); **WALL 2** = the vocal byte is confounded with the
+     shared text — peer-adjacency=reading-adjacency, so a peer reads a neighbour's "authored" byte off its own
+     eye (15/17/21), and flat royalty is maximised by PREDICTABILITY not depth (selects AGAINST complexity,
+     18/20). Escape recipe the critiques prescribe: destructive/rivalrous built cells + authored value
+     decoupled from the reading eye + depth-pays-more-per-cell. (B) Attacked Wall 1 directly (the deeper
+     enabler, live build not vetted — it's one falsifiable physics change): `GENESIS_DEPLETE` (default-OFF, no
+     new constant, byte-identical when off) makes reading DRAW from a finite per-cell fuel reservoir
+     (`read_fuel`, cap=CELL_STATES) instead of minting; driver regrows `GENESIS_DEPLETE_REGROW`/iteration.
+     **Live sweep: regrow 128 = CARRYING CAPACITY FORMS** — pop oscillates 400–598 (never pinned at cap, first
+     time in the whole arc), `Hact≈1.2–2.5` (HIGHEST sustained action entropy yet, vs 0.8 eat-monoculture),
+     reads compressed 150→30–50, sustains 114k+ ticks no extinction. regrow 256≈unbounded (barely binds);
+     regrow ≤64 cold-cliffs (starves the bootstrap = Exp-20 bootstrap-vs-scarcity tension on the energy axis).
+     **Wall 1 is not a law of the substrate — it was a consequence of MINTING, and it's breakable.** This is
+     the missing precondition for stigmergy: with reading no longer infinite-free, an authored economy is no
+     longer dominated. Fixed a bug (regrow was gated on the slow restock cadence → starved; moved to
+     per-iteration) + caught a missed 2nd kernel call site (warmup) via the live-loop rule. Follow-up: per-tick
+     in-kernel regrow for finer carrying-capacity control (driver granularity is coarse). `GENESIS_DEPLETE`+
+     `GENESIS_DEPLETE_REGROW` kept as instruments (default OFF/CELL_STATES); default byte-identical, no
+     regression. **NEXT: build stigmergy ON TOP OF bounded reading using the Part-A escape recipe.**
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

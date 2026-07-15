@@ -1346,6 +1346,76 @@ still confirmed.
 
 ---
 
+## 🧪 Experiment 24 — Stigmergy Design Space Names Two Walls; Bounding Reading Income Breaks Wall 1 and Forms a Carrying Capacity (2026-07-14)
+
+Exp 22/23 pointed at a **stigmergic** substrate (agents build open-ended artifacts, so behavior expresses
+with unbounded bandwidth and what-a-neighbour-built becomes a modelable peer target). This experiment first
+**vets the stigmergy design space adversarially**, then acts on what the vetting reveals.
+
+**Part A — stigmergy design vetting (workflow, 5 designs × 2 refutation lenses).** Five independent
+stigmergy economies (pheromone trails, construct-consume, external-memory ledger, niche-construction,
+minimal-write-action), each attacked by scarcity/collapse and depth/confound lenses. **All five FATAL,
+0 survivors**, but — unlike Exp 21 — the failures converge on **two named walls**, and the critiques
+collectively prescribe the escape:
+
+- **WALL 1 — an infinite free resource dominates any authored economy (lessons 13/22).** Reading income is
+  *minted* (`energy += net/8·CELL_STATES`, drawn from no cell) on a non-destructive 6000-cell scroll feeding
+  ~600 orgs. Any *authored* cell that charges a royalty is strictly dominated by the free book sitting right
+  there → consumers never switch → builders earn nothing → building is selected out. Structural and
+  permanent, not a cold-start transient. **You cannot run a scarce authored economy beside an infinite free
+  one.**
+- **WALL 2 — the vocal byte is confounded with the shared text (lessons 15/17/21).** Every design reused
+  `org_char_val` (the reading prediction) as the written/peer value. But peer-adjacency = reading-adjacency on
+  a shared scroll: your neighbour stands on the cell you are about to read, so you predict its "authored" byte
+  from your **own eye**, zero theory-of-mind; and one byte cannot be both slow reading-prediction (survival)
+  and an independent register (building) — Exp 17 compressed into one byte. Plus a scoring lesson: **flat
+  royalty is maximised by *predictability*, not depth** — a trivial `AAAA` run and a modelled hard cell both
+  pay the reader `net=8`, so depth divides the reader pool without multiplying income; the economy selects
+  *against* complexity (Exp 18/20 reflex ceiling re-derived).
+
+**Part B — attack Wall 1 directly (the deeper enabler, live build).** Wall 1 has been the load-bearing
+blocker since Exp 13; it is one falsifiable physics change, so it is built and measured rather than vetted.
+`GENESIS_DEPLETE` (default-OFF, no new constant, compile-time gated → byte-identical when off) makes reading
+**draw from a finite per-cell fuel reservoir** `read_fuel` (cap = `CELL_STATES` = the cell's own state-space)
+instead of minting: a positive read pays out only `min(gain, read_fuel[cell])` and spends that fuel; the
+driver regrows fuel by `GENESIS_DEPLETE_REGROW` per loop-iteration, capped at `CELL_STATES` (the renewal rate
+= the sustained per-cell income ceiling). Income is no longer minted, so total reading energy per unit time
+is bounded and a carrying capacity can form.
+
+**Result (live sweep, books + `GENESIS_ACTPROBE`):**
+
+| regrow / iter | outcome |
+|---|---|
+| 256 (≈unbounded) | bootstraps, rides ~590, occasional dips — barely binds |
+| **128** | **carrying capacity forms** — pop **oscillates 400–598** (never pinned at cap), `Hact ≈ 1.2–2.5` (mean well above the 0.8 eat-monoculture baseline), reads compressed ~150→30–50, sustains 114 k+ ticks, no extinction |
+| 64, 32 | cold-cliff (`pop=12, reads=0`) — the reservoir starves the founder bootstrap before ignition |
+
+**Findings.**
+1. **Wall 1 is real and breakable.** At regrow 128, bounding reading income does exactly what 13 experiments
+   said was structurally impossible on the minted scroll: **population sits below the 600 cap and oscillates
+   (boom–bust carrying-capacity dynamics)** instead of pinning at cap. The infinite-uncontested-resource wall
+   is not a law of the substrate — it was a consequence of *minting*.
+2. **Competition lifts behavioral diversity.** `Hact` at regrow 128 is the **highest sustained action
+   entropy in the whole arc** (~1.2–2.5 vs ~0.8 eat-monoculture, ~1.7 niche) — scarcity for finite fuel makes
+   different orgs do different things, direct further support for the Exp 22 demand thesis.
+3. **Bootstrap vs. scarcity tension (the cost).** Tight bounds (regrow ≤ 64) cold-cliff: the founder cohort
+   needs near-full income to ignite reading, exactly what depletion removes — the same
+   bootstrap-requires-abundance tension as Exp 20, now on the *energy* axis. The viable window (regrow ~128)
+   is narrow, and the driver-level per-iteration regrow granularity is coarser than per-tick consumption, so
+   the carrying capacity is noisy; a per-tick in-kernel regrow would give finer control (noted for follow-up).
+
+**Consequence.** Wall 1 — the blocker behind Exp 13/20/22 and the killer of every Exp-24 stigmergy design —
+is **breakable**: a bounded reading economy forms a real carrying capacity and raises behavioral diversity.
+This is the missing precondition for the stigmergy class: with reading no longer an infinite free substitute,
+an authored/contested economy is no longer strictly dominated. The path re-opens — build a stigmergy economy
+*on top of bounded reading*, using the Part-A escape recipe (destructive/rivalrous built cells + an authored
+value decoupled from the reading eye + depth that pays more per cell, not flat royalty). `GENESIS_DEPLETE` +
+`GENESIS_DEPLETE_REGROW` kept as instruments (default OFF / `CELL_STATES`); the default economy is
+byte-identical and was re-verified with no regression. Branches: stigmergy-on-infinite-substrate closed
+(24-A, two walls named); **Wall-1 broken — bounded reading forms a carrying capacity + lifts `Hact` (24-B)**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
