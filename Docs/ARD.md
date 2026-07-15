@@ -378,6 +378,23 @@ eye, and depth that pays more per cell rather than a flat royalty). `GENESIS_DEP
 `GENESIS_DEPLETE_REGROW` are kept as instruments; the default economy is byte-identical and was re-verified
 with no regression.
 
+**Stigmergy built — first persistent agent-authored substrate structure (Exp 25, 2026-07-14).**
+`GENESIS_STIGMERGY` (default-OFF, requires `DEPLETE`, byte-identical when off) overloads `OUT_CONSUME`
+(keeping `N_OUTPUT=6`, no genome-decode risk): choosing CONSUME on a writable cell with a printable emission
+authors the vocal byte there and claims ownership (`cell_owner`), and reading an owned cell pays the author a
+per-bit royalty (zero-sum, non-lethal). The build revealed a *location* constraint: authoring only into
+vacuum failed outright (`authored=0`) because survival keeps every organism on the readable scroll, so no one
+ever stands on vacuum — build and read sites were spatially disjoint. Co-locating them (authoring a
+*depleted* scroll cell — printable but out of fuel, exactly where readers are and where income has stopped)
+made authoring emerge and persist: ~270–278 owned cells held by ~150 authors at full population, the first
+persistent agent-written structure in the substrate. It remains shallow (broad thin dabbling, not a
+specialist builder niche), does not raise brain size or action entropy, and needs a seeded write reflex to
+bootstrap. The diagnosis is that the royalty is too *flat*: a thin per-bit slice makes authoring a marginal
+side-income rather than a livable niche, so the Exp-24 recipe's third leg — rent that scales *super-linearly*
+with authored difficulty, plus a text-*independent* authored value (the deeper half of Wall 2) — is the next
+lever. `GENESIS_STIGMERGY` and `GENESIS_STIG_SEED` are kept as instruments; the default economy is
+byte-identical and was re-verified with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

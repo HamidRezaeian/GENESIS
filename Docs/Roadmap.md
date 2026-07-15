@@ -375,6 +375,28 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      in-kernel regrow for finer carrying-capacity control (driver granularity is coarse). `GENESIS_DEPLETE`+
      `GENESIS_DEPLETE_REGROW` kept as instruments (default OFF/CELL_STATES); default byte-identical, no
      regression. **NEXT: build stigmergy ON TOP OF bounded reading using the Part-A escape recipe.**
+- ⚠️ **Stigmergy BUILT — first persistent agent-authored substrate structure, but shallow + needs seeding +
+     does not yet ascend (Exp 25, 2026-07-14).** `GENESIS_STIGMERGY` (default-OFF, requires DEPLETE, no new
+     constant, byte-identical off): overload OUT_CONSUME (keeps N_OUTPUT=6, zero genome-decode risk) — CONSUME
+     on a writable cell + printable emission AUTHORS the vocal byte there, claims ownership
+     (`cell_owner[pos]`), cost=CELL_STATES; reading an OWNED cell pays the author a per-bit royalty slice
+     (zero-sum, non-lethal, depth-scaled). **(25a) vacuum-only authoring FAILED** (`authored=0`): survival
+     glues every org to the readable scroll (off-scroll≈0), so no org ever stands on vacuum → CONSUME-on-text
+     is a no-op → build/read locations DISJOINT ("option≠pressure" as a LOCATION mismatch). **(25b) FIX:
+     author a DEPLETED scroll cell** (printable + fuel exhausted = exactly where readers are AND stopped
+     paying; reclaiming it is rivalrous/destructive per Exp-24 recipe) → **authoring EMERGES + persists:
+     authored≈270-278 cells, authors≈150 orgs, stable at pop=600. FIRST persistent agent-authored readable
+     structure in GENESIS.** **HONEST LIMITS:** shallow (150 authors × ~2 cells = broad thin dabbling, not a
+     builder/reader division; authored plateaus not grows); does NOT ascend (N≈23.9k slightly BELOW depletion
+     baseline, Hact≈1.1-1.5 below depletion's 2.2); needs SEEDING (unseeded cold-cliffs — write reflex too
+     rare to express from cold gene pool). **Diagnosis: plumbing works but economics too FLAT** — the royalty
+     is a thin per-bit slice so authoring is marginal side-income ~150 orgs dabble in, not a niche a specialist
+     lives in. **Missing = Exp-24 recipe's 3rd leg: depth must pay SUPER-LINEARLY more per cell** (dedicated
+     author of hard content out-earns solo reader → real builder niche → only then can division of labour lift
+     Hact/capability, Exp 22). Also authored byte is still the org's READING emission (scroll-tracking), not
+     text-INDEPENDENT → deeper half of Wall 2 remains. `GENESIS_STIGMERGY`+`GENESIS_STIG_SEED` instruments
+     (default OFF); default byte-identical, no regression (4th rogue-leftover-sim recurrence cliffed an interim
+     check, killed+re-verified). NEXT: super-linear depth-scaled rent + text-independent authored value.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

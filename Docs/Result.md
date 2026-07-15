@@ -1416,6 +1416,64 @@ byte-identical and was re-verified with no regression. Branches: stigmergy-on-in
 
 ---
 
+## 🧪 Experiment 25 — Stigmergy Built: Agents Author Persistent Substrate Structure for the First Time (shallow, needs seeding, does not yet ascend) (2026-07-14)
+
+With Wall 1 broken (Exp 24), the stigmergy class is buildable. This experiment implements the minimal
+falsifiable primitive from the Exp-24 escape recipe and measures whether agent authoring emerges.
+
+**Design (`GENESIS_STIGMERGY`, default-OFF, requires `DEPLETE`, no new constant, byte-identical when off).**
+- **Write primitive:** overload `OUT_CONSUME` (keeps `N_OUTPUT=6`, zero genome-decode risk). When an org
+  chooses CONSUME on a writable cell with a printable emission, it **authors** its vocal byte there, claims
+  ownership (`cell_owner[pos]=org`), and refuels the cell; cost = `CELL_STATES` (the cell's state-space).
+- **Royalty:** reading an *owned* cell transfers a per-bit slice of the reader's (fuel-bounded) gain
+  reader→owner (zero-sum, non-lethal) — a builder-rent income stream distinct from solo reading, and
+  depth-scaled (harder authored text → larger reader gain → larger rent).
+- New observation-only telemetry: `authored` (owned-cell count) + `authors` (distinct live owners).
+
+**Result — a two-stage debugging arc that is itself the finding:**
+
+1. **Write-location matters (Exp 25a, vacuum-only authoring → FAILS).** First build wrote only to *vacuum*
+   (`0x00`) cells, to keep authored bytes off the shared reading eye (the Wall-2 escape). Live: `authored=0`
+   throughout — authoring **never fired**. Diagnosis via the action/frontier probes: survival glues every org
+   to the readable scroll (`off-scroll ≈ 0`, mean offset 100 %), so no org ever *stands on vacuum*, and
+   CONSUME-on-text is a pure no-op. **Authoring-requires-vacuum and survival-requires-the-scroll are
+   spatially exclusive** — the build/read locations were disjoint, so the incentive could never engage.
+   Seeding a `bias→CONSUME` write reflex did not help (CONSUME fired 13–47 %, but always on text/food, never
+   on vacuum). "Option ≠ pressure," recast as a *location* mismatch.
+2. **Co-locate build and read (Exp 25b, author a DEPLETED scroll cell → WORKS).** Fix: let an org author a
+   *printable scroll cell whose fuel is exhausted* (as well as vacuum). A depleted cell is exactly where
+   readers already are *and* has stopped paying, so refreshing it with one's own byte colonises live reading
+   territory — and reclaiming a dead cell is rivalrous/destructive (the Exp-24 recipe). Live
+   (`STIGMERGY + DEPLETE regrow 128 + seeded write`): **authoring emerges and persists** — `authored ≈ 270–278`
+   cells held by `authors ≈ 150` orgs, stable across the whole run at full `pop=600`. **This is the first time
+   in GENESIS that agents write persistent, readable structure into the substrate that other agents read.**
+
+**Honest limits (what it is NOT, yet).**
+- **Shallow, not specialised.** ~150 authors holding ~2 cells each = broad, thin authoring, not a
+  builder/reader *division of labour*; `authored` plateaus (~278) rather than growing.
+- **Does not ascend.** With authoring on, `Universe N ≈ 23.9 k` (slightly *below* the pure-depletion baseline)
+  and `Hact ≈ 1.1–1.5` (below depletion's ~2.2) — authoring adds activity but not capability; no brain growth
+  or entropy climb.
+- **Needs seeding to bootstrap.** Unseeded, the write reflex is too rare to express and the colony
+  cold-cliffs (a brief founder-window authoring of ~37 cells, then collapse). Authoring cannot yet *emerge*
+  from a cold gene pool — it must be seeded, then selection tolerates but does not amplify it.
+
+**Diagnosis + next step.** The plumbing works — persistent stigmergy is real and non-regressing — but the
+*economics are too flat to drive ascent*: the royalty is a thin per-bit slice, so authoring is a marginal
+side-income that ~150 orgs dabble in rather than a niche a specialist can live in. The Exp-24 recipe's third
+leg — **depth must pay MORE per cell, not a flat royalty** — is the missing piece: rent must scale
+super-linearly with authored difficulty so a dedicated author of hard content out-earns a solo reader and a
+true builder niche forms (and, per Exp 22, only then can a stable division of labour lift `Hact`/capability).
+The authored bytes are also currently the org's *reading* emission (scroll-tracking), so they are not yet a
+text-*independent* authored value — the deeper half of Wall 2 remains. `GENESIS_STIGMERGY` +
+`GENESIS_STIG_SEED` kept as instruments (default OFF); the default economy is byte-identical and was
+re-verified with no regression (a rogue leftover sim cliffed an interim check to `pop=12` — the 4th
+recurrence; killed and re-verified clean). Branches: vacuum-only authoring closed (25a, build/read must be
+co-located); **persistent agent authoring achieved but shallow (25b) — next lever is super-linear
+depth-scaled rent + a text-independent authored value**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

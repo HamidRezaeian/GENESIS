@@ -71,6 +71,22 @@ ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 # identical to the verified minted economy (gain is used unchanged), so the default path is untouched.
 DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
 
+# STIGMERGY (Exp 25, default-OFF, requires DEPLETE). The Exp-24 vetting named the escape recipe:
+# destructive/rivalrous built cells + an authored value DECOUPLED from the reading eye + depth that
+# pays more per cell (not a flat royalty). Minimal falsifiable primitive: OVERLOAD OUT_CONSUME on a
+# VACUUM (0x00) cell — when an org standing on empty RAM with a printable emission chooses CONSUME, it
+# WRITES its vocal byte there and claims ownership (cell_owner[pos]=org), paying CELL_STATES (the cell's
+# own state-space — the same a full solve/eat is worth). This keeps N_OUTPUT=6 (no genome-decode risk),
+# writes OUTSIDE the pinned scroll into vacuum (so authored bytes are NOT book-confounded = the Wall-2
+# escape), and creates readable territory. ROYALTY: when any org net-positive READS an OWNED cell, a
+# fraction of its (already fuel-bounded) reading gain transfers reader->owner (zero-sum, non-lethal),
+# so an author collects rent = a builder niche distinct from reading (division of labour, Exp 22).
+# Depth-pays-more: harder authored text earns the reader more gain, hence more royalty, so authoring
+# rich/predictable-but-hard content out-earns trivial scribble. Compile-time gated -> byte-identical
+# when off. Meaningful only WITH bounded reading (DEPLETE): on the minted infinite scroll an authored
+# cell is dominated by the free book (Wall 1), which Exp 24 proved DEPLETE breaks.
+STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -350,7 +366,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -773,6 +789,23 @@ def world_tick_numba(
                         gain = avail
                     read_fuel[nxt] -= gain
                 energy[org] += gain
+                if STIGMERGY and gain > np.float32(0.0):
+                    # AUTHORSHIP ROYALTY (Exp 25): reading an OWNED cell pays its author rent — a per-bit
+                    # slice (gain/BITS_PER_BYTE, constant-free) transferred reader->owner. Zero-sum (never
+                    # minted), non-lethal (capped at the reader's surplus above its body-subsistence
+                    # floor). Rent scales with the reader's GAIN, which is larger for harder authored text
+                    # a good reader solves well -> authoring rich content out-earns trivial scribble
+                    # (depth-pays-more). A distinct income stream from solo reading = a builder niche.
+                    owner = cell_owner[nxt]
+                    if owner != -1 and owner != org and alive[owner]:
+                        roy = gain / BITS_PER_BYTE
+                        rfloor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
+                        surplus = energy[org] - rfloor
+                        if roy > surplus:
+                            roy = surplus
+                        if roy > np.float32(0.0):
+                            energy[org] -= roy
+                            energy[owner] += roy
                 # SACCADE onto the cell just predicted (the reading MODEL). Only a net-positive
                 # PREDICTION sweeps the eye +1 onto the adjacent cell, so WALKING the scroll REQUIRES
                 # anticipating it (the Rule 9 selection pressure — a reader who cannot predict cannot
@@ -862,6 +895,22 @@ def world_tick_numba(
                     ram_substrate[pos] = 0x00
                     if energy[org] > ATP_MAX:
                         energy[org] = ATP_MAX
+                elif STIGMERGY and 32 <= org_char_val <= 126 and (val == 0x00 or (32 <= val <= 126 and val != 0x55 and read_fuel[pos] <= np.float32(0.0))):
+                    # STIGMERGY WRITE (Exp 25): author a byte where authoring can actually PAY — either
+                    # vacuum (0x00) OR a DEPLETED scroll cell (printable but fuel exhausted). Exp-25a
+                    # showed vacuum-only authoring never fires: survival glues every org to the readable
+                    # scroll, so no one ever stands on vacuum, and CONSUME-on-text is a pure no-op. A
+                    # depleted scroll cell is exactly WHERE readers are AND has stopped paying, so an
+                    # author that refreshes it with its own byte (claiming ownership + resetting fuel)
+                    # colonises live reading territory a follower will walk. Cost = CELL_STATES (the
+                    # cell's state-space); writing to vacuum keeps the Wall-2 escape, and reclaiming a
+                    # dead scroll cell is rivalrous/destructive (the Exp-24 recipe). Owned cells earn the
+                    # author a royalty on every read (above).
+                    if energy[org] >= CELL_STATES:
+                        ram_substrate[pos] = np.uint8(org_char_val)
+                        cell_owner[pos] = org
+                        read_fuel[pos] = CELL_STATES   # authored cell starts fully fuelled
+                        energy[org] -= CELL_STATES
 
             elif best_a == OUT_REPRODUCE:
                 g_count = org_g_count[org]

@@ -89,7 +89,11 @@ NICHE_JUMP = os.environ.get("GENESIS_NICHE", "0") == "1"
 # = fuel restored per cell per restock cadence (default = CELL_STATES = full refill each restock, i.e.
 # the gentlest bound; lower values tighten scarcity). Derived from CELL_STATES, no new constant.
 DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
-os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "")
+# Stigmergy (Exp 25): compile-time branch inside world_tick (CONSUME-overload write + authorship
+# royalty), so its kernel must not share a cache with the non-stigmergy build. Requires DEPLETE to
+# matter (Exp 24 Wall-1).
+STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
+os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "")
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
@@ -205,6 +209,10 @@ g_read_log[0] = 1
 # the restock cadence in the main loop. Unused (never drawn from) when DEPLETE is off.
 g_read_fuel = np.full(RAM_SIZE, float(CELL_STATES), dtype=np.float32)
 DEPLETE_REGROW = float(os.environ.get("GENESIS_DEPLETE_REGROW", str(CELL_STATES)))
+# Exp 25 per-cell authorship (Wall-2 stigmergy). cell_owner[p] = org index that authored the byte at
+# p (-1 = unowned book/vacuum). Reading an owned cell pays its owner a royalty (in-kernel). Cleared
+# where the scroll is re-laid or a cell reverts to vacuum. Unused when STIGMERGY off.
+g_cell_owner = np.full(RAM_SIZE, -1, dtype=np.int32)
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
@@ -390,6 +398,18 @@ def create_intelligent_ancestor(dna=None):
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
     
+    # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
+    # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
+    # (the food-seeking reflex pulls them onto text and halts them there), so authoring cannot bootstrap
+    # from a cold gene pool — "option != pressure" (Exp 20/23). To TEST THE ECONOMICS (does the royalty
+    # make authoring PAY once expressed?) separately from the bootstrap problem, optionally seed a weak
+    # bias->CONSUME drive so founders occasionally CONSUME off-food: on vacuum with a printable vocal
+    # byte that writes+claims a cell; on text it is a harmless no-op; on food it eats. Selection then
+    # decides if royalty income keeps the trait. Default OFF so the honest "does it emerge unaided" and
+    # "does it pay once seeded" cases are both testable.
+    if os.environ.get("GENESIS_STIG_SEED", "0") == "1":
+        genes.extend([GENE_MARKER, 1, CONSUME, 168])   # Bias -> CONSUME (+5) occasional off-food consume/write
+
     # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
     # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
     # wiring cannot pollute speech and corrupt the 8-bit echo (reading fidelity, Rules 9/10).
@@ -700,7 +720,7 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner
     )
 
     for i in range(MAX_ORGANISMS):
@@ -891,7 +911,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner
         )
         
         for i in range(n_births):
@@ -1110,12 +1130,22 @@ def sim_loop():
                         band[4] += 1
             mean_off_pct = (100.0 * sum_off / n_on / BOOK_TARGET_BYTES) if n_on else 0.0
 
+            # Exp 25 stigmergy telemetry (observation-only): count authored (owned) cells + distinct
+            # live authors — does authoring emerge + persist under bounded reading?
+            stig_line = ""
+            if STIGMERGY:
+                owned_mask = g_cell_owner >= 0
+                n_owned = int(np.count_nonzero(owned_mask))
+                owners = g_cell_owner[owned_mask]
+                n_authors = int(np.unique(owners).size) if n_owned else 0
+                stig_line = f" | authored={n_owned} authors={n_authors}"
+
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
                   f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
-                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}")
+                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}")
             
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk
