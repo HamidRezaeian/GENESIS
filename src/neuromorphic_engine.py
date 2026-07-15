@@ -67,6 +67,11 @@ OUT_JMP_BCK_10 = 3
 OUT_CONSUME    = 4
 OUT_REPRODUCE  = 5
 
+# Long-jump distance (cells) for the OUT_JMP_*_10 actions. Named so the Exp 23 food-niche lattice can
+# DERIVE its spacing from the SAME number the actuator uses (a niche reachable meal-to-meal by exactly
+# the jump action it is meant to reward), rather than introducing an independent tuned stride.
+LONG_JUMP_STRIDE = 10
+
 GENE_MARKER  = 161
 NEURON_MARKER = 162
 RECEPTOR_MARKER = 195
@@ -781,8 +786,8 @@ def world_tick_numba(
                 npos = pos
                 if best_a == OUT_JMP_FWD: npos = (pos + 1) % RAM_SIZE
                 elif best_a == OUT_JMP_BCK: npos = (pos - 1 + RAM_SIZE) % RAM_SIZE
-                elif best_a == OUT_JMP_FWD_10: npos = (pos + 10) % RAM_SIZE
-                elif best_a == OUT_JMP_BCK_10: npos = (pos - 10 + RAM_SIZE) % RAM_SIZE
+                elif best_a == OUT_JMP_FWD_10: npos = (pos + LONG_JUMP_STRIDE) % RAM_SIZE
+                elif best_a == OUT_JMP_BCK_10: npos = (pos - LONG_JUMP_STRIDE + RAM_SIZE) % RAM_SIZE
                 
                 energy[org] -= CYCLES_PER_MOVE
                 if org_grid[npos] == -1:

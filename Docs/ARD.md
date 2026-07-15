@@ -336,6 +336,24 @@ toward **(b) a structured/stigmergic environment** over **(a) action-space widen
 retained as the honest per-action instrument; the default economy (probe off) is byte-identical and was
 re-verified with no regression.
 
+**A second energy niche lifts action entropy, but a passive lattice does not recruit the targeted gait
+(Exp 23, 2026-07-14, partial).** `GENESIS_NICHE` (default-OFF, pure driver change, no new constant) stocks
+ambient food only on a stride-`LONG_JUMP_STRIDE` lattice, where the stride derives from the jump-10 actuator
+distance (the literal `10` was named into `LONG_JUMP_STRIDE` so the niche and the actuator share one number).
+The demand prediction holds *in direction*: at matched food rate the lattice sustains a two-mode locomotion
+equilibrium (`fwd`+`bck`, `Hact ≈ 1.7`) where uniform food of the same magnitude collapses to a single-action
+`bck`-monoculture (`Hact ≈ 1.1`) — the first intervention in the arc that *raises* equilibrium action
+entropy. But it did **not** recruit the intended jump gait (`f10`/`b10` stayed ~0–9 %): a passive stride-10
+lattice is walk-reachable, so `+1`/`−1` drift still lands on lattice cells and no long jump is *required* —
+"option ≠ pressure", the Exp-20 failure recast on the foraging axis. The architectural lesson: spatial-demand
+structure genuinely moves `Hact`, but (i) forcing a *specific* action needs the alternative gaits to *fail*
+(a true energy barrier only a long jump crosses, not a spacing preference), and (ii) even a perfect two-niche
+split yields only a 1-bit reader-vs-forager label to a peer predictor — generic action diversity is still not
+*modelable behavioral depth*. This keeps **(b) a stigmergic environment** (diversity in open-ended built
+artifacts, not a fixed gait menu) as the favoured substrate lever, with Exp 23 as evidence that spatial
+structure is a real handle on the distribution. `GENESIS_NICHE` and `GENESIS_FOOD_RATE` are kept as
+instruments; the default economy is byte-identical and was re-verified with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

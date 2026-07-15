@@ -1285,6 +1285,67 @@ the lever (22)**.
 
 ---
 
+## 🧪 Experiment 23 — A Second Energy Niche Lifts Action Entropy, but a Passive Lattice Does Not Recruit the Targeted Jump Gait (2026-07-14, partial)
+
+Exp 22 concluded the ascent lever is **demand for behavioral diversity** — an economy where different
+behaviors pay different organisms, so the colony cannot collapse onto one monetized action. This experiment
+runs the minimal build-time test: add a **second, orthogonal energy niche** and ask whether it (i) holds
+`Hact` up at equilibrium (the demand prediction) and (ii) recruits the two dead actions Exp 22 found
+(`f10`/`b10` = jump ±10).
+
+**Design (`GENESIS_NICHE`, default-OFF, no new constant, pure driver change).** In niche mode the ambient
+`0x55` food (same total amount) is stocked **only on a stride-`LONG_JUMP_STRIDE` lattice** (`idx %
+LONG_JUMP_STRIDE == 0`), where `LONG_JUMP_STRIDE = 10` is the *same* distance the `OUT_JMP_*_10` actuator
+already moves (the literal `10` in the jump code was named into this constant so the lattice **derives** from
+the actuator, not a tuned stride). The intent: a meal is reachable meal-to-meal by exactly the jump-10
+action, while a `+1`-drift walker starves crossing the empty cells between lattice points → jump-10 becomes
+the efficient foraging gait → a forager niche distinct from the readers. This is a Python-driver change (food
+placement only), so the njit kernel is untouched and the default (niche OFF) economy is byte-identical.
+
+**Result (live, books, `GENESIS_ACTPROBE`, matched food rate for the control):**
+
+| condition | equilibrium distribution | `Hact` (equilibrium) |
+|---|---|---|
+| niche ON, food 0.1 (default rate) | `eat 85%` monoculture, `b10` **revived 8–9%** (from ~0) | ~0.8 |
+| niche ON, food 20 (viable niche) | `fwd ~50%` + `bck ~25–40%` + reading, coexisting | **~1.6–1.8** |
+| **control: uniform food 20 (niche OFF)** | **`bck 73–80%` monoculture** | **~1.0–1.1** |
+
+**Two findings, one positive and one negative — reported honestly:**
+
+1. **POSITIVE — a second niche lifts `Hact` (the demand prediction holds).** At matched food rate (20), the
+   lattice sustains a **two-mode** locomotion equilibrium (`fwd`+`bck` coexisting, `Hact ≈ 1.7`), whereas
+   uniform food of the same magnitude collapses to a **single-action** `bck`-monoculture (`Hact ≈ 1.1`).
+   Spatial structure in *where* energy sits does hold action entropy up — direct support for Exp 22's
+   demand/niche thesis, and the first intervention in the arc that *raises* equilibrium `Hact` rather than
+   watching it collapse.
+2. **NEGATIVE — the passive lattice does not recruit the *targeted* jump actions.** `f10`/`b10` stayed dead
+   (~0–9 %); the added diversity came from `fwd`+`bck`, not the jump gait the lattice was designed to reward.
+   The mechanism is too weak: stride-10 spacing does **not** *force* a jump, because a `+1`/`−1` drifter still
+   lands on lattice cells by ordinary walking (and back-drift `bck` sweeps them just as well), so evolution
+   never needs the long jump. Passive spacing creates *an option*, not a *requirement* — the same
+   "option ≠ pressure" failure the reading-difficulty ramp hit in Exp 20, now on the foraging axis.
+
+**Diagnosis + next step.** The demand thesis is *confirmed in direction* (niche structure ⇒ higher `Hact`)
+but the specific instrument under-delivered: a **passive** resource lattice is walk-reachable, so it recruits
+generic locomotion, not the intended specialised gait, and `Hact ≈ 1.7` is still a locomotion mix (two
+actions), not the open-ended behavioral diversity a theory-of-mind economy needs. To force a *specific* gait
+the niche must make the drift gaits **fail** — e.g. lattice cells that only *yield* to an arrival by a
+long-jump (a gap the `+1` walker cannot cross because the intervening cells cost energy with no reward, an
+Exp-13-style true barrier rather than a spacing preference), or a moving/refreshing lattice that outruns
+drift. More fundamentally, this reinforces the Exp 21/22 conclusion that **generic action diversity is not
+the same as *modelable* behavioral depth**: even a perfect two-niche split gives a peer predictor only a
+1-bit "reader vs forager" label to model, not compressible complexity. The stronger route remains **(b)
+stigmergy** — where the diversity is in open-ended *artifacts agents build*, not in a fixed menu of gaits —
+and the lattice result is a useful down-payment: it proves spatial-demand structure moves `Hact`, so a richer
+built-environment structure is worth the larger investment. `GENESIS_NICHE` + `GENESIS_FOOD_RATE` kept as
+instruments (default-OFF / default-0.1); the default economy was re-verified byte-identical, no regression
+(`pop` healthy, `ext=0 refuge=0`) after killing a rogue leftover sim that had cliffed an interim control via
+CPU contention (the Exp-18 live-loop lesson, third recurrence — leftover sims are the standing hazard here).
+Branches: passive-resource-lattice under-recruits the targeted gait (23, partial); demand/niche direction
+still confirmed.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

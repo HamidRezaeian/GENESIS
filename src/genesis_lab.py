@@ -74,11 +74,22 @@ os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
     f"{'_actp' if ACT_PROBE else ''}"))
+# JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
+# single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
+# exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
+# amount) is stocked ONLY on a stride-LONG_JUMP_STRIDE lattice, so a meal is reachable meal-to-meal by
+# exactly the jump10 action but a +1-drift walker starves crossing the empty cells between lattice
+# points -> jump10 becomes the efficient foraging gait. Readers keep the scroll, foragers work the
+# lattice = two behavioral niches. This is a PURE DRIVER change (food spawn placement, lines below),
+# NOT a kernel change, so the njit cache is unaffected and the default (niche OFF) food economy is
+# byte-identical. Derives its spacing from LONG_JUMP_STRIDE (no new constant).
+NICHE_JUMP = os.environ.get("GENESIS_NICHE", "0") == "1"
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
+    LONG_JUMP_STRIDE,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
 from books_of_genesis import (
@@ -196,7 +207,7 @@ global_avg_age = 0
 
 WS_CLIENTS = set()
 ws_loop = None
-g_energy_spawn_rate = 0.1
+g_energy_spawn_rate = float(os.environ.get("GENESIS_FOOD_RATE", "0.1"))
 
 async def broadcast_msg(msg):
     if WS_CLIENTS:
@@ -812,12 +823,20 @@ def sim_loop():
                     print(f"  [ARK] New Elite Preserved (Age: {max_ark_age})")
 
         spawn_count = g_energy_spawn_rate
+        # Exp 23 niche: constrain food to a stride-LONG_JUMP_STRIDE lattice so it is reachable
+        # meal-to-meal by the jump10 action but not by +1 drift (creates demand for a forager niche).
+        # Same total food as the uniform default; only the placement changes. Default (OFF) is the
+        # byte-identical uniform spawn.
+        def _food_idx():
+            if NICHE_JUMP:
+                return random.randint(0, (RAM_SIZE // LONG_JUMP_STRIDE) - 1) * LONG_JUMP_STRIDE
+            return random.randint(0, RAM_SIZE - 1)
         for _ in range(int(spawn_count)):
-            idx = random.randint(0, RAM_SIZE-1)
+            idx = _food_idx()
             if g_ram[idx] == 0x00:
                 g_ram[idx] = 0x55
         if random.random() < (spawn_count - int(spawn_count)):
-            idx = random.randint(0, RAM_SIZE-1)
+            idx = _food_idx()
             if g_ram[idx] == 0x00:
                 g_ram[idx] = 0x55
 

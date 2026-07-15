@@ -333,6 +333,24 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      regression (`pop 506–600`, reads healthy, `ext=0 refuge=0` — after killing a rogue leftover sim that
      had cliffed the first check via CPU contention, the Exp-18 live-loop lesson re-validated). Supply
      hypothesis ELIMINATED; demand/niche-structure CONFIRMED as the lever.
+- ⚠️ **A second energy niche LIFTS Hact, but a passive lattice does NOT recruit the targeted jump gait
+     (Exp 23, 2026-07-14, partial).** Built `GENESIS_NICHE` (default-OFF, pure driver change, no new
+     constant): ambient food stocked ONLY on a stride-`LONG_JUMP_STRIDE` lattice (=10, the SAME distance the
+     jump10 actuator moves — named the literal `10` into a constant so the lattice DERIVES from the actuator).
+     Intent: meals reachable meal-to-meal by jump10, +1-drift starves between → forager niche. **POSITIVE:**
+     at matched food rate 20, the lattice holds a TWO-mode equilibrium (`fwd`+`bck` coexist, `Hact≈1.7`) vs
+     uniform food collapsing to a `bck`-monoculture (`Hact≈1.1`) — first intervention that RAISES equilibrium
+     Hact; confirms Exp 22 demand thesis in direction. **NEGATIVE:** `f10`/`b10` stayed dead (~0–9%) — the
+     added diversity is `fwd`+`bck`, not the jump gait. Passive stride-10 spacing does NOT FORCE a jump (a +1
+     walker still lands on lattice cells, `bck` sweeps them too) = "option ≠ pressure" (same Exp-20 failure on
+     the foraging axis). **Next:** to force a specific gait the drift gaits must FAIL — lattice cells behind a
+     true energy BARRIER only a long-jump crosses (Exp-13-style), or a moving lattice that outruns drift. But
+     even a perfect 2-niche split gives a peer predictor only a 1-bit reader-vs-forager label — reinforces
+     that generic action diversity ≠ MODELABLE depth. **Stronger route remains (b) STIGMERGY** (diversity in
+     open-ended BUILT artifacts, not a fixed gait menu); the lattice is a down-payment proving spatial-demand
+     structure moves Hact. `GENESIS_NICHE`+`GENESIS_FOOD_RATE` kept as instruments (default OFF/0.1); default
+     byte-identical, no regression (killed a 3rd rogue leftover sim mid-run — leftover sims are the standing
+     hazard, always verify procs clean before a live A/B).
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was
