@@ -96,7 +96,12 @@ STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
 # Ownership persistence (Exp 27): a second compile-time branch inside the stigmergy write, so its
 # kernel must not share a cache with non-persist stigmergy.
 STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
-os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "")
+# Leaky/decaying ownership (Exp 28): owned cells get no FREE regrow (owner must refresh to hold);
+# implies the persist refresh path. A second compile-time branch, so key the cache.
+STIG_LEASE = os.environ.get("GENESIS_STIG_LEASE", "0") == "1"
+if STIG_LEASE:
+    STIG_PERSIST = True  # lease uses the owner-only refresh mechanic
+os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "") + ("_lease" if STIG_LEASE else "")
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
@@ -905,8 +910,28 @@ def sim_loop():
         # (=CELL_STATES) barely binds; low tightens the carrying capacity. Derived from CELL_STATES,
         # no new constant; a cheap vectorised op, only when DEPLETE is on.
         if DEPLETE:
-            np.minimum(g_read_fuel + np.float32(DEPLETE_REGROW), np.float32(CELL_STATES),
-                       out=g_read_fuel)
+            if STIG_LEASE:
+                # LEAKY OWNERSHIP (Exp 28, Rule-10 decay GRADIENT). Unowned cells regrow at the full
+                # free rate (reading economy untouched). OWNED cells regrow at a REDUCED rate
+                # (DEPLETE_REGROW / BITS_PER_BYTE = 1/8 the free rate, hardware-derived) — holding
+                # territory costs upkeep the owner must top up by actively refreshing (in-kernel, costs
+                # CELL_STATES), but a HOT cell still nets positive so authoring is not strictly a loss
+                # (the binary no-regrow version made authoring unprofitable -> authored~0). A fully
+                # neglected owned cell still drains toward empty; at fuel <= 0 the claim LAPSES (owner
+                # cleared) so the cell recycles and is contestable — persistent enough to hold, leaky
+                # enough never to ossify into a founder toll-booth (Exp 27 freeze). Vectorised.
+                owned = g_cell_owner >= 0
+                g_read_fuel[~owned] = np.minimum(g_read_fuel[~owned] + np.float32(DEPLETE_REGROW),
+                                                 np.float32(CELL_STATES))
+                g_read_fuel[owned] = np.minimum(
+                    g_read_fuel[owned] + np.float32(DEPLETE_REGROW) / np.float32(8),
+                    np.float32(CELL_STATES))
+                lapsed = owned & (g_read_fuel <= 0.0)
+                g_cell_owner[lapsed] = -1
+                g_read_hits[lapsed] = 0
+            else:
+                np.minimum(g_read_fuel + np.float32(DEPLETE_REGROW), np.float32(CELL_STATES),
+                           out=g_read_fuel)
 
         n_alive, n_births = world_tick_numba(
             g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,

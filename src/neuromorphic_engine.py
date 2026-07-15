@@ -98,6 +98,22 @@ STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
 # Rule 10 — no eternal claims). Compile-time gated -> byte-identical when off.
 STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
 
+# LEAKY / DECAYING OWNERSHIP (Exp 28, default-OFF, requires STIGMERGY). Exp 27 found ABSOLUTE
+# persistence FREEZES the map: continuous free fuel-regrow refuels an owner's cells for nothing, so
+# founders hold high-traffic toll-booths forever at zero cost -> ossification, Hact -> 0. Exp 26 (no
+# persistence) had the opposite failure (churn, no concentration). The Rule-10 gradient between them:
+# an owned cell gets NO free regrow -> it can be replenished ONLY by the owner actively REFRESHING it
+# (paying CELL_STATES, the write cost). So holding territory costs ongoing UPKEEP proportional to how
+# fast reads drain it (a hot cell drains faster -> needs more frequent tending), an owner can hold only
+# as many cells as it can afford to service, and a NEGLECTED owned cell depletes to empty -> its claim
+# LAPSES (owner cleared) -> the cell recycles and is contestable again. Persistent enough that a better
+# builder can hold + out-earn, impermanent enough it never ossifies into a founder cartel. The regrow-
+# skip + lapse both live in the driver's fuel step (vectorised); this flag gates the IN-KERNEL half
+# (an owner refreshing its own cell is already the STIG_PERSIST refresh path). Constant-free.
+STIG_LEASE = os.environ.get("GENESIS_STIG_LEASE", "0") == "1"
+if STIG_LEASE:
+    STIG_PERSIST = True   # lease reuses the owner-only refresh mechanic (in-kernel write path)
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2

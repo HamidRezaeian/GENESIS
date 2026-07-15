@@ -435,6 +435,28 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      arc lesson (gradient not cliff) now on the property-right axis. `GENESIS_STIG_PERSIST` kept as the frozen
      A/B extreme (default-OFF); default byte-identical, no regression. **NEXT: decaying/leaky ownership (a
      refresh-to-hold claim that weakens if unattended).**
+- ⚠️ **Leaky ownership DESTABILISES the colony — holding-cost on shared-scroll cells cannibalises the reading
+     substrate (Exp 28, 2026-07-14).** Built the Rule-10 decay gradient `GENESIS_STIG_LEASE` (default-OFF,
+     implies PERSIST, no new constant): owned cells lose full free regrow → owner must actively REFRESH (pay
+     CELL_STATES) to hold; neglected cell drains → claim LAPSES → recycles. Two variants: (a) binary (owned
+     get ZERO regrow), (b) partial (owned regrow at 1/BITS_PER_BYTE of free rate, hardware-derived).
+     **BOTH COLD-CLIFF the colony (pop→12), seeded AND unseeded.** binary+seed: authored→0 (authoring strictly
+     a loss); partial unseeded: pop 288→12 (cliffs WITHOUT the seed too = the lease mechanic itself, not just
+     the seed). **TWO structural failure mechanisms:** (1) **authoring CANNIBALISES the reading substrate** —
+     authoring targets DEPLETED SCROLL cells (Exp 25b), so an authored cell IS a scroll cell; under lease it
+     gets reduced regrow → orgs convert live reading territory into slow-refuelling owned cells that drain +
+     lapse + churn the scroll to low-fuel → reading income (survival) drops → collapse. (2) seeded write-spam
+     bankrupts the bootstrap (~82 founders each pay 256 to author, can't recoup under lease → mass energy
+     drain). **Diagnosis: the decay gradient is RIGHT but authoring must NOT sit on the reading scroll.** Exp
+     27 (freeze) + Exp 28 (leak) bracket the persistence axis, but Exp 28 exposes the deeper coupling carried
+     since Exp 25b: authoring reuses depleted scroll cells, so ANY holding-cost on owned cells is a
+     holding-cost on the shared reading substrate → the two economies fight over the same fuel. **Clean fix =
+     the OPEN HALF OF WALL 2: authoring needs its own TEXT-INDEPENDENT territory** (a region/value channel NOT
+     the reading scroll) so ownership upkeep/lapse/rent operate on AUTHORED resource without draining READING
+     fuel. Until authoring + reading are decoupled in SPACE/SUBSTRATE (not just byte value), every
+     property-right refinement collides with survival. `GENESIS_STIG_LEASE` kept as the destabilising A/B
+     extreme (default-OFF); default byte-identical, no regression. **NEXT: decouple authoring from the reading
+     scroll — a text-independent authored territory (the open half of Wall 2).**
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

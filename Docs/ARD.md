@@ -429,6 +429,23 @@ freeze extreme (absolute persistence) works; the next lever is a decaying/leaky 
 `GENESIS_STIG_PERSIST` is kept as the frozen A/B extreme (default-OFF); the default economy is byte-identical
 and was re-verified with no regression.
 
+**Leaky ownership destabilises the colony — the decay gradient collides with the reading substrate (Exp 28,
+2026-07-14).** Building the decay gradient (`GENESIS_STIG_LEASE`: owned cells lose the full free fuel-regrow,
+so an owner must pay `CELL_STATES` to refresh and hold, and a neglected claim lapses) cold-cliffed the colony
+(`pop → 12`) in both a binary form (owned cells get zero regrow) and a partial form (owned cells regrow at
+`1/BITS_PER_BYTE` of the free rate), with and without the seeded write reflex. The cause is a structural
+coupling the stigmergy line has carried since Exp 25b: authoring reuses *depleted scroll cells*, so an
+authored cell **is** a reading cell — putting a holding-cost on owned cells therefore puts a holding-cost on
+the shared reading substrate, and orgs that author scroll cells convert live reading territory into
+slow-refuelling owned cells that drain, lapse, and churn the scroll into a low-fuel state, collapsing the
+reading (survival) economy. The seeded write reflex compounds it by bankrupting the founder cohort. The
+architectural conclusion is that the ownership-persistence axis cannot be tuned in isolation while authoring
+and reading share the same cells: the open half of Wall 2 — a *text-independent authored territory* (a region
+or value channel distinct from the reading scroll) — must be closed first, so that ownership upkeep, lapse,
+and rent act on an authored resource without draining reading fuel. `GENESIS_STIG_LEASE` is kept as the
+destabilising A/B extreme (default-OFF); the default economy is byte-identical and was re-verified with no
+regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

@@ -1573,6 +1573,55 @@ economy is byte-identical and was re-verified with no regression. Branches: no-p
 
 ---
 
+## 🧪 Experiment 28 — Leaky Ownership Destabilises the Colony: Holding-Cost on Shared-Scroll Cells Cannibalises the Reading Substrate (2026-07-14)
+
+Exp 27's freeze pointed to a **decay gradient** for ownership (Rule 10): a claim should cost upkeep to hold
+and lapse if neglected, so territory recycles slowly. This experiment builds that (`GENESIS_STIG_LEASE`) and
+finds the *implementation* couples authoring to reading destructively.
+
+**Design (`GENESIS_STIG_LEASE`, default-OFF, implies `STIG_PERSIST`, no new constant).** Owned cells no
+longer receive the full free fuel-regrow; an owner must *actively refresh* (pay `CELL_STATES`) to keep a cell
+fuelled and earning. A neglected owned cell drains to empty and its claim **lapses** (owner cleared → cell
+recycles, contestable again). Two variants tested: (a) **binary** — owned cells get *zero* free regrow; (b)
+**partial** — owned cells regrow at `1/BITS_PER_BYTE` of the free rate (hardware-derived), so holding still
+costs ~7/8 upkeep but a hot cell nets positive.
+
+**Result — both variants COLD-CLIFF the colony (`pop → 12`), with and without the seeded write reflex:**
+
+| config | outcome |
+|---|---|
+| binary lease + seed | `pop 101 → 12`, `authored → 0` (authoring is strictly a loss) |
+| binary lease, unseeded | volatile `pop 200–560`, `authored` flickers 0–2 (never accumulates) |
+| **partial lease + seed** | `pop → 12`, authored freezes at `109/82` on a dead colony |
+| **partial lease, unseeded** | `pop 288 → 12` — cliffs *without* the seed too |
+
+**Two failure mechanisms, both structural:**
+
+1. **Authoring cannibalises the reading substrate.** Authoring targets *depleted scroll cells* (Exp 25b), so
+   an authored cell **is a scroll cell** — and under lease it now gets only reduced regrow. Orgs authoring
+   scroll cells convert live reading territory into slow-refuelling owned cells, which drain, lapse, and churn
+   the scroll into a low-fuel state → reading income (the survival economy) drops → collapse. The partial
+   variant cliffs *unseeded* too, so this is the lease mechanic itself, not just the seed.
+2. **Seeded write-spam bankrupts the bootstrap.** With the seed, ~82 founders each pay `CELL_STATES=256` to
+   author during the ignition window; under lease those cells earn no free regrow, cannot recoup 256 in rent
+   before draining, so the founder cohort mass-drains its energy and the colony crashes before reading
+   stabilises.
+
+**Diagnosis — the decay gradient is right, but authoring must not sit on the reading scroll.** Exp 27
+(freeze) and Exp 28 (leak) together bracket the ownership-persistence axis, but Exp 28 exposes a deeper
+coupling the whole stigmergy line has carried since Exp 25b: because authoring reuses *depleted scroll cells*
+(the fix that made authoring fire at all), any holding-cost on owned cells is a holding-cost on the shared
+reading substrate, and the two economies fight over the same fuel. The clean resolution is the **deeper half
+of Wall 2, still open**: authoring needs its own **text-independent territory** (a region, or a value channel,
+that is not the reading scroll) so that ownership upkeep, lapse, and rent operate on *authored* resource
+without draining *reading* fuel. Until authoring and reading are decoupled in *space/substrate* (not just in
+byte value), every property-right refinement will keep colliding with survival. `GENESIS_STIG_LEASE` kept as
+an instrument (default-OFF, the destabilising extreme of the A/B); the default economy is byte-identical and
+was re-verified with no regression. Branches: churn (26), freeze (27), **leak-cannibalises-reading (28) —
+authoring and reading must be decoupled in substrate, not merely in byte value (the open half of Wall 2)**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
