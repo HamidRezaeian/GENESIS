@@ -87,6 +87,17 @@ DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
 # cell is dominated by the free book (Wall 1), which Exp 24 proved DEPLETE breaks.
 STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
 
+# OWNERSHIP PERSISTENCE (Exp 27, default-OFF, requires STIGMERGY). Exp 26 found super-linear rent
+# concentrates read-TRAFFIC (hot cells form) but income never concentrates on an author because any
+# org can re-author a depleted cell and SEIZE ownership -> cells churn -> no specialist can HOLD a
+# high-traffic patch. This adds a PROPERTY RIGHT: a LIVING owner's cell is not seizable by others (a
+# non-owner can author only vacuum or an unowned / dead-owner cell), while the OWNER may refresh its
+# OWN cells at any fuel level to keep them live. So a builder that defends a hot patch collects its
+# concentrated super-linear rent, survives on it, and holds it = a livable specialist niche + a stable
+# builder/reader division of labour (Exp 22). Owner DEATH releases the cell (turnover stays emergent,
+# Rule 10 — no eternal claims). Compile-time gated -> byte-identical when off.
+STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -905,22 +916,30 @@ def world_tick_numba(
                     ram_substrate[pos] = 0x00
                     if energy[org] > ATP_MAX:
                         energy[org] = ATP_MAX
-                elif STIGMERGY and 32 <= org_char_val <= 126 and (val == 0x00 or (32 <= val <= 126 and val != 0x55 and read_fuel[pos] <= np.float32(0.0))):
-                    # STIGMERGY WRITE (Exp 25): author a byte where authoring can actually PAY — either
-                    # vacuum (0x00) OR a DEPLETED scroll cell (printable but fuel exhausted). Exp-25a
-                    # showed vacuum-only authoring never fires: survival glues every org to the readable
-                    # scroll, so no one ever stands on vacuum, and CONSUME-on-text is a pure no-op. A
-                    # depleted scroll cell is exactly WHERE readers are AND has stopped paying, so an
-                    # author that refreshes it with its own byte (claiming ownership + resetting fuel)
-                    # colonises live reading territory a follower will walk. Cost = CELL_STATES (the
-                    # cell's state-space); writing to vacuum keeps the Wall-2 escape, and reclaiming a
-                    # dead scroll cell is rivalrous/destructive (the Exp-24 recipe). Owned cells earn the
-                    # author a royalty on every read (above).
+                elif STIGMERGY and 32 <= org_char_val <= 126 and (
+                        val == 0x00
+                        or (STIG_PERSIST and 32 <= val <= 126 and val != 0x55 and cell_owner[pos] == org)
+                        or (32 <= val <= 126 and val != 0x55 and read_fuel[pos] <= np.float32(0.0)
+                            and (not STIG_PERSIST
+                                 or cell_owner[pos] == -1 or cell_owner[pos] == org or not alive[cell_owner[pos]]))):
+                    # STIGMERGY WRITE (Exp 25): author a byte where authoring can actually PAY — vacuum
+                    # (0x00) OR a DEPLETED scroll cell (printable, fuel exhausted). Exp-25a showed
+                    # vacuum-only authoring never fires (survival glues orgs to the scroll, no one stands
+                    # on vacuum); a depleted scroll cell is exactly WHERE readers are AND has stopped
+                    # paying, so refreshing it with one's own byte colonises live reading territory.
+                    # EXP 27 OWNERSHIP PERSISTENCE (STIG_PERSIST): a LIVING owner's cell is NOT seizable
+                    # by others — a non-owner may take only vacuum, an unowned cell, or a dead-owner cell;
+                    # the OWNER may refresh its OWN cell at ANY fuel level (defend + keep it live). Owner
+                    # death releases the cell (emergent turnover, Rule 10). Cost = CELL_STATES. Owned
+                    # cells earn the author a super-linear traffic-scaled royalty on every read (above).
                     if energy[org] >= CELL_STATES:
                         ram_substrate[pos] = np.uint8(org_char_val)
+                        was_mine = cell_owner[pos] == org
                         cell_owner[pos] = org
-                        read_fuel[pos] = CELL_STATES   # authored cell starts fully fuelled
-                        read_hits[pos] = 0             # fresh territory: traffic counter resets
+                        read_fuel[pos] = CELL_STATES   # authored/refreshed cell starts fully fuelled
+                        if not was_mine:
+                            read_hits[pos] = 0         # fresh territory: traffic counter resets (a
+                                                       # refresh of one's OWN cell KEEPS its earned traffic)
                         energy[org] -= CELL_STATES
 
             elif best_a == OUT_REPRODUCE:

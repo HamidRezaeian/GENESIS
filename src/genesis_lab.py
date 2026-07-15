@@ -93,7 +93,10 @@ DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
 # royalty), so its kernel must not share a cache with the non-stigmergy build. Requires DEPLETE to
 # matter (Exp 24 Wall-1).
 STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
-os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "")
+# Ownership persistence (Exp 27): a second compile-time branch inside the stigmergy write, so its
+# kernel must not share a cache with non-persist stigmergy.
+STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
+os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "")
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,

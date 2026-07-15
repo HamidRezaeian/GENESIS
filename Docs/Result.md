@@ -1526,6 +1526,53 @@ is byte-identical and was re-verified with no regression. Branches: flat-rent-to
 
 ---
 
+## 🧪 Experiment 27 — Absolute Ownership Persistence Freezes the Map: Both Extremes Fail, the Answer Is a Decay Gradient (2026-07-14)
+
+Exp 26 showed super-linear rent concentrates read-traffic but not income, because any org can seize a
+depleted cell → churn → no specialist can *hold* territory. This experiment adds the missing **property
+right** and measures whether a specialist then forms.
+
+**Design (`GENESIS_STIG_PERSIST`, default-OFF, requires `STIGMERGY`, no new constant).** A **living owner's
+cell is not seizable** by others — a non-owner may author only vacuum, an unowned cell, or a dead-owner cell;
+the **owner may refresh its own cell at any fuel level** (defend + keep it live, retaining its earned
+traffic). Owner **death releases** the cell (turnover stays emergent, Rule 10). Combined with Exp-26
+super-linear rent, a builder that defends a hot patch should collect concentrated rent, survive on it, and
+hold it — a livable specialist niche.
+
+**Result (live, `STIG_PERSIST + super-rent + DEPLETE regrow 128 + seeded`, ~418 k ticks):** a **hard
+economic freeze**, not a specialisation.
+
+| signal | early (≤30 k) | frozen equilibrium (150 k → 418 k) |
+|---|---|---|
+| `authored` / `authors` | growing (60/49 → 112/91) | **locked at exactly `112/91` for 150 k+ ticks** |
+| `toptraf` (peak cell traffic) | ~2 k | **climbs unbounded → 106 810** |
+| `tophold` (max cells/author) | 2–3 | **4 (still no specialist)** |
+| `Hact` | ~2.0 | **collapses monotonically 2.0 → ~0.1** |
+
+**Finding — persistence over-corrects into rent-seeking ossification.** By making cells unseizable, absolute
+persistence **froze the map**: the ~91 founder-authored cells became permanent toll-booths, every reader
+funnels through them (`toptraf` explodes to >100 k reads on a handful of cells), the colony collapses onto
+pure read-through-owned-cells behaviour (`Hact → 0.1`, a monoculture), and **no new authoring ever happens**
+because all viable depleted-cell territory is locked by living owners. `tophold` stays at 4 — the freeze
+locked in *before* any author could accumulate a holding, so 91 orgs each own ~1 permanent cell forever.
+This is the exact opposite failure from Exp 26 (total churn), and it is *worse* for capability: churn at
+least kept `Hact` elevated (~2.2), whereas the freeze drives it to near-zero.
+
+**Diagnosis — both extremes fail; the answer is a decay gradient (Rule 10).** No persistence (Exp 26) =
+constant churn, income never concentrates, no specialist. Absolute persistence (Exp 27) = permanent capture,
+map ossifies, diversity dies, still no specialist (concentration happens on *cells* via `toptraf`, but not on
+*authors* via `tophold`, because the founders locked their claims before selection could sort winners). The
+missing ingredient is neither extreme but the **Tectonic Gradient Principle applied to ownership**: a claim
+must **decay over time** (an owner must keep *paying/refreshing* to hold territory, and an unrefreshed claim
+weakens so it can be contested) so that territory recycles slowly — persistent enough that a genuinely better
+builder can hold and out-earn, impermanent enough that it never ossifies into a founder toll-booth cartel.
+This is the same lesson as the whole arc — a *gradient*, not a cliff — now on the property-right axis.
+`GENESIS_STIG_PERSIST` kept as an instrument (default-OFF, the frozen extreme of the A/B); the default
+economy is byte-identical and was re-verified with no regression. Branches: no-persistence-churns (26),
+**absolute-persistence-freezes (27) — ownership needs a decay gradient, not a binary right**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

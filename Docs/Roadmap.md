@@ -415,6 +415,26 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      live) so a specialist defends territory → income concentrates → stable builder/reader division lifts
      capability (Exp 22). `read_hits`+`tophold`/`toptraf` kept as obs-only instruments; default byte-identical,
      no regression. Branches: flat-rent-shallow closed (25); super-rent-needs-territory-persistence (26).
+- ⚠️ **Absolute ownership persistence FREEZES the map — both extremes fail, answer is a DECAY GRADIENT
+     (Exp 27, 2026-07-14).** Added the property right `GENESIS_STIG_PERSIST` (default-OFF, requires STIGMERGY,
+     no new constant): a LIVING owner's cell is NOT seizable (non-owner may author only vacuum/unowned/
+     dead-owner); the OWNER may refresh its OWN cell at any fuel level (defend + keep live, retains earned
+     traffic); owner DEATH releases the cell (emergent turnover, Rule 10). **Result = a HARD ECONOMIC FREEZE,
+     not specialisation:** `authored/authors` LOCK at exactly 112/91 for 150k+ ticks, `toptraf` explodes
+     unbounded → 106,810 (a handful of founder cells become permanent toll-booths every reader funnels
+     through), `Hact` COLLAPSES monotonically 2.0→0.1 (monoculture), `tophold` still 4 (freeze locked in
+     BEFORE any author could accumulate a holding → 91 orgs each own ~1 permanent cell forever). **NO new
+     authoring ever happens** (all viable depleted-cell territory locked by living owners). **Opposite failure
+     from Exp 26 (total churn) and WORSE for capability** (churn kept Hact~2.2; freeze kills it). **Diagnosis:
+     BOTH EXTREMES FAIL** — no persistence (26) churns/no-concentration; absolute persistence (27)
+     ossifies/diversity-dies; concentration happened on CELLS (toptraf) but not AUTHORS (tophold) because
+     founders locked claims before selection could sort winners. **Missing = Tectonic Gradient Principle
+     (Rule 10) on the OWNERSHIP axis: a claim must DECAY over time** (owner keeps paying/refreshing to hold;
+     unrefreshed claim weakens → contestable) so territory recycles SLOWLY — persistent enough a better
+     builder holds + out-earns, impermanent enough it never ossifies into a founder toll-booth cartel. Same
+     arc lesson (gradient not cliff) now on the property-right axis. `GENESIS_STIG_PERSIST` kept as the frozen
+     A/B extreme (default-OFF); default byte-identical, no regression. **NEXT: decaying/leaky ownership (a
+     refresh-to-hold claim that weakens if unattended).**
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

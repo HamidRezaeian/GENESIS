@@ -412,6 +412,23 @@ income concentrates, and a stable division of labour can lift capability (Rule-2
 `tophold`/`toptraf` probes are observation-only instruments; the default economy is byte-identical and was
 re-verified with no regression.
 
+**Absolute ownership persistence freezes the map — ownership needs a decay gradient (Exp 27, 2026-07-14).**
+Adding a binary property right (`GENESIS_STIG_PERSIST`: a living owner's cell is unseizable; the owner alone
+may refresh it; owner death releases it) did not produce a specialist — it produced an economic *freeze*.
+Over ~418 k ticks the authored map locked at exactly 112 cells held by 91 authors and never changed again,
+peak per-cell traffic climbed without bound (>100 k reads on a handful of founder cells that became permanent
+toll-booths), and action entropy collapsed monotonically from ~2.0 to ~0.1 as the colony funnelled onto
+reading-through-owned-cells. The maximum holding per author stayed at ~4: the freeze locked in before
+selection could sort winners, so ownership concentrated on *cells* (traffic) but never on *authors*
+(holdings). This is the opposite failure from the Exp-26 churn and worse for capability. The architectural
+lesson is that a property right must obey the Tectonic Gradient Principle (Rule 10) like every other hazard:
+ownership must **decay** — an owner must keep paying to hold territory and an unrefreshed claim must weaken
+until it is contestable — so that claims are persistent enough for a better builder to hold and out-earn, yet
+impermanent enough never to ossify into a founder cartel. Neither the churn extreme (no persistence) nor the
+freeze extreme (absolute persistence) works; the next lever is a decaying/leaky ownership claim.
+`GENESIS_STIG_PERSIST` is kept as the frozen A/B extreme (default-OFF); the default economy is byte-identical
+and was re-verified with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1
