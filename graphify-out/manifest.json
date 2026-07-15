@@ -40,9 +40,9 @@
     "semantic_hash": "5d3394df7677d1ee08f0b69bb767b38c"
   },
   "public/app.js": {
-    "mtime": 1783775578.9913683,
-    "ast_hash": "dcb67f3c73ec69a835886015b3fc8604",
-    "semantic_hash": "dcb67f3c73ec69a835886015b3fc8604"
+    "mtime": 1783867220.0319054,
+    "ast_hash": "5ab6b14af2578854c96cda6f2c31ab4d",
+    "semantic_hash": "5ab6b14af2578854c96cda6f2c31ab4d"
   },
   "skills-lock.json": {
     "mtime": 1783516580.5192924,
@@ -55,19 +55,19 @@
     "semantic_hash": "ecbf32c03aa82a2e4b586ffe01770851"
   },
   "src/analyzer.py": {
-    "mtime": 1783516580.6130035,
-    "ast_hash": "8c97b8722f816a50200146454107da6f",
-    "semantic_hash": "8c97b8722f816a50200146454107da6f"
+    "mtime": 1783965515.6198199,
+    "ast_hash": "d833cf2cd2fda9e2e20f4372c1ede823",
+    "semantic_hash": "d833cf2cd2fda9e2e20f4372c1ede823"
   },
   "src/books_of_genesis.py": {
-    "mtime": 1783854634.479393,
-    "ast_hash": "c1293b57a016a039708e0ce1b9d1c16c",
-    "semantic_hash": "c1293b57a016a039708e0ce1b9d1c16c"
+    "mtime": 1783875846.173884,
+    "ast_hash": "2386e80321b3a0eba898a24bf7b05bdc",
+    "semantic_hash": "2386e80321b3a0eba898a24bf7b05bdc"
   },
   "src/brain_migration.py": {
-    "mtime": 1783516580.6140018,
-    "ast_hash": "b2dabf9960be962b565f78c21a9fdc1e",
-    "semantic_hash": "b2dabf9960be962b565f78c21a9fdc1e"
+    "mtime": 1783965547.6912131,
+    "ast_hash": "8df1192e5fbfb3f632dd2e871ef64523",
+    "semantic_hash": "8df1192e5fbfb3f632dd2e871ef64523"
   },
   "src/extract_agi.py": {
     "mtime": 1783516580.6140018,
@@ -75,9 +75,9 @@
     "semantic_hash": "bae5dab9ba1e3f10614eaeefaa3d049d"
   },
   "src/genesis_lab.py": {
-    "mtime": 1783863106.931372,
-    "ast_hash": "4455d5d625db82e813b52ea973230c39",
-    "semantic_hash": "4455d5d625db82e813b52ea973230c39"
+    "mtime": 1783995837.277577,
+    "ast_hash": "5a3128fb1a2a81fbbebe79fb1f9fe337",
+    "semantic_hash": "5a3128fb1a2a81fbbebe79fb1f9fe337"
   },
   "src/genome_extractor.py": {
     "mtime": 1783516580.616004,
@@ -85,9 +85,9 @@
     "semantic_hash": "6f98d87bb7e2077aa8f431d7ecf4d983"
   },
   "src/neuromorphic_engine.py": {
-    "mtime": 1783862700.529408,
-    "ast_hash": "4de09f6469d92e5f79f62ea85d05bcd1",
-    "semantic_hash": "4de09f6469d92e5f79f62ea85d05bcd1"
+    "mtime": 1783995646.196771,
+    "ast_hash": "eb97d48eb6b464d198810cacb7279af5",
+    "semantic_hash": "eb97d48eb6b464d198810cacb7279af5"
   },
   "tests/sim_test.py": {
     "mtime": 1783516580.5177073,
@@ -245,9 +245,9 @@
     "semantic_hash": "02e5aab69119804889bc222e9df4576e"
   },
   "Docs/ARD.md": {
-    "mtime": 1783864424.8559983,
-    "ast_hash": "3106546a0b9a53cb3c20471420140b4a",
-    "semantic_hash": "3106546a0b9a53cb3c20471420140b4a"
+    "mtime": 1783997392.1091344,
+    "ast_hash": "eff120bc0335ac137c465fb152e9c8ed",
+    "semantic_hash": "eff120bc0335ac137c465fb152e9c8ed"
   },
   "Docs/Article_Draft.md": {
     "mtime": 1783864752.3998373,
@@ -260,19 +260,19 @@
     "semantic_hash": "c4dcaacba01562d13653c6bb09526233"
   },
   "Docs/Result.md": {
-    "mtime": 1783864332.198031,
-    "ast_hash": "24dcf4709cc758ec065b44fa8f6ed82c",
-    "semantic_hash": "24dcf4709cc758ec065b44fa8f6ed82c"
+    "mtime": 1783997267.4948306,
+    "ast_hash": "d145469da1f100cff6120618ca188ebb",
+    "semantic_hash": "d145469da1f100cff6120618ca188ebb"
   },
   "Docs/Roadmap.md": {
-    "mtime": 1783864395.0944755,
-    "ast_hash": "0407bf65c7afd00281df399582e65ac8",
-    "semantic_hash": "0407bf65c7afd00281df399582e65ac8"
+    "mtime": 1783997362.3899312,
+    "ast_hash": "3933814a71518d23de36a1ba7d3f09e7",
+    "semantic_hash": "3933814a71518d23de36a1ba7d3f09e7"
   },
   "public/index.html": {
-    "mtime": 1783609036.6002676,
-    "ast_hash": "09c2e2f8f0c261c1391a83928720871c",
-    "semantic_hash": "09c2e2f8f0c261c1391a83928720871c"
+    "mtime": 1783867082.861598,
+    "ast_hash": "e470a17834d9098664099288d6fe8d85",
+    "semantic_hash": "e470a17834d9098664099288d6fe8d85"
   },
   "tests/smoke_test.py": {
     "mtime": 1783822993.133181,
@@ -1138,5 +1138,25 @@
     "mtime": 1783857268.452279,
     "ast_hash": "2d428728c064a69cf2f3d0378deaa932",
     "semantic_hash": "2d428728c064a69cf2f3d0378deaa932"
+  },
+  "Books/generate_ascent.py": {
+    "mtime": 1784017422.6391165,
+    "ast_hash": "0f268587244a9250ae8461da3753a250",
+    "semantic_hash": "0f268587244a9250ae8461da3753a250"
+  },
+  "src/brain_io.py": {
+    "mtime": 1783965343.745356,
+    "ast_hash": "548ca57cb06334d04f43ae0912ecd929",
+    "semantic_hash": "548ca57cb06334d04f43ae0912ecd929"
+  },
+  "tests/brain_io_test.py": {
+    "mtime": 1783967771.7512555,
+    "ast_hash": "8011740a76e6b185f259d66d823ddd3b",
+    "semantic_hash": "8011740a76e6b185f259d66d823ddd3b"
+  },
+  "Books/English/00_Graded.txt": {
+    "mtime": 1783906488.1630936,
+    "ast_hash": "558d025fd59ad397a4e4aba712790623",
+    "semantic_hash": "558d025fd59ad397a4e4aba712790623"
   }
 }

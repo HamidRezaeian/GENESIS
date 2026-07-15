@@ -275,6 +275,26 @@ rewarded to learn), **not** when it is merely high-entropy; adding surprise to a
 it *less* modelable. Red-Queen stays **default-OFF** (compile-time DCE'd; peer-OFF path byte-identical and
 re-verified healthy); the `Hact` probe is retained as the honest action-entropy metric.
 
+**Cognitive-complexity curriculum built and closed — complexity without scarcity does not ascend
+(Exp 20, 2026-07-14).** The Exp 19 redirect (target = *compressible complexity*) tested on the
+peer-independent **reading** economy: `Books/generate_ascent.py` emits `00_Ascent.txt`, one monotonic
+6000-glyph scroll ramping **cognitive complexity** rather than run-length (bootstrap runs → successor +1 →
+carry 00–99 → arithmetic `a+b=c` mod 10; each stage a compressible rule that generalises, so learning it
+out-earns memorising). Reading pays for the **unsensed pos+1** and an organism senses only the current
+cell, so a correct prediction in the computational bands can only come from a mind carrying context. A new
+observation-only **ascent-frontier probe** buckets live scroll offsets into the four stage bands (Rules
+9↔6, never selects) — on a monotonic-difficulty scroll, *where the colony lives = the difficulty it
+sustains*. Live: the colony **sustains** (`pop=587–600, ext=0 refuge=0`, bootstrap ignites) but the frontier
+**collapses into the bootstrap band** (`~597/3/0/0/0`, mean offset pinned ~53 % at the bootstrap→successor
+boundary); the carry/arithmetic bands stay **permanently empty**. **Cause = the Exp 13 abundance wall on the
+difficulty axis:** the easy band is an infinite uncontested resource for 600 organisms, so there is zero
+selective pressure to cross into the hard frontier — grazing easy forever beats starving at the boundary.
+**This re-derives the standing structural verdict from a new direction: a single-agent reading economy has
+no scarcity, whether text is made quantitatively (Exp 13) or qualitatively (Exp 20) harder — so it cannot
+self-generate ascent. Ascent must route through PEER, with a compressible-complexity target.** `00_Ascent`
+and the frontier probe are kept as reusable instruments; the peer-OFF `00_Graded` baseline was re-verified
+over ~3 M ticks with all Exp 20 shared-code changes in place — no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

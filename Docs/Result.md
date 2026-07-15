@@ -1089,6 +1089,73 @@ now closed: text-scarcity (13), degenerate-code (15), high-change-substrate (17)
 
 ---
 
+## 🧪 Experiment 20 — Cognitive-Complexity Curriculum: Minds Bootstrap Then Camp the Easy Band, Never Climbing Into Computation (2026-07-14)
+
+Exp 19 redirected the frontier from *raw surprise* to **compressible complexity** — a target that is
+*predictable-in-principle but hard to compute*. This experiment tests that directly on the **reading**
+economy (peer-independent), the first-principles form of the redirect: instead of ramping difficulty by
+**run-length** (every prior curriculum, incl. `00_Graded` — even its hardest run=1 cycle is reflex-solvable
+by a memorised lookup, no symbol's value must be *computed*), ramp **cognitive complexity** so that
+predicting the next symbol progressively demands **computation over prior context** held in the SNN's own
+recurrent state.
+
+**Design (`Books/generate_ascent.py` → `00_Ascent.txt`; world structure only, no new constant).** One
+monotonic 6000-glyph scroll matching `BOOK_TARGET_BYTES` (so the engine lays it in a single pass, no
+tiling-induced easy→hard resets), difficulty rising **once, end to end**, in four **compressible** stages
+(each a small rule that *generalises* across the stage, so learning the rule out-earns memorising the loop):
+`bootstrap` 55 % (long shrinking A–J runs — the Exp 12/17 cold-ignition foothold) → `successor` 20 %
+(cyclic +1) → `carry` 12 % (two-digit counting 00–99 = working memory over a cell) → `arithmetic` 13 %
+(`a+b=c` mod 10 = compute over held operands, `=`→digit is bit-distant so echo scores badly — only
+computing earns). Reading pays for predicting the **unsensed pos+1** (Exp 12) and an organism senses only
+the current cell, so a correct next-symbol in the computational bands can *only* come from a mind carrying
+context. **First iteration cliffed cold** (a short book tiled 5× left ~77 % of the standing scroll as hard
+tail → `pop=12, reads=0`, the known cold cliff); rebuilt as the single bootstrap-dominant scroll above,
+which ignites.
+
+**Instrument — the ascent-frontier probe (`genesis_lab.py`, observation-only, Rules 9↔6, NEVER selects).**
+Aggregate telemetry (`Universe N`) cannot see a *small advancing frontier*. The probe buckets every live
+organism's scroll offset into the four stage bands + off-scroll and prints `frontier b/s/c/a/off` plus mean
+offset %. **Where the colony lives on a monotonic-difficulty scroll = the difficulty it can sustain**, and a
+rightward drift over deep time would be ascent *into computation*.
+
+**Result (live, `GENESIS_BOOK_NAME=00_Ascent`, ~150 k ticks):**
+
+| metric | value | verdict |
+|---|---|---|
+| population | 587–600/600, `ext=0 refuge=0` | **SUSTAINS** — bootstrap ignites, no cliff, no regression |
+| `frontier b/s/c/a/off` | starts `536/37/8/18/1` → settles **`~597/3/0/0/0`** | **collapses INTO the bootstrap band** |
+| mean offset | pinned at **~53 %** (the bootstrap→successor boundary) | colony piles at the boundary, **never crosses** |
+| computational bands (carry/arith) | `0/0` after ~30 k ticks, stable 100 k+ | **permanently empty** — no mind ever climbs in |
+| `Universe N` | 26.3 k → ~24.7 k then level | usual decay-then-plateau; no ascent |
+
+**Diagnosis — this is the Exp 13 abundance wall, now proven on the *difficulty* axis.** The colony
+bootstraps in the run-length head and *stays there*: the few organisms that spawn in the computational
+bands **die** (can't read computation → can't earn → starve), and **nobody ever climbs in from the easy
+end**. The reason is structural and identical to Exp 13: the easy band (3300 uncontested cells, reading is
+non-destructive + spatially exclusive, the saccade-walker cannot camp but the *band* never runs out) is an
+**infinite uncontested resource for 600 organisms**, so there is **zero selective pressure to cross into the
+hard frontier** — grazing the easy band forever strictly beats starving at the boundary. Making text
+*harder further along* does not force computation when the easy end is inexhaustible. A monotonic difficulty
+scroll without scarcity is just a difficulty *option*, and evolution correctly declines it.
+
+**Consequence — reading cannot self-generate ascent pressure (branch CLOSED), which re-derives Exp 13's
+verdict from a new direction.** Exp 13 proved text cannot be made *quantitatively* scarce (non-destructive +
+exclusive + walkable = infinite resource); Exp 20 proves it cannot be made *qualitatively* scarce either —
+adding a hard frontier does not create carrying-capacity pressure toward it while an easy frontier remains.
+**Both roads dead-end at the same wall: a single-agent reading economy has no scarcity, so it has no
+ascent.** This *reconfirms the standing structural conclusion* — **ascent must route through PEER**
+(agent–agent prediction is the only zero-sum, genuinely scarce resource) — and sharpens the peer target: it
+must be **compressible complexity** (Exp 19), i.e. a deterministic function of a neighbour's private
+history/state that is predictable-in-principle but hard to compute, so out-modelling it is a real climbable
+skill *and* the loser genuinely loses a scarce resource. `00_Ascent` + the frontier probe are kept as
+reusable instruments (the probe is the honest measure of *where on a difficulty ramp* a colony lives). The
+default reading economy (`00_Graded`, peer-OFF) was re-verified with all Exp 20 shared-code changes in place
+over ~3 M ticks — no regression (`pop=539–561`, reading healthy, `Universe N≈22 k` stable, `ext=0 refuge=0`).
+Branches now closed: text-scarcity (13), degenerate-code (15), high-change-substrate (17),
+raw-unpredictability (19), **complexity-without-scarcity (20)**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

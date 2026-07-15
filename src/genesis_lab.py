@@ -47,6 +47,10 @@ BOOK_CATEGORY = os.environ.get("GENESIS_BOOK_CATEGORY", "English")
 # prediction economy (pop -> refuge floor 12, reads=0); 00_Graded (run-length ramp 10->5->3->2->1)
 # bootstraps on its runs and SUSTAINS (pop 596-600, refuge=0) while the shrinking-run frontier
 # demands progressively real sequence-modeling (Rule 10 gradient, now in the TEXT difficulty).
+# EXP 20 alternative: 00_Ascent (Books/generate_ascent.py) ramps COGNITIVE COMPLEXITY, not just
+# run-length — bootstrap runs -> successor(+1) -> two-digit carry(working memory) -> a+b=c
+# (compute over context). 00_Graded's hardest section is still a memorisable fixed cycle; 00_Ascent's
+# tail is only solvable by a mind that HOLDS CONTEXT, the brain-like computation the project chases.
 BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "00_Graded")
 BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", "6000"))
 BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
@@ -75,7 +79,7 @@ from neuromorphic_engine import (
 )
 from books_of_genesis import (
     inject_custom_book, inject_curriculum_file, inject_passage, regrow_passage,
-    inject_contiguous_library, get_library_books
+    inject_contiguous_library, get_library_books, contiguous_library_start
 )
 import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + monotonic hall-of-fame)
 
@@ -87,6 +91,14 @@ import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + 
 BRAIN_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain", "Brain.npz")
 RESUME_BRAIN = os.environ.get("GENESIS_RESUME", "0") == "1"
+
+# Fixed centred start address of the contiguous library scroll — the anchor for the Exp 20
+# ascent-frontier probe (a book position maps to a difficulty band via its offset from here).
+LIB_START = contiguous_library_start(RAM_SIZE, BOOK_TARGET_BYTES)
+# Cumulative offset fractions of the 00_Ascent stage boundaries (bootstrap|successor|carry|arith),
+# matching Books/generate_ascent.py's FRAC. Observation-only: on a non-Ascent book these are just
+# scroll quartiles and the band labels lose meaning, but the probe never affects the sim.
+ASCENT_BANDS = (0.55, 0.75, 0.87)
 
 g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
 for i in range(1000):
@@ -1018,10 +1030,36 @@ def sim_loop():
                         a = int(action_now[i]); act_hist[a] = act_hist.get(a, 0) + 1
             h_act, nd_act = _entropy(act_hist)
 
+            # --- ASCENT-FRONTIER PROBE (Exp 20, observation-only, Rules 9<->6: NEVER selects) ---
+            # 00_Ascent ramps COGNITIVE COMPLEXITY by scroll offset (bootstrap runs -> successor ->
+            # carry -> arithmetic), so WHERE the colony lives on the scroll = the difficulty it can
+            # sustain, and a rightward drift over deep time is ascent INTO computation (not just
+            # survival). Bucket live positions into the four stage bands + off-scroll, and report the
+            # mean offset as a % of the scroll (the single frontier scalar). Pure telemetry off live
+            # positions; never fed to energy/selection.
+            band = [0, 0, 0, 0, 0]   # bootstrap, successor, carry, arithmetic, off-scroll
+            sum_off = 0; n_on = 0
+            if SEEK_TEXT:
+                for i in range(MAX_ORGANISMS):
+                    if not g_alive[i]:
+                        continue
+                    off = (int(g_positions[i]) - LIB_START) % RAM_SIZE
+                    if off < BOOK_TARGET_BYTES:
+                        sum_off += off; n_on += 1
+                        f = off / BOOK_TARGET_BYTES
+                        if f < ASCENT_BANDS[0]:   band[0] += 1
+                        elif f < ASCENT_BANDS[1]: band[1] += 1
+                        elif f < ASCENT_BANDS[2]: band[2] += 1
+                        else:                     band[3] += 1
+                    else:
+                        band[4] += 1
+            mean_off_pct = (100.0 * sum_off / n_on / BOOK_TARGET_BYTES) if n_on else 0.0
+
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
                   f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
+                  f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
                   f"| ext={num_extinctions} refuge={num_refuge}")
             
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium

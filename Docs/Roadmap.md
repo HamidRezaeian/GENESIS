@@ -275,6 +275,23 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      needs a **structured, modelable (predictable-but-hard-to-compute)** target — *compressible complexity*
      the predictor is rewarded for learning to compute — **not** raw surprise. Red-Queen default-OFF;
      peer-OFF baseline byte-identical + re-verified healthy. `Hact` probe retained.
+- ❌ **Complexity-without-scarcity branch CLOSED — a cognitive-difficulty ramp does NOT self-generate
+     ascent; re-derives the Exp 13 abundance wall on the difficulty axis (Exp 20, 2026-07-14).** Built
+     `Books/generate_ascent.py` → `00_Ascent.txt`: one monotonic 6000-glyph scroll ramping **cognitive
+     complexity** (bootstrap runs → successor +1 → carry 00–99 → arithmetic `a+b=c` mod 10), each stage a
+     **compressible** rule so learning-the-rule out-earns memorising (the Exp 19 redirect, tested on the
+     peer-independent *reading* economy; world structure only, no new constant). Added an observation-only
+     **ascent-frontier probe** (`frontier b/s/c/a/off` + mean offset %, Rules 9↔6, never selects). Live
+     (`GENESIS_BOOK_NAME=00_Ascent`, ~150 k ticks): colony **sustains** (`pop=587–600, ext=0 refuge=0`) but
+     the frontier **collapses INTO the bootstrap band** (`~597/3/0/0/0`, mean offset pinned ~53 % at the
+     bootstrap→successor boundary); computational bands (carry/arith) go **permanently empty** — organisms
+     spawned there die, nobody climbs in. **Cause = the Exp 13 abundance wall on the *difficulty* axis:** the
+     easy band is an infinite uncontested resource for 600 orgs, so there is **zero pressure to cross into
+     the hard frontier** — grazing easy forever beats starving at the boundary. **Verdict: a single-agent
+     reading economy has no scarcity → no ascent, whether you make text quantitatively (Exp 13) OR
+     qualitatively (Exp 20) harder.** Reconfirms: **ascent must route through PEER**, with a **compressible-
+     complexity** target (Exp 19). `00_Ascent` + frontier probe kept as instruments; peer-OFF `00_Graded`
+     baseline re-verified over ~3 M ticks — no regression. Branches closed: 13, 15, 17, 19, **20**.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was
