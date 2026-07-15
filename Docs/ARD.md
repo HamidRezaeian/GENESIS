@@ -319,6 +319,23 @@ widening/compositionalising the action space or (b) a structured/stigmergic envi
 RAM artifacts and peers predict what a neighbour *built*. Both are genome-decode-sensitive changes, which is
 exactly the forward-compatibility case `brain_io` was built to absorb.
 
+**Supply-vs-demand settled — the ceiling is behavioral collapse to the single monetized action (Exp 22,
+2026-07-14).** `GENESIS_ACTPROBE` (compile-time, observation-only, default-OFF, kernel byte-identical when
+off) records `best_a` on the peer-OFF path and prints the full 6-way action histogram. Live measurement to
+equilibrium refutes the "skewed-but-diverse" reading of Exp 19: each economy pays for exactly one behavior
+and the colony **collapses onto it** — the reading economy converges to an `eat`-monoculture (73–86 %,
+`Hact ≈ 0.8–1.2`), and the peer run before ignition converges to a `fwd`-monoculture (88–95 %,
+`Hact ≈ 0.35–0.6`). The early `Hact ≈ 2.2` is founder-cohort diversity *decaying*, so the equilibrium the
+peer economy must model is even lower than the Exp 19/21 time-average of ~1.8. Two of six actions (`f10`,
+`b10` = jump ±10) are structurally dead throughout, so the effective repertoire is ~4 and at steady state
+~1. **This is decisive for the substrate fork: the ceiling is *demand*-limited, not supply-limited** — the
+distribution is dictated by what pays, not by how many action bits exist, so widening `N_OUTPUT` would add
+capacity a single-reward economy has no reason to use. The lever is an economy in which *different behaviors
+pay off for different organisms* (niche structure / division of labour), which re-ranks the Exp 21 fork
+toward **(b) a structured/stigmergic environment** over **(a) action-space widening**. `GENESIS_ACTPROBE` is
+retained as the honest per-action instrument; the default economy (probe off) is byte-identical and was
+re-verified with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

@@ -67,9 +67,13 @@ PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
 # so its kernel must not share a cache with peer-only either. Fold it into the economy-keyed cache dir
 # alongside the peer flag (mirrors the peer default-OFF discipline).
 RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
+# Action-distribution probe (Exp 22, observation-only). Also a compile-time branch inside world_tick
+# (records best_a on the peer-OFF path), so its kernel must not share a cache with the plain default.
+ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
-    f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"))
+    f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
+    f"{'_actp' if ACT_PROBE else ''}"))
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
@@ -1024,11 +1028,21 @@ def sim_loop():
             # UNpredictable, so its whole thesis is that Hact RISES over deep time toward log2(6)~2.58.
             # Pure telemetry: read off the state array, printed only, never fed to energy/reproduction.
             act_hist = {}
-            if PEER_PREDICT:
+            if PEER_PREDICT or ACT_PROBE:
                 for i in range(MAX_ORGANISMS):
                     if g_alive[i] and action_now[i] >= 0:
                         a = int(action_now[i]); act_hist[a] = act_hist.get(a, 0) + 1
             h_act, nd_act = _entropy(act_hist)
+
+            # Exp 22: full per-action breakdown (fwd/bck/f10/b10/eat/rep = best_a 0..5) so supply-vs-
+            # demand is directly visible — WHICH actions are dead, not just the aggregate entropy.
+            # Observation-only; only assembled when the probe (or peer) is populating action_now.
+            act_line = ""
+            if PEER_PREDICT or ACT_PROBE:
+                tot_a = sum(act_hist.values()) or 1
+                names = ("fwd", "bck", "f10", "b10", "eat", "rep")
+                act_line = " | act " + " ".join(
+                    f"{names[a]}={100*act_hist.get(a,0)//tot_a}%" for a in range(6))
 
             # --- ASCENT-FRONTIER PROBE (Exp 20, observation-only, Rules 9<->6: NEVER selects) ---
             # 00_Ascent ramps COGNITIVE COMPLEXITY by scroll offset (bootstrap runs -> successor ->
@@ -1060,7 +1074,7 @@ def sim_loop():
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
                   f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
-                  f"| ext={num_extinctions} refuge={num_refuge}")
+                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}")
             
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk

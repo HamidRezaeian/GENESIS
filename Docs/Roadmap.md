@@ -314,6 +314,25 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      (b) structured/stigmergic environment where agents build RAM artifacts and peers predict what a
      neighbour BUILT. Frontier redirected from "what should peers predict?" (exhausted) to "how does an
      organism's behavior become worth predicting?" Branches closed: 13, 15, 17, 19, 20, **21**.
+- ✅ **Supply-vs-demand SETTLED empirically — the ceiling is behavioral COLLAPSE to the single monetized
+     action; demand-limited, not supply (Exp 22, 2026-07-14).** Built `GENESIS_ACTPROBE` (compile-time,
+     observation-only, default-OFF, kernel byte-identical when off): records `best_a` on the peer-OFF path
+     and prints the full 6-way histogram `act fwd/bck/f10/b10/eat/rep` + `Hact`. Live-measured both
+     economies to equilibrium: **reading collapses to an `eat`-monoculture (73–86%, Hact~0.8–1.2); the peer
+     run (pre-ignition) collapses to a `fwd`-monoculture (88–95%, Hact~0.35–0.6).** Each economy pays for
+     ONE behavior → the colony converges onto THAT one → distribution is dictated by WHAT PAYS, not
+     repertoire size. Early `Hact~2.2` was founder diversity BURNING OFF (the Exp 19/21 ~1.8 was a
+     time-average across the decay; equilibrium is LOWER). **`f10`/`b10` (jump±10) structurally DEAD (~0%)
+     in both → effective repertoire ~4, at equilibrium ~1.** **VERDICT: widening `N_OUTPUT` (supply) adds
+     capacity a single-reward economy won't use — WRONG lever. The lever is DEMAND for behavioral diversity:
+     an economy where DIFFERENT behaviors pay DIFFERENT organisms (niche structure / division of labour) so
+     the population can't collapse onto one action.** Re-ranks the fork: **(b) structured/stigmergic env
+     favoured over (a) action-space widening.** Next concrete test: does a SECOND orthogonal energy source
+     (paying a different action than reading) split the colony into 2 behavioral niches + hold `Hact` up at
+     equilibrium? `GENESIS_ACTPROBE` kept as instrument; default (probe OFF) re-verified byte-identical, no
+     regression (`pop 506–600`, reads healthy, `ext=0 refuge=0` — after killing a rogue leftover sim that
+     had cliffed the first check via CPU contention, the Exp-18 live-loop lesson re-validated). Supply
+     hypothesis ELIMINATED; demand/niche-structure CONFIRMED as the lever.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

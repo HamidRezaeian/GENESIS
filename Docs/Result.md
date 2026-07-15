@@ -1222,6 +1222,69 @@ complexity-without-scarcity (20), **peer-target-on-6-action-substrate (21)**.
 
 ---
 
+## 🧪 Experiment 22 — Grounding the Ceiling: The Action Distribution Collapses to a Single Monetized Action (2026-07-14)
+
+Exp 21 concluded — from a scalar (`Hact ≈ 1.8`) plus theory — that behavioral expression, not the peer
+coupling, is the ascent ceiling, and left a **supply-vs-demand** fork open: is `Hact` low because the
+repertoire is too small (supply) or because no task rewards diversity (demand)? This experiment **measures it
+directly** rather than inferring it.
+
+**Instrument (`GENESIS_ACTPROBE`, compile-time, observation-only, Rules 9↔6, NEVER selects).** A default-OFF
+flag records each organism's decided `best_a` into `action_now` even on the peer-OFF path (the write is
+dead-code-eliminated when off, so the verified default kernel stays byte-identical), and the 5 s telemetry
+prints the full 6-way histogram `act fwd/bck/f10/b10/eat/rep` alongside `Hact`. This exposes **which**
+actions live, not just the aggregate entropy.
+
+**Result (live, books economy, peer-OFF and peer-ON, to equilibrium):**
+
+| phase | distribution | `Hact` |
+|---|---|---|
+| reading, early (founder diversity) | `fwd 57%` → spreads, `eat` rising | climbs to **~2.2** |
+| **reading, equilibrium** | **`eat 73–86%`**, all else starved | collapses to **~0.8–1.2** |
+| peer-ON, early | `fwd 42%`, `bck 33%` | ~1.8 |
+| **peer-ON, equilibrium** | **`fwd 88–95%`**, all else starved | collapses to **~0.35–0.6** |
+| **`f10` / `b10` (jump ±10), both economies** | **~0 % throughout** | 2 of 6 actions structurally dead |
+
+**Diagnosis — the ceiling is behavioral *collapse to the single monetized action*, sharper than either
+horn of the Exp 21 fork.** Three empirical facts settle it:
+
+1. **It is a demand problem, decisively — not supply.** Each economy pays for exactly one behavior, and the
+   colony collapses onto *that one*: the reading economy monetises standing-and-reading, so it converges to
+   an **`eat`-monoculture** (`eat` = the CONSUME action that the reading reward is scored through); the peer
+   run, before peer income ignites, is a pure reading-forage race and converges to a **`fwd`-monoculture**.
+   Different economies → different surviving action → the distribution is dictated by *what pays*, not by the
+   repertoire size. Adding action bits (widening `N_OUTPUT`) would supply capacity the current single-reward
+   economy has no reason to use. **Confirmed: `Hact` is demand-limited.**
+2. **The transient fooled the scalar.** Early ticks show `Hact ≈ 2.2` (near the `log2 6 = 2.58` ceiling) —
+   but that is founder-cohort diversity *burning off*, not sustained richness. By equilibrium `Hact` falls to
+   ~0.5–1.2. The Exp 19/21 figure of ~1.8 was a *time-average across that decay*; the **equilibrium** entropy
+   the peer economy actually has to model is even lower (~0.5–1.0). This makes the Exp 21 ceiling argument
+   *stronger*, not weaker: the action stream a theory-of-mind economy must predict is nearly monomorphic at
+   steady state.
+3. **Two of six actions are structurally dead.** `f10`/`b10` (jump ±10) never exceed noise in either economy
+   — the saccade-walker never needs a long jump. The *effective* repertoire is ~4, and at equilibrium ~1.
+
+**Consequence — the fork is resolved and re-pointed.** The lever is **not** widening the action space (supply)
+— that adds unused capacity to a single-reward economy. The lever is **creating demand for behavioral
+diversity**: an economy where *different behaviors pay off for different organisms*, so the population cannot
+collapse onto one monetized action. This is the same conclusion the whole arc keeps reaching from new angles
+— **ascent needs a niche structure / division of labour**, not a richer actuator — and it now has direct
+per-action evidence. The two candidate substrate levers from Exp 21 are re-ranked by this: **(b) a structured
+/ stigmergic environment** (agents build and consume open-ended RAM artifacts, so what pays depends on what
+others built → endogenous niches → sustained behavioral diversity → a peer target with real entropy to model)
+is favoured over **(a) widening the action space** (pure supply, which this experiment shows would not lift
+the equilibrium). A minimal build-time test of (b): does introducing a *second, orthogonal* energy source
+(one that pays a DIFFERENT action than reading) split the population into two behavioral niches and hold
+`Hact` up at equilibrium? That is the next concrete experiment. **No selection pressure was added this
+experiment** — `GENESIS_ACTPROBE` is pure telemetry; the default economy (probe OFF) is byte-identical and
+was re-verified (`pop` healthy, `Universe N` stable, `ext=0 refuge=0`). Instruments retained:
+`GENESIS_ACTPROBE` (the honest per-action measure). Branches now closed: text-scarcity (13),
+degenerate-code (15), high-change-substrate (17), raw-unpredictability (19), complexity-without-scarcity (20),
+peer-target-on-6-action-substrate (21); **supply-hypothesis eliminated, demand/niche-structure confirmed as
+the lever (22)**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

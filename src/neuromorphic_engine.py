@@ -50,6 +50,16 @@ PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
 # off). genesis_lab folds it into NUMBA_CACHE_DIR so the kernels never share a compiled cache.
 RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
 
+# ACTION-DISTRIBUTION PROBE (Exp 22, observation-only, Rules 9<->6: NEVER selects). Exp 21 concluded
+# theory-of-mind is capped at the action-stream's entropy (Hact~1.8 bits, N_OUTPUT=6 ceiling 2.58) but
+# that was INFERRED from a scalar + theory. This flag records each org's decided best_a into action_now
+# even with peer OFF, so genesis_lab can histogram the FULL 6-way action distribution in the DEFAULT
+# reading economy and settle supply-vs-demand: is 1.8 a monoculture (a few actions dead because no task
+# rewards them) or a saturated repertoire? Compile-time gated -> the write is dead-code-eliminated when
+# off, so the verified default kernel is byte-identical. Peer already writes action_now, so this only
+# adds the write on the peer-OFF path.
+ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -557,7 +567,7 @@ def world_tick_numba(
         # organism's policy. Written before the peer block so a neighbour already stepped this tick
         # exposes its FRESH decision (t), while a not-yet-stepped neighbour still holds t-1 in
         # action_now until it overwrites here. Compile-time gated with the rest of the peer economy.
-        if PEER_PREDICT:
+        if PEER_PREDICT or ACT_PROBE:
             action_now[org] = best_a
                 
         # A vocal bit is set if its neuron fired at all this tick. With random scratchpad synapses
