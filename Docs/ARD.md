@@ -395,6 +395,23 @@ with authored difficulty, plus a text-*independent* authored value (the deeper h
 lever. `GENESIS_STIGMERGY` and `GENESIS_STIG_SEED` are kept as instruments; the default economy is
 byte-identical and was re-verified with no regression.
 
+**Super-linear rent lifts diversity but a specialist needs territory persistence (Exp 26, 2026-07-14).** The
+authorship royalty was made to scale super-linearly with a cell's cumulative read-traffic (a per-cell
+`read_hits` counter, reset on authoring; fraction = `min(hits, BITS_PER_BYTE-1)/BITS_PER_BYTE` of the
+reader's gain — constant-free, zero-sum, non-lethal). This corrected the Exp-25 flatness in the intended
+direction: action entropy stayed elevated (`Hact ≈ 2.0–2.45`, the pure-depletion level, versus ~1.3 under
+flat rent) and heavily-read hotspots emerged (`toptraf` 894 → 9 879). But no specialist formed — the maximum
+holding any author accumulated (`tophold`) never exceeded ~6 cells while the author count kept rising, i.e.
+broad dabbling persisted. The cause is structural: super-linear rent rewards *holding* high-traffic
+territory, but nothing lets an author *hold* it — any organism can re-author a depleted cell and seize
+ownership, so cells churn and income cannot concentrate; late in the run the churn actively destabilises the
+colony (entropy and population decay). Rent depth is therefore necessary but insufficient without a **property
+right**: the next lever is ownership persistence (re-authoring an owned, still-fuelled cell must cost more
+than claiming vacuum, or an owner's cheap refresh must keep held cells live) so a builder can defend a patch,
+income concentrates, and a stable division of labour can lift capability (Rule-22 logic). `read_hits` and the
+`tophold`/`toptraf` probes are observation-only instruments; the default economy is byte-identical and was
+re-verified with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

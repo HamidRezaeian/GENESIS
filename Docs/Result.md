@@ -1474,6 +1474,58 @@ depth-scaled rent + a text-independent authored value**.
 
 ---
 
+## 🧪 Experiment 26 — Super-Linear Rent Preserves Diversity and Concentrates Traffic, but No Specialist Forms Without Territory Persistence (2026-07-14)
+
+Exp 25 authored persistent structure but stayed shallow: a *flat* per-bit royalty (~4 energy vs the ~32 a
+read earns) made authoring marginal side-income ~150 orgs dabbled in. This experiment adds the Exp-24
+recipe's third leg — **rent that scales super-linearly with a cell's usefulness** — to test whether a livable
+specialist builder niche then forms.
+
+**Design (no new constant; Rules 17/9/10 respected).** The authorship royalty fraction now grows with a
+cell's cumulative **read-traffic** (`read_hits`, a per-cell integer counter reset on each authoring): a cell
+read once yields the author `1/BITS_PER_BYTE` of the reader's gain, a heavily-read cell up to
+`(BITS_PER_BYTE-1)/BITS_PER_BYTE`. So income **concentrates on whoever holds high-traffic (useful, hence
+popular) territory** — a specialist should out-earn a dabbler. Constant-free (a pure integer-hit ratio ×
+the reader's own gain), strictly zero-sum (the reader always keeps ≥ `1/BITS_PER_BYTE`), non-lethal (capped
+at the reader's surplus above its body floor). New telemetry: `tophold` (max cells held by one author),
+`toptraf` (peak per-cell traffic).
+
+**Result (live, `STIGMERGY + DEPLETE regrow 128 + seeded write`, vs Exp 25 flat rent):**
+
+| signal | Exp 25 (flat) | Exp 26 (super-linear) |
+|---|---|---|
+| `Hact` | ~1.1–1.5 (suppressed) | **~2.0–2.45 (elevated, matches pure-depletion)** |
+| `toptraf` (peak cell traffic) | — | **894 → 9 879 (heavy-traffic cells form)** |
+| `tophold` (max cells/author) | ~2 | **caps at 4–6 (still no specialist)** |
+| `authors` | ~150 | 31 → 185 (still broad) |
+
+**Two findings:**
+
+1. **Super-linear rent preserves diversity + concentrates traffic (positive).** Unlike flat rent (which
+   *suppressed* `Hact` to ~1.3), traffic-scaled rent keeps `Hact` elevated (~2.0–2.4, the pure-depletion
+   level) for most of the run, and `toptraf` climbs into the thousands — some cells become heavily-read
+   hotspots, so the super-linear mechanism genuinely engages and does **not** collapse behavioral diversity.
+2. **No specialist forms — territory turnover is the wall (negative).** `tophold` never exceeds 6: no author
+   accumulates a holding to *live on*, and `authors` keeps climbing (broad dabbling persists). Diagnosis:
+   **super-linear rent rewards *holding* high-traffic cells, but nothing lets an author *hold* them** — any
+   org can re-author a depleted cell and seize ownership, so cells churn constantly and income can never
+   concentrate. Rent *depth* is necessary but insufficient; the missing mechanic is **ownership persistence /
+   territory defense** (a held cell should resist overwrite, or the owner should refresh it cheaply, so a
+   builder can defend a patch long enough to specialise). Late in the run `Hact` decays (2.4 → 1.06) and
+   population dips as the churn destabilises — turnover is actively costly, not merely neutral.
+
+**Consequence.** The economics moved the right way (depth-scaled rent lifts/keeps diversity and builds
+traffic hotspots) but the **division of labour still does not crystallise** because there is no property
+right — this is a *territory-persistence* gap, not a rent-shape gap. Next lever: give ownership persistence
+(e.g. re-authoring an *owned, still-fuelled* cell costs more than claiming vacuum/depleted, or an owner's
+cheap refresh resets fuel so held cells stay live) so a specialist can defend high-traffic territory, income
+concentrates, and — per Exp 22 — a stable builder/reader division can finally lift capability. `read_hits`
+and the `tophold`/`toptraf` probes are kept as instruments (observation-only, Rule 9↔6); the default economy
+is byte-identical and was re-verified with no regression. Branches: flat-rent-too-shallow closed (25);
+**super-linear rent lifts diversity + traffic but needs territory persistence for a specialist niche (26)**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

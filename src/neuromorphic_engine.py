@@ -366,7 +366,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -790,15 +790,25 @@ def world_tick_numba(
                     read_fuel[nxt] -= gain
                 energy[org] += gain
                 if STIGMERGY and gain > np.float32(0.0):
-                    # AUTHORSHIP ROYALTY (Exp 25): reading an OWNED cell pays its author rent — a per-bit
-                    # slice (gain/BITS_PER_BYTE, constant-free) transferred reader->owner. Zero-sum (never
-                    # minted), non-lethal (capped at the reader's surplus above its body-subsistence
-                    # floor). Rent scales with the reader's GAIN, which is larger for harder authored text
-                    # a good reader solves well -> authoring rich content out-earns trivial scribble
-                    # (depth-pays-more). A distinct income stream from solo reading = a builder niche.
+                    # AUTHORSHIP ROYALTY (Exp 26: SUPER-LINEAR, traffic-scaled). Exp 25 paid a FLAT per-bit
+                    # slice (gain/BITS_PER_BYTE ~= 4 vs the ~32 a read earns) — negligible, so authoring was
+                    # marginal side-income ~150 orgs dabbled in, never a livable niche. Fix (Exp-24 recipe's
+                    # 3rd leg, depth-pays-MORE): the rent FRACTION grows with the cell's cumulative
+                    # READ-TRAFFIC — a cell read once yields the author 1/BITS_PER_BYTE of the reader's gain,
+                    # a heavily-read cell up to (BITS_PER_BYTE-1)/BITS_PER_BYTE. So income CONCENTRATES on the
+                    # author who holds high-traffic (useful/hard, hence popular) territory = a specialist
+                    # builder out-earns a dabbler, which is what makes a niche livable and a division of
+                    # labour form (Exp 22). Constant-free: the fraction is (min(hits, BITS_PER_BYTE-1)) /
+                    # BITS_PER_BYTE, a pure integer-hit ratio times the reader's own gain; the reader always
+                    # keeps >= 1/BITS_PER_BYTE, so it is strictly zero-sum and never lethal (capped at the
+                    # reader's surplus above its body-subsistence floor).
                     owner = cell_owner[nxt]
                     if owner != -1 and owner != org and alive[owner]:
-                        roy = gain / BITS_PER_BYTE
+                        read_hits[nxt] += 1
+                        slices = read_hits[nxt]
+                        if slices > BITS_PER_BYTE - 1:
+                            slices = BITS_PER_BYTE - 1
+                        roy = gain * np.float32(slices) / BITS_PER_BYTE
                         rfloor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
                         surplus = energy[org] - rfloor
                         if roy > surplus:
@@ -910,6 +920,7 @@ def world_tick_numba(
                         ram_substrate[pos] = np.uint8(org_char_val)
                         cell_owner[pos] = org
                         read_fuel[pos] = CELL_STATES   # authored cell starts fully fuelled
+                        read_hits[pos] = 0             # fresh territory: traffic counter resets
                         energy[org] -= CELL_STATES
 
             elif best_a == OUT_REPRODUCE:

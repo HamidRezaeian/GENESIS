@@ -213,6 +213,10 @@ DEPLETE_REGROW = float(os.environ.get("GENESIS_DEPLETE_REGROW", str(CELL_STATES)
 # p (-1 = unowned book/vacuum). Reading an owned cell pays its owner a royalty (in-kernel). Cleared
 # where the scroll is re-laid or a cell reverts to vacuum. Unused when STIGMERGY off.
 g_cell_owner = np.full(RAM_SIZE, -1, dtype=np.int32)
+# Exp 26 per-cell cumulative read-traffic (super-linear rent). Counts reads of an OWNED cell since it
+# was authored; the authorship royalty fraction grows with it (a popular cell pays its author more),
+# reset to 0 on each (re)authoring. Unused when STIGMERGY off.
+g_read_hits = np.zeros(RAM_SIZE, dtype=np.int32)
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
@@ -720,7 +724,7 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits
     )
 
     for i in range(MAX_ORGANISMS):
@@ -911,7 +915,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits
         )
         
         for i in range(n_births):
@@ -1138,7 +1142,13 @@ def sim_loop():
                 n_owned = int(np.count_nonzero(owned_mask))
                 owners = g_cell_owner[owned_mask]
                 n_authors = int(np.unique(owners).size) if n_owned else 0
-                stig_line = f" | authored={n_owned} authors={n_authors}"
+                # Exp 26: is a SPECIALIST forming? max cells one author holds + peak per-cell traffic.
+                if n_owned:
+                    top_hold = int(np.max(np.bincount(owners)))
+                    top_traffic = int(np.max(g_read_hits[owned_mask]))
+                else:
+                    top_hold = top_traffic = 0
+                stig_line = f" | authored={n_owned} authors={n_authors} tophold={top_hold} toptraf={top_traffic}"
 
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "

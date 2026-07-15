@@ -397,6 +397,24 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      text-INDEPENDENT → deeper half of Wall 2 remains. `GENESIS_STIGMERGY`+`GENESIS_STIG_SEED` instruments
      (default OFF); default byte-identical, no regression (4th rogue-leftover-sim recurrence cliffed an interim
      check, killed+re-verified). NEXT: super-linear depth-scaled rent + text-independent authored value.
+- ⚠️ **Super-linear rent PRESERVES diversity + concentrates traffic, but NO specialist forms without
+     TERRITORY PERSISTENCE (Exp 26, 2026-07-14).** Added the Exp-24 recipe's 3rd leg: royalty fraction scales
+     with a cell's cumulative READ-TRAFFIC (`read_hits` counter, reset on authoring) — 1 read pays
+     1/BITS_PER_BYTE of reader gain, a hot cell up to (BITS_PER_BYTE-1)/BITS_PER_BYTE (no new constant, pure
+     integer-hit ratio × reader gain; zero-sum reader keeps ≥1/8; non-lethal). +telemetry `tophold` (max
+     cells/author), `toptraf` (peak cell traffic). **POSITIVE:** vs Exp-25 flat rent (which SUPPRESSED Hact to
+     ~1.3), super-linear rent keeps Hact ELEVATED ~2.0-2.45 (pure-depletion level) + `toptraf` climbs 894→9879
+     (heavy-traffic hotspots form = the mechanism engages, doesn't collapse diversity). **NEGATIVE:** `tophold`
+     caps at 4-6 — NO author accumulates a holding to LIVE on; `authors` keeps climbing (31→185, broad
+     dabbling persists). **Diagnosis: super-linear rent rewards HOLDING high-traffic cells but nothing lets an
+     author HOLD them** — any org re-authors a depleted cell + seizes ownership → constant churn → income can't
+     concentrate. Rent DEPTH is necessary but insufficient; missing = **ownership PERSISTENCE / territory
+     defense** (a held cell resists overwrite, or owner cheaply refreshes it). Late-run Hact decays 2.4→1.06 +
+     pop dips = churn is actively destabilising, not neutral. **NEXT: give ownership persistence** (re-authoring
+     an owned+fuelled cell costs more than claiming vacuum/depleted; or owner's cheap refresh keeps held cells
+     live) so a specialist defends territory → income concentrates → stable builder/reader division lifts
+     capability (Exp 22). `read_hits`+`tophold`/`toptraf` kept as obs-only instruments; default byte-identical,
+     no regression. Branches: flat-rent-shallow closed (25); super-rent-needs-territory-persistence (26).
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was
