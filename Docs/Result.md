@@ -1622,6 +1622,69 @@ authoring and reading must be decoupled in substrate, not merely in byte value (
 
 ---
 
+## 🧪 Experiment 29 — Substrate Decoupling (Parallel Canvas): The Fuel Coupling Breaks, but a New Energy-Currency Coupling Bankrupts the Colony (2026-07-14)
+
+Exp 28 diagnosed the wall: because authoring reused depleted *scroll* cells, every ownership holding-cost was
+a holding-cost on the shared reading fuel → cannibalisation → collapse. The fix is to give authoring its own
+**spatially-separate territory**. This experiment was **adversarially vetted before building** (a 5-design
+workflow panel — parallel-canvas, annotation-layer, food-plane, two-pool, migration-niche — each critiqued by
+coupling and ascent lenses); the surviving synthesis was **Parallel-Canvas + surprise-gate**, built as
+`GENESIS_CANVAS`.
+
+**Design (default-OFF, requires DEPLETE+STIGMERGY, no new constant, N_OUTPUT=6 kept).** A **canvas band**
+`[CANVAS_LO, CANVAS_HI)` of one scroll-width is laid immediately after the reading scroll (bounds derived from
+`LIB_START + BOOK_TARGET_BYTES`). Authoring (CONSUME-overload) is **index-confined** to the canvas, so a
+scroll cell can *never* be owned — ownership upkeep/lapse physically cannot touch survival fuel (the Exp-28
+fix, structurally). The canvas abuts the scroll so a forward-saccading reader walks onto it; the scroll's
+Exp-24 carrying capacity makes the uncrowded canvas the higher-marginal-income frontier readers migrate to.
+Royalty is **surprise-gated** (rent pays only when the read cell differs from the previous — an echo/constant
+run earns the builder zero, the Wall-2 anti-farm). Optional `GENESIS_CANVAS_SEED` tiles the book into the
+canvas so it pays reading income from t=0.
+
+**Result (live sweep across the seed/reflex parameter space):**
+
+| config | population | authoring | migration (`oncanvas`) | outcome |
+|---|---|---|---|---|
+| seeded canvas + write-reflex | 585→590→264→**12** | `authored 5747→5910` (whole band), `authors 217→391` | 40→168→**596** | **migration works, mass-authoring bankrupts** |
+| seeded canvas, no write-reflex | 236→48→**12** | `authored 5403→5606`, `authors ~188` | 121→37→23 | same bankruptcy |
+| unseeded + write-reflex | cold **12** from t=1, `reads=0` | `authored 2` | 0 | founders author vacuum, never bootstrap reading |
+| unseeded, no write-reflex | sustains 322→463 | `authored ~5` (barren) | ~2 | **sustains but barren** (Exp-25b) |
+
+**Diagnosis — the intended wall broke; a new one replaced it.** Two genuinely new positive results, both
+first-time achievements in the whole arc:
+1. **The fuel decoupling WORKED.** Reading fuel was never cannibalised — the Exp-28 collapse mechanism (leak
+   draining the survival substrate) is *structurally impossible* under index-confined ownership, and the runs
+   confirm it (survival never died *from fuel starvation*).
+2. **Reader migration WORKED.** `oncanvas` climbed 40→168→**596** — for the first time readers left the
+   survival scroll and colonised the authored territory *en masse*, defeating the Exp-25b "nobody visits
+   barren territory" barrenness that blocked every prior stigmergy build. The geometry (abutting band) +
+   carrying-capacity gradient is a real migration pull, no artificial lure.
+
+But the colony still collapses, via **the failure mode the vetting panel predicted precisely: energy-currency
+coupling ("a new form of Exp-28").** The fuel pools are decoupled, but *energy* is one shared currency —
+authoring costs `CELL_STATES` per cell, and once migration succeeds, hundreds of orgs pile onto the canvas and
+author simultaneously (`authored → 5910`, nearly the entire 6000-cell band), draining collective energy far
+faster than royalty returns it → mass starvation → `pop → 12`. Seeding makes the canvas attractive enough that
+migration *over*-succeeds into a build-frenzy; not seeding leaves it barren (no migration, no authoring);
+seeding the write-reflex without content makes founders author vacuum and never bootstrap. The three poles
+bracket a coupling that the *spatial* decoupling does not address: **authoring is a collective-action /
+tragedy-of-the-commons problem in the shared energy pool** — individually rational authoring (claim a cell,
+hope for rent) is collectively bankrupting when everyone can do it at once with delayed, uncertain payoff.
+
+**Consequence — the decoupling is necessary and now proven achievable, but insufficient alone.** The missing
+piece is not more spatial separation (that works) but a **throttle on the rate of collective energy conversion
+into authored territory** — authoring must be individually costly-enough or rate-limited-enough that it cannot
+become a synchronous colony-wide drain, while still being profitable for a *specialist minority* (the Exp-22
+division of labour). Candidate levers (unbuilt): author cost that scales with how much canvas one already owns
+(diminishing returns → self-limits hoarding and frenzies); or authoring gated on a scarcer prerequisite than
+raw energy; or a slower migration pull so builders and readers reach the canvas in balance rather than a mob.
+`GENESIS_CANVAS`/`GENESIS_CANVAS_SEED` kept as instruments (default-OFF); the default economy is byte-identical
+and was re-verified (`pop=600, Universe N≈25.6k, ext=0 refuge=0`, no canvas telemetry). Branches: churn (26),
+freeze (27), leak-cannibalises-reading (28), **energy-currency-frenzy (29) — spatial fuel decoupling works +
+migration works, but shared-energy authoring is a collective-action collapse that needs a conversion throttle**.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

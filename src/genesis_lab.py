@@ -101,7 +101,10 @@ STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
 STIG_LEASE = os.environ.get("GENESIS_STIG_LEASE", "0") == "1"
 if STIG_LEASE:
     STIG_PERSIST = True  # lease uses the owner-only refresh mechanic
-os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "") + ("_lease" if STIG_LEASE else "")
+# Parallel authored canvas (Exp 29): authoring lives in a spatially-separate band, a second compile-time
+# branch, so key the cache. Requires STIGMERGY+DEPLETE to matter.
+CANVAS = os.environ.get("GENESIS_CANVAS", "0") == "1"
+os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "") + ("_lease" if STIG_LEASE else "") + ("_canvas" if CANVAS else "")
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
@@ -128,6 +131,12 @@ RESUME_BRAIN = os.environ.get("GENESIS_RESUME", "0") == "1"
 # Fixed centred start address of the contiguous library scroll — the anchor for the Exp 20
 # ascent-frontier probe (a book position maps to a difficulty band via its offset from here).
 LIB_START = contiguous_library_start(RAM_SIZE, BOOK_TARGET_BYTES)
+# Exp 29 canvas band: one scroll-width of cells laid immediately AFTER the reading scroll, so a
+# forward-saccading reader walks straight onto it. Bounds DERIVE from LIB_START + BOOK_TARGET_BYTES
+# (no tuned constant). Authoring is index-confined here; a scroll cell can never be owned.
+CANVAS_LO = (LIB_START + BOOK_TARGET_BYTES) % RAM_SIZE
+CANVAS_HI = CANVAS_LO + BOOK_TARGET_BYTES
+CANVAS_SEED = os.environ.get("GENESIS_CANVAS_SEED", "0") == "1"
 # Cumulative offset fractions of the 00_Ascent stage boundaries (bootstrap|successor|carry|arith),
 # matching Books/generate_ascent.py's FRAC. Observation-only: on a non-Ascent book these are just
 # scroll quartiles and the band labels lose meaning, but the probe never affects the sim.
@@ -732,7 +741,7 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI
     )
 
     for i in range(MAX_ORGANISMS):
@@ -755,6 +764,12 @@ def sim_loop():
             print(f"[BOOKS] WARNING: could not inject {BOOK_CATEGORY}/{BOOK_NAME}; library empty.")
         print(f"[BOOKS] Economy=books | library={BOOK_CATEGORY}/{BOOK_NAME} (contiguous scroll) "
               f"target={BOOK_TARGET_BYTES}B seed={int(CELL_STATES)}(one cell) currency=CELL_STATES({int(CELL_STATES)}/cell)")
+        # Exp 29: optionally SEED the canvas with the book too, so it pays reading income from t=0 and
+        # readers migrate onto it before any authoring exists (solves the Exp-25b cold-start barrenness).
+        # Owner stays -1 (unclaimed readable content); an org CONSUME-claims a cell to start earning rent.
+        if CANVAS and CANVAS_SEED:
+            inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES, at=CANVAS_LO)
+            print(f"[CANVAS] authored band=[{CANVAS_LO},{CANVAS_HI}) seeded with book (readable from t=0)")
 
     # RESUME (opt-in, GENESIS_RESUME=1). Seed the founder cohort from the persistent best-ever
     # hall-of-fame so capability compounds across sessions instead of cold-starting every run. The
@@ -910,16 +925,15 @@ def sim_loop():
         # (=CELL_STATES) barely binds; low tightens the carrying capacity. Derived from CELL_STATES,
         # no new constant; a cheap vectorised op, only when DEPLETE is on.
         if DEPLETE:
-            if STIG_LEASE:
-                # LEAKY OWNERSHIP (Exp 28, Rule-10 decay GRADIENT). Unowned cells regrow at the full
-                # free rate (reading economy untouched). OWNED cells regrow at a REDUCED rate
-                # (DEPLETE_REGROW / BITS_PER_BYTE = 1/8 the free rate, hardware-derived) — holding
-                # territory costs upkeep the owner must top up by actively refreshing (in-kernel, costs
-                # CELL_STATES), but a HOT cell still nets positive so authoring is not strictly a loss
-                # (the binary no-regrow version made authoring unprofitable -> authored~0). A fully
-                # neglected owned cell still drains toward empty; at fuel <= 0 the claim LAPSES (owner
-                # cleared) so the cell recycles and is contestable — persistent enough to hold, leaky
-                # enough never to ossify into a founder toll-booth (Exp 27 freeze). Vectorised.
+            if STIG_LEASE or CANVAS:
+                # LEAKY OWNERSHIP (Exp 28) / CANVAS (Exp 29): unowned cells regrow at the full free rate
+                # (the reading scroll — survival — is untouched). OWNED cells regrow at a REDUCED rate
+                # (DEPLETE_REGROW / BITS_PER_BYTE = 1/8 the free rate, hardware-derived) so holding costs
+                # upkeep; a neglected owned cell drains to empty and its claim LAPSES (owner cleared ->
+                # recycles, contestable). Under CANVAS ownership is INDEX-CONFINED to the canvas band, so
+                # this owned-cell leak/lapse can ONLY ever touch canvas cells — the Exp-28 cannibalisation
+                # of the shared reading substrate is structurally impossible (a scroll cell is never
+                # owned, so it always takes the full-regrow branch). Vectorised.
                 owned = g_cell_owner >= 0
                 g_read_fuel[~owned] = np.minimum(g_read_fuel[~owned] + np.float32(DEPLETE_REGROW),
                                                  np.float32(CELL_STATES))
@@ -943,7 +957,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI
         )
         
         for i in range(n_births):
@@ -1165,7 +1179,7 @@ def sim_loop():
             # Exp 25 stigmergy telemetry (observation-only): count authored (owned) cells + distinct
             # live authors — does authoring emerge + persist under bounded reading?
             stig_line = ""
-            if STIGMERGY:
+            if STIGMERGY or CANVAS:
                 owned_mask = g_cell_owner >= 0
                 n_owned = int(np.count_nonzero(owned_mask))
                 owners = g_cell_owner[owned_mask]
@@ -1177,6 +1191,13 @@ def sim_loop():
                 else:
                     top_hold = top_traffic = 0
                 stig_line = f" | authored={n_owned} authors={n_authors} tophold={top_hold} toptraf={top_traffic}"
+                # Exp 29: canvas occupancy — do readers MIGRATE off the scroll onto the authored band?
+                if CANVAS:
+                    on_canvas = 0
+                    for i in range(MAX_ORGANISMS):
+                        if g_alive[i] and CANVAS_LO <= int(g_positions[i]) < CANVAS_HI:
+                            on_canvas += 1
+                    stig_line += f" oncanvas={on_canvas}"
 
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "

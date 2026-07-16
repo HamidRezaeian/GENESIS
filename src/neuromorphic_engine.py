@@ -114,6 +114,25 @@ STIG_LEASE = os.environ.get("GENESIS_STIG_LEASE", "0") == "1"
 if STIG_LEASE:
     STIG_PERSIST = True   # lease reuses the owner-only refresh mechanic (in-kernel write path)
 
+# PARALLEL AUTHORED CANVAS (Exp 29, default-OFF, requires STIGMERGY+DEPLETE) — the SUBSTRATE DECOUPLING.
+# Exps 25-28 welded authoring to the reading scroll (author a DEPLETED scroll cell), so every
+# ownership holding-cost was a holding-cost on the shared reading fuel -> Exp-28 cannibalisation (leak
+# drained the survival substrate -> collapse). Fix: give authoring its OWN spatial territory — a CANVAS
+# band laid immediately AFTER the reading scroll [CANVAS_LO, CANVAS_HI), one scroll-width wide (bounds
+# DERIVE from LIB_START + BOOK_TARGET_BYTES, no tuned constant). Authoring is INDEX-CONFINED to the
+# canvas: a scroll cell can NEVER be owned, so ownership upkeep/lapse physically cannot touch survival
+# fuel. The canvas abuts the scroll so a forward-saccading reader WALKS onto it (defeats Exp-25b
+# "nobody visits vacuum" by geometry); the scroll's Exp-24 carrying capacity makes the uncrowded canvas
+# the higher-marginal-income frontier readers migrate to. Ownership reuses the Exp-27 non-seizable-
+# living-owner rule + the Exp-28 leak/lapse gradient, but CANVAS-SCOPED. Plus the Exp-1(FRONTIER)
+# SURPRISE GATE: royalty pays the owner ONLY when the read cell differs from the previous
+# (next_byte != ram[pos]) — an echo/constant-run authored cell (predictable, Exp-12 zero-information)
+# earns the builder ZERO rent, forcing must-compute authored content (the Wall-2 anti-farm). Compile-
+# time gated -> byte-identical when off. Authoring reuses OUT_CONSUME (N_OUTPUT=6 kept, zero decode
+# risk); the authored VALUE is the org's 8-bit vocal byte = the Exp-21 behavioural-expression widening
+# (256^N states over an N-cell passage) realised without changing output count.
+CANVAS = os.environ.get("GENESIS_CANVAS", "0") == "1"
+
 OUT_JMP_FWD    = 0
 OUT_JMP_BCK    = 1
 OUT_JMP_FWD_10 = 2
@@ -393,7 +412,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -816,7 +835,7 @@ def world_tick_numba(
                         gain = avail
                     read_fuel[nxt] -= gain
                 energy[org] += gain
-                if STIGMERGY and gain > np.float32(0.0):
+                if (STIGMERGY or CANVAS) and gain > np.float32(0.0):
                     # AUTHORSHIP ROYALTY (Exp 26: SUPER-LINEAR, traffic-scaled). Exp 25 paid a FLAT per-bit
                     # slice (gain/BITS_PER_BYTE ~= 4 vs the ~32 a read earns) — negligible, so authoring was
                     # marginal side-income ~150 orgs dabbled in, never a livable niche. Fix (Exp-24 recipe's
@@ -829,8 +848,14 @@ def world_tick_numba(
                     # BITS_PER_BYTE, a pure integer-hit ratio times the reader's own gain; the reader always
                     # keeps >= 1/BITS_PER_BYTE, so it is strictly zero-sum and never lethal (capped at the
                     # reader's surplus above its body-subsistence floor).
+                    # EXP 29 SURPRISE GATE (Wall-2 anti-farm): under CANVAS, pay rent ONLY when the read
+                    # cell DIFFERS from the previous cell (next_byte != ram[pos]) — an echo/constant-run
+                    # authored cell (predictable by copying the eye, Exp-12 zero-information) earns the
+                    # builder NOTHING, so trivial scribble cannot farm rent and only must-COMPUTE authored
+                    # content pays. Uses two in-kernel bytes, no new state/constant.
+                    surprise_ok = (not CANVAS) or (next_byte != ram_substrate[pos])
                     owner = cell_owner[nxt]
-                    if owner != -1 and owner != org and alive[owner]:
+                    if surprise_ok and owner != -1 and owner != org and alive[owner]:
                         read_hits[nxt] += 1
                         slices = read_hits[nxt]
                         if slices > BITS_PER_BYTE - 1:
@@ -932,6 +957,22 @@ def world_tick_numba(
                     ram_substrate[pos] = 0x00
                     if energy[org] > ATP_MAX:
                         energy[org] = ATP_MAX
+                elif CANVAS and 32 <= org_char_val <= 126 and canvas_lo <= pos < canvas_hi and (
+                        cell_owner[pos] == -1 or cell_owner[pos] == org or not alive[cell_owner[pos]]):
+                    # CANVAS AUTHORING (Exp 29): author ONLY inside the canvas band [canvas_lo,canvas_hi)
+                    # — index-confined, so a scroll cell can NEVER be owned and ownership upkeep/lapse can
+                    # physically never touch the survival substrate (the Exp-28 fix). A non-owner may
+                    # claim only an unowned / dead-owner cell (Exp-27 non-seizable-living-owner); the
+                    # owner may refresh its OWN cell to defend it. Writes the org's 8-bit vocal byte (the
+                    # Exp-21 expression channel), claims ownership, refuels the cell. Cost = CELL_STATES.
+                    if energy[org] >= CELL_STATES:
+                        ram_substrate[pos] = np.uint8(org_char_val)
+                        was_mine = cell_owner[pos] == org
+                        cell_owner[pos] = org
+                        read_fuel[pos] = CELL_STATES
+                        if not was_mine:
+                            read_hits[pos] = 0
+                        energy[org] -= CELL_STATES
                 elif STIGMERGY and 32 <= org_char_val <= 126 and (
                         val == 0x00
                         or (STIG_PERSIST and 32 <= val <= 126 and val != 0x55 and cell_owner[pos] == org)

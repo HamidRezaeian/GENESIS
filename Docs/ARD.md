@@ -446,6 +446,28 @@ and rent act on an authored resource without draining reading fuel. `GENESIS_STI
 destabilising A/B extreme (default-OFF); the default economy is byte-identical and was re-verified with no
 regression.
 
+**Substrate decoupling built — the fuel coupling breaks and migration works, but a new energy-currency
+coupling bankrupts the colony (Exp 29, 2026-07-14).** After adversarial vetting of five decoupling designs, the
+surviving synthesis `GENESIS_CANVAS` (default-OFF, requires DEPLETE+STIGMERGY, no new constant, `N_OUTPUT`=6
+kept) places a **canvas band** of one scroll-width immediately after the reading scroll (bounds derived from
+`LIB_START + BOOK_TARGET_BYTES`), with authoring **index-confined** to it so a scroll cell can never be owned —
+ownership upkeep and lapse therefore cannot touch survival fuel, making the Exp-28 cannibalisation structurally
+impossible. The band abuts the scroll (a forward-saccading reader walks onto it) and rent is surprise-gated so
+echo/constant-run content earns the builder nothing. Two first-time positive results: the **fuel decoupling
+holds** (reading fuel is never drained), and **reader migration succeeds** (`oncanvas` climbs 40→168→596 —
+readers colonise the authored territory en masse, defeating the Exp-25b barrenness that blocked every prior
+stigmergy build). But the colony still collapses (`pop→12`) through exactly the failure the vetting panel
+predicted: **the fuel pools are decoupled but energy is a single shared currency.** Once migration succeeds,
+hundreds of organisms author simultaneously at `CELL_STATES` per cell (`authored→5910`, nearly the whole band),
+draining collective energy faster than royalty returns it → mass starvation. Authoring is thus a
+tragedy-of-the-commons in the shared energy pool: individually rational, collectively bankrupting when
+synchronous. The spatial decoupling is necessary and now proven achievable, but insufficient alone — the next
+lever is a **throttle on the collective rate of energy→territory conversion** (an author cost that scales with
+canvas already owned, a scarcer prerequisite than raw energy, or a slower migration pull), so that authoring
+remains profitable for a specialist minority (the division of labour) without becoming a synchronous colony-wide
+drain. `GENESIS_CANVAS`/`GENESIS_CANVAS_SEED` are kept as instruments (default-OFF); the default economy is
+byte-identical and was re-verified with no regression.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

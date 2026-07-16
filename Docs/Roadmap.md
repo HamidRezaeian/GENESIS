@@ -457,6 +457,27 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      property-right refinement collides with survival. `GENESIS_STIG_LEASE` kept as the destabilising A/B
      extreme (default-OFF); default byte-identical, no regression. **NEXT: decouple authoring from the reading
      scroll — a text-independent authored territory (the open half of Wall 2).**
+- ⚠️ **Substrate decoupling BUILT — the fuel coupling breaks + migration works, but a NEW energy-currency
+     coupling bankrupts the colony (Exp 29, 2026-07-14).** Adversarially vetted 5 decoupling designs (workflow,
+     2 refute lenses); built the surviving synthesis `GENESIS_CANVAS` (default-OFF, requires DEPLETE+STIGMERGY,
+     no new constant, N_OUTPUT=6 kept): a CANVAS band `[LIB_START+BOOK_TARGET_BYTES, +BOOK_TARGET_BYTES)` laid
+     after the scroll, authoring INDEX-CONFINED to it (a scroll cell can never be owned → ownership upkeep/lapse
+     structurally cannot touch survival fuel = the Exp-28 fix), abutting the scroll so readers walk onto it,
+     royalty SURPRISE-GATED (echo/constant-run pays zero rent = Wall-2 anti-farm), optional `GENESIS_CANVAS_SEED`
+     tiles the book in so it pays from t=0. **TWO FIRST-TIME POSITIVES:** (1) the fuel decoupling WORKS — reading
+     fuel is never cannibalised (Exp-28 collapse mechanism structurally impossible); (2) reader MIGRATION works —
+     `oncanvas` climbs 40→168→**596**, readers colonise authored territory en masse, defeating the Exp-25b
+     barrenness that blocked every prior stigmergy build. **BUT still collapses (pop→12) via the vetting-PREDICTED
+     failure: energy-currency coupling.** Fuel pools are decoupled but ENERGY is one shared currency — once
+     migration succeeds, hundreds author simultaneously at CELL_STATES/cell (`authored→5910`, whole band), draining
+     collective energy faster than royalty returns → mass starvation. Parameter sweep brackets it: seeded+reflex →
+     migration over-succeeds into a build-frenzy → bankruptcy; unseeded → barren (no migration) or founders author
+     vacuum and never bootstrap. **Authoring is a tragedy-of-the-commons in the shared energy pool: individually
+     rational, collectively bankrupting when synchronous.** Decoupling is NECESSARY + now proven ACHIEVABLE but
+     INSUFFICIENT alone — needs a THROTTLE on collective energy→territory conversion (author cost scaling with
+     canvas already owned = diminishing returns; or a scarcer prerequisite than raw energy; or a slower migration
+     pull). `GENESIS_CANVAS`/`_SEED` kept as instruments (default-OFF); default byte-identical, no regression.
+     Branches: churn (26), freeze (27), leak-cannibalises-reading (28), **energy-currency-frenzy (29)**.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was
