@@ -1731,6 +1731,69 @@ permanent A/B instrument (default-OFF); default (learning-on) byte-identical, re
 
 ---
 
+## 🧪 Experiment 31 — STDP Diagnosis: Three Causes, and the Root Is No Supervision (2026-07-16)
+
+Following Rule 18 (diagnose before adding mechanics), two orthogonal diagnostic ablations isolated *why*
+STDP is net-negative (Exp 30). A code read first settled the cheapest hypothesis: **the STDP sign is
+correct** — pre-before-post potentiates, post-before-pre depresses (Hebbian, not anti-Hebbian). The live
+A/B then separated the rest (`GENESIS_STDP_COSTONLY` = keep energy cost, freeze weight; `GENESIS_STDP_DIV`
+= scale steps down):
+
+| mode | population | brain `N` | solve-rate |
+|---|---|---|---|
+| NOLEARN | 599 flat | 25.8k flat | **~51 %** |
+| ON (full STDP) | 596 → 423 | −34 % sheds | ~23 % |
+| DIV=32 (graded, small steps) | 599 flat | ~25k flat | ~5 % → **3 %** |
+| COSTONLY (cost only) | cold-cliff → 12 | — | — |
+
+**Three real causes:** (1) **bang-bang step** — the current rule could move a weight ~12 % of its range in
+one event, slamming good decoded weights to the rail; this caused the shedding+collapse and is FIXED by
+small steps (DIV=32 → population and N go flat). (2) **metabolic overhead** — COSTONLY cold-cliffs the
+bootstrap, so the raw STDP energy tax alone can starve founders. (3) **ROOT: no supervision** — even the
+corrected graded rule still makes reading slowly die (23 %→3 %), because plain STDP is *unsupervised*: it
+reinforces any temporal coincidence with no reward/error signal, so it cannot tell a *correct* prediction
+from a wrong one and drifts the decode-good weights toward task-irrelevant input correlations. Fixing the
+step stops the catastrophe but not the slow rot, because the rule optimises coincidence, not correctness.
+
+**Verdict — substrate NOT falsified; the learning rule is diagnosed and fixable in a specific direction.**
+Pure two-factor Hebbian STDP cannot be load-bearing because the task rewards *correct* prediction and STDP
+is blind to correctness. The indicated fix is **three-factor / neuromodulated plasticity**: multiply the
+weight update by a success signal — the organism's own reading-reward energy — so a coincidence is
+reinforced only when the prediction was actually right (eligibility × reward). This is more biologically
+faithful (Rule 6/11: real synapses are neuromodulated), Rule-9 autotelic (the reward is the economy's own
+reading income, not a human error label), and the first lever in the project that targets the MIND rather
+than the market. `GENESIS_STDP_COSTONLY`/`GENESIS_STDP_DIV` kept as permanent diagnostic instruments
+(default = current behaviour, byte-identical). Next: build three-factor STDP and A/B it against NOLEARN.
+
+---
+
+## 🧪 Experiment 32 — Three-Factor STDP Beats Ablation EARLY, Then Still Drifts: the Problem Is Credit Assignment (2026-07-16)
+
+The Exp-31 fix was built: `GENESIS_STDP3` scales the weight update by a per-organism neuromodulator = the
+organism's own normalised reading reward last tick (one-tick eligibility delay), so plasticity damps toward
+zero when the organism is not comprehending. Combined with the small-step fix (`GENESIS_STDP_DIV=32`) — the
+"corrected rule" — and A/B'd vs the NOLEARN baseline (solve ~51 % flat):
+
+| phase | population | brain `N` | solve-rate |
+|---|---|---|---|
+| STDP3+DIV32, early | 599 | 26 267 | **~78 %** (project best) |
+| STDP3+DIV32, steady | 599 → 251 | 26 267 → 10 611 (sheds) | 78 % → ~29 % |
+
+**Partial success — a real milestone, plus a precise next target.** For the first time a learning rule pushed
+comprehension *above* the no-learning baseline (78 % vs 51 %) — **constructive learning IS possible on this
+substrate**, so the `Ascent.md` kill-criterion stays un-triggered and the substrate is alive. But it does not
+hold: the colony decays to a lower plateau. The residual drift is diagnosed: the neuromodulator only **gates
+the timing** of plasticity (learn while comprehending) — it does not fix **direction / credit assignment**.
+When reading is paying, full-gain STDP is back on and still blindly reinforces *every* coincident synapse,
+including those that did not cause the correct output. A reward *magnitude* is not an error *signal*: the third
+factor must carry **which synapses deserve credit for the correct prediction**, not merely *that* a reward
+occurred — the classic SNN credit-assignment problem. That is the specific, well-posed next target (not another
+economy lever, not a blind STDP tweak). `GENESIS_STDP3` kept as an instrument. Next: a credit-assigning third
+factor (potentiate only synapses onto neurons whose spikes drove the *correct* vocal bits; depress those onto
+wrong bits) — true reward-modulated STDP — then A/B for a rule that *holds* above ablation.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

@@ -509,6 +509,20 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      Operative now: **fix or remove STDP before any further capability work; treat the engine as
      reflex-evolution-only until a learning rule is shown to help.** `GENESIS_NOLEARN` kept as a permanent A/B
      instrument.
+- 🔬 **STDP diagnosed + first repair beats ablation EARLY (Exp 31–32, 2026-07-16) — the MIND is now the
+     work.** Exp 31 (diagnosis, `GENESIS_STDP_COSTONLY`/`GENESIS_STDP_DIV`): STDP sign is CORRECT (Hebbian);
+     three real causes of net-negativity — (1) bang-bang step (~12% of range/event) slams good weights to the
+     rail → shedding+collapse, FIXED by small steps (DIV=32 → pop/N flat); (2) metabolic overhead (COSTONLY
+     cold-cliffs bootstrap); (3) **ROOT = no supervision** — even graded STDP makes reading slowly die
+     (23%→3%) because plain Hebbian is blind to whether a prediction was CORRECT. Exp 32 (`GENESIS_STDP3`):
+     built the fix — a three-factor neuromodulator scaling the weight update by the org's own reading reward
+     (Rule-9 autotelic, bio-faithful). **First learning rule to beat the no-learning baseline: solve-rate ~78%
+     early (vs NOLEARN 51%) — CONSTRUCTIVE LEARNING IS POSSIBLE on this substrate, substrate NOT falsified.**
+     But it doesn't HOLD (decays to ~29%): the modulator gates plasticity TIMING, not DIRECTION — when reading
+     pays, full STDP still blindly reinforces every coincident synapse. **Residual problem = CREDIT ASSIGNMENT**
+     (which synapses caused the correct output). NEXT = a credit-assigning third factor (potentiate synapses
+     onto neurons that drove the CORRECT vocal bits, depress wrong ones) = true reward-modulated STDP, then A/B
+     for a rule that HOLDS above ablation. All flags kept as instruments; default byte-identical.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

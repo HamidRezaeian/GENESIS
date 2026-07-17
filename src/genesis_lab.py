@@ -73,10 +73,17 @@ ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 # Learning ablation (Exp 30) — compile-time branch inside world_tick (deletes STDP Phase 3), so its
 # kernel must not share a cache with the learning-on default.
 NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
+# STDP diagnostic modes (Exp 31): compile-time branches inside Phase 3 → key the cache.
+STDP_COSTONLY = os.environ.get("GENESIS_STDP_COSTONLY", "0") == "1"
+STDP_DIV = os.environ.get("GENESIS_STDP_DIV", "1")
+# Three-factor neuromodulated plasticity (Exp 32): compile-time branch → key the cache.
+STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
-    f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"))
+    f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
+    f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
+    f"{'_stdp3' if STDP3 else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -221,6 +228,10 @@ vocal_prev = np.zeros(MAX_ORGANISMS, dtype=np.int32)
 # when GENESIS_PEER=1 (compile-time gated inside world_tick). Init -1 = "no action decided".
 action_now  = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
 action_prev = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
+# Exp 32 three-factor plasticity: per-org neuromodulator = last tick's normalised reading reward.
+# Init 1.0 so the very first tick behaves like ordinary Hebbian STDP (neutral gain) before any reward
+# history exists. Only read/written by the kernel when GENESIS_STDP3=1.
+g_org_reward = np.ones(MAX_ORGANISMS, dtype=np.float32)
 g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
 
@@ -744,7 +755,7 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward
     )
 
     for i in range(MAX_ORGANISMS):
@@ -960,7 +971,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward
         )
         
         for i in range(n_births):

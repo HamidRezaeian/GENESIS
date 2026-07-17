@@ -484,6 +484,23 @@ where only a real learner can win), not another economy mechanic. Until a plasti
 the engine is treated as reflex-evolution-only. `GENESIS_NOLEARN` is retained as a permanent A/B instrument;
 the default (learning-on) path is unchanged.
 
+**STDP diagnosed and first repair partially works — the problem is credit assignment (Exp 31–32, 2026-07-16).**
+Diagnostic ablations (`GENESIS_STDP_COSTONLY`, `GENESIS_STDP_DIV`) established that the STDP sign is correct
+(Hebbian) and that net-negativity has three causes: a bang-bang step (~12 % of the weight range per event) that
+slams good decoded weights to the rail (fixed by small steps), an unamortised metabolic cost that can starve the
+bootstrap, and — the root — the fact that plain STDP is *unsupervised* and cannot tell a correct prediction from
+a wrong one, so it drifts good weights toward task-irrelevant coincidences. The indicated fix, three-factor
+neuromodulated plasticity (`GENESIS_STDP3`: scale the weight update by the organism's own reading reward, a
+Rule-9 autotelic and biologically faithful signal), was built and, with small steps, became **the first learning
+rule to beat the no-learning baseline** — reading comprehension reached ~78 % vs ~51 % for ablation early in the
+run, demonstrating that constructive in-lifetime learning is achievable on this substrate (the kill-criterion
+remains un-triggered). It does not yet hold, decaying to ~29 %, because the neuromodulator gates the *timing* of
+plasticity but not its *direction*: a reward magnitude is not an error signal, so full-gain learning still
+reinforces every coincident synapse regardless of which ones caused the correct output. The well-posed next step
+is a credit-assigning third factor (reward-modulated eligibility that potentiates synapses onto neurons driving
+the *correct* vocal bits and depresses those driving wrong bits) — a true reward-modulated STDP. All diagnostic
+and repair flags are retained as instruments; the default path is byte-identical.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

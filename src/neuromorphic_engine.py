@@ -82,6 +82,32 @@ DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
 # substrate (Ascent.md kill-criterion). Gated for DCE so the default (learning-on) kernel is unchanged.
 NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
 
+# STDP DIAGNOSTIC MODES (Exp 31, default-OFF) — isolate WHY in-lifetime STDP is net-negative (Exp 30).
+# COSTONLY: keep the plasticity ENERGY cost but ZERO the weight update — if this behaves like NOLEARN
+# (good), the harm is the weight change, not the metabolic overhead; if it behaves like full STDP
+# (bad), the harm is the energy tax. DIVISOR: scale every STDP step down by GENESIS_STDP_DIV (default 1
+# = unchanged) — the current step can move a weight up to ~32 of the 255-wide range in ONE event
+# (bang-bang, despite the "graded" comment), so a larger divisor tests whether TRULY graded plasticity
+# (tiny steps) stops the decode-good weights being slammed to the rail. Both are compile-time / cheap
+# and default to the exact current behaviour, so the learning-on path is unchanged when unset.
+STDP_COSTONLY = os.environ.get("GENESIS_STDP_COSTONLY", "0") == "1"
+STDP_DIV = np.float32(float(os.environ.get("GENESIS_STDP_DIV", "1")))
+
+# THREE-FACTOR / NEUROMODULATED PLASTICITY (Exp 32, default-OFF) — the diagnosed fix for net-negative
+# STDP (Exp 31). Plain two-factor Hebbian STDP is UNSUPERVISED: it reinforces any temporal coincidence
+# with no notion of whether the prediction was CORRECT, so it drifts the decode-good weights toward
+# task-irrelevant input correlations (reading slowly dies even with corrected small steps). The fix is
+# a THIRD factor — a per-organism neuromodulatory signal = the organism's own reading-reward this tick
+# (org_reward[org]) — that GATES/scales the weight update: a coincidence is consolidated only when it
+# co-occurred with getting a prediction RIGHT (eligibility × reward, dopamine-style). Constant-free
+# (the reward IS the economy's own reading income, Rule 9 autotelic; the modulator is normalised by the
+# per-cell exchange rate CELL_STATES so it is a pure ratio). More biologically faithful than pure
+# Hebbian (Rule 6/11). Composes with GENESIS_STDP_DIV (small steps) — the two together are the corrected
+# rule. Compile-time gated; default engine unchanged when off. Requires the org_reward array (threaded
+# through world_tick like action_now); one-tick eligibility delay (STDP this tick uses last tick's
+# reward), which is the standard three-factor trace.
+STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
+
 # STIGMERGY (Exp 25, default-OFF, requires DEPLETE). The Exp-24 vetting named the escape recipe:
 # destructive/rivalrous built cells + an authored value DECOUPLED from the reading eye + depth that
 # pays more per cell (not a flat royalty). Minimal falsifiable primitive: OVERLOAD OUT_CONSUME on a
@@ -423,7 +449,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -470,6 +496,7 @@ def world_tick_numba(
             out_accum[o] = 0
             
         total_atp = np.float32(0.0)
+        read_gain_tick = np.float32(0.0)   # Exp 32: reading reward earned this tick (the 3rd factor)
         n_count = org_n_count[org]
         
         # Zero the portion of the pre-allocated buffer we need
@@ -528,6 +555,17 @@ def world_tick_numba(
         n_steps = org_lif_steps[org]
         if n_steps < 1:
             n_steps = 1
+
+        # THREE-FACTOR neuromodulator (Exp 32): the plasticity gain for THIS tick = the organism's own
+        # reading reward from LAST tick (org_reward[org], written at the end of this org's processing
+        # below), normalised so a full one-cell prediction gives ~1.0 (ordinary Hebbian learning) and NO
+        # reward gives ~0.0 (plasticity DAMPED OFF — no blind drift, the Exp-31 root cause). So a
+        # coincidence is consolidated only in proportion to getting predictions RIGHT (eligibility ×
+        # reward). Pure ratio, constant-free. When STDP3 is off this is a dead 1.0 and the rule is the
+        # ordinary (two-factor) STDP, unchanged.
+        stdp_mod = np.float32(1.0)
+        if STDP3:
+            stdp_mod = org_reward[org]
 
         for step in range(n_steps):
             if random.random() < viscosity[org]:
@@ -610,10 +648,11 @@ def world_tick_numba(
                         if t_pre >= 0 and t_pre < t_now:
                             dt = np.float32(t_now - t_pre) * DT
                             r_idx = global_rec_id[n_ptr + dst]
-                            w = global_conn_weight[s_ptr + c]
-                            w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx])
-                            if w > W_MAX: w = W_MAX
-                            global_conn_weight[s_ptr + c] = w
+                            if not STDP_COSTONLY:
+                                w = global_conn_weight[s_ptr + c]
+                                w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / STDP_DIV * stdp_mod
+                                if w > W_MAX: w = W_MAX
+                                global_conn_weight[s_ptr + c] = w
                             # Plasticity is real compute (an exp() + weight write). Charge it when
                             # it actually fires, so learning carries its own honest energy cost and
                             # a brain thrashing a huge plastic fabric pays for it — activity-gated,
@@ -625,10 +664,11 @@ def world_tick_numba(
                         if t_post >= 0 and t_post < t_now:
                             dt = np.float32(t_now - t_post) * DT
                             r_idx = global_rec_id[n_ptr + dst]
-                            w = global_conn_weight[s_ptr + c]
-                            w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx])
-                            if w < W_MIN: w = W_MIN
-                            global_conn_weight[s_ptr + c] = w
+                            if not STDP_COSTONLY:
+                                w = global_conn_weight[s_ptr + c]
+                                w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / STDP_DIV * stdp_mod
+                                if w < W_MIN: w = W_MIN
+                                global_conn_weight[s_ptr + c] = w
                             total_atp += CYCLES_PER_STDP_UPDATE
 
             # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
@@ -849,6 +889,7 @@ def world_tick_numba(
                         gain = avail
                     read_fuel[nxt] -= gain
                 energy[org] += gain
+                read_gain_tick += gain   # Exp 32: accumulate the tick's reading reward (3rd factor)
                 if (STIGMERGY or CANVAS) and gain > np.float32(0.0):
                     # AUTHORSHIP ROYALTY (Exp 26: SUPER-LINEAR, traffic-scaled). Exp 25 paid a FLAT per-bit
                     # slice (gain/BITS_PER_BYTE ~= 4 vs the ~32 a read earns) — negligible, so authoring was
@@ -950,6 +991,7 @@ def world_tick_numba(
                                     pgain = pavail
                                 read_fuel[npos] -= pgain
                             energy[org] += pgain
+                            read_gain_tick += pgain   # Exp 32: jump-predict reward (3rd factor)
                         if org_char_val == pval:
                             idx = read_log[0]
                             if idx < 996:
@@ -1068,6 +1110,16 @@ def world_tick_numba(
                     n_births += 1
 
         age[org] += n_steps
+
+        # Exp 32: store this tick's normalised reading reward as the organism's neuromodulator for NEXT
+        # tick's three-factor plasticity (one-tick eligibility delay). read_gain_tick/CELL_STATES ~= 1.0
+        # for a full one-cell prediction, 0.0 for no comprehension income — so plasticity next tick is
+        # scaled by how well this organism just predicted. Only maintained when STDP3 is on.
+        if STDP3:
+            m = read_gain_tick / CELL_STATES
+            if m < np.float32(0.0):
+                m = np.float32(0.0)
+            org_reward[org] = m
 
         if energy[org] <= np.float32(0.0):
             alive[org] = False

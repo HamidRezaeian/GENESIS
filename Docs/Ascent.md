@@ -169,6 +169,82 @@ the default engine should be treated as "reflex-evolution only" until a learning
 
 ---
 
+## 4c. DIAGNOSIS — Experiment 31: WHY STDP is net-negative (2026-07-16). Three causes; the ROOT is no supervision.
+
+Two orthogonal diagnostic ablations were built (`GENESIS_STDP_COSTONLY` = keep the plasticity energy
+cost but freeze the weight; `GENESIS_STDP_DIV` = scale every STDP step down, testing whether *truly
+graded* small steps help) and run against the ON / NOLEARN baselines. First, a code read settled the
+cheapest hypothesis: **the STDP sign is CORRECT** — pre-before-post potentiates (LTP), post-before-pre
+depresses (LTD); it is Hebbian, not anti-Hebbian. So "wrong sign" is ruled out. The live A/B then
+separated the rest:
+
+| mode | population | brain `N` | solve-rate | reading |
+|---|---|---|---|---|
+| **NOLEARN** (no plasticity) | 599 flat | 25.8k flat | **~51 %** | best — fixed reflex |
+| **ON** (full STDP, current) | 596 → **423** | −34 % (sheds) | ~23 % | collapse + degradation |
+| **DIV=32** (truly graded, small steps) | 599 flat | ~25k flat | ~5 % → **3 %** | collapse FIXED, but reading slowly dies |
+| **COSTONLY** (energy kept, weight frozen) | cold-cliff → 12 | — | — | raw STDP energy cost kills bootstrap |
+
+**Three real causes, now separated:**
+1. **Bang-bang step size (fixed).** The current step could move a weight up to ~32 of the 255-wide range
+   in ONE event (~12 %), despite a "graded" comment — so a good decoded weight was slammed to the rail in
+   a few spikes. This caused the brain-shedding and population collapse: DIV=32 (small steps) FIXES it —
+   population and `N` go flat, no more shedding.
+2. **Metabolic overhead (real, secondary).** COSTONLY (the energy tax alone, no weight change) cold-cliffs
+   the bootstrap — the raw per-update STDP cost, unamortised by any benefit, can starve founders.
+3. **ROOT CAUSE — no supervision (the decisive finding).** Even the *corrected* graded rule (DIV=32) still
+   makes reading **slowly die** (solve-rate 23 %→5 %→3 %). Plain STDP is **unsupervised**: it reinforces
+   *any* temporal coincidence with no reward/error signal, so it has no way to know a prediction was
+   *correct*. It therefore drifts the decode-good genetic weights toward task-irrelevant input
+   correlations — constructive-looking, actually destructive. Fixing the step size stops the *catastrophe*
+   but not the *slow rot*, because the rule is optimising the wrong thing (coincidence, not correctness).
+
+**Verdict — the substrate is NOT falsified; the LEARNING RULE is diagnosed and fixable in a specific
+direction.** Pure two-factor Hebbian STDP cannot be load-bearing here because the task needs *correct*
+prediction and STDP is blind to correctness. The indicated fix is **three-factor / neuromodulated
+plasticity**: gate (multiply) the weight update by a success signal — the organism's own reading-reward
+energy — so a coincidence is reinforced **only when it coincided with getting the prediction right**
+(dopamine-style eligibility × reward). This is (a) more biologically faithful (Rule 6/11 — real synapses
+are neuromodulated, not pure Hebbian), (b) Rule-9 autotelic (the reward is the economy's own reading
+income, not a human-supplied error label), and (c) the first lever in the whole project that targets the
+MIND (how it learns) rather than the market (what it's paid for). Small steps (a DNA-derived divisor) and
+amortised cost come along for free. `GENESIS_STDP_COSTONLY`/`GENESIS_STDP_DIV` kept as permanent
+diagnostic instruments (default = current behaviour). **Next: build three-factor neuromodulated STDP and
+A/B it against NOLEARN — if it BEATS ablation, criterion B is finally satisfiable and the mind, not the
+economy, is the thing that ascends.**
+
+---
+
+## 4d. RESULT — Experiment 32: three-factor STDP (first form) beats ablation EARLY, then still drifts (2026-07-16).
+
+Three-factor neuromodulated plasticity was built (`GENESIS_STDP3`): the weight update is scaled by a
+per-organism neuromodulator = that organism's own normalised reading reward last tick (one-tick
+eligibility delay), so plasticity is damped toward zero when the organism is *not* comprehending and runs
+at full gain when it is. Combined with the Exp-31 small-step fix (`GENESIS_STDP_DIV=32`), this is the
+"corrected rule." Live A/B vs the NOLEARN baseline (solve ~51 % flat):
+
+| phase | population | brain `N` | solve-rate |
+|---|---|---|---|
+| STDP3+DIV32, **early** | 599 | 26 267 | **~78 %** (best in the whole project) |
+| STDP3+DIV32, **steady** | 599 → 251 | 26 267 → 10 611 (sheds) | 78 % → **~29 %** |
+
+**Partial success — and a precise next diagnosis.** For the first time a learning rule pushed
+comprehension *above* the no-learning baseline (78 % vs 51 %), proving **constructive learning IS possible
+on this substrate** — the kill-criterion stays un-triggered, the substrate is alive. But it does not hold:
+the colony still decays to a lower plateau. Root cause of the residual drift: the neuromodulator only
+**gates the timing** of plasticity (learn when comprehending, not when idle) — it does not fix the
+**direction / credit assignment**. When reading *is* paying, full-gain STDP is back on and still blindly
+reinforces *every* coincident synapse, including those that did not cause the correct output. A reward
+*magnitude* is not an error *signal*: the third factor must carry **which synapses deserve credit for the
+correct prediction**, not merely *that* a reward occurred. This is the classic SNN credit-assignment
+problem, and it is the specific, well-posed next target — not another economy lever and not a blind STDP
+tweak. `GENESIS_STDP3` kept as an instrument. **Next: a credit-assigning third factor (e.g. reward-modulated
+eligibility that potentiates only synapses onto neurons whose spikes drove the *correct* vocal bits, and
+depresses those onto wrong bits) — a true reward-modulated STDP, then A/B vs NOLEARN for a rule that
+*holds* above ablation.**
+
+---
+
 ## 5. What changes operationally
 
 - New experiments are pre-registered against §2's criteria before running; a run that doesn't move A/B/C
