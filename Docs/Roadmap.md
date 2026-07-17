@@ -1,5 +1,17 @@
 # GENESIS Roadmap
 
+> **STRATEGIC PIVOT (2026-07-16): the design loop is CLOSED. See `Docs/Ascent.md` (binding).**
+> Experiments 13–29 formed an open-ended "build a lever → hit a new wall → build the next lever" loop
+> that accumulated economy mechanics (DEPLETE, STIGMERGY, SUPER-RENT, PERSIST, LEASE, CANVAS…) without
+> approaching the Rule-6 goal. Root cause (now fixed by **Rule 18**): "ascent" was only ever defined
+> NEGATIVELY (every run a "not yet"), and the project's **load-bearing assumption — that the brain LEARNS
+> within its lifetime — was never validated** against a control. `Docs/Ascent.md` now fixes a
+> pre-registered, quantitative finish line (A: capability +25% sustained 5M ticks; B: learning is
+> load-bearing vs an STDP-ablation control; C: efficiency holds) AND a kill-criterion that falsifies the
+> substrate if learning cannot be made load-bearing. **The next experiment is NOT another economy lever
+> — it is the learning-ablation A/B (STDP ON vs OFF), the highest-information test and the one that should
+> have been Exp 1.** Validate the mind first; shape the economy that selects for it second.
+
 > **Status (2026-07-10):** The live system is the genome-encoded Spiking Neural Network
 > engine (`neuromorphic_engine.py` + `genesis_lab.py`). The long phase history below has
 > been condensed into an honest account of how the *architecture* evolved — several early
@@ -478,6 +490,25 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      canvas already owned = diminishing returns; or a scarcer prerequisite than raw energy; or a slower migration
      pull). `GENESIS_CANVAS`/`_SEED` kept as instruments (default-OFF); default byte-identical, no regression.
      Branches: churn (26), freeze (27), leak-cannibalises-reading (28), **energy-currency-frenzy (29)**.
+- 🛑 **DESIGN LOOP CLOSED + the load-bearing assumption FAILS: in-lifetime STDP is net-NEGATIVE (Exp 30,
+     2026-07-16).** Per the strategic pivot (Rule 18 / `Docs/Ascent.md`), the first validation of the
+     project's core assumption — does the brain LEARN in-lifetime? — was built (`GENESIS_NOLEARN`,
+     compile-time STDP-Phase-3 deletion, default-OFF, byte-identical when off) and run as a live A/B on the
+     default books economy. **Ablating learning is BETTER on every axis:** pop 596→**423** (ON, decaying) vs
+     **599** flat (OFF); Universe N 25834→**17441** (−34%, brain sheds) vs 25790 flat (OFF); reading
+     solve-rate **~23%** (ON) vs **~51%** (OFF); reads ~60 vs ~148. **Criterion B fails harder than "OFF≈ON":
+     STDP is actively HARMFUL** — the whole-project "sustains but decays" signature (brain sheds, prediction
+     dies, Exp 12+) is now causally attributed to STDP driving decode-good genetic weights toward noise. Every
+     Exp 13–29 economy lever was built on a learning rule that was eroding the capability it tried to grow.
+     **This falsifies the current learning RULE, not (yet) the substrate** — 3 repairable causes to diagnose:
+     wrong-sign/target plasticity (most likely — shedding-under-learning = destructive drift), STDP metabolic
+     overhead, or task mismatch (fixed reflex beats changing weight on next-symbol prediction). **NEXT = a
+     DIAGNOSIS not a new lever (Rule 18):** ON-vs-OFF on a task whose answer CHANGES within a lifetime (only
+     there can a real learner beat a fixed reflex) + isolate STDP energy cost from weight-update effect. Only
+     if a corrected sign-correct task-matched plasticity still loses is the SNN-on-RAM substrate falsified.
+     Operative now: **fix or remove STDP before any further capability work; treat the engine as
+     reflex-evolution-only until a learning rule is shown to help.** `GENESIS_NOLEARN` kept as a permanent A/B
+     instrument.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

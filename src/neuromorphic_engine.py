@@ -71,6 +71,17 @@ ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 # identical to the verified minted economy (gain is used unchanged), so the default path is untouched.
 DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
 
+# LEARNING ABLATION (Exp 30, default-OFF) — the decisive test of the project's LOAD-BEARING ASSUMPTION
+# (Rule 18 / Docs/Ascent.md criterion B): does the brain LEARN within its lifetime, or is it a fixed
+# reflex tuned only by evolution? When GENESIS_NOLEARN=1, STDP (Phase 3) is compile-time DELETED — no
+# in-lifetime weight change and no STDP energy cost — so a synapse keeps its DNA-decoded weight for
+# life. Lamarckian inheritance is automatically neutralised too (a learned weight == its decoded weight
+# when nothing is learned). Everything else is byte-identical: same genomes, same economy, same physics.
+# The A/B (NOLEARN=0 vs =1, identical seeds) isolates the causal contribution of plasticity to survival
+# and comprehension. If OFF ~= ON, learning is not load-bearing and the substrate is falsified as an AGI
+# substrate (Ascent.md kill-criterion). Gated for DCE so the default (learning-on) kernel is unchanged.
+NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
+
 # STIGMERGY (Exp 25, default-OFF, requires DEPLETE). The Exp-24 vetting named the escape recipe:
 # destructive/rivalrous built cells + an authored value DECOUPLED from the reading eye + depth that
 # pays more per cell (not a flat royalty). Minimal falsifiable primitive: OVERLOAD OUT_CONSUME on a
@@ -586,36 +597,39 @@ def world_tick_numba(
                         else:
                             global_v[n_ptr + n] = v
 
-            # Phase 3: STDP Updates only for spiking neurons
-            for c in range(s_count):
-                src = global_conn_src[s_ptr + c]
-                dst = global_conn_dst[s_ptr + c]
-                
-                if curr_spk_buf[dst]:
-                    t_pre = global_t_last[n_ptr + src]
-                    if t_pre >= 0 and t_pre < t_now:
-                        dt = np.float32(t_now - t_pre) * DT
-                        r_idx = global_rec_id[n_ptr + dst]
-                        w = global_conn_weight[s_ptr + c]
-                        w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx])
-                        if w > W_MAX: w = W_MAX
-                        global_conn_weight[s_ptr + c] = w
-                        # Plasticity is real compute (an exp() + weight write). Charge it when
-                        # it actually fires, so learning carries its own honest energy cost and
-                        # a brain thrashing a huge plastic fabric pays for it — activity-gated,
-                        # so sparse-firing large brains are not penalised (Rule 7/11/17).
-                        total_atp += CYCLES_PER_STDP_UPDATE
+            # Phase 3: STDP Updates only for spiking neurons. Compile-time gated on NOLEARN — when
+            # ablated the entire plasticity phase (weight updates + STDP energy cost) is dead-code-
+            # eliminated, so synapses keep their DNA-decoded weights for life (Exp 30 / Ascent.md B).
+            if not NOLEARN:
+                for c in range(s_count):
+                    src = global_conn_src[s_ptr + c]
+                    dst = global_conn_dst[s_ptr + c]
 
-                elif curr_spk_buf[src]:
-                    t_post = global_t_last[n_ptr + dst]
-                    if t_post >= 0 and t_post < t_now:
-                        dt = np.float32(t_now - t_post) * DT
-                        r_idx = global_rec_id[n_ptr + dst]
-                        w = global_conn_weight[s_ptr + c]
-                        w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx])
-                        if w < W_MIN: w = W_MIN
-                        global_conn_weight[s_ptr + c] = w
-                        total_atp += CYCLES_PER_STDP_UPDATE
+                    if curr_spk_buf[dst]:
+                        t_pre = global_t_last[n_ptr + src]
+                        if t_pre >= 0 and t_pre < t_now:
+                            dt = np.float32(t_now - t_pre) * DT
+                            r_idx = global_rec_id[n_ptr + dst]
+                            w = global_conn_weight[s_ptr + c]
+                            w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx])
+                            if w > W_MAX: w = W_MAX
+                            global_conn_weight[s_ptr + c] = w
+                            # Plasticity is real compute (an exp() + weight write). Charge it when
+                            # it actually fires, so learning carries its own honest energy cost and
+                            # a brain thrashing a huge plastic fabric pays for it — activity-gated,
+                            # so sparse-firing large brains are not penalised (Rule 7/11/17).
+                            total_atp += CYCLES_PER_STDP_UPDATE
+
+                    elif curr_spk_buf[src]:
+                        t_post = global_t_last[n_ptr + dst]
+                        if t_post >= 0 and t_post < t_now:
+                            dt = np.float32(t_now - t_post) * DT
+                            r_idx = global_rec_id[n_ptr + dst]
+                            w = global_conn_weight[s_ptr + c]
+                            w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx])
+                            if w < W_MIN: w = W_MIN
+                            global_conn_weight[s_ptr + c] = w
+                            total_atp += CYCLES_PER_STDP_UPDATE
 
             # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
             # fired this step, not per neuron present. On a 20W neuromorphic substrate the spike

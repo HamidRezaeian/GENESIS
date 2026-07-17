@@ -238,7 +238,7 @@ function onBrain(data) {
     const links = e.synapses.map(s => ({ source: s.source, target: s.target, weight: s.weight }));
 
     const nameMap = {
-        'In 0': '⚡ Energy', 'In 1': '• Bias', 'In 2': '🌡 Crowd', 'In 3': '👁 RAM',
+        'In 0': '⚡ Energy', 'In 1': '• Bias', 'In 2': '🌡 Crowd', 'In 3': '📡 OrcScalar',
         'In 4': '♪ VoLo', 'In 5': '♪ VoMid', 'In 6': '♪ VoHi',
         'Out 0': '→ +1', 'Out 1': '← −1', 'Out 2': '⇒ +10', 'Out 3': '⇐ −10',
         'Out 4': '🍽 Eat', 'Out 5': '🧬 Repro'

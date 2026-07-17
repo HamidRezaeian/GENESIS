@@ -70,10 +70,13 @@ RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
 # Action-distribution probe (Exp 22, observation-only). Also a compile-time branch inside world_tick
 # (records best_a on the peer-OFF path), so its kernel must not share a cache with the plain default.
 ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
+# Learning ablation (Exp 30) — compile-time branch inside world_tick (deletes STDP Phase 3), so its
+# kernel must not share a cache with the learning-on default.
+NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
-    f"{'_actp' if ACT_PROBE else ''}"))
+    f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total

@@ -1685,11 +1685,60 @@ migration works, but shared-energy authoring is a collective-action collapse tha
 
 ---
 
+## 🧪 Experiment 30 — The Learning-Ablation Test: In-Lifetime STDP Is Net-NEGATIVE (the design loop closes, `Docs/Ascent.md`) (2026-07-16)
+
+**Strategic pivot.** Experiments 13–29 formed an open-ended "build a lever → hit a new wall" loop that
+reshaped the *economy* 17 times while never once validating the project's load-bearing assumption — that a
+GENESIS brain **learns within its lifetime**. `Docs/Ascent.md` + `Rules.md` Rule 18 now fix a pre-registered
+finish line (A capability rise, B learning load-bearing, C efficiency) and mandate validating that
+assumption *before* adding any more mechanics. This experiment is that validation — the test that should
+have been Exp 1.
+
+**Design (`GENESIS_NOLEARN`, default-OFF, no new constant).** Compile-time deletion of STDP Phase 3: when
+ablated, no in-lifetime weight update and no plasticity energy cost fire, so every synapse keeps its
+DNA-decoded weight for life (Lamarckian inheritance auto-neutralises — a learned weight equals its decoded
+weight when nothing is learned). Everything else — genomes, economy, physics — is byte-identical. The A/B
+(ON vs OFF, default books economy) isolates the causal contribution of plasticity.
+
+**Result (live A/B to equilibrium):**
+
+| metric (equilibrium) | STDP **ON** (current default) | STDP **OFF** (ablated) |
+|---|---|---|
+| population | 596 → **423** (steady decay) | **599** (flat) |
+| brain size `Universe N` | 25 834 → **17 441** (−34 %, sheds) | 25 790 (−2 %, flat) |
+| reading solve-rate | **~23 %** | **~51 %** |
+| reads / window | ~60 | **~148** |
+
+**Verdict — criterion B fails, and fails HARDER than expected: learning is not merely non-load-bearing, it
+is actively HARMFUL.** Ablating plasticity makes the colony *more* stable, keeps the brain *larger*, and
+*doubles* comprehension. The whole-project "sustains but decays" signature (brain sheds, prediction dies —
+Exp 12 onward) is now **causally attributed to STDP itself** driving the decode-good genetic weights toward
+noise, not to economic abundance. Every economy lever of Exp 13–29 was built on top of a learning rule that
+was silently eroding the capability those levers tried to grow.
+
+**This does NOT yet falsify the substrate — it falsifies the current learning RULE**, which admits three
+repairable causes (to be diagnosed, not assumed): (1) wrong-sign/wrong-target plasticity corrupting a good
+evolved reflex — most likely, the *shedding under learning* is the signature of destructive weight drift;
+(2) STDP metabolic overhead taxing a learner with no offsetting benefit (Rule 7 then grinds it down); (3)
+task mismatch — next-symbol prediction is well-served by a *fixed* good reflex, so a changing weight only
+adds variance. **Next step is a DIAGNOSIS (Rule 18), not a new economy lever:** test ON-vs-OFF on a task
+whose answer *changes within a lifetime* (only there can a correct learner beat a fixed reflex) and isolate
+the STDP energy cost from the weight-update effect. Only if a corrected, sign-correct, task-matched
+plasticity still loses to ablation is the SNN-on-RAM substrate falsified. Operative conclusion for now: **the
+current STDP rule is net-negative and must be fixed or removed before any further capability work; the engine
+is effectively "reflex-evolution only" until a learning rule is shown to help.** `GENESIS_NOLEARN` kept as a
+permanent A/B instrument (default-OFF); default (learning-on) byte-identical, re-verified.
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:
-- **Learning efficacy:** STDP + Lamarckian memory are implemented, but we have not yet
-  measured that they *improve survival on a task* over a non-learning control.
+- **Learning efficacy:** STDP + Lamarckian memory are implemented, and were finally **measured against a
+  non-learning control (Exp 30, `GENESIS_NOLEARN`) — the result is NET-NEGATIVE:** ablating STDP *improves*
+  survival, brain retention, and comprehension (solve-rate ~23 %→~51 %). In-lifetime learning as currently
+  ruled is harmful, not merely unproven. Diagnosing whether this is a fixable STDP-rule flaw (wrong sign,
+  metabolic overhead, or task mismatch) or a substrate falsification is the open frontier (`Docs/Ascent.md`).
 - **Communication/logic:** vocal cords, neighbour hearing and the Oracle channel exist, but
   no unsupervised language or logic-gate emergence has been measured on this engine.
 - **Efficiency selection (Rule 7):** the per-cycle physics now select *for* leaner brains

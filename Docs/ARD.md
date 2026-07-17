@@ -468,6 +468,22 @@ remains profitable for a specialist minority (the division of labour) without be
 drain. `GENESIS_CANVAS`/`GENESIS_CANVAS_SEED` are kept as instruments (default-OFF); the default economy is
 byte-identical and was re-verified with no regression.
 
+**The design loop is closed and the load-bearing assumption fails: in-lifetime STDP is net-negative (Exp 30,
+2026-07-16).** The 17-lever economy search (Exp 13–29) never validated the assumption underneath it — that a
+GENESIS brain learns within its lifetime. Under the strategic pivot (Rule 18 / `Docs/Ascent.md`), a
+compile-time learning-ablation control (`GENESIS_NOLEARN`, deletes STDP Phase 3, byte-identical when off) was
+A/B'd against the learning-on default. Ablating learning is strictly better: population stays flat at ~599
+instead of decaying to ~423, the brain holds ~25.8k neurons/synapses instead of shedding 34 % to ~17.4k, and
+reading solve-rate roughly doubles (~23 %→~51 %). The long-standing "sustains but decays" pattern is therefore
+causally attributed to STDP driving the DNA-decoded (already-good) weights toward noise — plasticity as ruled
+here is destructive, not constructive. This falsifies the current *learning rule*, not yet the substrate: the
+repairable candidates are wrong-sign/wrong-target plasticity, unamortised STDP metabolic cost, and a task
+(next-symbol prediction) that a fixed reflex already solves so a changing weight only adds variance. The
+mandated next step is diagnostic (isolate cost from weight-effect; test on a within-lifetime-changing task
+where only a real learner can win), not another economy mechanic. Until a plasticity rule is shown to help,
+the engine is treated as reflex-evolution-only. `GENESIS_NOLEARN` is retained as a permanent A/B instrument;
+the default (learning-on) path is unchanged.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1
