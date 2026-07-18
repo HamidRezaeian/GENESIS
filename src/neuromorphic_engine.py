@@ -129,6 +129,57 @@ STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
 # org_reward; 8 floats = 8 bits) plus STDP3 (uses its stdp_mod gain).
 STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
 
+# WITHIN-LIFETIME REMAP TASK (Exp 34, default-OFF) — the AFFIRMATIVE test of Rule-6 in-lifetime
+# LEARNING that Ascent.md §4 step 2 pre-registered and NO experiment has ever built. The whole
+# doubt in the strategy review (Ascent.md §3, 2nd disconfirming hypothesis): next-symbol prediction
+# is well-served by a FIXED reflex, so evolution can pre-encode it and there is no gradient that
+# only a LEARNER can climb — every prior "ascent" attempt could have been fixed-reflex evolution.
+# This task removes that escape hatch by making the CORRECT ANSWER CHANGE WITHIN ONE LIFETIME on a
+# timescale shorter than a generation but far longer than a spike. MINIMAL FORM (a 2-bit SWAP, chosen
+# after the full-byte-rotation form needed a dense 8x8 eye->vocal fabric that either corrupted the
+# echo bootstrap when firing or, when silent, could not be recruited): in a "swapped" phase the reward
+# target has vocal bits REMAP_SB0 and REMAP_SB1 EXCHANGED (target echoes the sensed byte on the other 6
+# bits, so survival is barely perturbed, but the 2 swapped bits demand the org emit bit SB1 where the
+# eye shows bit SB0 and vice-versa). The swap is on NO sensory input, so a FIXED genome cannot
+# pre-encode it — a NOLEARN reflex keeps echoing and is wrong on the 2 swapped bits every swapped phase;
+# only in-lifetime credit-assigning plasticity (STDP3C) could re-route eye SB0 -> vocal SB1. The A/B
+# (STDP3C vs NOLEARN) is thus criterion B on a task a reflex PROVABLY cannot fake: if the learner
+# recovers swapped-phase solve-rate and the ablation does not, in-lifetime learning is affirmatively
+# validated (beyond the Exp-33 "load-bearing on a task a reflex also solves" caveat). If the learner
+# CANNOT recover — the specific prediction, since STDP3C's per-bit eligibility only reinforces/suppresses
+# vocal neurons that ACTUALLY FIRED and has no mechanism to RECRUIT a silent neuron that SHOULD fire —
+# then the missing substrate capability is localised precisely: the credit signal is OUTPUT-gated
+# (a "was I right?" trace) not a true ERROR signal ("vocal SB1 should have fired"), and THAT — an
+# error/teaching signal that reaches silent-but-wanted pathways, not another economy lever — is the
+# next substrate change. Either outcome is decisive and pre-registered. Autotelic: the target derives
+# from the text the org already reads (Rule 9, no human label); constant-free (a bit swap, Rule 17).
+# Compile-time gated -> default kernel byte-identical. PERIOD/STATES are honest TIMESCALES, env-tunable.
+REMAP = os.environ.get("GENESIS_REMAP", "0") == "1"
+REMAP_PERIOD = np.int64(int(os.environ.get("GENESIS_REMAP_PERIOD", "4000")))  # global_time units per phase
+REMAP_STATES = np.int64(int(os.environ.get("GENESIS_REMAP_STATES", "2")))     # phases (2 = identity vs swapped)
+REMAP_SB0 = np.int64(int(os.environ.get("GENESIS_REMAP_SB0", "0")))           # the two vocal/eye bits that
+REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))           # swap in a non-zero phase
+
+# ERROR / TEACHING-SIGNAL PLASTICITY (Exp 35, default-OFF) — the diagnosed fix for the Exp-34 negative.
+# Exp 34 proved credit-assigning STDP (STDP3C) can PRUNE a wrong-firing pathway but cannot RECRUIT a
+# silent-but-wanted neuron: Hebbian-family plasticity updates a synapse only on a POST-synaptic spike,
+# so a vocal neuron that SHOULD fire but is silent generates no eligibility and its afferents never
+# potentiate — the rule carries a REWARD signal (was-I-right on the bits that fired), not an ERROR
+# signal (which bits SHOULD have fired). This flag adds the missing error term as a local DELTA RULE on
+# the reading-eye -> vocal-bit synapses: after a read, for each vocal bit b, err_b = target_b - output_b
+# (in {+1,0,-1}); every synapse from an ACTIVE eye input j (sense_buf[RAM_BIT0_INPUT+j] high) onto vocal
+# neuron b is nudged w += err_b * (eye_j active) * gain. err_b = +1 (wanted but silent) POTENTIATES the
+# active eye afferents of a silent neuron WITHOUT needing it to have spiked (the recruitment STDP3C
+# cannot do); err_b = -1 (fired but unwanted) DEPRESSES them; err_b = 0 leaves them. This is the local,
+# biologically-plausible teaching current of predictive-coding / dendritic-error SNNs (the "should-fire"
+# signal delivered to the apical dendrite), NOT backprop. Autotelic + constant-free: the target derives
+# from the org's OWN reading target (Rule 9, no human label), the eye-activity is already in sense_buf,
+# the step reuses STDP_DIV/CELL_STATES scaling (Rule 17). Reward-gated by read_gain like STDP3 so it
+# only teaches when the org is actually reading. Compile-time gated -> default kernel byte-identical.
+# Requires the eye inputs (sense_buf) and the vocal target, both already in-kernel; writes the same
+# global_conn_weight the STDP path does, so it composes with (or replaces) STDP3C.
+STDP_TARGET = os.environ.get("GENESIS_STDP_TARGET", "0") == "1"
+
 # STIGMERGY (Exp 25, default-OFF, requires DEPLETE). The Exp-24 vetting named the escape recipe:
 # destructive/rivalrous built cells + an authored value DECOUPLED from the reading eye + depth that
 # pays more per cell (not a flat royalty). Minimal falsifiable primitive: OVERLOAD OUT_CONSUME on a
@@ -507,6 +558,14 @@ def world_tick_numba(
         for i in range(vocal_cords.shape[0]):
             vocal_prev[i] = vocal_cords[i]
             action_prev[i] = action_now[i]     # Exp 18: freeze last tick's motor decision (hidden target)
+
+    # WITHIN-LIFETIME REMAP (Exp 34): the phase advances with wall-clock, identical for every organism
+    # this tick and unobservable in any sense input, so a fixed reflex cannot pre-encode it — only an
+    # in-lifetime learner can re-track it. remap_on = this phase swaps the two designated target bits.
+    # Computed ONCE per tick (depends only on global_time). Dead when REMAP off (branch DCE'd).
+    remap_on = False
+    if REMAP and REMAP_STATES > 1:
+        remap_on = ((global_time // REMAP_PERIOD) % REMAP_STATES) != 0
 
     for org in range(max_org):
         if not alive[org]:
@@ -902,11 +961,27 @@ def world_tick_numba(
         nxt = (pos + 1) % RAM_SIZE
         next_byte = ram_substrate[nxt]
         if next_byte >= 32 and next_byte <= 126 and next_byte != 0x55:
+            # WITHIN-LIFETIME REMAP (Exp 34): the reward target is next_byte LEFT-ROTATED by this tick's
+            # phase (remap_rot bits). rot==0 is the ordinary echo/predict target (byte-identical to the
+            # default, so REMAP off is unchanged); rot!=0 remaps which emission bits are "correct" for
+            # the SAME sensed context — a mapping a fixed genome cannot pre-encode (the rotation is on no
+            # input) but a credit-assigning learner can re-track from its own per-bit reward. Rotation is
+            # within the 8-bit register (constant-free). The saccade/echo-log below still key on the RAW
+            # next_byte (walking the scroll is unchanged); only the reward TARGET is remapped.
+            tgt_byte = next_byte
+            if REMAP and remap_on:
+                nb = np.int64(next_byte)
+                b0 = (nb >> REMAP_SB0) & np.int64(1)
+                b1 = (nb >> REMAP_SB1) & np.int64(1)
+                # clear the two swap-bit positions, then write them back exchanged
+                nb = nb & ~((np.int64(1) << REMAP_SB0) | (np.int64(1) << REMAP_SB1))
+                nb = nb | (b1 << REMAP_SB0) | (b0 << REMAP_SB1)
+                tgt_byte = nb & np.int64(0xFF)
             correct_bits = 0
             wrong_bits = 0
             for b in range(8):
                 out_b = (org_char_val >> b) & 1
-                tgt_b = (next_byte >> b) & 1
+                tgt_b = (tgt_byte >> b) & 1
                 if out_b == 1 and tgt_b == 1:
                     correct_bits += 1
                     if STDP3C:
@@ -919,6 +994,43 @@ def world_tick_numba(
                     if STDP3C:
                         org_elig[org, b] = np.float32(0.0)
             net = correct_bits - wrong_bits
+
+            # ERROR / TEACHING-SIGNAL PLASTICITY (Exp 35): the local delta rule that supplies the
+            # RECRUITMENT gradient STDP3C structurally cannot (Exp 34). For each vocal bit b, the error
+            # err_b = target_b - output_b is +1 (WANTED but the neuron was silent), -1 (fired but
+            # unwanted), or 0. We nudge every synapse from an ACTIVE reading-eye input j onto vocal
+            # neuron b by err_b — so a wanted-silent neuron's active eye afferents POTENTIATE even though
+            # it never spiked (no Hebbian eligibility needed), and an unwanted-fired neuron's afferents
+            # DEPRESS. This is the teaching current of dendritic-error SNNs, local + autotelic (target =
+            # the org's own read target) + constant-free (reuses STDP_DIV; magnitude scaled by the same
+            # small-step divisor as STDP). Reward-gated: only teach when actually reading (net!=0 already
+            # gates the block). Charged like an STDP update (real work, activity-gated). Only the eye->
+            # vocal fabric is taught (dst in vocal range, src in eye range); everything else untouched.
+            if STDP_TARGET and net != 0:
+                tn_ptr = org_n_ptr[org]
+                ts_ptr = org_s_ptr[org]
+                ts_count = org_s_count[org]
+                for tc in range(ts_count):
+                    tdst = global_conn_dst[ts_ptr + tc]
+                    # vocal-bit neurons are indices N_INPUT+6 .. N_INPUT+13 (out_idx 6..13)
+                    if tdst >= N_INPUT + 6 and tdst < N_IO:
+                        vb = tdst - (N_INPUT + 6)
+                        out_vb = (org_char_val >> vb) & 1
+                        tgt_vb = (int(tgt_byte) >> vb) & 1
+                        err = np.float32(tgt_vb - out_vb)     # +1 wanted-silent, -1 unwanted-fired, 0 ok
+                        if err != np.float32(0.0):
+                            tsrc = global_conn_src[ts_ptr + tc]
+                            # only afferents from an ACTIVE reading-eye input carry the teaching signal:
+                            # potentiating a silent eye's synapse would teach noise. Eye inputs are
+                            # RAM_BIT0_INPUT..+7; sense_buf holds their activation for this tick.
+                            if tsrc >= RAM_BIT0_INPUT and tsrc < RAM_BIT0_INPUT + 8:
+                                if sense_buf[tsrc] > np.float32(0.5):
+                                    w = global_conn_weight[ts_ptr + tc]
+                                    w += err * (CELL_STATES / BITS_PER_BYTE) / STDP_DIV
+                                    if w > W_MAX: w = W_MAX
+                                    elif w < W_MIN: w = W_MIN
+                                    global_conn_weight[ts_ptr + tc] = w
+                                    total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
                 if DEPLETE and gain > np.float32(0.0):
@@ -980,7 +1092,7 @@ def world_tick_numba(
                     org_grid[nxt] = org
                     pos = nxt
                     grazed = True
-            if org_char_val == next_byte:
+            if org_char_val == tgt_byte:
                 idx = read_log[0]
                 if idx < 996:
                     read_log[idx] = 1
@@ -1014,11 +1126,23 @@ def world_tick_numba(
                     # Distinct from the stationary echo read; a full correct prediction logs type 3.
                     pval = ram_substrate[npos]
                     if pval >= 32 and pval <= 126 and pval != 0x55:
+                        # Exp 34: remap the jump-predict target the SAME way as the stationary read, so
+                        # the eligibility trace is never contaminated with un-remapped credit in a rot!=0
+                        # phase (would give the learner a partially-wrong training signal). rot==0 ->
+                        # byte-identical to the default jump-predict.
+                        ptgt = pval
+                        if REMAP and remap_on:
+                            pv = np.int64(pval)
+                            b0 = (pv >> REMAP_SB0) & np.int64(1)
+                            b1 = (pv >> REMAP_SB1) & np.int64(1)
+                            pv = pv & ~((np.int64(1) << REMAP_SB0) | (np.int64(1) << REMAP_SB1))
+                            pv = pv | (b1 << REMAP_SB0) | (b0 << REMAP_SB1)
+                            ptgt = pv & np.int64(0xFF)
                         pc = 0
                         pw = 0
                         for b in range(8):
                             ob = (org_char_val >> b) & 1
-                            tb = (pval >> b) & 1
+                            tb = (ptgt >> b) & 1
                             if ob == 1 and tb == 1:
                                 pc += 1
                                 if STDP3C:
@@ -1042,7 +1166,7 @@ def world_tick_numba(
                                 read_fuel[npos] -= pgain
                             energy[org] += pgain
                             read_gain_tick += pgain   # Exp 32: jump-predict reward (3rd factor)
-                        if org_char_val == pval:
+                        if org_char_val == ptgt:
                             idx = read_log[0]
                             if idx < 996:
                                 read_log[idx] = 3

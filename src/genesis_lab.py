@@ -87,12 +87,19 @@ STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
 if STDP3C:
     os.environ["GENESIS_STDP3"] = "1"
     STDP3 = True
+# Within-lifetime remap task (Exp 34): compile-time branch inside world_tick (remaps the reward target
+# by a wall-clock phase) + a seeded ancestor fabric. Its kernel must not share a cache with the default.
+REMAP = os.environ.get("GENESIS_REMAP", "0") == "1"
+# Error/teaching-signal plasticity (Exp 35): compile-time branch inside the reward block (a local delta
+# rule on eye->vocal synapses that RECRUITS silent-but-wanted neurons, which STDP3C cannot). Key the cache.
+STDP_TARGET = os.environ.get("GENESIS_STDP_TARGET", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
     f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
     f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
-    f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}"))
+    f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}{'_remap' if REMAP else ''}"
+    f"{'_tgt' if STDP_TARGET else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -446,6 +453,28 @@ def create_intelligent_ancestor(dna=None):
         # cleanly above threshold in ONE step, giving a crisp deterministic 8-bit copy (Rules 9/10).
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
+
+    # --- REMAP FABRIC (Exp 34, gated GENESIS_REMAP, default off) ---
+    # The within-lifetime remap task (neuromorphic_engine REMAP) SWAPS two target bits (SB0<->SB1) in a
+    # wall-clock phase a fixed genome cannot pre-encode. STDP can only RE-WEIGHT synapses that already
+    # EXIST — so for a learner to re-route eye bit SB0 -> vocal bit SB1 (and SB1 -> SB0) in a swapped
+    # phase, those two CROSS synapses must be physically present to potentiate. The diagonal echo above
+    # keeps the colony ALIVE (identity phases + the 6 unswapped bits fund survival every phase); this
+    # adds ONLY the two cross routes at ZERO initial weight (raw 128 = w 0): present but silent, so the
+    # clean diagonal echo bootstrap is uncorrupted (the full 8x8 fabric, tried first, cold-cliffed the
+    # colony under learning — 56 corruptible routes slammed the echo; 2 routes is the minimal learnable
+    # remap). If credit-assigning STDP can drive these two routes up (and suppress the now-wrong diagonal
+    # bits) it re-tracks the swap; if it cannot (output-gated credit cannot recruit a SILENT synapse whose
+    # postsynaptic neuron never fires in the swapped phase, so no eligibility ever reaches it), the missing
+    # capability is localised. Only seeded under REMAP -> default ancestor byte-identical.
+    if os.environ.get("GENESIS_REMAP", "0") == "1":
+        SB0 = int(os.environ.get("GENESIS_REMAP_SB0", "0"))
+        SB1 = int(os.environ.get("GENESIS_REMAP_SB1", "1"))
+        # two cross routes, doubled for the same mutational robustness as the echo copy-synapses
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB0, VOCAL_BIT0 + SB1, 128])
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB0, VOCAL_BIT0 + SB1, 128])
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB1, VOCAL_BIT0 + SB0, 128])
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB1, VOCAL_BIT0 + SB0, 128])
     
     # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
     # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
@@ -1227,12 +1256,25 @@ def sim_loop():
                             on_canvas += 1
                     stig_line += f" oncanvas={on_canvas}"
 
+            # Exp 34 REMAP telemetry (observation-only): the current wall-clock phase and the windowed
+            # solve-rate. On the remap task the KEY signature is whether solve-rate RECOVERS after each
+            # phase flip: a NOLEARN reflex can only be correct in the rot==0 phase (echo) and drops when
+            # the mapping rotates; a real in-lifetime learner re-tracks each phase and holds solve-rate
+            # up across all phases. Printed only, never fed to selection.
+            remap_line = ""
+            if REMAP:
+                import neuromorphic_engine as _ne
+                _period = int(_ne.REMAP_PERIOD); _states = int(_ne.REMAP_STATES)
+                phase = (global_time // _period) % _states if _period > 0 else 0
+                solve_rate = (100.0 * r_success / (r_success + r_fail)) if (r_success + r_fail) else 0.0
+                remap_line = f" | remap_phase={phase}/{_states} solve%={solve_rate:.0f}"
+
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
                   f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
-                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}")
+                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}")
             
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk

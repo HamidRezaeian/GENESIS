@@ -523,6 +523,45 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      (which synapses caused the correct output). NEXT = a credit-assigning third factor (potentiate synapses
      onto neurons that drove the CORRECT vocal bits, depress wrong ones) = true reward-modulated STDP, then A/B
      for a rule that HOLDS above ablation. All flags kept as instruments; default byte-identical.
+- ✅ **Credit-assigning STDP HOLDS above ablation — criterion B met (Exp 33, 2026-07-17).** `GENESIS_STDP3C`
+     (per-vocal-bit signed eligibility trace): steady solve-rate 60% vs NOLEARN 51%, no brain shedding, no pop
+     decay across 400k ticks — first durable net-positive learning rule (`Ascent.md` §4e). But on a task a
+     FIXED reflex also solves, so it doesn't yet prove *construction* of new mappings.
+- 🛑 **Within-lifetime remap test — the learner CANNOT re-track: STDP prunes but cannot RECRUIT (Exp 34,
+     2026-07-18).** Built §4-step-2 (the affirmative test, never built before): `GENESIS_REMAP` (default-OFF,
+     compile-time gated, byte-identical off) makes the reading-reward target SWAP two vocal bits on a wall-clock
+     phase that is on NO sensory input — a fixed genome provably cannot pre-encode it, only in-lifetime plasticity
+     can track it. Measured in a survival-DECOUPLED sandbox (`tests/remap_sandbox_probe.py`, real kernel, frozen
+     energy-pinned 120-clone cohort, per-bit accuracy). **DECISIVE NEGATIVE:** in swapped phases the learner's
+     swap-bit accuracy is ~40% FLAT (no within-phase recovery, no cumulative gain over 5 phase-cycles) —
+     statistically indistinguishable from NOLEARN ~42%, while unchanged bits hold 99% (cohort healthy). Mechanism
+     (pre-registered prediction, confirmed): STDP3C's credit is OUTPUT-GATED — it updates only on a POST-synaptic
+     spike, so it can LTD-PRUNE a wrong-firing route but cannot RECRUIT a silent-but-wanted neuron (no spike → no
+     eligibility → no gradient). Exp 33's win is real but NARROW: it *tunes/prunes an already-firing* reflex, it
+     does not *construct* a new input→output mapping — the difference between tuning a circuit and building one,
+     and building is what reasoning (Rule 6) needs. **Does NOT trigger the kill-criterion — localises the defect:
+     the rule carries a REWARD signal, not an ERROR signal.** NEXT = a SUBSTRATE change to the plasticity rule
+     (NOT another economy lever): inject a small TARGET CURRENT into the vocal neurons the target byte says should
+     be ON (org's own reading target, Rule 9 autotelic, constant-free) so a wanted-silent neuron spikes and its
+     afferents become LTP-eligible; re-run this exact sandbox A/B. If swap-bit accuracy then climbs and holds
+     above NOLEARN → substrate can construct mappings in-lifetime (first evidence it can support reasoning); if
+     not → kill-criterion genuinely in play. `GENESIS_REMAP` + sandbox probe kept as permanent instruments.
+- ✅ **Error/teaching signal RECRUITS — the substrate CONSTRUCTS a new mapping in-lifetime (Exp 35,
+     2026-07-18).** Built the pre-registered Exp-34 fix: `GENESIS_STDP_TARGET` (default-OFF, compile-time gated,
+     byte-identical off) — a local DELTA RULE on eye→vocal synapses, `err_b = target_b − output_b`, that
+     POTENTIATES a wanted-but-SILENT neuron's active eye afferents with NO post-spike required (the recruitment
+     gradient STDP3C lacks). Biologically the dendritic-error/teaching current of predictive-coding SNNs, NOT
+     backprop; autotelic (target = org's own read target, Rule 9) + constant-free (reuses STDP_DIV/CELL_STATES).
+     **BREAKTHROUGH in the sandbox A/B:** STDP_TARGET re-tracks the swap **56%→~99% within ~2000 ticks EVERY phase
+     flip** (recovery curve absent in Exp 34), re-learning faster each cycle, unchanged bits hold 99%; NOLEARN +
+     STDP3C stay flat ~40%. **First in-lifetime CONSTRUCTION of a new input→output mapping in the project** — the
+     substrate can BUILD a pathway, not only tune/prune one (Exp 33). Affirmative criterion B on a reflex-proof
+     task; kill-criterion NOT in play, substrate validated one level deeper. **Honest scope:** proven in the
+     ISOLATED sandbox (frozen energy-pinned cohort, seeded 2-bit fabric); NOT yet shown to beat NOLEARN on the
+     LIVE books economy or to generalise to evolved topology. NEXT (in order): (1) live-loop A/B STDP_TARGET vs
+     NOLEARN vs STDP3C on 00_Graded (holds above ablation on the real economy? fixes Exp-33 residual drift?);
+     (2) criterion-A push (make held capability RISE) on a rule that can now construct. `GENESIS_STDP_TARGET` kept
+     as permanent instrument; default byte-identical (re-verified). Full write-up: `Ascent.md` §4g, `Result.md` Exp 35.
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

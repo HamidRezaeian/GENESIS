@@ -501,6 +501,50 @@ is a credit-assigning third factor (reward-modulated eligibility that potentiate
 the *correct* vocal bits and depresses those driving wrong bits) — a true reward-modulated STDP. All diagnostic
 and repair flags are retained as instruments; the default path is byte-identical.
 
+**Credit-assigning STDP holds above ablation, then the remap test exposes its limit — STDP prunes but cannot
+RECRUIT (Exp 33–34, 2026-07-17/18).** Exp 33 built the credit-assigning third factor (`GENESIS_STDP3C`: a
+per-vocal-bit signed eligibility trace, +1/−1/0 from the read's own per-bit correctness, multiplying each
+Phase-3 vocal-bit update) and it became the first learning rule to **durably beat ablation** (steady solve-rate
+60 % vs NOLEARN 51 % over 400 k ticks, no shedding, no pop decay). But that task — next-symbol prediction — is
+one a *fixed reflex also solves, so it does not prove the substrate can LEARN a genuinely new mapping. Exp 34
+built the affirmative test (`Ascent.md` §4 step 2, never built before): `GENESIS_REMAP` (default-OFF,
+compile-time gated, byte-identical off) makes the reading-reward target **swap two vocal bits** on a wall-clock
+phase that is on **no sensory input**, so a fixed genome cannot pre-encode it and only in-lifetime plasticity
+can track it. Measured in a survival-decoupled sandbox (`tests/remap_sandbox_probe.py`, driving the real kernel
+with a frozen, energy-pinned cohort so *only weights change*), the result is a **decisive negative**: in swapped
+phases the learner's swap-bit accuracy is **~40 %, flat, with no within-phase recovery and no cumulative gain
+across phase-cycles — indistinguishable from the NOLEARN ~42 %**, while the unchanged bits hold 99 % (the cohort
+is healthy; only the bits that require *learning* fail). The mechanism is exactly the pre-registered prediction:
+STDP (even credit-assigned) updates a synapse only on a **post-synaptic spike**, so it can LTD-*prune* a
+wrong-firing pathway but cannot **recruit** a silent-but-wanted neuron (no spike → no eligibility → no gradient).
+Exp 33's win is therefore real but **narrow — it tunes/prunes an already-firing reflex, it does not construct a
+new input→output mapping** (the difference between tuning a circuit and building one; building is what reasoning,
+Rule 6, requires). This does **not** trigger the kill-criterion; it localises the defect — **the rule carries a
+REWARD signal, not an ERROR signal** — and fixes the next step as a *substrate change to the plasticity rule*
+(a target/teaching current that depolarises wanted-silent vocal neurons so their afferents become LTP-eligible),
+not another economy lever. `GENESIS_REMAP` and the sandbox probe are retained as permanent instruments; the
+default path is byte-identical (re-verified). Full account: `Docs/Ascent.md` §4f, `Result.md` Exp 34.
+
+**The teaching signal repairs it — the substrate CONSTRUCTS a new mapping in-lifetime (Exp 35, 2026-07-18).**
+The pre-registered fix was built: `GENESIS_STDP_TARGET` (default-OFF, compile-time gated, byte-identical off), a
+local **delta rule** on the reading-eye→vocal-bit synapses applied on a rewarded read — for each vocal bit b,
+`err_b = target_b − output_b`, and each synapse from an *active* eye input onto vocal neuron b is nudged by
+`err_b`. `err_b=+1` (a *wanted-but-silent* neuron) **potentiates that neuron's active eye afferents with no
+post-synaptic spike required** — the recruitment gradient credit-assigned STDP structurally cannot supply — while
+`err_b=−1` depresses a fired-but-unwanted route. This is the local, biologically-plausible teaching/error current
+of dendritic-error / predictive-coding SNNs (a "should-fire" signal to the apical dendrite), not backprop; it is
+autotelic (target = the org's own read target, Rule 9) and constant-free (reuses `STDP_DIV`/`CELL_STATES`, Rule
+17). In the same sandbox the result is decisive: `STDP_TARGET` **re-tracks the swap 56 % → ~99 % within ~2000
+ticks at every phase flip** (the recovery curve absent under STDP3C), re-learning faster each cycle, with the
+unchanged bits held at 99 %, while NOLEARN and STDP3C stay flat ~40 %. This is the **first in-lifetime
+construction of a new input→output mapping** in the project — the substrate can *build* a pathway, not only tune
+or prune an already-firing one — the affirmative form of criterion B on a reflex-proof task, and the first
+concrete evidence the substrate can support the circuit-*construction* that reasoning (Rule 6) requires. Honest
+scope: proven in the isolated sandbox (frozen, energy-pinned cohort on the seeded 2-bit cross-fabric); its value
+on the **live** economy over deep time, and its generalisation to *evolved* topology, are the pre-registered next
+tests. `GENESIS_STDP_TARGET` is retained as a permanent instrument; the default path is byte-identical
+(re-verified). Full account: `Docs/Ascent.md` §4g, `Result.md` Exp 35.
+
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise
 point mutations at an expected rate of `1/genome_length` (thermal copy noise). Bytes 0–1

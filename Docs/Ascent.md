@@ -293,8 +293,150 @@ assigning learner can track it) — then A/B for the full A ∧ B ∧ C finish l
 
 ---
 
-- New experiments are pre-registered against §2's criteria before running; a run that doesn't move A/B/C
-  is a **closed branch**, not a prompt for a new mechanic.
+## 4f. RESULT — Experiment 34: the within-lifetime remap test (§4 step 2). The learner CANNOT re-track: STDP prunes but cannot RECRUIT (2026-07-18).
+
+§4 step 2 — the affirmative test of Rule-6 learning that *no experiment had ever built* — was built and run.
+The doubt it targets (§3, 2nd disconfirming hypothesis): next-symbol prediction is well-served by a *fixed*
+reflex, so Exp 33's "learning is load-bearing" could still be evolution-of-a-fixed-reflex on a task a reflex
+also solves. The remap task removes that escape hatch by making the **correct answer change within one
+lifetime**, on a wall-clock phase that is on **no sensory input** — so a fixed genome provably cannot
+pre-encode it and only genuine in-lifetime plasticity can track it.
+
+**Task (`GENESIS_REMAP`, default-OFF, compile-time gated, byte-identical when off).** In a "swapped" phase
+the reading-reward target has two designated vocal bits **exchanged** (SB0↔SB1); in the identity phase the
+target is the ordinary next byte. The other 6 bits echo normally, so survival is barely perturbed and the
+*only* thing that must be *learned* is to re-route eye-bit SB0→vocal-bit SB1 (and vice-versa) when the phase
+flips. The ancestor is seeded with the two **cross synapses** at **zero weight** (present but silent), so
+credit-assigning STDP has a physical route to potentiate — its fairest possible shot. (A first design used a
+full 8×8 eye→vocal fabric; under learning it cold-cliffed the colony — 56 corruptible routes slam the echo —
+which is itself the first data point: *dense plastic input fabric + STDP = catastrophic drift*. The minimal
+2-route form isolates the question cleanly.)
+
+**Measurement — a survival-DECOUPLED held-out sandbox probe** (`tests/remap_sandbox_probe.py`, Rules 9↔6/14).
+Every prior "does it learn?" result was confounded by the economy: making reading harder drives the colony to
+the refuge floor (pop=12), so a learner's re-tracking cannot be separated from the economy collapsing. This
+probe removes the economy entirely and drives the **real `world_tick_numba` kernel** (Live-Loop-Test-Gap rule):
+a frozen cohort of 120 REMAP-ancestor clones stands on a fixed text patch, **energy pinned high every tick**
+(nobody dies, nobody reproduces → only synaptic weights change), the remap phase alternates on the
+`REMAP_PERIOD` clock, and observation-only **per-bit accuracy** is split into the 2 swapped bits vs the 6
+unchanged bits.
+
+| phase (steady, all 5 phase-cycles identical) | STDP3C (learner, DIV=32) | NOLEARN (ablation) |
+|---|---|---|
+| unchanged-bit accuracy (health check) | **~99 %** | **~99 %** |
+| identity-phase swap-bit accuracy | ~87 % | ~87 % |
+| **swapped-phase swap-bit accuracy** | **~40 % (flat, no trend)** | **~42 % (flat, no trend)** |
+
+**The learner does NOT re-track the swap — it is statistically indistinguishable from the ablation** (~40 %
+vs ~42 %; the learner is marginally *worse*, from weight noise). At fine resolution (250-tick windows across
+a 3000-tick swapped phase) the swap-bit accuracy is **flat noise around 40 %** from the first window to the
+last — no within-phase recovery curve, no cumulative improvement across 5 phase-cycles. 120 organisms × 3000
+ticks of in-phase experience produce **zero** measurable learning of the new mapping, while the unchanged
+bits stay at 99 % (proving the cohort is healthy and reading fine — *only* the bits that require learning fail).
+
+**This is a decisive, pre-registered NEGATIVE, and it localises the substrate defect precisely — it does NOT
+trigger the kill-criterion.** The mechanism is exactly the pre-registered prediction from the kernel analysis:
+**STDP3C's credit is OUTPUT-GATED — it can only reinforce/suppress vocal neurons that ACTUALLY FIRED.** In a
+swapped phase the echo diagonal makes vocal-SB0 fire (now *wrong*) and leaves vocal-SB1 **silent** (it *should*
+fire). Hebbian-family STDP (even credit-assigned) updates a synapse only on a **post-synaptic spike**; a silent
+neuron generates no eligibility, so there is **no gradient that can turn a silent-but-wanted neuron ON**. The
+rule can *prune* a wrong active pathway (LTD on the firing wrong bit) but cannot *recruit* a new one. Exp 33's
+"learning holds above ablation" is therefore real but **narrow**: STDP3C consolidates/prunes an *already-firing*
+correct-ish reflex; it does **not** perform the credit-*construction* that in-lifetime learning of a genuinely
+new input→output mapping requires. This is the difference between *tuning* a circuit and *building* one — and
+building is what reasoning/abstraction (Rule 6) needs.
+
+**The diagnosis is not "the substrate cannot learn" (kill-criterion) but "the learning RULE carries a reward
+signal, not an ERROR signal."** A `was-I-right?` scalar/per-bit-credit reaches only neurons that fired; a
+teaching signal must also reach neurons that *should have fired and did not* (the classic delta/backprop-style
+term, or a biologically-plausible three-factor rule with a **target-driven dendritic/error current** that
+depolarises the wanted-silent neuron so it spikes and becomes eligible). **The pre-registered next step is
+therefore a SUBSTRATE change to the plasticity rule, not another economy lever:** inject, on a rewarded read, a
+small **target current** into the vocal neurons the target byte says *should* be on (derived from the org's own
+reading target — Rule 9 autotelic, constant-free), so a wanted-silent neuron fires and its afferents become
+eligible for LTP. Then re-run this exact sandbox A/B: if swapped-phase accuracy now *climbs within a phase and
+holds above NOLEARN*, the substrate can construct new mappings in-lifetime (criterion B affirmed on a
+reflex-proof task, and the first real evidence the substrate can support reasoning). If it *still* cannot after
+a correct error-signal rule, the kill-criterion is genuinely in play. `GENESIS_REMAP` and the sandbox probe are
+kept as permanent instruments; the default engine is byte-identical (verified) and was re-checked — no regression.
+
+---
+
+## 4g. RESULT — Experiment 35: the error/teaching signal RECRUITS — the substrate CONSTRUCTS a new mapping in-lifetime (2026-07-18). The Exp-34 negative is repaired.
+
+The Exp-34 diagnosis was precise: STDP (even credit-assigned) updates only on a post-synaptic spike, so it can
+prune a wrong-firing route but cannot **recruit** a silent-but-wanted neuron. The pre-registered fix — a
+teaching/**error** signal rather than a reward signal — was built and run against the *same* sandbox.
+
+**The rule (`GENESIS_STDP_TARGET`, default-OFF, compile-time gated, byte-identical when off).** A local delta
+rule on the reading-eye→vocal-bit synapses, applied in the reward block on a rewarded read: for each vocal bit
+b, `err_b = target_b − output_b ∈ {+1, 0, −1}`; every synapse from an **active** eye input j onto vocal neuron b
+is nudged `w += err_b · (CELL_STATES/8)/STDP_DIV`. `err_b = +1` (WANTED but the neuron was **silent**)
+**potentiates** the silent neuron's active eye afferents **without** requiring a post-spike — the exact
+recruitment gradient STDP3C lacks; `err_b = −1` (fired but unwanted) depresses; `err_b = 0` leaves them. This is
+the local, biologically-plausible teaching current of predictive-coding / dendritic-error SNNs (a "should-fire"
+signal to the apical dendrite), **not** backprop. Autotelic (target = the org's own read target, Rule 9) and
+constant-free (reuses `STDP_DIV`, `CELL_STATES` — Rule 17); charged like an STDP update (activity-gated).
+
+**Result — sandbox A/B (identical to Exp 34; `STDP_TARGET`, DIV=4):**
+
+| rule | swapped-phase swap-bit accuracy | behaviour |
+|---|---|---|
+| NOLEARN (ablation) | ~41 % **flat** | fixed reflex, never re-tracks |
+| STDP3C (Exp 34) | ~40 % **flat** | cannot recruit silent neurons |
+| **STDP_TARGET (Exp 35)** | **56 % → ~99 % within ~2000 ticks, EVERY phase flip** | **constructs the new mapping in-lifetime** |
+
+Each phase transition now shows the recovery curve that was **absent** in Exp 34: at a flip to SWAP the swap-bit
+accuracy drops to ~56 % (old mapping wrong), then climbs 84 → 86 → 98 → 99 % and holds; at the flip back to
+identity it drops to ~50 % and re-climbs to ~99 %; the re-learning **repeats every cycle and gets faster**
+(later cycles rail in fewer windows). The unchanged bits hold 99 % throughout (the teaching signal touches only
+the eye→vocal fabric it is supposed to). The NOLEARN control on the identical fabric stays flat ~41 %, proving
+the recovery is real in-lifetime plasticity, not a measurement artefact.
+
+**Interpretation — the first in-lifetime CONSTRUCTION of a new input→output mapping in the project's history.**
+Exp 33 showed the substrate can *tune/prune* an already-firing reflex; Exp 34 showed credit-assigned STDP cannot
+*build* a new pathway; Exp 35 shows that **with an error signal that reaches silent-but-wanted neurons, the
+substrate CAN build one** — re-tracking a mapping whose correct answer changes within a lifetime, on a task a
+fixed genome provably cannot pre-encode. This is the affirmative form of criterion B on a reflex-proof task and
+the first concrete evidence the substrate can support the circuit-*construction* that reasoning/abstraction
+(Rule 6) requires. The kill-criterion is **not** in play; the substrate is validated one level deeper than Exp 33
+left it — it can *learn to compute a new function*, not only tune a fixed one.
+
+**Honest scope + next step (pre-registered).** This is proven **in the isolated sandbox** (frozen, energy-pinned
+cohort on the seeded cross-fabric) — it isolates the learning mechanism from the economy by construction. It is
+**not yet** shown that (i) `STDP_TARGET` beats NOLEARN on the **live books economy** (survival + comprehension
+over deep time, the Exp-33 setting), nor (ii) that the recruitment mechanism generalises beyond the seeded 2-bit
+fabric to *evolved* topology. The next experiments are exactly those two, in order: (1) live-loop A/B
+`STDP_TARGET` vs NOLEARN vs STDP3C on `00_Graded` (does the recruiting rule hold above ablation on the real
+economy, and does it fix the Exp-33 residual drift?); (2) then the criterion-A push (make held capability RISE),
+now on a rule that can *construct* rather than only tune. `GENESIS_STDP_TARGET` + `GENESIS_REMAP` +
+`tests/remap_sandbox_probe.py` kept as permanent instruments; default engine byte-identical (re-verified: cache
+`genesis_numba_books`, ancestor 31 synapses).
+
+**UPDATE — the live-loop A/B was run the same day, and the step size is decisive (the Exp-31 lesson recurs).**
+Live A/B on `00_Graded`, 120–150 k ticks each:
+
+| arm | population | solve-rate `reads/(reads+miss)` | Universe N |
+|---|---|---|---|
+| NOLEARN | 600 | ~77 % | 26 173 |
+| STDP3C (DIV=32) | 600 | ~52 % | 26 059 |
+| **STDP_TARGET, DIV=4** (large step) | **40 (CLIFFS)** | ~95 % (survivors) | 1 649 (tiny) |
+| **STDP_TARGET, DIV=32** (small step) | **600 (full, no shed)** | **~74 %** | 25 971 |
+
+At the large step (DIV=4) the teaching signal is so strong it slams the eye→vocal fabric to a minimal hyper-echo
+during the bootstrap — Rule-7 efficiency then selects the tiny brain and most founders starve (**the Exp-31
+bang-bang cliff, now on the teaching-signal axis**; the energy-pinned sandbox hid it because nothing could die).
+At the **small step (DIV=32)** the tension resolves: `STDP_TARGET` **sustains a full 600 colony with no shedding
+and ~74 % comprehension** (vs NOLEARN's ~77 %, STDP3C's ~52 %) — i.e. it is now **economy-compatible AND still
+recruits** (the DIV=32 sandbox re-tracks the swap 66 %→~97 % every flip). So the shippable setting is the small
+step. This is the **first learning rule that both (a) constructs a genuinely new in-lifetime mapping (Exp 35
+sandbox) and (b) survives the live economy at full population** — though on the *stationary* books task it does
+not yet *beat* NOLEARN's comprehension (it roughly matches it, because next-symbol prediction rewards a fixed
+echo the ablation already nails). The honest conclusion: the recruiting rule's *value* shows up where the task
+requires **learning a new mapping** (the remap), not where a fixed reflex suffices — which is precisely why the
+next step (criterion A) must put the colony on a task whose optimum *keeps moving*, so construction is
+continuously required and the rule that can construct out-competes the one that cannot. `GENESIS_STDP_DIV=32` is
+the operative step for `STDP_TARGET`; the DIV=4 cliff is retained as the bang-bang A/B extreme.
 - `Rules.md` gains **Rule 18** (pre-registered falsifiable finish line + validate the load-bearing
   assumption before adding mechanics) so this discipline is permanent, not a one-off.
 - The UI (next task) will surface the A/B/C probes (`C(t)`, learning-ablation delta, `C/footprint`) so
