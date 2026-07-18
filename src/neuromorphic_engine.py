@@ -108,6 +108,27 @@ STDP_DIV = np.float32(float(os.environ.get("GENESIS_STDP_DIV", "1")))
 # reward), which is the standard three-factor trace.
 STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
 
+# CREDIT-ASSIGNING THREE-FACTOR STDP (Exp 33, default-OFF, superset of STDP3). The Exp-32 residual
+# diagnosis: STDP3's neuromodulator only GATES the timing of plasticity (learn when comprehending),
+# not the DIRECTION. While reading pays, full-gain Hebbian STDP is back on and blindly reinforces
+# EVERY coincident synapse incl. those driving WRONG vocal bits -- so decode-good weights still drift
+# (the slow rot Exp 31 isolated). A reward MAGNITUDE is not an error SIGNAL: the third factor must
+# carry WHICH synapses deserve credit for the correct prediction, not merely THAT reward occurred.
+# FIX = per-destination signed eligibility. Reading reward already scores each vocal bit separately
+# against the target byte (correct_bits / wrong_bits below): a vocal neuron that fired a bit the target
+# HAD is correct (credit +), one that fired a bit the target LACKS is wrong (credit -). Gate each Phase
+# 3 update by this per-bit sign: LTP onto a correct-bit neuron, LTD (reverse) onto a wrong-bit one,
+# silent/irrelevant bits zero -- so plasticity only consolidates synapses that drove CORRECT output.
+# Biologically faithful (dopamine-gated, per-ensemble eligibility trace, Rule 6/11). Autotelic: the
+# credit sign DERIVES from reading's own per-bit correctness, never a human label (Rule 9), and is a
+# pure per-bit ratio -- constant-free (Rule 17). Composes with STDP_DIV (small steps). One-tick
+# eligibility DELAY (update uses last tick's per-bit credit, like the stdp_mod scalar below). Motor
+# output neurons (out_idx 0..5) carry no per-bit correctness, so they keep the scalar stdp_mod
+# (Exp-32 behaviour preserved) -- credit targets exactly the diagnosed drift, the vocal decode.
+# Compile-time gated -> default kernel byte-identical. Requires the org_elig array (threaded like
+# org_reward; 8 floats = 8 bits) plus STDP3 (uses its stdp_mod gain).
+STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
+
 # STIGMERGY (Exp 25, default-OFF, requires DEPLETE). The Exp-24 vetting named the escape recipe:
 # destructive/rivalrous built cells + an authored value DECOUPLED from the reading eye + depth that
 # pays more per cell (not a flat royalty). Minimal falsifiable primitive: OVERLOAD OUT_CONSUME on a
@@ -449,7 +470,7 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -643,6 +664,21 @@ def world_tick_numba(
                     src = global_conn_src[s_ptr + c]
                     dst = global_conn_dst[s_ptr + c]
 
+                    # Exp 33 CREDIT ASSIGNMENT: per-destination eligibility. STDP3's plasticity
+                    # gain is a single org scalar (stdp_mod) -- it scales all updates equally so
+                    # wrong-bit drivers get reinforced as much as right ones (the slow-rot cause).
+                    # Here the gain becomes per-SYNAPSE: for a synapse onto a VOCAL-bit neuron,
+                    # multiply by that bit's signed credit from last tick (org_elig[org, v_idx],
+                    # +1 correct / -1 wrong / 0 silent) -- LTP then consolidates only correct-bit
+                    # drivers, and LTD reverses onto wrong-bit drivers. For motor / hidden / input
+                    # destinations there is no per-bit correctness, so the gain stays the scalar
+                    # stdp_mod (Exp-32 behaviour preserved). One-tick eligibility delay. The branch
+                    # is compile-time gated (STDP3C off -> dst_gain == stdp_mod, byte-identical).
+                    dst_gain = stdp_mod
+                    if STDP3C:
+                        if dst >= N_INPUT + 6 and dst < N_IO:
+                            dst_gain = stdp_mod * org_elig[org, dst - N_INPUT - 6]
+
                     if curr_spk_buf[dst]:
                         t_pre = global_t_last[n_ptr + src]
                         if t_pre >= 0 and t_pre < t_now:
@@ -650,7 +686,7 @@ def world_tick_numba(
                             r_idx = global_rec_id[n_ptr + dst]
                             if not STDP_COSTONLY:
                                 w = global_conn_weight[s_ptr + c]
-                                w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / STDP_DIV * stdp_mod
+                                w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / STDP_DIV * dst_gain
                                 if w > W_MAX: w = W_MAX
                                 global_conn_weight[s_ptr + c] = w
                             # Plasticity is real compute (an exp() + weight write). Charge it when
@@ -666,7 +702,7 @@ def world_tick_numba(
                             r_idx = global_rec_id[n_ptr + dst]
                             if not STDP_COSTONLY:
                                 w = global_conn_weight[s_ptr + c]
-                                w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / STDP_DIV * stdp_mod
+                                w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / STDP_DIV * dst_gain
                                 if w < W_MIN: w = W_MIN
                                 global_conn_weight[s_ptr + c] = w
                             total_atp += CYCLES_PER_STDP_UPDATE
@@ -873,8 +909,15 @@ def world_tick_numba(
                 tgt_b = (next_byte >> b) & 1
                 if out_b == 1 and tgt_b == 1:
                     correct_bits += 1
+                    if STDP3C:
+                        org_elig[org, b] = np.float32(1.0)
                 elif out_b == 1 and tgt_b == 0:
                     wrong_bits += 1
+                    if STDP3C:
+                        org_elig[org, b] = np.float32(-1.0)
+                else:
+                    if STDP3C:
+                        org_elig[org, b] = np.float32(0.0)
             net = correct_bits - wrong_bits
             if net != 0:
                 gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
@@ -978,8 +1021,15 @@ def world_tick_numba(
                             tb = (pval >> b) & 1
                             if ob == 1 and tb == 1:
                                 pc += 1
+                                if STDP3C:
+                                    org_elig[org, b] = np.float32(1.0)
                             elif ob == 1 and tb == 0:
                                 pw += 1
+                                if STDP3C:
+                                    org_elig[org, b] = np.float32(-1.0)
+                            else:
+                                if STDP3C:
+                                    org_elig[org, b] = np.float32(0.0)
                         pnet = pc - pw
                         if pnet != 0:
                             pgain = np.float32(pnet) / BITS_PER_BYTE * CELL_STATES

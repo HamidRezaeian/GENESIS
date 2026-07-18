@@ -1794,6 +1794,54 @@ wrong bits) — true reward-modulated STDP — then A/B for a rule that *holds* 
 
 ---
 
+## 🧪 Experiment 33 — Credit-Assigning Three-Factor STDP HOLDS Above Ablation: Criterion B Met for the First Time (2026-07-17)
+
+The Exp-32 diagnosis was that the scalar `stdp_mod` gates the *timing* of plasticity but never its
+*direction*: while reading pays, full-gain Hebbian STDP reinforces every coincident synapse — including
+those driving the WRONG vocal bits — so the decode-good genetic weights still drift (the slow rot Exp 31
+isolated). The fix is `GENESIS_STDP3C` (default-OFF, superset of STDP3): a **per-vocal-bit signed
+eligibility trace**. Reading reward already scores each of the 8 vocal bits separately against the target
+byte (`correct_bits` / `wrong_bits` in the reward block); that per-bit verdict is stored as
+`org_elig[org, 0..7]` (+1 correct, −1 wrong, 0 silent, one-tick eligibility delay) and multiplies each
+Phase-3 update whose destination is a vocal-bit neuron. LTP consolidates ONLY correct-bit drivers; LTD
+reverses onto wrong-bit drivers; motor/hidden destinations keep the scalar `stdp_mod` (Exp-32 behaviour
+preserved). Autotelic (the credit sign derives from reading's own per-bit correctness, never a human label
+— Rule 9), constant-free (a pure per-bit ratio — Rule 17), compile-time gated (default byte-identical,
+verified live), composes with `STDP_DIV=32` (small steps); STDP3C implies STDP3 (same dopamine ×
+eligibility gain).
+
+Live A/B on the default books economy (`00_Graded`), STDP3C vs the NOLEARN control, both to **400 000
+LIF-ticks**, identical environment:
+
+| metric | NOLEARN (ablation) | STDP3C (credit-assigning) |
+|---|---|---|
+| population | 599–600 flat | 597–599 flat |
+| brain size `Universe N` | ~25 900 flat | ~26 050 flat (NO shedding) |
+| solve-rate `reads/(reads+miss)`, early | ~54 % | **~72 %** |
+| solve-rate, steady (~350 k ticks) | **~51 %** | **~60 %** |
+
+**Criterion B (learning is load-bearing) is SATISFIED — and, unlike every prior rule, it HOLDS.** STDP3C
+stays *above* the ablation baseline across the whole 400 k-tick run (steady 60 % vs 51 %), with **no brain
+shedding** (`N` flat ~26 050 vs Exp-32's 26 267 → 10 611 collapse) and **no population decay** (599 flat vs
+Exp-32's 599 → 251). Giving the third factor *which synapses deserve credit* — not merely *that* reward
+occurred — is what makes in-lifetime learning net-positive AND stable on this substrate. This is the first
+learning rule in the project's history that measurably and durably beats not-learning; the kill-criterion
+stays un-triggered and the SNN-on-RAM substrate is now positively validated as a learner, not merely un-
+falsified (see `Docs/Ascent.md` §4e).
+
+Residual (next target = criterion A, not a new economy lever): a mild early-to-steady drift (72 % → 60 %) —
+credit assignment is *sufficient to hold above ablation* but capability criterion A (a sustained ≥25 % RISE
+in prediction-depth) is still not met. The frontier probe shows the colony sits ~93 % off-scroll in the
+arithmetic band while `pred` ≈ 0 — it holds the hard region without yet earning compute-depth income.
+Instrument notes: `GENESIS_STDP3C` kept as a permanent instrument (default = current behaviour); eligibility is
+written only in the stationary-read scoring block, so a jump-predict tick uses a one-tick-stale credit
+vector (bounded harmless — the reward-gate zeroes plasticity when reading pays nothing). **Next: make the
+held capability RISE — couple the credit trace to the prediction-DEPTH frontier, or run the §4-step-2 within-
+lifetime remap task (correct answer changes mid-life, where only a credit-assigning learner tracks it) —
+then A/B for the full A ∧ B ∧ C finish line.**
+
+---
+
 ## 3. Open Questions (Not Yet Demonstrated)
 
 Honest gaps between the engine's *capacity* and demonstrated *emergence*:

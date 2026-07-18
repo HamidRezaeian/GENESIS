@@ -165,6 +165,38 @@ i.e. the substrate itself became cheaper to simulate. We stress a limit: this es
 strong, correctly-signed selection *gradient* on footprint; it does not yet establish
 efficiency *at equal capability*, since capability remains unquantified.
 
+### 3.4 Validating the Load-Bearing Assumption: In-Lifetime Learning That Holds Above Ablation
+The project's load-bearing assumption (Rule 18; `Docs/Ascent.md`) is that a GENESIS organism's brain
+**learns within its lifetime** — that two-factor Hebbian STDP, gated by phenotypic reward, measurably
+improves comprehension over a non-learning control. A learning-ablation A/B (`GENESIS_NOLEARN` deletes the
+plasticity phase compile-time, byte-identical default) first *falsified* the assumption on the naive rule:
+ablating plasticity made the colony *more* stable, kept the brain *larger*, and *doubled* reading solve-rate
+(599 flat / 25.8 k neurons / ~51 % vs 596→423 / shed 34 % / ~23 %) — in-lifetime STDP was net-NEGATIVE
+(Exp 30). Diagnosis (Exp 31) separated three causes — bang-bang step size, metabolic overhead, and a ROOT
+lack of supervision: unsupervised Hebbian coincidence-reinforcement drifts decode-good genetic weights
+toward task-irrelevant correlations. A scalar reward-gated rule (three-factor, Exp 32: `GENESIS_STDP3`,
+one-tick-eligibility dopamine × the organism's own reading reward) first beat ablation *early* (78 %) but
+still drifted (599→251, N 26 267→10 611, solve 78 %→29 %): a reward *magnitude* gates *timing*, not
+*direction* — it reinforced wrong-bit drivers as much as right ones. A **per-vocal-bit signed eligibility
+trace** (Exp 33: `GENESIS_STDP3C`) assigns the credit direction: each of the 8 vocal bits is scored already
+by the reading reward against the target byte, and that per-bit verdict (+1 correct / −1 wrong / 0 silent,
+one-tick delayed) multiplies each plasticity update onto a vocal-bit neuron, so LTP consolidates only
+correct-bit drivers and LTD reverses onto wrong-bit ones; motor/hidden destinations keep the scalar gate.
+
+| rule | criterion-B A/B (books, 400 k LIF-ticks) | pop | `Universe N` | solve-rate |
+|---|---|---|---|---|
+| NOLEARN (ablation) | baseline | 599 flat | ~25 900 flat | ~51 % |
+| naive STDP (Exp 30) | **fails hard** (ablation better) | 596→423 | shed −34 % | ~23 % |
+| scalar-reward STDP (Exp 32) | beats early, drifts below | 599→251 | 26 267→10 611 | 78 %→29 % |
+| **credit-assigning STDP (Exp 33)** | **holds above ablation** | 597–599 flat | ~26 050 flat | **72 %→60 %** |
+
+Thus criterion B (learning load-bearing) is met for the first time and *sustained*: a credit-assigning
+third factor is the first learning rule to measurably and durably beat not-learning on this substrate, with
+no brain shedding and no population decay. A residual early-to-steady drift (72 %→60 %) remains, so
+capability criterion A (a sustained ≥25 % rise in prediction-depth) is not yet met; the next target is to
+make the *held* capability *rise* (credit-depth coupling or a within-lifetime-remap task), not to add an
+economy lever — the search has pivoted from shaping the market to designing the learning rule.
+
 ---
 
 ## 4. Discussion

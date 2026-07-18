@@ -245,7 +245,53 @@ depresses those onto wrong bits) — a true reward-modulated STDP, then A/B vs N
 
 ---
 
-## 5. What changes operationally
+## 4e. RESULT — Experiment 33: credit-assigning three-factor STDP HOLDS above ablation (2026-07-17). Criterion B is met for the first time.
+
+The Exp-32 residual was a credit-assignment failure: the neuromodulator `stdp_mod` is a single per-org
+scalar, so while reading pays it scales EVERY coincident synapse equally — including those that drove the
+WRONG vocal bits. A reward *magnitude* gated the *timing* of plasticity but never its *direction*, so the
+decode-good weights still drifted (the slow rot Exp 31 isolated). The fix (`GENESIS_STDP3C`, default-OFF,
+superset of STDP3): a **per-vocal-bit signed eligibility trace**. Reading reward already scores each of the
+8 vocal bits separately against the target byte (`correct_bits` / `wrong_bits`); that per-bit verdict is
+stored as `org_elig[org, 0..7]` (+1 correct, −1 wrong, 0 silent, one-tick delay) and multiplies each Phase-3
+update whose destination is a vocal-bit neuron. LTP then consolidates ONLY synapses that drove a correct
+bit; LTD reverses onto wrong-bit drivers; motor/hidden destinations keep the scalar `stdp_mod` (Exp-32
+behaviour). Autotelic (the credit sign derives from reading's own per-bit correctness, never a human label —
+Rule 9), constant-free (a pure per-bit ratio — Rule 17), compile-time gated (default byte-identical, verified),
+and composes with `STDP_DIV=32` (small steps). STDP3C implies STDP3 (same dopamine × eligibility gain).
+
+Live A/B on the default books economy (`00_Graded`), STDP3C vs the NOLEARN control, both to 400 000 LIF-ticks,
+identical environment:
+
+| metric | NOLEARN (ablation baseline) | STDP3C (credit-assigning) |
+|---|---|---|
+| population | 599–600 flat | 597–599 flat |
+| brain size `Universe N` | ~25 900 flat | ~26 050 flat (no shedding) |
+| solve-rate `reads/(reads+miss)`, early | ~54 % | **~72 %** |
+| solve-rate, steady (~350 k ticks) | **~51 %** | **~60 %** |
+
+**Criterion B (learning is load-bearing) is SATISFIED — and, unlike every prior rule, it HOLDS.** STDP3C
+stays *above* the ablation baseline across the whole 400 k-tick run (steady 60 % vs 51 %), with **no brain
+shedding** (`N` flat ~26 050 vs Exp-32's 26 267 → 10 611 collapse) and **no population decay** (599 flat vs
+Exp-32's 599 → 251). Directional credit assignment fixed the slow rot that scalar reward-gating (Exp 32)
+could not: giving the third factor *which synapses deserve credit* — not merely *that* reward occurred —
+is what makes in-lifetime learning net-POSITIVE and stable on this substrate. This is the first learning
+rule in the project's history that measurably and durably beats not-learning; the kill-criterion stays
+un-triggered and the SNN-on-RAM substrate is now positively validated as a learner, not merely un-falsified.
+
+Residual: a mild early-to-steady drift remains (72 % → 60 %), so credit assignment is *sufficient to hold
+above ablation* but not yet *monotone-rising* — capability criterion A (a sustained ≥25 % RISE in
+prediction-depth) is still not met. Note also the frontier probe: the colony sits ~93 % off-scroll in the
+arithmetic band but `pred` stays ~0, i.e. it holds the hard region without yet earning compute-depth income.
+Two instrument notes: (i) eligibility is written only in the stationary-read scoring block, so a jump-predict
+tick uses a one-tick-stale credit vector (bounded harmless — the reward-gate zeroes plasticity when reading
+pays nothing); (ii) `GENESIS_STDP3C` kept as a permanent instrument (default = current behaviour).
+**Next (targets criterion A, not a new economy lever): make the held capability RISE — e.g. couple the
+credit trace to the prediction-DEPTH frontier (pay/への consolidate compute-band predictions more), or the
+within-lifetime remap task of §4 step 2 (a task whose correct answer changes mid-life, where only a credit-
+assigning learner can track it) — then A/B for the full A ∧ B ∧ C finish line.**
+
+---
 
 - New experiments are pre-registered against §2's criteria before running; a run that doesn't move A/B/C
   is a **closed branch**, not a prompt for a new mechanic.

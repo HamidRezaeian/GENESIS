@@ -78,12 +78,21 @@ STDP_COSTONLY = os.environ.get("GENESIS_STDP_COSTONLY", "0") == "1"
 STDP_DIV = os.environ.get("GENESIS_STDP_DIV", "1")
 # Three-factor neuromodulated plasticity (Exp 32): compile-time branch → key the cache.
 STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
+# Credit-assigning three-factor STDP (Exp 33, superset of STDP3): compile-time branch -> key the cache.
+STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
+# STDP3C is a SUPERSET of STDP3: the credit sign multiplies the same neuromodulated gain (dopamine ×
+# per-bit eligibility), so turning on credit assignment forces the reward-gated timing on too. Set the
+# env var BEFORE neuromorphic_engine imports (it reads GENESIS_STDP3 independently at module load), so
+# a lone GENESIS_STDP3C=1 gives the full corrected rule without also having to pass GENESIS_STDP3=1.
+if STDP3C:
+    os.environ["GENESIS_STDP3"] = "1"
+    STDP3 = True
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
     f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
     f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
-    f"{'_stdp3' if STDP3 else ''}"))
+    f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -232,6 +241,11 @@ action_prev = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
 # Init 1.0 so the very first tick behaves like ordinary Hebbian STDP (neutral gain) before any reward
 # history exists. Only read/written by the kernel when GENESIS_STDP3=1.
 g_org_reward = np.ones(MAX_ORGANISMS, dtype=np.float32)
+# Exp 33 credit-assigning STDP: per-org, per-vocal-bit signed eligibility trace (one tick delayed).
+# 8 floats = the 8 vocal bits; +1 correct, -1 wrong, 0 silent. Init zero so the first STDP tick has
+# no spurious credit (vocal-bit plasticity silent until a prediction actually scores). Only read/
+# written by the kernel when GENESIS_STDP3C=1.
+g_org_elig = np.zeros((MAX_ORGANISMS, 8), dtype=np.float32)
 g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
 
@@ -755,7 +769,7 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig
     )
 
     for i in range(MAX_ORGANISMS):
@@ -971,7 +985,7 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig
         )
         
         for i in range(n_births):
