@@ -36,7 +36,7 @@ This models the universe's total computational matter as one shared heap; memory
 fragmentation is itself a spatial hazard.
 
 ### 1.4 Organisms — Genome-Encoded SNNs
-A genome is a byte string parsed into three record types:
+A genome is a byte string parsed into record types:
 - **`RECEPTOR_MARKER = 195`** (10 bytes): a "receptor protein" — one of up to
   `MAX_RECEPTORS_PER_ORG = 16` DNA-encoded plasticity profiles
   `(A_PLUS, A_MINUS, TAU_P, TAU_M, V_REST, V_RESET, TAU_DEFAULT, SPIKE_RATE_MAX)`.
@@ -44,9 +44,20 @@ A genome is a byte string parsed into three record types:
   threshold and a leak time-constant.
 - **`GENE_MARKER = 161`** (4 bytes): a synapse `(src, dst, weight)`; `weight` maps a raw
   byte to `float(w) − 128` (i.e. −128..+127).
+- **`SENSOR_MARKER = 196`** (5 bytes, `GENESIS_EVOSENSE`, default-OFF — Exp 37): an **evolvable
+  sensor** — a hidden-band neuron whose firing is driven by a real hardware **affordance**
+  `(aff_type, signed offset, param)` sampled at `pos+offset` (RAM byte / a single RAM bit /
+  cell occupancy / neighbour energy / neighbour vocal bit / own energy), not by LIF integration.
+  So the organism can **grow its own senses** coupled only to quantities the substrate physically
+  exposes (Rule 15), rather than a designer-fixed input layer. It is an ordinary synapse *source*,
+  so the reward/plasticity machinery is untouched; each affordance sample costs one honest cycle
+  (Rule 17). When off, dead-code-eliminated → byte-identical.
 
-Every organism has a fixed I/O layer of **`N_INPUT = 15`** sensory + **`N_OUTPUT = 14`**
-motor neurons (`N_IO = 29`) plus a variable number of hidden neurons.
+Every organism has an innate fixed I/O layer of **`N_INPUT = 25`** sensory + **`N_OUTPUT = 14`**
+motor neurons (`N_IO = 39`) plus a variable number of hidden/sensor neurons. *(This fixed I/O is the
+Rule-5 baseline and the last major un-dissolved abstraction; Exp 37 Phase A0 adds evolvable sensors
+alongside it, with Phases B/C — evolvable actuators, then dissolving the fixed input block so
+`N_INPUT/N_OUTPUT` stop being constants — pre-registered in Roadmap P4.)*
 
 ### 1.5 Neuron & Synapse Model
 - **Leaky Integrate-and-Fire** with `float32` voltage: leak `v += (v_rest − v)/tau`,
@@ -82,7 +93,9 @@ motor neurons (`N_IO = 29`) plus a variable number of hidden neurons.
 ## 2. Core Mechanisms
 ### 2.1 Thermodynamics = CPU Cycles
 Energy is execution cycles, drained per action from each organism's reserve
-(`ATP_MAX = 1,000,000` ceiling). Costs are **honest raw-cycle counts** — one executed
+(`ATP_MAX = RAM_SIZE × CELL_STATES` ceiling — the total matter-energy the universe holds, i.e. the honest
+physical bound on the cycles one organism can bank; a Rule-17 derivation of the former arbitrary `1e6`, Exp 36
+2026-07-18). Costs are **honest raw-cycle counts** — one executed
 operation debits one cycle (Rule 15/17), with no arbitrary discounts:
 - synapse transmission `1` (when the pre-synaptic neuron fired), **neuron membrane update
   `1 × n_spiked` per step** (`CYCLES_PER_NEURON_UPDATE`, **event-driven** — charged per action

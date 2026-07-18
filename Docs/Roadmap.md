@@ -585,10 +585,44 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
       NUMBA-cache keys are retired. **Measured:** books cohort reads (peak 58 correct/tick) and depth
       selects emergently 7.65→2.0, but the economy is **net-negative** and coast-collapses (~550 ticks)
       — see next bullet.
-- [ ] **Remaining honest magnitudes (NOT game constants, but next to derive/justify):** `ATP_MAX =
-      1e6` (energy ceiling — arbitrary; candidate = `RAM_SIZE × CELL_STATES`), `SYN_DENSITY_SCALE` /
-      `STDP_SCALE = 8`, viscosity denominator `1000`, `FOOD_SCAN_RADIUS = 16`. `+128` (int8 bias) and
-      the `1 cycle/op` costs are hardware-real — keep.
+- ✅ **Remaining honest magnitudes DERIVED — Rule-17 hardening (Exp 36, 2026-07-18).** The directive "no
+      constant without a physical derivation" (we build an AGI substrate, not a game) closed the last
+      neural-physics literals, each live-A/B'd on default books (all `pop=599–600, ext=0, refuge=0`, no shed):
+      `SYN_DENSITY_SCALE` **deleted** (dead literal); `STDP_SCALE 8 → BITS_PER_BYTE` (the register bit-width;
+      amplitudes stay DNA-encoded); crowd divisor `33 → 2·FOOD_SCAN_RADIUS+1` (the scan-window cell count);
+      **`ATP_MAX 1e6 → RAM_SIZE·CELL_STATES`** (16.77M — total universe matter-energy, the honest per-org
+      ceiling); **viscosity denom `1000 → MAX_DNA_PER_ORG/2`** (0.5 stall-cap at half the densest all-synapse
+      decode of the largest genome); **indel/dup rates `0.05/0.10/0.15 → 1/l`** (a structural slip is one
+      copy-head event at per-byte fidelity, so indels are rarer than point subs by factor l — the
+      biologically-correct ordering). Rule 17 itself was amended (three permitted classes: hardware-derived /
+      DNA-encoded / structural bound; a bare literal is a BUG to derive or move into DNA, never to tune).
+      Finding along the way: the *first* mutation derivation (equal structural/point split, `p_struct≈0.63`)
+      SHREDDED reading (`reads 132→20`, 4× churn destroys learned circuits faster than selection maintains) —
+      exposed that the old `0.05` silently protected capability; the corrected one-copy-head derivation restores
+      it (`reads ~100`). **TRACKED DEBT (Rule-17, explicit not silent):** the Lamarckian 50/50 consolidation
+      blend is still an inline literal — honest fix = DNA-encode it as a heritable per-lineage
+      acquired-inheritance fraction (a genome-format change, deferred as its own task). `FOOD_SCAN_RADIUS=16`
+      is now referenced-not-magic (the crowd window derives from it); `+128` int8 bias and `1 cycle/op` are
+      hardware-real — keep. See Result Exp 36, ARD §2.1.
+- ✅ **Evolvable SENSORS — the organism grows its own senses (Exp 37 = Phase A0, 2026-07-18).** Attacks the
+      deepest fixed abstraction (a designer-set `N_INPUT/N_OUTPUT` = the Rule-15 "video-game I/O" + the Exp-21
+      behavioural-expression ceiling): biology grew eyes/ears from environmental pressure, so a hardcoded
+      sensorimotor spec limits the organism. `GENESIS_EVOSENSE` (default-OFF, compile-gated, byte-identical off):
+      a new `SENSOR_MARKER` gene declares a **sensor neuron** whose firing comes from a DNA-chosen real hardware
+      **affordance** (RAM byte / a single bit=photoreceptor / occupancy=touch / neighbour energy / neighbour
+      vocal bit=hearing / own energy=interoception) sampled at a DNA-chosen offset — evolution can only couple to
+      what the substrate physically offers (Rule 15). Sensor neurons are ordinary sources into the net, so the
+      validated reward/STDP/REMAP wiring is untouched; each affordance sample is charged one honest cycle (Rule
+      17). **Live-verified:** default byte-identical; EVOSENSE-on-no-genes sustains pop600; the seeded demo
+      (`GENESIS_EVOSENSE_SEED`, a look-ahead eye + touch sensor) shows evolution **RETAINS + PROLIFERATES** the
+      self-wired senses — total live sensor neurons 1200→~1600 over 150k ticks, ~every org carries ≥1, pop600
+      ext0 (they earn their keep, mutation generates more = a live evolutionary substrate). **HONEST SCOPE: Phase
+      A0** adds an *extension* sensor apparatus alongside the innate fixed senses (Rule-5 baseline); it does NOT
+      yet dissolve N_INPUT/N_OUTPUT. **Continuation (pre-registered): Phase B** = evolvable ACTUATORS + migrate the
+      vocal/motor readout off the fixed indices (invasive — re-run the REMAP sandbox to confirm STDP_TARGET still
+      recruits); **Phase C** = migrate the innate senses into SENSOR genes too so n_c is fully genome-derived and
+      I/O stops being a constant. brain_io fingerprint already tracks N_INPUT/N_OUTPUT (auto-archives on change).
+      `GENESIS_EVOSENSE`/`_SEED` kept as instruments. See Result Exp 37, ARD §1.4.
 - ✅ **Flat-membrane blocker FIXED — event-driven membrane (Exp 8, 2026-07-12):** the membrane now
       charges `CYCLES_PER_NEURON_UPDATE × n_spiked` (per action potential), not `× n_count` (per neuron).
       On a 20 W substrate the spike is the energy event; idle neurons draw ~nothing (Rule 11). Result:

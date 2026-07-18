@@ -1982,7 +1982,94 @@ Honest gaps between the engine's *capacity* and demonstrated *emergence*:
   lever for ascent; (b) a peer-prediction coupling that does not extinguish its own substrate (Exp 11
   found `GENESIS_PEER=1` collapses the thriving colony).
 
+## 🧪 Experiment 36 — Rule-17 Hardening: Deriving the Last Magic Numbers from the Substrate (2026-07-18)
+
+Prompted by the directive that **no constant may exist without a physical derivation** — we are building an AGI
+substrate, not a game, so every number must fall out of the hardware/network environment or live in DNA, else we
+have merely a simulator. Rule 17 was amended (three permitted classes: HARDWARE-DERIVED, DNA-ENCODED, or an
+explicit STRUCTURAL BOUND; a bare literal is a *bug* to derive or move into DNA, never to tune). Six remaining
+neural-physics literals were closed, each **live-A/B'd on the default books economy** (all: `pop=599–600, ext=0,
+refuge=0`, no shedding):
+
+| constant | was | now (derived) | rationale |
+|---|---|---|---|
+| `SYN_DENSITY_SCALE` | `8.0` | **deleted** | dead literal — defined, never referenced (a dead magic number is still a violation) |
+| `STDP_SCALE` | `8.0` | `BITS_PER_BYTE` | the register's own bit-width maps a full receptor byte to one bit-plane of the weight range; the amplitudes themselves stay DNA-encoded |
+| crowd divisor | `/33.0` | `/(2·FOOD_SCAN_RADIUS+1)` | the divisor IS the number of cells in the scan window (density = occupied / cells-looked-at) |
+| `ATP_MAX` | `1e6` | `RAM_SIZE·CELL_STATES` (16.77M) | the honest ceiling on cycles one organism can bank = the total matter-energy in all of RAM |
+| viscosity denom | `/1000.0` | `/(MAX_DNA_PER_ORG/2)` | 0.5 stall-cap at half the densest all-synapse decode of the largest allowed genome (`MAX_DNA/4` synapses) |
+| indel/dup rates | `0.05/0.10/0.15` | per-byte `1/l` (one copy head) | see below |
+
+**The mutation-rate derivation surfaced a real finding (a useful negative on the way).** First attempt derived the
+structural-fault rate as "at least one per-byte slip over the whole genome," `1-(1-1/l)^l ≈ 0.63` — i.e. structural
+and point faults each carry ~half the load. Live A/B: the colony **survived but reading collapsed** (`reads 132→~20`,
+solve-rate ~47%→~10%, frontier fell back to the bootstrap band) — a **4× increase in structural churn shreds the
+reading circuit faster than selection maintains it.** This exposed that the old hand-set `0.05` was silently holding
+structural mutation low enough to preserve learned circuits. The corrected derivation is physically sharper: a
+substitution can occur at **every** byte (l sites → ~1 expected/copy, the per-byte sweep), but a structural slip is a
+**length change at the single copy head** — one site per replication — so `P(indel this copy) = 1/l`, making indels
+**rarer than point mutations by exactly the factor l** (the biologically-correct ordering, derived from "one copy
+head, per-byte fidelity 1/l", with no imported ratio). Re-A/B: `reads ~90–109`, capability preserved, indels down
+~30× from the old 15% with no harm (structural churn was never load-bearing for survival, only destructive to
+capability above a threshold). Point-mutation frequency is unchanged (it was already the honest `1/l` sweep).
+
+**Net:** the physics engine now contains no un-derived neural-physics constant — every remaining literal is either a
+hardware fact (`BITS_PER_BYTE`, `CELL_STATES`, `±128` int8 range, `1 cycle`/op), a structural capacity bound
+(`MAX_ORGANISMS`, `UNIVERSE_MAX_*`, `MAX_DNA_PER_ORG`), or DNA-encoded (receptor amplitudes/thresholds/potentials).
+Remaining tracked Rule-17 debt (logged in `Roadmap.md` P4, not silently left): the Lamarckian 50/50 consolidation
+blend is still an inline literal — the honest fix is to **DNA-encode it** (a heritable per-lineage
+acquired-inheritance fraction evolution tunes), which is a genome-format change deferred as its own task. Default
+economy re-verified byte-identical for the *unchanged* paths; the derived paths are live-A/B-verified healthy.
+
+## 🧪 Experiment 37 — Evolvable Sensors: the Organism Grows Its Own Senses (Phase A0, 2026-07-18)
+
+Prompted by the directive that a **fixed sensorimotor spec is us limiting the organism**: biology did not receive
+"eyes/ears" as a designed I/O layer — environmental pressure *grew* them from receptors coupled to physical
+quantities that already existed (light, sound). Any hardcoded `N_INPUT=25 / N_OUTPUT=14` is the "video-game
+abstraction" Rule 15 forbids and the behavioural-expression ceiling Exp 21 named. This experiment begins
+dissolving it: the sensory apparatus becomes **DNA-encoded and mutable**, so evolution discovers *what to sense
+and where*.
+
+**Mechanism (`GENESIS_EVOSENSE`, default-OFF, compile-time gated, byte-identical off).** A new `SENSOR_MARKER`
+gene (5 bytes `[marker, slot, aff_type, offset+128, param]`, modelled on the proven `RECEPTOR_MARKER` pattern)
+declares a **sensor neuron** in the hidden band whose firing comes from a real hardware **affordance** sampled at
+a DNA-chosen signed offset from the pointer — not from LIF integration. Six affordances, each a quantity the
+substrate already exposes (Rule 15 — evolution can only couple to what the machine physically offers, exactly as
+molecules bound the senses biology could build): RAM byte value, a single RAM bit (a digital photoreceptor), cell
+occupancy (touch), neighbour energy (chemoreception), a neighbour vocal bit (hearing), own energy
+(interoception). A sensor neuron is otherwise an ordinary **source** — synapses wire it into hidden/output
+neurons — so the *validated* reward/STDP/REMAP machinery (which indexes the fixed vocal/eye neurons) is
+completely untouched. Each affordance sample is a real memory read, **charged one honest cycle** (Rule 17), so a
+bloated sensor array pays for itself and cannot be a free lunch. `decode_genome`/`count_genes` handle the marker;
+`sense_affordance()` transduces once per tick; a per-neuron `sense_type`/`sense_meta` map carries the coupling.
+
+**Results (live, `00_Graded`):**
+- **Default byte-identical** (EVOSENSE off): ancestor 44 neurons/31 synapses, cache key `genesis_numba_books`,
+  unchanged — the whole apparatus is dead-code-eliminated.
+- **EVOSENSE on, zero sensor genes**: sustains `pop=600, ext=0, reads~103` — the gate is inert until a sensor
+  gene exists (correct).
+- **Seeded demo** (`GENESIS_EVOSENSE_SEED`: 2 sensor genes/founder — a "look-ahead eye" reading the RAM byte
+  `LONG_JUMP_STRIDE` cells ahead, a sense the fixed reading eye *cannot* provide, plus a proximity/touch sensor):
+  **evolution RETAINS and PROLIFERATES the self-wired senses.** Tick-cadence retention across 150 k ticks:
+  total live sensor neurons **1163 → 1389 → 1611 → 1600**, with ~every organism carrying ≥1 (`orgs_with_sensor`
+  596→599), `pop=600 ext=0 refuge=0` throughout. Starting from ~1200 seeded, the colony *grew* the count to
+  ~1600 — the sensors are not costly dead weight pruned by Rule-7 efficiency; they earn their keep, and mutation
+  actively generates new ones, so `SENSOR_MARKER` is a live evolutionary substrate.
+
+**Significance + honest scope.** This is the first time in the project an organism's **senses are not a
+designer-fixed layer** — they are genome-encoded, mutable, coupled only to real hardware, and demonstrably
+retained under selection. It directly attacks the Exp-21 behavioural-expression ceiling from the *input* side and
+the Rule-15/17 "fixed I/O is an abstraction" critique. **Scope (stated honestly): this is Phase A0** — an
+*extension* sensor apparatus added *alongside* the innate fixed senses (which remain as the Rule-5 baseline). It
+does **not** yet dissolve `N_INPUT`/`N_OUTPUT` as constants. The continuation is pre-registered in Roadmap P4:
+**Phase B** (evolvable *actuators* + migrate the vocal/motor readout off the fixed indices — invasive, re-run
+through the REMAP sandbox to confirm STDP_TARGET still recruits) and **Phase C** (migrate the innate senses into
+SENSOR genes too, so `n_c` is fully genome-derived and I/O stops being a global constant). `GENESIS_EVOSENSE` +
+`GENESIS_EVOSENSE_SEED` kept as instruments; default byte-identical (re-verified). `brain_io`'s fingerprint
+already tracks `N_INPUT/N_OUTPUT` so any future I/O change auto-archives stale checkpoints.
+
 ## 6. Critical Audit Fixes (2026-07-11)
+
 A rigorous architectural review identified and fixed three critical engine flaws that compromised open-ended evolution:
 1. **Infinite Reading Money:** The stationary reading reward did not consume the byte unless the read was a perfect match, allowing organisms to stand still and farm partial-credit energy forever without foraging. Originally fixed by consuming the byte on *any* vocalization attempt. **Superseded by Exp 9 (2026-07-12):** the graze-along-the-line saccade advances the head off the cell on every rewarded read, so re-reading requires walking the whole 65 536-cell ring — the movement *is* the anti-farm, and reading is now non-destructive (the byte-consume was removed). Same guarantee (no standing-still farm), but the library is no longer strip-mined.
 2. **Hidden Neuron Ablation Bug:** A fragile boundary check in `count_genes` meant that any organism allocated past the start of the RAM heap counted zero genes. This meant all late-born organisms were spawned with zero hidden neurons, effectively crippling them.

@@ -93,13 +93,16 @@ REMAP = os.environ.get("GENESIS_REMAP", "0") == "1"
 # Error/teaching-signal plasticity (Exp 35): compile-time branch inside the reward block (a local delta
 # rule on eye->vocal synapses that RECRUITS silent-but-wanted neurons, which STDP3C cannot). Key the cache.
 STDP_TARGET = os.environ.get("GENESIS_STDP_TARGET", "0") == "1"
+# Evolvable sensors (Exp 37): compile-time branch (SENSOR_MARKER decode + affordance transduction in the
+# LIF loop). Its kernel must not share a cache with the fixed-I/O default.
+EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
     f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
     f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
     f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}{'_remap' if REMAP else ''}"
-    f"{'_tgt' if STDP_TARGET else ''}"))
+    f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -136,6 +139,7 @@ from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
+    SENSOR_MARKER, EVOSENSE, N_AFFORDANCE,
     LONG_JUMP_STRIDE,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
@@ -212,6 +216,14 @@ o_rec_v_reset = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float3
 o_rec_tau_def = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32)
 o_rec_spk_max = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32)
 g_global_rec_id = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
+
+# EVOLVABLE SENSORS (Exp 37): per-NEURON affordance coupling. sense_type = 0 for an ordinary LIF neuron,
+# >0 for a DNA-declared sensor neuron (value = affordance index + 1); sense_meta packs the signed sample
+# offset (low byte) + a bit/action param (high byte). Parallel to g_global_rec_id, sized to the neuron
+# heap. Always allocated (cheap) but only read/written when GENESIS_EVOSENSE is on, so the default engine
+# is byte-identical.
+g_global_sense_type = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
+g_global_sense_meta = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 
 g_viscosity = np.zeros(MAX_ORGANISMS, dtype=np.float32)
 # Per-organism compute latency: how many LIF substeps a spike needs to traverse this organism's
@@ -488,6 +500,29 @@ def create_intelligent_ancestor(dna=None):
     if os.environ.get("GENESIS_STIG_SEED", "0") == "1":
         genes.extend([GENE_MARKER, 1, CONSUME, 168])   # Bias -> CONSUME (+5) occasional off-food consume/write
 
+    # --- EVOLVABLE-SENSOR DEMO (Exp 37, gated GENESIS_EVOSENSE_SEED, default off) ---
+    # Proves the SENSOR_MARKER apparatus end-to-end: seed a couple of sensor NEURONS coupled to real
+    # affordances the FIXED senses do not provide, and wire them toward an action so their value is
+    # expressible. These are declared AFTER the 5 hidden neurons above, so they occupy neuron indices
+    # N_IO+5, N_IO+6 (the decode places NEURON/SENSOR genes into the hidden band in genome order). Gene =
+    # [SENSOR_MARKER, slot, aff_type, offset(+128 bias), param]. Demo sensors: (1) a LOOK-AHEAD eye —
+    # RAM byte value LONG_JUMP_STRIDE cells ahead (aff_type 0), a sense the fixed reading eye (only the
+    # cell UNDER the pointer) cannot provide; (2) a PROXIMITY/touch sensor — occupancy 1 cell ahead
+    # (aff_type 2). Then wire each to JMP_FWD so a founder that senses useful structure ahead can act on
+    # it. Selection decides whether these evolved senses are kept or pruned (they cost honest read cycles).
+    # Only added under the seed flag; the default and unseeded-EVOSENSE ancestors carry NO sensor genes.
+    if os.environ.get("GENESIS_EVOSENSE_SEED", "0") == "1":
+        SENSE_AHEAD = N_IO + 5   # first sensor neuron's index in the hidden band
+        SENSE_TOUCH = N_IO + 6
+        # sensor gene: [marker, slot, aff_type, offset+128, param]
+        genes.extend([SENSOR_MARKER, 0, 0, 128 + LONG_JUMP_STRIDE, 0])  # look-ahead RAM byte, +STRIDE
+        genes.extend([SENSOR_MARKER, 1, 2, 128 + 1, 0])                 # touch: occupancy 1 ahead
+        # wire the evolved senses toward forward motion (redundant, mutation-robust like seek/echo)
+        genes.extend([GENE_MARKER, SENSE_AHEAD, N_INPUT + 0, 200])      # look-ahead -> JMP_FWD
+        genes.extend([GENE_MARKER, SENSE_AHEAD, N_INPUT + 0, 200])
+        genes.extend([GENE_MARKER, SENSE_TOUCH, N_INPUT + 1, 200])      # touch    -> JMP_BCK (avoid)
+        genes.extend([GENE_MARKER, SENSE_TOUCH, N_INPUT + 1, 200])
+
     # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
     # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
     # wiring cannot pollute speech and corrupt the 8-bit echo (reading fidelity, Rules 9/10).
@@ -496,7 +531,7 @@ def create_intelligent_ancestor(dna=None):
         dst = random.randint(N_INPUT, N_INPUT + 5)   # action outputs only, not vocal bits
         w = random.randint(0, 255)
         genes.extend([GENE_MARKER, src, dst, w])
-    
+
     return np.array(genes, dtype=np.uint8)
 
 def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
@@ -549,7 +584,8 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
         n_ptr, n_c, s_ptr,
         g_global_conn_src, g_global_conn_dst, g_global_conn_weight,
         g_global_thresh, g_global_tau, g_global_rec_id,
-        o_rec_v_rest, o_rec_tau_def, org_id
+        o_rec_v_rest, o_rec_tau_def, org_id,
+        g_global_sense_type, g_global_sense_meta
     )
 
     # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
@@ -587,7 +623,11 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
     g_org_grid[pos] = org_id
     
     footprint = np.float32(n_c) + np.float32(s_c)
-    g_viscosity[org_id] = footprint / np.float32(1000.0) 
+    # Rule-17 HARDWARE-DERIVED (2026-07-18): same viscosity saturation scale as world_tick_numba —
+    # denominator = MAX_DNA_PER_ORG/2 (0.5 cap at half the densest all-synapse decode of the largest
+    # allowed genome), not a hand-set 1000. Kept identical to the kernel so the spawn-time seed matches
+    # the per-tick recompute.
+    g_viscosity[org_id] = footprint / np.float32(MAX_DNA_PER_ORG / 2)
     
     return True
 
@@ -595,29 +635,42 @@ def mutate_dna(parent_dna):
     dna = bytearray(parent_dna)
     l = len(dna)
     if l < 8: return np.array(dna, dtype=np.uint8)
-    
+
+    # THERMODYNAMIC COPY FIDELITY (Rule 17 HARDWARE-DERIVED, 2026-07-18). A genome is copied byte by
+    # byte and the honest error rate is PER-BYTE: `1/l`, the copy machine's fidelity, giving exactly one
+    # expected fault per full-length copy (the point-substitution pass already encodes this). The two
+    # fault CLASSES differ in how many sites can express per copy, and that difference is physical, not a
+    # tuned ratio:
+    #  - a SUBSTITUTION can happen at EVERY byte independently (l sites) -> ~1 expected substitution/copy
+    #    (the per-byte sweep below);
+    #  - a STRUCTURAL slip (insertion/deletion/duplication) is a LENGTH change at the copy head — a single
+    #    replication has ONE head, so at most one structural event per copy, expressed at the same per-byte
+    #    fidelity for a single designated site: P(structural this copy) = 1/l. This makes indels rarer than
+    #    point mutations by exactly the factor l (one head-site vs l body-sites) — the biologically-correct
+    #    ordering, derived from "one copy head, per-byte fidelity 1/l", with NO hand-set 0.05/0.10/0.15 and
+    #    NO imported biological ratio. Longer genomes get proportionally rarer indels (one head, more body).
+    per_byte = 1.0 / float(l)
     r = random.random()
-    if r < 0.05 and l < MAX_DNA_PER_ORG - 4:
+    if r < per_byte / 3.0 and l < MAX_DNA_PER_ORG - 4:
         idx = random.randint(8, l)
         dna.insert(idx, random.randint(0,255))
-    elif r < 0.10 and l > 8:
+    elif r < 2.0 * per_byte / 3.0 and l > 8:
         idx = random.randint(8, l-1)
         del dna[idx]
-    elif r < 0.15 and l > 8 and l < MAX_DNA_PER_ORG - 16:
+    elif r < per_byte and l > 8 and l < MAX_DNA_PER_ORG - 16:
         idx1 = random.randint(8, l-1)
         idx2 = random.randint(idx1, min(l, idx1+16))
         chunk = dna[idx1:idx2]
         dna.extend(chunk)
     else:
-        # Thermodynamic error rate: exactly 1 expected byte corruption per genome replication.
-        # Protect bytes 0-1 (the base RECEPTOR_MARKER + receptor index) so a single point
-        # mutation can never wipe an entire lineage's STDP machinery; the physics params
-        # (A_PLUS..SPIKE_RATE_MAX, bytes 2-9) remain fully mutable for meta-learning.
-        error_prob = 1.0 / float(l)
+        # Point substitution: exactly 1 expected byte corruption per genome replication (the same per-
+        # byte fidelity 1/l over all l sites). Protect bytes 0-1 (the base RECEPTOR_MARKER + receptor
+        # index) so a single point mutation can never wipe an entire lineage's STDP machinery; the physics
+        # params (A_PLUS..SPIKE_RATE_MAX, bytes 2-9) remain fully mutable for meta-learning.
         for idx in range(2, l):
-            if random.random() < error_prob:
+            if random.random() < per_byte:
                 dna[idx] = random.randint(0, 255)
-            
+
     return np.array(dna, dtype=np.uint8)
 
 def crossover_dna(a, b):
@@ -798,7 +851,8 @@ def sim_loop():
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig
+        0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
+        g_global_sense_type, g_global_sense_meta
     )
 
     for i in range(MAX_ORGANISMS):
@@ -1014,7 +1068,8 @@ def sim_loop():
             o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
-            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig
+            g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
+            g_global_sense_type, g_global_sense_meta
         )
         
         for i in range(n_births):
@@ -1269,12 +1324,29 @@ def sim_loop():
                 solve_rate = (100.0 * r_success / (r_success + r_fail)) if (r_success + r_fail) else 0.0
                 remap_line = f" | remap_phase={phase}/{_states} solve%={solve_rate:.0f}"
 
+            # Exp 37 evolvable-sensor telemetry (observation-only, Rules 9<->6: NEVER selects). Count the
+            # sensor neurons that exist across the LIVE colony and how many organisms carry >=1 — does an
+            # evolved sense PERSIST under selection (kept because it pays) or get pruned (a costly organ
+            # with no benefit)? Pure telemetry off the decoded neuron arrays.
+            evosense_line = ""
+            if EVOSENSE:
+                total_sensors = 0; orgs_with = 0
+                for i in range(MAX_ORGANISMS):
+                    if not g_alive[i]:
+                        continue
+                    npi = int(g_org_n_ptr[i]); nci = int(g_org_n_count[i])
+                    cnt = int(np.count_nonzero(g_global_sense_type[npi:npi+nci] > 0))
+                    total_sensors += cnt
+                    if cnt > 0:
+                        orgs_with += 1
+                evosense_line = f" | sensors={total_sensors} orgs_with_sensor={orgs_with}"
+
             print(f"[LIF Time: {global_time:,}] | {ticks_accum / (now - last_print):.0f} world-ticks/s "
                   f"| Pop: {n_alive}/{MAX_ORGANISMS} | Universe N: {universe_n} "
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
                   f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
-                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}")
+                  f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}{evosense_line}")
             
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk

@@ -259,6 +259,27 @@ NEURON_MARKER = 162
 RECEPTOR_MARKER = 195
 MAX_RECEPTORS_PER_ORG = 16
 
+# EVOLVABLE SENSORS (Exp 37, default-OFF, Rules 5/9/15/17). The organism's SENSES must not be a
+# designer-fixed spec (the fixed N_INPUT=25 map): biology evolved eyes/ears from environmental
+# pressure, so any hardcoded sensorimotor layout is us limiting the organism. A SENSOR_MARKER gene
+# couples a hidden neuron to a REAL hardware affordance the substrate already offers (a byte value, a
+# single bit, cell occupancy, a neighbour's energy/voice, own energy) sampled at a DNA-chosen offset
+# from the organism's pointer. So evolution DISCOVERS what to sense and where — it can only couple to
+# what the machine physically exposes (Rule 15), exactly as molecules bound the senses biology could
+# build. A sensor neuron fires from its affordance instead of from LIF integration; it is otherwise an
+# ordinary source into the network (it can drive any hidden/output neuron via normal synapses), so the
+# VALIDATED reward/STDP/REMAP machinery (which indexes the fixed vocal/eye neurons) is untouched. Gene
+# layout mirrors the proven RECEPTOR_MARKER pattern: [SENSOR_MARKER, slot, aff_type, offset, param]
+# (5 bytes). aff_type % N_AFFORDANCE picks the physical quantity; offset is a signed byte (−128..127)
+# address delta; param selects a bit/action index where the type needs one. Compile-time gated
+# (GENESIS_EVOSENSE) -> when off, the marker is skipped and the engine is byte-identical. This is
+# Phase A0: an EXTENSION sensor apparatus added alongside the innate fixed senses (which stay as the
+# Rule-5 baseline); Phases B/C (evolvable actuators, then dissolving the fixed input block entirely so
+# N_INPUT/N_OUTPUT stop being constants) follow as their own A/Bs — see Roadmap P4.
+SENSOR_MARKER = 196
+N_AFFORDANCE = 6   # number of physical affordance types a sensor can couple to (see sense() switch)
+EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
+
 # V_THRESH_IO removed: was dead code (defined but never referenced)
 DT           = np.float32(1.0)
 TAU_REF      = 1
@@ -291,16 +312,28 @@ CYCLES_PER_BYTE_COPY = np.float32(1.0)
 # 20W massive-sparse-parallelism paradigm (Rule 11), not a penalty on merely HAVING synapses.
 CYCLES_PER_NEURON_UPDATE = np.float32(1.0)
 CYCLES_PER_STDP_UPDATE   = np.float32(1.0)
-ATP_MAX = np.float32(1000000.0)
+# Per-organism energy ceiling (Rule 17 HARDWARE-DERIVED, 2026-07-18). Was an arbitrary 1e6 "game"
+# number. The honest physical ceiling on the cycles a single organism can hold is the TOTAL
+# matter-energy the universe contains: every one of RAM_SIZE cells, each an 8-bit register worth
+# CELL_STATES, so RAM_SIZE * CELL_STATES. An organism cannot bank more execution-cycles than exist in
+# all of RAM — the ceiling is the substrate's own size, not a designer's pick. (Only a cap + the
+# energy-sense normaliser energy/ATP_MAX; a live A/B confirmed the larger honest ceiling does not
+# destabilise the economy — see Result Exp 36.)
+ATP_MAX = RAM_SIZE * CELL_STATES
 
-# STDP increment scaling: raw receptor bytes are 0-255 but the whole weight range is only
-# 256 wide, so an unscaled step slams weights to the rail (bang-bang STDP). Dividing by
-# STDP_SCALE makes plasticity graded (max step ~32, ~12% of the range).
-STDP_SCALE = np.float32(8.0)
+# STDP increment scaling (Rule 17 HARDWARE-DERIVED, 2026-07-18). Raw receptor amplitude bytes are
+# 0..255 (one 8-bit register) but the signed weight range W_MAX-W_MIN is 255-wide, so an unscaled step
+# would move a weight across the whole range in one event (bang-bang). The honest divisor is the
+# register's own bit-width, BITS_PER_BYTE=8: it maps a full-scale receptor byte (255) to a max step of
+# ~32 = one bit-plane of the 8-bit weight (255/8), i.e. a single spike can shift at most the lowest
+# ~1/8 of the weight's dynamic range. Not a tuned "8" — it is the byte's bit-count, the same hardware
+# fact CELL_STATES=2**BITS_PER_BYTE rests on. (The receptor amplitudes THEMSELVES are DNA-encoded, so
+# evolution still tunes the per-lineage learning rate; this only fixes the register->range scale.)
+STDP_SCALE = BITS_PER_BYTE
 
-# Computational viscosity (Rule 13): stall probability = (synapses / neurons) / this scale,
-# capped at 0.5. Dense brains stall more, rewarding sparse parallel topologies.
-SYN_DENSITY_SCALE = np.float32(8.0)
+# (SYN_DENSITY_SCALE removed 2026-07-18: it was a dead module-level literal — defined but never
+# referenced. Viscosity is driven by absolute footprint / a hardware-bounded denominator below, not by
+# this. A dead magic number is still a Rule-17 violation; deleted rather than left to rot.)
 
 MAX_ORGANISMS = 600
 BIRTH_BUF_SZ  = 150
@@ -390,11 +423,19 @@ def count_genes(g_ptr, g_count, g_genome):
         elif marker == NEURON_MARKER and i + 4 < g_ptr + g_count:
             h_count += 1
             i += 5
+        elif EVOSENSE and marker == SENSOR_MARKER and i + 4 < g_ptr + g_count:
+            # A sensor gene declares one extra sensor NEURON (5 bytes, same width as NEURON_MARKER).
+            # Counted into the hidden-neuron budget so block allocation covers it; decode_genome places
+            # it in the neuron array and flags it affordance-driven. EVOSENSE off -> dead-code-eliminated
+            # and the marker byte falls through to filler (i += 1), so the count is byte-identical to the
+            # pre-Exp-37 engine.
+            h_count += 1
+            i += 5
         elif marker == RECEPTOR_MARKER and i + 9 < g_ptr + g_count:
             i += 10
         else:
             i += 1
-            
+
     return s_count, h_count
 
 @njit(cache=True)
@@ -403,16 +444,19 @@ def decode_genome(
     n_ptr, n_c, s_ptr,
     global_conn_src, global_conn_dst, global_conn_weight,
     global_thresh, global_tau, global_rec_id,
-    o_rec_v_rest, o_rec_tau_def, org_id
+    o_rec_v_rest, o_rec_tau_def, org_id,
+    global_sense_type, global_sense_meta
 ):
     s_idx = 0
     h_idx = 0
-    
+
     for i in range(N_IO):
         global_rec_id[n_ptr + i] = 0
         global_thresh[n_ptr + i] = o_rec_v_rest[org_id, 0] + 128.0
         global_tau[n_ptr + i] = o_rec_tau_def[org_id, 0]
-        
+        if EVOSENSE:
+            global_sense_type[n_ptr + i] = 0   # fixed I/O neurons are never affordance-driven
+
     i = 0
     while i < g_count - 3:
         marker = global_genome[g_ptr + i]
@@ -421,10 +465,10 @@ def decode_genome(
                 src = global_genome[g_ptr + i + 1]
                 dst = global_genome[g_ptr + i + 2]
                 w_raw = global_genome[g_ptr + i + 3]
-                
+
                 actual_src = src % n_c
                 actual_dst = dst % n_c
-                
+
                 if actual_dst >= N_INPUT:
                     global_conn_src[s_ptr + s_idx] = actual_src
                     global_conn_dst[s_ptr + s_idx] = actual_dst
@@ -438,6 +482,31 @@ def decode_genome(
                 t = np.float32(global_genome[g_ptr + i + 3])
                 global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + t
                 global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
+                if EVOSENSE:
+                    global_sense_type[n_ptr + N_IO + h_idx] = 0   # ordinary LIF hidden neuron
+                h_idx += 1
+            i += 5
+        elif EVOSENSE and marker == SENSOR_MARKER and i + 4 < g_count:
+            # A SENSOR gene occupies one neuron slot in the hidden band (interleaved with NEURON genes
+            # by genome order) but the neuron is AFFORDANCE-DRIVEN, not LIF-integrated: its firing comes
+            # from a physical quantity sampled at pos+offset (see sense()). It is otherwise an ordinary
+            # SOURCE — synapses can read its spikes to drive hidden/output neurons — so the fixed
+            # reward/STDP/REMAP wiring is untouched. Bytes: [SENSOR_MARKER, slot(unused here), aff_type,
+            # offset, param]. aff_type % N_AFFORDANCE selects the quantity; offset is a SIGNED address
+            # delta (byte 0..255 -> -128..127); param is a bit/action index. Stored as sense_type =
+            # aff_type+1 (0 reserved for "not a sensor") and sense_meta packs offset (low byte, signed)
+            # and param (high byte).
+            if N_IO + h_idx < n_c:
+                aff = global_genome[g_ptr + i + 2] % N_AFFORDANCE
+                off_raw = np.int32(global_genome[g_ptr + i + 3]) - 128   # signed -128..127
+                param = np.int32(global_genome[g_ptr + i + 4])
+                global_sense_type[n_ptr + N_IO + h_idx] = aff + 1
+                global_sense_meta[n_ptr + N_IO + h_idx] = (off_raw & 0xFF) | (param << 8)
+                # a sensor neuron needs no LIF threshold/tau (it is set directly), but keep the arrays
+                # well-defined so a stray synapse onto it (dst can still land here) does not read garbage
+                global_rec_id[n_ptr + N_IO + h_idx] = 0
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, 0] + 128.0
+                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, 0]
                 h_idx += 1
             i += 5
         elif marker == RECEPTOR_MARKER and i + 9 < g_count:
@@ -509,6 +578,44 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     sense_buf[N_INPUT - 1] = food_behind / np.float32(FOOD_SCAN_RADIUS)
 
 
+@njit(cache=True)
+def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, energy, vocal_cords, own_energy):
+    """Evolvable-sensor transduction (Exp 37): return a [0,1] activation for a sensor neuron coupled to
+    physical affordance `aff_type` sampled at pos+offset. Every branch reads a REAL hardware quantity the
+    substrate already exposes — evolution can only wire a sensor to what the machine physically offers
+    (Rule 15), never to an invented game signal. aff_type is 0-based here (sense_type-1 in the neuron
+    array). Called once per tick per sensor neuron; its memory reads are charged as honest work by the
+    caller. NOTE: a sampled neighbour affordance (energy/voice) at an EMPTY cell reads 0 — absence is
+    information too. own_energy is the calling organism's own reserve (for interoception)."""
+    addr = (pos + offset + RAM_SIZE) % RAM_SIZE
+    if aff_type == 0:
+        # RAM byte value at offset (analog chemoreception of the substrate)
+        return np.float32(ram_substrate[addr]) / np.float32(255.0)
+    elif aff_type == 1:
+        # single BIT `param` of the RAM byte at offset (a digital photoreceptor — one bit of light)
+        b = param % 8
+        return np.float32((ram_substrate[addr] >> b) & 1)
+    elif aff_type == 2:
+        # cell OCCUPANCY at offset (touch / proximity: is another organism there?)
+        return np.float32(1.0) if org_grid[addr] != -1 else np.float32(0.0)
+    elif aff_type == 3:
+        # neighbour ENERGY at offset, normalised (chemoreception of a neighbour's state); 0 if empty
+        nb = org_grid[addr]
+        if nb != -1:
+            return energy[nb] / ATP_MAX
+        return np.float32(0.0)
+    elif aff_type == 4:
+        # neighbour VOCAL bit `param` at offset (hearing a specific channel of a neighbour's voice)
+        nb = org_grid[addr]
+        if nb != -1:
+            b = param % 8
+            return np.float32((vocal_cords[nb] >> b) & 1)
+        return np.float32(0.0)
+    else:
+        # aff_type 5: own ENERGY (interoception) — offset ignored (the body is here)
+        return own_energy / ATP_MAX
+
+
 
 @njit(cache=True)
 def world_tick_numba(
@@ -521,7 +628,8 @@ def world_tick_numba(
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
-    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig
+    oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
+    global_sense_type, global_sense_meta
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -533,6 +641,10 @@ def world_tick_numba(
     # Pre-allocate reusable buffers for spiking to avoid inside-loop allocations (massive speedup)
     prev_spk_buf = np.zeros(2048, dtype=np.bool_)
     curr_spk_buf = np.zeros(2048, dtype=np.bool_)
+    # Evolvable-sensor per-tick activation buffer (Exp 37): a sensor neuron's affordance is tick-
+    # invariant (like sense()), so it is transduced ONCE per organism per tick into this buffer and then
+    # fired stochastically each substep. Dead/untouched when EVOSENSE is off.
+    sensor_act = np.zeros(2048, dtype=np.float32)
 
     # Cosmic Radiation Phase (Thermodynamic Entropy)
     # Flip bits INSIDE living genomes (germline mutation). Targeting allocated regions
@@ -585,18 +697,29 @@ def world_tick_numba(
 
         # Spatial crowding: fraction of neighbouring RAM cells occupied by other organisms
         # (0..1). Fed to sensory input 2 so organisms can feel density and evolve dispersal.
+        # Rule-17 HARDWARE-DERIVED (2026-07-18): the neighbourhood is the SAME ±FOOD_SCAN_RADIUS window
+        # the organism already senses over (one memory-locality window, not a second invented radius),
+        # and the divisor is the ACTUAL number of cells in it — 2*R+1 — not a hand-set "33". The window
+        # width IS the count of cells scanned, a fact of the scan, so density = occupied / cells-looked-at.
         crowd_count = np.float32(0.0)
-        for offset in range(-16, 17):
+        for offset in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
             if org_grid[(pos + offset + RAM_SIZE) % RAM_SIZE] != -1:
                 crowd_count += 1.0
-        crowding = crowd_count / np.float32(33.0)
+        crowding = crowd_count / np.float32(2 * FOOD_SCAN_RADIUS + 1)
 
-        # Computational viscosity (Rule 13): stall probability rises with the organism's own
-        # TOTAL HARDWARE FOOTPRINT (neurons + synapses). Dense, bloated brains stall
-        # more often, rewarding sparse, minimal architectures (the 20W paradigm).
-        # We scale by a large denominator so a typical organism (~30 neurons) has low viscosity.
+        # Computational viscosity (Rule 13, "square-cube law of code"): stall probability rises with the
+        # organism's own TOTAL HARDWARE FOOTPRINT (neurons + synapses). Dense, bloated brains stall more,
+        # rewarding sparse minimal architectures (the 20W paradigm).
+        # Rule-17 HARDWARE-DERIVED (2026-07-18): the denominator was a hand-set "1000" ("a large number so
+        # a typical brain has low viscosity" — an admitted tune). The honest saturation scale is the
+        # MAXIMUM footprint an organism can physically have: its genome is capped at MAX_DNA_PER_ORG bytes,
+        # and the densest decode is all-synapse (GENE_MARKER = 4 bytes/synapse), so an organism can carry
+        # at most ~MAX_DNA_PER_ORG/4 synapses. Viscosity reaches its 0.5 cap at HALF that maximum density,
+        # i.e. denominator = 2 * (MAX_DNA_PER_ORG/4) = MAX_DNA_PER_ORG/2 — a brain hits maximal stall when
+        # it fills half the largest body the substrate allows, not at an invented 500. Derived purely from
+        # the DNA cap + the bytes-per-synapse decode width; no tuned number.
         footprint = np.float32(n_count) + np.float32(org_s_count[org])
-        local_viscosity = footprint / np.float32(1000.0)
+        local_viscosity = footprint / np.float32(MAX_DNA_PER_ORG / 2)
         if local_viscosity > np.float32(0.5):
             local_viscosity = np.float32(0.5)
         viscosity[org] = local_viscosity
@@ -610,6 +733,26 @@ def world_tick_numba(
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
+
+        # EVOLVABLE SENSORS (Exp 37): transduce each DNA-declared sensor neuron ONCE per tick from its
+        # physical affordance (tick-invariant, exactly like sense() above). A sensor neuron lives in the
+        # hidden band (index >= N_IO) and is flagged by global_sense_type>0. Each affordance sample is a
+        # real memory read, charged as honest work (Rule 17) — one CYCLES_PER_SYNAPSE_READ per sample,
+        # the same unit a synapse read costs — so a bloated sensor array pays for itself and cannot be a
+        # free lunch. Dead-code-eliminated when EVOSENSE is off, so the default engine is byte-identical.
+        if EVOSENSE:
+            n_ptr_s = org_n_ptr[org]
+            for sn in range(N_IO, n_count):
+                st = global_sense_type[n_ptr_s + sn]
+                if st > 0:
+                    meta = global_sense_meta[n_ptr_s + sn]
+                    off = meta & 0xFF
+                    if off >= 128:
+                        off -= 256                      # unpack signed offset
+                    prm = (meta >> 8) & 0xFF
+                    sensor_act[sn] = sense_affordance(st - 1, off, prm, pos, ram_substrate,
+                                                      org_grid, energy, vocal_cords, energy[org])
+                    total_atp += CYCLES_PER_SYNAPSE_READ
 
         # EVENT-DRIVEN SENSING (Rule 11, 2026-07-12 — same principle as the Exp 8 membrane fix).
         # The old model charged a FLAT 2*FOOD_SCAN_RADIUS (=32) cycles EVERY tick to EVERY organism
@@ -684,9 +827,18 @@ def world_tick_numba(
                 r_idx = global_rec_id[n_ptr + n]
                 spike_val = 1.0 * o_rec_spk_max[org, r_idx]
                 if spike_val > 1.0: spike_val = 1.0
-                
+
                 if n < N_INPUT:
                     if random.random() < sense_buf[n] * spike_val:
+                        curr_spk_buf[n] = True
+                        global_t_last[n_ptr + n] = t_now
+                        n_spiked += 1
+                elif EVOSENSE and n >= N_IO and global_sense_type[n_ptr + n] > 0:
+                    # EVOLVABLE SENSOR neuron (Exp 37): fires stochastically from its transduced affordance
+                    # activation (precomputed once this tick), exactly like a fixed input neuron — NOT from
+                    # LIF integration. So it is a genuine sensory SOURCE the network wired itself, coupled to
+                    # a real hardware quantity. Firing is spike-gated metabolically like every other neuron.
+                    if random.random() < sensor_act[n] * spike_val:
                         curr_spk_buf[n] = True
                         global_t_last[n_ptr + n] = t_now
                         n_spiked += 1
