@@ -52,6 +52,16 @@ A genome is a byte string parsed into record types:
   exposes (Rule 15), rather than a designer-fixed input layer. It is an ordinary synapse *source*,
   so the reward/plasticity machinery is untouched; each affordance sample costs one honest cycle
   (Rule 17). When off, dead-code-eliminated → byte-identical.
+- **`ACTUATOR_MARKER = 197`** (5 bytes, `GENESIS_EVOACT`, default-OFF — Exp 38): an **evolvable
+  effector** — an ordinary LIF hidden-band neuron that, when it fires, *also* drives a physical
+  action `(act_idx)` by adding its spike into `out_accum[act_idx]`, the same accumulator the innate
+  output neuron for that action uses. So the organism can **grow its own effectors** (a new evolved
+  *route* to an action, not a replacement of the fixed outputs), widening the behavioural-expression
+  channel Exp 21 named as the cognition ceiling. The fixed output neurons the reward/STDP/REMAP
+  machinery reads are untouched (verified: `STDP_TARGET` recruitment intact under EVOACT). When off,
+  dead-code-eliminated → byte-identical. *(Exp 38 finding: the mechanism is sound, but a new effector
+  is retained only under an economy that rewards behavioural diversity — the single-reward books
+  economy prunes it; see `Ascent.md` §5.)*
 
 Every organism has an innate fixed I/O layer of **`N_INPUT = 25`** sensory + **`N_OUTPUT = 14`**
 motor neurons (`N_IO = 39`) plus a variable number of hidden/sensor neurons. *(This fixed I/O is the

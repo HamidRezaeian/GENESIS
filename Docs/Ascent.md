@@ -441,3 +441,49 @@ the operative step for `STDP_TARGET`; the DIV=4 cliff is retained as the bang-ba
   assumption before adding mechanics) so this discipline is permanent, not a one-off.
 - The UI (next task) will surface the A/B/C probes (`C(t)`, learning-ablation delta, `C/footprint`) so
   the finish line is watchable live, not reconstructed from logs.
+
+---
+
+## 5. Strategic reframe (2026-07-18, user-directed): grounded cognition, NOT human-language tuition
+
+A user challenge forced an honest re-examination of the whole curriculum premise: **is teaching the organisms
+human language (the `Books/` ASCII curriculum, next-symbol prediction) the right path to a mind at all?** The
+conclusion, consistent with the project's own Rule 9 and the Exp 33–34 findings, is **no — as the path to
+cognition it is inverted**, and the direction is now fixed:
+
+**The diagnosis (why `Books` cannot build a mind, only the appearance of one):**
+1. **Symbol grounding is absent.** An organism reading ASCII and predicting the next byte binds those symbols to
+   *nothing in its own survival world*. "2+2=4" is a byte pattern, not a quantity; it learns text statistics, not
+   meaning. Exp 33/34 confirmed this concretely: next-symbol prediction is solved by a *fixed reflex* — literacy
+   as pattern-echo, not comprehension.
+2. **It violates the spirit of Rule 9 (Autotelic).** Human-authored text IS a human curriculum; Rule 9 requires
+   the challenges (and any language) to *emerge from agent–agent survival*, not be spoon-fed.
+3. **It anthropomorphises.** It assumes intelligence == human literacy. An alien mind coupled to RAM may build a
+   wholly non-linguistic cognition; imposing English from birth is teaching a fish to climb before it can swim.
+
+**The correct order (mirrors child development — meaning before words):**
+1. **Grounding first.** Cognition must be grounded in the organism's *own* real world (energy, space, neighbour
+   behaviour, survival prediction). A child understands the world, then attaches words to it.
+2. **Language emerges from agent–agent interaction** (the `GENESIS_PEER` line) — a language of *their own*,
+   grounded in their world, not human orthography.
+3. **The human interface is a LATER translator layer.** Once grounded cognition exists, we either translate their
+   emergent signals (decoding a whale-song) or teach human language as a *second* language mapped onto
+   already-grounded concepts. This is how the user's eventual "ask it 2+2 / say hello" interface is reached —
+   **not** by pre-memorising English from t=0.
+
+**Consequence — the two jobs `Books` was conflating are split:**
+- **Survival scaffold:** an energy source that merely keeps the colony alive so cognition has time to evolve. This
+  is all `Books`/reading is now asked to be — a nutrient, not a teacher. It may later be *removed* entirely in
+  favour of a grounded survival economy (food/space/peer). Reading-as-cognition is retired.
+- **The mind path (the real work):** grounded survival cognition + emergent peer communication + **widened
+  behavioural expression** (Exp 21's ceiling: "a mind cannot be modelled richer than it can *act*"). The
+  expression axis is now being widened from both sides — **evolvable SENSORS (Exp 37, built)** and **evolvable
+  ACTUATORS (Exp 38 / Phase B, next)** — because without the capacity to sense and act richly, neither grounding
+  nor theory-of-mind peer prediction can deepen.
+
+**User decision (recorded):** the goal is **genuine grounded AGI**, explicitly *not* a trained-network chatbot
+that emits "4" by pattern-completion. This is the slow Darwinian road; a typeable "2+2=4" is far off and, if
+reached, will be *real* rather than a statistical echo. Phase B (evolvable actuators) is therefore the correct
+next build — not merely to de-magic fixed I/O, but because widening what an organism can *do* is the load-bearing
+prerequisite for grounded cognition and for peer prediction to become worth ascending. `Books` stays temporarily
+as the survival scaffold while the grounded/peer economy is built to replace it.

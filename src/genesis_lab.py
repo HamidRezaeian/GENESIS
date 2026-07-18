@@ -96,13 +96,16 @@ STDP_TARGET = os.environ.get("GENESIS_STDP_TARGET", "0") == "1"
 # Evolvable sensors (Exp 37): compile-time branch (SENSOR_MARKER decode + affordance transduction in the
 # LIF loop). Its kernel must not share a cache with the fixed-I/O default.
 EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
+# Evolvable actuators (Exp 38 / Phase B): compile-time branch (ACTUATOR_MARKER decode + out_accum drive
+# in the LIF loop). Key the cache so it doesn't share a kernel with the fixed-motor default.
+EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
     f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
     f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
     f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}{'_remap' if REMAP else ''}"
-    f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}"))
+    f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}{'_evoact' if EVOACT else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -139,7 +142,7 @@ from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
-    SENSOR_MARKER, EVOSENSE, N_AFFORDANCE,
+    SENSOR_MARKER, EVOSENSE, N_AFFORDANCE, ACTUATOR_MARKER, EVOACT,
     LONG_JUMP_STRIDE,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
@@ -224,6 +227,10 @@ g_global_rec_id = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 # is byte-identical.
 g_global_sense_type = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 g_global_sense_meta = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
+# EVOLVABLE ACTUATORS (Exp 38): per-NEURON action drive. 0 = drives no action; >0 = drives physical
+# output (act_idx+1). A hidden actuator neuron's spike is added into out_accum[act_idx]. Parallel array,
+# only read/written when GENESIS_EVOACT is on -> default byte-identical.
+g_global_act_drive = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 
 g_viscosity = np.zeros(MAX_ORGANISMS, dtype=np.float32)
 # Per-organism compute latency: how many LIF substeps a spike needs to traverse this organism's
@@ -523,6 +530,24 @@ def create_intelligent_ancestor(dna=None):
         genes.extend([GENE_MARKER, SENSE_TOUCH, N_INPUT + 1, 200])      # touch    -> JMP_BCK (avoid)
         genes.extend([GENE_MARKER, SENSE_TOUCH, N_INPUT + 1, 200])
 
+    # --- EVOLVABLE-ACTUATOR DEMO (Exp 38, gated GENESIS_EVOACT_SEED, default off) ---
+    # Proves the ACTUATOR_MARKER apparatus: seed an effector NEURON that drives a physical action when it
+    # fires (its spike adds to the SAME out_accum slot the innate output uses), and wire an input to it so
+    # it is expressible. Gene = [ACTUATOR_MARKER, slot, act_idx, thresh, receptor]. Demo: an effector that
+    # drives JMP_FWD (act_idx 0) from the food-ahead sense (input N_INPUT-2) — a second, evolved route to
+    # advancing toward text, parallel to the innate seek reflex, so it is NEUTRAL-to-helpful for reading
+    # survival (unlike an off-food CONSUME driver, which starves a reader). Selection decides if the extra
+    # effector is kept. Declared after any sensor genes; wired by the ordinal the decoder assigns.
+    if os.environ.get("GENESIS_EVOACT_SEED", "0") == "1":
+        n_prior = 5 + (2 if os.environ.get("GENESIS_EVOSENSE_SEED", "0") == "1" else 0)  # hidden decl'd so far
+        ACT_FWD = N_IO + n_prior
+        FOOD_AHEAD_IN = N_INPUT - 2
+        # actuator gene: drives JMP_FWD (out idx 0), threshold byte 40, receptor 0
+        genes.extend([ACTUATOR_MARKER, 0, 0, 40, 0])
+        # drive it from the food/text-ahead sense so it advances toward text (redundant, mutation-robust)
+        genes.extend([GENE_MARKER, FOOD_AHEAD_IN, ACT_FWD, 255])
+        genes.extend([GENE_MARKER, FOOD_AHEAD_IN, ACT_FWD, 255])
+
     # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
     # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
     # wiring cannot pollute speech and corrupt the 8-bit echo (reading fidelity, Rules 9/10).
@@ -585,7 +610,7 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
         g_global_conn_src, g_global_conn_dst, g_global_conn_weight,
         g_global_thresh, g_global_tau, g_global_rec_id,
         o_rec_v_rest, o_rec_tau_def, org_id,
-        g_global_sense_type, g_global_sense_meta
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive
     )
 
     # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
@@ -852,7 +877,7 @@ def sim_loop():
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-        g_global_sense_type, g_global_sense_meta
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive
     )
 
     for i in range(MAX_ORGANISMS):
@@ -1069,7 +1094,7 @@ def sim_loop():
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
             g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-            g_global_sense_type, g_global_sense_meta
+            g_global_sense_type, g_global_sense_meta, g_global_act_drive
         )
         
         for i in range(n_births):

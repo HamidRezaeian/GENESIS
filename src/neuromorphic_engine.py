@@ -280,6 +280,23 @@ SENSOR_MARKER = 196
 N_AFFORDANCE = 6   # number of physical affordance types a sensor can couple to (see sense() switch)
 EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
 
+# EVOLVABLE ACTUATORS (Exp 38 / Phase B, default-OFF, Rules 5/9/15/21). The MOTOR side of dissolving the
+# fixed I/O: just as SENSOR_MARKER lets an organism grow its own senses, ACTUATOR_MARKER lets it grow its
+# own effectors. Exp 21 named the ceiling on cognition: "a mind cannot be modelled richer than it can
+# ACT" — a 6-way motor argmax + 8-bit vocal byte is too thin an expression channel for grounding or
+# theory-of-mind peer prediction to deepen. This widens WHAT an organism can do without touching the
+# validated learning: an ACTUATOR gene declares a hidden-band neuron that, WHEN IT FIRES, drives one of
+# the existing physical actions (its spikes are added into the SAME out_accum slot the innate output
+# neuron uses). So it adds a NEW evolved ROUTE to an action — mirroring how a sensor adds a new SOURCE —
+# rather than replacing the fixed readout. The reward/STDP/REMAP machinery still reads out_accum[0..13]
+# exactly as before, so STDP_TARGET recruitment (Exp 35) is structurally unaffected (verified). Gene
+# layout mirrors SENSOR_MARKER: [ACTUATOR_MARKER, slot, act_idx, unused, param]; act_idx % N_IO_OUT
+# picks which of the 14 physical outputs (6 motor + 8 vocal) this effector drives. Compile-time gated
+# (GENESIS_EVOACT) -> byte-identical when off. Phase B widens the action REPERTOIRE's expressivity;
+# Phase C then dissolves the fixed input/output blocks entirely so N_INPUT/N_OUTPUT stop being constants.
+ACTUATOR_MARKER = 197
+EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
+
 # V_THRESH_IO removed: was dead code (defined but never referenced)
 DT           = np.float32(1.0)
 TAU_REF      = 1
@@ -431,6 +448,12 @@ def count_genes(g_ptr, g_count, g_genome):
             # pre-Exp-37 engine.
             h_count += 1
             i += 5
+        elif EVOACT and marker == ACTUATOR_MARKER and i + 4 < g_ptr + g_count:
+            # An actuator gene declares one extra effector NEURON (5 bytes). Like a sensor, counted into
+            # the hidden-neuron budget; decode_genome places it and records which physical action it
+            # drives. EVOACT off -> dead-code-eliminated -> byte-identical count.
+            h_count += 1
+            i += 5
         elif marker == RECEPTOR_MARKER and i + 9 < g_ptr + g_count:
             i += 10
         else:
@@ -445,7 +468,7 @@ def decode_genome(
     global_conn_src, global_conn_dst, global_conn_weight,
     global_thresh, global_tau, global_rec_id,
     o_rec_v_rest, o_rec_tau_def, org_id,
-    global_sense_type, global_sense_meta
+    global_sense_type, global_sense_meta, global_act_drive
 ):
     s_idx = 0
     h_idx = 0
@@ -456,6 +479,8 @@ def decode_genome(
         global_tau[n_ptr + i] = o_rec_tau_def[org_id, 0]
         if EVOSENSE:
             global_sense_type[n_ptr + i] = 0   # fixed I/O neurons are never affordance-driven
+        if EVOACT:
+            global_act_drive[n_ptr + i] = 0    # fixed I/O neurons drive actions by position, not by map
 
     i = 0
     while i < g_count - 3:
@@ -484,6 +509,8 @@ def decode_genome(
                 global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
                 if EVOSENSE:
                     global_sense_type[n_ptr + N_IO + h_idx] = 0   # ordinary LIF hidden neuron
+                if EVOACT:
+                    global_act_drive[n_ptr + N_IO + h_idx] = 0    # ordinary neuron, drives no action
                 h_idx += 1
             i += 5
         elif EVOSENSE and marker == SENSOR_MARKER and i + 4 < g_count:
@@ -507,6 +534,30 @@ def decode_genome(
                 global_rec_id[n_ptr + N_IO + h_idx] = 0
                 global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, 0] + 128.0
                 global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, 0]
+                if EVOACT:
+                    global_act_drive[n_ptr + N_IO + h_idx] = 0   # a sensor drives no action
+                h_idx += 1
+            i += 5
+        elif EVOACT and marker == ACTUATOR_MARKER and i + 4 < g_count:
+            # An ACTUATOR gene occupies one neuron slot in the hidden band and is an ordinary LIF neuron
+            # (it integrates synaptic input like any hidden neuron) — but WHEN IT FIRES it also drives a
+            # physical action: its spike is added into out_accum[act_idx], the SAME accumulator the innate
+            # output neuron for that action uses. So evolution grows a NEW route to an action (e.g. a
+            # deep hidden circuit that has learned WHEN to jump can fire the jump directly), widening the
+            # behavioural-expression channel Exp 21 identified as the cognition ceiling — WITHOUT altering
+            # the fixed output neurons the reward/STDP/REMAP machinery reads. Bytes: [ACTUATOR_MARKER,
+            # slot(unused), act_idx, unused, param(unused)]. act_idx % N_OUTPUT picks which of the 14
+            # physical outputs (0..5 motor, 6..13 vocal bits) it drives. Stored act_drive = act_idx+1
+            # (0 reserved for "drives nothing"). It keeps a normal receptor/threshold so it integrates.
+            if N_IO + h_idx < n_c:
+                act_i = global_genome[g_ptr + i + 2] % N_OUTPUT
+                rec_id = global_genome[g_ptr + i + 4] % MAX_RECEPTORS_PER_ORG   # param byte = receptor
+                global_rec_id[n_ptr + N_IO + h_idx] = rec_id
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, rec_id]
+                if EVOSENSE:
+                    global_sense_type[n_ptr + N_IO + h_idx] = 0   # not a sensor
+                global_act_drive[n_ptr + N_IO + h_idx] = act_i + 1
                 h_idx += 1
             i += 5
         elif marker == RECEPTOR_MARKER and i + 9 < g_count:
@@ -629,7 +680,7 @@ def world_tick_numba(
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
     oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
-    global_sense_type, global_sense_meta
+    global_sense_type, global_sense_meta, global_act_drive
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -864,6 +915,16 @@ def world_tick_numba(
                             if n >= N_INPUT and n < N_IO:
                                 out_idx = n - N_INPUT
                                 out_accum[out_idx] += 1
+                            elif EVOACT and n >= N_IO:
+                                # EVOLVABLE ACTUATOR (Exp 38): a hidden effector neuron that has fired
+                                # contributes its spike to the physical action it drives — the SAME
+                                # accumulator (out_accum) the innate output neuron for that action uses.
+                                # So an evolved circuit can trigger a jump/consume/vocal-bit directly,
+                                # widening the expression channel without disturbing the fixed outputs
+                                # the reward/STDP/REMAP machinery reads. act_drive-1 is the action index.
+                                ad = global_act_drive[n_ptr + n]
+                                if ad > 0:
+                                    out_accum[ad - 1] += 1
                         else:
                             global_v[n_ptr + n] = v
 

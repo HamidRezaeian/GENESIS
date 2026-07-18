@@ -623,6 +623,25 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
       recruits); **Phase C** = migrate the innate senses into SENSOR genes too so n_c is fully genome-derived and
       I/O stops being a constant. brain_io fingerprint already tracks N_INPUT/N_OUTPUT (auto-archives on change).
       `GENESIS_EVOSENSE`/`_SEED` kept as instruments. See Result Exp 37, ARD §1.4.
+- ✅ **Evolvable ACTUATORS — the organism grows its own effectors (Exp 38 = Phase B, 2026-07-18).** The motor
+      complement of Exp 37, directly attacking the Exp-21 cognition ceiling ("a mind cannot be modelled richer
+      than it can ACT"). `GENESIS_EVOACT` (default-OFF, compile-gated, byte-identical off): an `ACTUATOR_MARKER`
+      gene declares a hidden LIF neuron that, WHEN IT FIRES, drives a physical action — its spike is added into the
+      SAME `out_accum[act_idx]` the innate output uses. So it adds a NEW evolved ROUTE to an action (mirroring how a
+      sensor adds a new SOURCE), NOT a readout replacement — so the reward/STDP/REMAP machinery is untouched.
+      **CRITICAL safety verified:** the REMAP sandbox re-run with EVOACT on (and EVOSENSE+EVOACT both on) confirms
+      `STDP_TARGET` still recruits (45→98% recovery each phase flip) — expression-widening does NOT break the
+      in-lifetime construction mechanism. **KEY FINDING (reinforces Ascent.md §5):** a seeded actuator is PRUNED in
+      the books economy (a CONSUME or JMP driver perturbs the tuned reading gait → cliffs to refuge floor, selected
+      out ~75k ticks) — NOT a mechanism failure but the Exp-22 result recurring: the single-reward books economy
+      selects AGAINST behavioural variation. Contrast Exp 37 (a new SENSOR was retained+proliferated: more input
+      never hurts a reader; a new output route perturbs its one monetised action). **Verdict: the sensorimotor
+      expression channel is now fully DNA-encoded + mutable (both halves), composes cleanly with learning — but
+      evolvable effectors will only be RETAINED under an economy that REWARDS behavioural diversity, which books
+      does not.** Empirical support for demoting Books to survival-scaffold and routing the mind path through PEER +
+      niche/diversity structure (the pre-registered next build, NOT another I/O mechanic). Phase C (dissolve fixed
+      N_INPUT/N_OUTPUT entirely) available but lower priority than giving the evolvable apparatus an economy that
+      selects for it. `GENESIS_EVOACT`/`_SEED` kept as instruments. See Result Exp 38, ARD §1.4, Ascent §5.
 - ✅ **Flat-membrane blocker FIXED — event-driven membrane (Exp 8, 2026-07-12):** the membrane now
       charges `CYCLES_PER_NEURON_UPDATE × n_spiked` (per action potential), not `× n_count` (per neuron).
       On a 20 W substrate the spike is the energy event; idle neurons draw ~nothing (Rule 11). Result:

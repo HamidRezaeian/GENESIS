@@ -2068,6 +2068,48 @@ SENSOR genes too, so `n_c` is fully genome-derived and I/O stops being a global 
 `GENESIS_EVOSENSE_SEED` kept as instruments; default byte-identical (re-verified). `brain_io`'s fingerprint
 already tracks `N_INPUT/N_OUTPUT` so any future I/O change auto-archives stale checkpoints.
 
+## 🧪 Experiment 38 — Evolvable Actuators: the Organism Grows Its Own Effectors (Phase B, 2026-07-18)
+
+The motor complement of Exp 37, and the direct attack on the Exp-21 cognition ceiling ("a mind cannot be modelled
+richer than it can *act*"): the organism should grow its own **effectors**, not receive a designer-fixed 6-motor +
+8-vocal output layer. Also part of the strategic reframe (`Ascent.md` §5): widening behavioural expression is the
+load-bearing prerequisite for grounded cognition and for peer-prediction to have anything rich to model.
+
+**Mechanism (`GENESIS_EVOACT`, default-OFF, compile-time gated, byte-identical off).** An `ACTUATOR_MARKER` gene
+(`[marker, slot, act_idx, thresh, receptor]`) declares an ordinary LIF neuron in the hidden band that **also drives
+a physical action when it fires** — its spike is added into `out_accum[act_idx]`, the *same* accumulator the innate
+output neuron for that action uses (`act_idx % N_OUTPUT` picks one of the 14 physical outputs). So evolution grows a
+**new route** to an action (e.g. a deep evolved circuit that has learned *when* to jump can trigger the jump
+directly), mirroring how a SENSOR adds a new *source* — **without replacing the fixed output neurons**. This is the
+critical safety property: the reward/STDP/REMAP machinery still reads `out_accum[0..13]` exactly as before.
+
+**Verification:**
+- **Default byte-identical** (EVOACT off): ancestor 44n/31s, cache `genesis_numba_books` unchanged.
+- **CRITICAL — validated learning intact:** the REMAP sandbox was re-run with EVOACT on (and again with
+  **EVOSENSE+EVOACT both on**): `STDP_TARGET` still recruits — swap-bit accuracy drops to ~45–50 % at each phase
+  flip then re-climbs to ~98 %, identical to the pre-Phase-B behaviour. Widening the actuator apparatus does **not**
+  disturb the in-lifetime construction mechanism (Exp 35). The seeded actuator decodes + fires + contributes to
+  `out_accum` correctly (mechanism confirmed present and functional).
+- **Retention finding (honest, and it reinforces the reframe):** a seeded demo actuator was **pruned** in the books
+  economy — both a CONSUME-driver (starves a reader by eating text) and a JMP_FWD-driver (perturbs the finely-tuned
+  reading saccade so the reader skates over cells) cliffed the colony to the refuge floor and were selected out
+  within ~75 k ticks. This is **not** a mechanism failure — it is the Exp-22 result recurring: the books survival
+  economy pays for exactly one behaviour (the tuned echo-reader), so it selects *against* any behavioural variation,
+  including a new effector. Contrast Exp 37, where a new *sensor* was retained/proliferated (more input never hurts a
+  reader; a new output route perturbs its single monetised action). **The apparatus is sound; the books monoculture
+  simply offers no niche for behavioural diversity to be retained in.**
+
+**Significance + honest scope.** Both halves of the sensorimotor expression channel are now DNA-encoded and mutable
+(sensors Exp 37, actuators Exp 38), composing cleanly with the validated learning — the Exp-21 ceiling is attacked
+from both sides. But Exp 38 also delivers a **decisive economy finding**: evolvable effectors will only be *retained
+and elaborated* under an economy that **rewards behavioural diversity** — which the single-reward books economy does
+not. This is direct empirical support for `Ascent.md` §5: Books must be demoted to a survival scaffold and the mind
+path routed through **peer prediction + niche/diversity structure**, where a richer action repertoire actually pays.
+That — a diversity-rewarding economy on top of the now-widened expression channel — is the pre-registered next
+build (not another I/O mechanic). **Phase C** (dissolving the fixed `N_INPUT/N_OUTPUT` blocks entirely) remains
+available but is lower priority than giving the existing evolvable apparatus an economy that selects for it.
+`GENESIS_EVOACT`/`GENESIS_EVOACT_SEED` kept as instruments; default byte-identical (re-verified).
+
 ## 6. Critical Audit Fixes (2026-07-11)
 
 A rigorous architectural review identified and fixed three critical engine flaws that compromised open-ended evolution:
