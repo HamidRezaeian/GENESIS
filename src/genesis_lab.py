@@ -54,6 +54,13 @@ BOOK_CATEGORY = os.environ.get("GENESIS_BOOK_CATEGORY", "English")
 BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "00_Graded")
 BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", "6000"))
 BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
+# FULL-CURRICULUM injection (2026-07-18, UI-toggleable). When on, the library scroll is laid as the WHOLE
+# ordered curriculum ladder (DEFAULT_CURRICULUM: 00_Graded -> 00_Ascent -> Math -> words -> phrases) as
+# ONE contiguous scroll, bootstrap-head-first so a cold colony still ignites (Exp 12/17). When off
+# (default), the single BOOK_NAME scroll is laid exactly as before (byte-identical). A pure driver change
+# (which bytes are stocked) — no kernel change, so the njit cache is unaffected. Live-flippable via
+# g_curriculum (set from the dashboard) so the user can switch the whole library on without a restart.
+CURRICULUM = os.environ.get("GENESIS_CURRICULUM", "0") == "1"
 
 # Seed energy is ARCHITECTURE-DERIVED, not a set number: the sentinel -1 tells spawn_organism to
 # gift each founder exactly its own CONSTRUCTION COST (genome bytes + neurons + synapses, 1 cycle
@@ -70,6 +77,9 @@ RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
 # Action-distribution probe (Exp 22, observation-only). Also a compile-time branch inside world_tick
 # (records best_a on the peer-OFF path), so its kernel must not share a cache with the plain default.
 ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
+# Niche economy (Exp 39) — compile-time branch inside world_tick (negative-frequency-dependent income
+# split), so its kernel must not share a cache with the default.
+NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "0") == "1"
 # Learning ablation (Exp 30) — compile-time branch inside world_tick (deletes STDP Phase 3), so its
 # kernel must not share a cache with the learning-on default.
 NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
@@ -93,19 +103,48 @@ REMAP = os.environ.get("GENESIS_REMAP", "0") == "1"
 # Error/teaching-signal plasticity (Exp 35): compile-time branch inside the reward block (a local delta
 # rule on eye->vocal synapses that RECRUITS silent-but-wanted neurons, which STDP3C cannot). Key the cache.
 STDP_TARGET = os.environ.get("GENESIS_STDP_TARGET", "0") == "1"
+# Working-memory delay task (Exp 43): compile-time branch inside the reward block (targets the byte sensed
+# DELAY_N ticks ago) + a per-org shift ring push. Its kernel must not share a cache with the default.
+DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
 # Evolvable sensors (Exp 37): compile-time branch (SENSOR_MARKER decode + affordance transduction in the
 # LIF loop). Its kernel must not share a cache with the fixed-I/O default.
 EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
 # Evolvable actuators (Exp 38 / Phase B): compile-time branch (ACTUATOR_MARKER decode + out_accum drive
 # in the LIF loop). Key the cache so it doesn't share a kernel with the fixed-motor default.
 EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
+# GROUNDED SCARCE ECONOMY (Exp 41, default-OFF). The peer-payoff negative (Exp 40) localised the blocker:
+# behavioural diversity is not enough for theory-of-mind — a neighbour's action must be a MODELABLE
+# FUNCTION of its OBSERVABLE state. On the abundant Books scaffold behaviour is diverse but not grounded
+# in anything a predictor can sense. GROUNDED mode composes the pieces that already exist into a survival
+# economy that is (1) genuinely SCARCE (a bounded, slowly/locally-regrowing 0x55 food field, NOT the
+# abundant auto-restocked Books scroll -> a real carrying capacity below the array cap, so reaching the
+# reproduce threshold is contested) and (2) GROUNDED (a grounded ancestor whose movement/consume are
+# DRIVEN by SENSOR_MARKER senses reading real hardware affordances -- food/occupancy/neighbour-energy --
+# so an organism's behaviour is a function of its sensed local world, hence modelable by a neighbour that
+# shares that world). It runs on the FOOD economy (0x55 = pristine RAM, Rule-15 honest), skips Books, and
+# implies EVOSENSE (the grounded senses must decode). This is the substrate the mind path needs; Books
+# stays the separate scaffold until grounded proves self-sustaining (one column at a time). Pure driver +
+# ancestor change; the kernel physics are those of EVOSENSE, so it keys the cache via EVOSENSE + _grounded.
+GROUNDED = os.environ.get("GENESIS_GROUNDED", "0") == "1"
+if GROUNDED:
+    os.environ["GENESIS_EVOSENSE"] = "1"   # grounded senses need the SENSOR_MARKER decode path
+    EVOSENSE = True
+# Grounded food-PATCH geometry (Exp 42): the Exp-41 grounded economy foraged net-NEGATIVE because grazing
+# ISOLATED cells costs one move+consume cycle per meal (high overhead/energy) — the same wall Exp 4 hit and
+# Exp 11 broke for reading with CONTIGUITY. Fix: food lives in DENSE CONTIGUOUS PATCHES a forager sits on
+# and eats cell-after-cell (high intake per move), navigating between patches with its grounded senses.
+# GROUNDED_PATCH_BYTES = a patch's width (a contiguous 0x55 run); the patch count derives from the food
+# budget / this width, so total food is bounded (carrying capacity) — NOT a tuned abundance. Derived from
+# the same food budget the uniform economy uses; only the SHAPE (dense patches vs isolated) changes.
+GROUNDED_PATCH_BYTES = int(os.environ.get("GENESIS_GROUNDED_PATCH", "24"))
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     tempfile.gettempdir(),
     f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
     f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
     f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
     f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}{'_remap' if REMAP else ''}"
-    f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}{'_evoact' if EVOACT else ''}"))
+    f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}{'_evoact' if EVOACT else ''}"
+    f"{'_niche' if NICHE_ECON else ''}{'_delay' if DELAY else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -148,7 +187,8 @@ from neuromorphic_engine import (
 )
 from books_of_genesis import (
     inject_custom_book, inject_curriculum_file, inject_passage, regrow_passage,
-    inject_contiguous_library, get_library_books, contiguous_library_start
+    inject_contiguous_library, get_library_books, contiguous_library_start,
+    inject_curriculum_sequence, DEFAULT_CURRICULUM
 )
 import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + monotonic hall-of-fame)
 
@@ -272,6 +312,11 @@ g_org_reward = np.ones(MAX_ORGANISMS, dtype=np.float32)
 # no spurious credit (vocal-bit plasticity silent until a prediction actually scores). Only read/
 # written by the kernel when GENESIS_STDP3C=1.
 g_org_elig = np.zeros((MAX_ORGANISMS, 8), dtype=np.float32)
+# Exp 43 working-memory DELAY task: per-org shift ring of recently-sensed bytes (slot 0 = now, slot k =
+# k ticks ago). The DELAY reward targets the byte DELAY_N ticks ago, on no current input, so only a brain
+# holding context can emit it. Always allocated (cheap); only read/written by the kernel when DELAY on.
+from neuromorphic_engine import DELAY_BUF as _DELAY_BUF
+g_org_delay_buf = np.zeros((MAX_ORGANISMS, _DELAY_BUF), dtype=np.uint8)
 g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
 
@@ -303,13 +348,25 @@ global_avg_age = 0
 WS_CLIENTS = set()
 ws_loop = None
 g_energy_spawn_rate = float(os.environ.get("GENESIS_FOOD_RATE", "0.1"))
+# AUTO-INJECT toggle (2026-07-18, UI-controllable). When True (default in books mode) the sim_loop
+# automatically restocks the contiguous library scroll whenever it shrinks below target — the survival
+# scaffold that keeps the colony alive (Ascent.md §5: Books is now a survival scaffold, not the mind
+# path). Exposed to the dashboard so the user can turn the auto-injection ON/OFF live (e.g. to watch the
+# colony run down the scroll, or to hold a fixed snapshot). Off = no automatic restock; the manual
+# "Inject Curriculum" button still works. Defaults to books-mode on.
+g_auto_inject = (GENESIS_ECONOMY == "books")
+# FULL-CURRICULUM live toggle (2026-07-18): when True the auto-injector lays the WHOLE ordered curriculum
+# ladder (DEFAULT_CURRICULUM) as one contiguous scroll instead of the single BOOK_NAME. Live-flippable
+# from the dashboard so the user can switch the entire library on/off without a restart. Initialised from
+# the GENESIS_CURRICULUM env default.
+g_curriculum = CURRICULUM
 
 async def broadcast_msg(msg):
     if WS_CLIENTS:
         websockets.broadcast(WS_CLIENTS, msg)
 
 async def ws_handler(websocket):
-    global g_oracle_val, g_oracle_target, g_energy_spawn_rate
+    global g_oracle_val, g_oracle_target, g_energy_spawn_rate, g_auto_inject, g_curriculum
     WS_CLIENTS.add(websocket)
     try:
         async for message in websocket:
@@ -321,6 +378,15 @@ async def ws_handler(websocket):
                     g_oracle_target = int(data.get("target", -1))
                 elif msg_type == "set_energy_rate":
                     g_energy_spawn_rate = float(data.get("rate", 0.1))
+                elif msg_type == "set_auto_inject":
+                    # UI toggle for the automatic library restock (survival scaffold, Ascent.md §5).
+                    g_auto_inject = bool(data.get("enabled", True))
+                elif msg_type == "set_curriculum":
+                    # UI toggle: lay the WHOLE ordered curriculum ladder (contiguous) vs the single book.
+                    g_curriculum = bool(data.get("enabled", False))
+                    # apply immediately so the switch is visible without waiting for a restock
+                    if GENESIS_ECONOMY == "books":
+                        _lay_library()
                 elif msg_type == "get_library":
                     books = get_library_books()
                     await websocket.send(json.dumps({
@@ -332,9 +398,16 @@ async def ws_handler(websocket):
                     for _ in range(5):
                         inject_custom_book(g_ram, RAM_SIZE, text)
                 elif msg_type == "inject_curriculum_file":
+                    # FIX (2026-07-18): lay the selected book as ONE CONTIGUOUS SCROLL (the layout the live
+                    # economy needs, Exp 11), NOT the confetti scatter of inject_curriculum_file — the UI
+                    # button used to scatter word fragments, contradicting the engine (net-negative gaps).
                     category = data.get("category", "")
                     book_name = data.get("book_name", "")
-                    inject_curriculum_file(g_ram, RAM_SIZE, category, book_name)
+                    inject_contiguous_library(g_ram, RAM_SIZE, category, book_name, BOOK_TARGET_BYTES)
+                elif msg_type == "inject_sequence":
+                    # Lay the WHOLE default curriculum ladder as one contiguous scroll (the "inject
+                    # everything correctly" action).
+                    inject_curriculum_sequence(g_ram, RAM_SIZE, BOOK_TARGET_BYTES)
                 elif msg_type == "get_status":
                     max_age = -1
                     elite_id = -1
@@ -345,6 +418,7 @@ async def ws_handler(websocket):
                     
                     if elite_id != -1:
                         n_count = g_org_n_count[elite_id]
+                        n_ptr = g_org_n_ptr[elite_id]
                         s_count = g_org_s_count[elite_id]
                         s_ptr = g_org_s_ptr[elite_id]
                         g_start = g_org_g_ptr[elite_id]
@@ -356,9 +430,22 @@ async def ws_handler(websocket):
                             dst = g_global_conn_dst[s_ptr + i]
                             w = g_global_conn_weight[s_ptr + i]
                             
-                            src_str = f"In {src}" if src < 25 else (f"Out {src-25}" if src < 39 else f"H {src}")
-                            dst_str = f"In {dst}" if dst < 25 else (f"Out {dst-25}" if dst < 39 else f"H {dst}")
-                            
+                            # Derive the neuron-role labels from the live I/O constants (not hardcoded
+                            # 25/39) so the Brain view stays correct automatically if N_INPUT/N_OUTPUT
+                            # change (Exp 37/38 evolvable-I/O direction). Sensor/actuator hidden neurons
+                            # show as H with their evolved role appended when those flags are on.
+                            def _role(n):
+                                if n < N_INPUT: return f"In {n}"
+                                if n < N_IO: return f"Out {n - N_INPUT}"
+                                tag = "H"
+                                if EVOSENSE and g_global_sense_type[n_ptr + n] > 0:
+                                    tag = f"S{int(g_global_sense_type[n_ptr + n]) - 1}"   # sensor affordance id
+                                elif EVOACT and g_global_act_drive[n_ptr + n] > 0:
+                                    tag = f"A{int(g_global_act_drive[n_ptr + n]) - 1}"     # actuator action id
+                                return f"{tag} {n}"
+                            src_str = _role(src)
+                            dst_str = _role(dst)
+
                             if abs(w) > 0.1:
                                 synapses.append({"source": src_str, "target": dst_str, "weight": float(w)})
                         
@@ -547,6 +634,35 @@ def create_intelligent_ancestor(dna=None):
         # drive it from the food/text-ahead sense so it advances toward text (redundant, mutation-robust)
         genes.extend([GENE_MARKER, FOOD_AHEAD_IN, ACT_FWD, 255])
         genes.extend([GENE_MARKER, FOOD_AHEAD_IN, ACT_FWD, 255])
+
+    # --- GROUNDED SENSES (Exp 41, gated GENESIS_GROUNDED, default off) ---
+    # The grounded scarce economy needs behaviour DRIVEN BY SENSED LOCAL HARDWARE STATE, so a neighbour's
+    # action is a modelable function of the shared world (the Exp-40 peer-negative fix). Seed SENSOR_MARKER
+    # neurons coupled to REAL affordances (Rule 15 — the machine already exposes them; sense_affordance in
+    # neuromorphic_engine) and wire each to the survival action it should drive. All grounded in what a
+    # neighbour could ALSO sense (food byte, occupancy, neighbour energy), so predicting a neighbour's
+    # move = modelling the shared physics. Only under GROUNDED; sensors decode via EVOSENSE (forced on).
+    # Sensor gene = [SENSOR_MARKER, slot, aff_type, offset+128, param]; declared after the 5 hidden
+    # neurons (indices N_IO+5 ..), the decoder assigns them hidden-band indices in genome order.
+    if GROUNDED:
+        JMP_FWD_G   = N_INPUT + 0
+        JMP_BCK_G   = N_INPUT + 1
+        CONSUME_G   = N_INPUT + 4
+        S_FOOD_AHEAD = N_IO + 5   # aff 0 (RAM byte) LONG_JUMP_STRIDE ahead: is there food/structure ahead?
+        S_FOOD_HERE  = N_IO + 6   # aff 0 (RAM byte) at offset 0: am I standing on food?
+        S_CROWD_AHEAD= N_IO + 7   # aff 2 (occupancy) 1 ahead: is a neighbour blocking me?
+        S_NB_ENERGY  = N_IO + 8   # aff 3 (neighbour energy) 1 ahead: how rich is my neighbour?
+        genes.extend([SENSOR_MARKER, 0, 0, 128 + LONG_JUMP_STRIDE, 0])  # food/structure ahead
+        genes.extend([SENSOR_MARKER, 1, 0, 128 + 0, 0])                 # byte under me (food here?)
+        genes.extend([SENSOR_MARKER, 2, 2, 128 + 1, 0])                 # occupancy 1 ahead (crowding)
+        genes.extend([SENSOR_MARKER, 3, 3, 128 + 1, 0])                 # neighbour energy 1 ahead
+        # wire grounded senses to grounded survival actions (redundant = mutation-robust, like seek/echo):
+        genes.extend([GENE_MARKER, S_FOOD_AHEAD, JMP_FWD_G, 220])       # food ahead -> advance
+        genes.extend([GENE_MARKER, S_FOOD_AHEAD, JMP_FWD_G, 220])
+        genes.extend([GENE_MARKER, S_FOOD_HERE,  CONSUME_G, 255])       # food here  -> eat
+        genes.extend([GENE_MARKER, S_FOOD_HERE,  CONSUME_G, 255])
+        genes.extend([GENE_MARKER, S_CROWD_AHEAD, JMP_BCK_G, 200])      # crowded ahead -> back off (disperse)
+        genes.extend([GENE_MARKER, S_NB_ENERGY,   JMP_FWD_G, 120])      # rich neighbour ahead -> approach (weak)
 
     # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
     # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
@@ -756,6 +872,16 @@ def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
                 if g_org_grid[p] == -1 and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55:
                     pos = p
                     break
+        elif GROUNDED:
+            # Exp 42: born on an empty cell ADJACENT to a food patch, so a grounded forager starts within
+            # sensing range of food (its grounded senses can immediately steer it onto the patch) instead
+            # of marooned in vacuum. Falls through to the generic empty-cell search if none found.
+            for _ in range(2000):
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1 and g_ram[p] == 0x00 and (
+                        g_ram[(p + 1) % RAM_SIZE] == 0x55 or g_ram[(p - 1 + RAM_SIZE) % RAM_SIZE] == 0x55):
+                    pos = p
+                    break
         if pos < 0:
             for _ in range(1000):  # bounded search; give up rather than spin on a full substrate
                 p = random.randint(0, RAM_SIZE - 1)
@@ -860,6 +986,44 @@ def seed_refuge(n):
     return born
 
 
+def _stock_food_patches(target_food):
+    """Exp 42 grounded foraging substrate: keep ~target_food cells of 0x55 laid as DENSE CONTIGUOUS
+    PATCHES (each GROUNDED_PATCH_BYTES wide) rather than isolated cells, so a forager sits on a patch and
+    eats cell-after-cell (high intake per move = break-even, the Exp-11 contiguity fix on the food axis).
+    Only tops up toward target (bounded total = carrying capacity below the array cap); patches are placed
+    at random anchors on empty runs, never overwriting the reading scroll region or other organisms' cells.
+    Returns the number of food cells present after stocking."""
+    present = int(np.count_nonzero(g_ram == 0x55))
+    deficit = int(target_food) - present
+    pw = max(1, GROUNDED_PATCH_BYTES)
+    guard = 0
+    while deficit >= pw and guard < 10000:
+        guard += 1
+        anchor = random.randint(0, RAM_SIZE - pw - 1)
+        # lay a patch only on a run of empty (0x00) cells, so we never clobber text/traps/food/orgs
+        ok = True
+        for k in range(pw):
+            if g_ram[anchor + k] != 0x00:
+                ok = False
+                break
+        if not ok:
+            continue
+        for k in range(pw):
+            g_ram[anchor + k] = 0x55
+        deficit -= pw
+    return int(np.count_nonzero(g_ram == 0x55))
+
+
+def _lay_library(at=None):
+    """Lay the reading scroll: the WHOLE ordered curriculum (contiguous) when g_curriculum is on, else
+    the single BOOK_NAME scroll (byte-identical to the pre-2026-07-18 behaviour when off). Both are laid
+    contiguously (Exp 11) — never the confetti scatter. Used by prestock, restock, and the dashboard so
+    all three stay consistent. Returns whatever the injector returns."""
+    if g_curriculum:
+        return inject_curriculum_sequence(g_ram, RAM_SIZE, BOOK_TARGET_BYTES, at=at)
+    return inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES, at=at)
+
+
 def sim_loop():
     global global_time, ark_dna, num_extinctions, num_refuge, ext_history, max_ark_age, global_avg_age
     print("Pre-compiling world_tick_numba (JIT warmup)...")
@@ -877,7 +1041,7 @@ def sim_loop():
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-        g_global_sense_type, g_global_sense_meta, g_global_act_drive
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf
     )
 
     for i in range(MAX_ORGANISMS):
@@ -896,16 +1060,26 @@ def sim_loop():
     # reading income finally beats metabolism (the scattered "confetti" gaps, not the exchange rate,
     # were what kept the economy net-negative). Pure world structure — no reward constant changed.
     if GENESIS_ECONOMY == "books":
-        if inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES) is None:
-            print(f"[BOOKS] WARNING: could not inject {BOOK_CATEGORY}/{BOOK_NAME}; library empty.")
-        print(f"[BOOKS] Economy=books | library={BOOK_CATEGORY}/{BOOK_NAME} (contiguous scroll) "
+        if _lay_library() is None:
+            print(f"[BOOKS] WARNING: could not inject library; empty.")
+        _lib_desc = "FULL CURRICULUM" if g_curriculum else f"{BOOK_CATEGORY}/{BOOK_NAME}"
+        print(f"[BOOKS] Economy=books | library={_lib_desc} (contiguous scroll) "
               f"target={BOOK_TARGET_BYTES}B seed={int(CELL_STATES)}(one cell) currency=CELL_STATES({int(CELL_STATES)}/cell)")
         # Exp 29: optionally SEED the canvas with the book too, so it pays reading income from t=0 and
         # readers migrate onto it before any authoring exists (solves the Exp-25b cold-start barrenness).
         # Owner stays -1 (unclaimed readable content); an org CONSUME-claims a cell to start earning rent.
         if CANVAS and CANVAS_SEED:
-            inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES, at=CANVAS_LO)
-            print(f"[CANVAS] authored band=[{CANVAS_LO},{CANVAS_HI}) seeded with book (readable from t=0)")
+            _lay_library(at=CANVAS_LO)
+            print(f"[CANVAS] authored band=[{CANVAS_LO},{CANVAS_HI}) seeded (readable from t=0)")
+
+    # Exp 42 GROUNDED: pre-stock the food field as DENSE CONTIGUOUS PATCHES (the Exp-11 contiguity fix on
+    # the food axis) so a grounded forager can break even. Food budget derives from the spawn rate scaled
+    # to a standing target — a carrying-capacity target below the array cap, bounded, not an abundant carpet.
+    if GROUNDED:
+        target_food = int(os.environ.get("GENESIS_GROUNDED_FOOD", "3000"))
+        got = _stock_food_patches(target_food)
+        print(f"[GROUNDED] scarce food economy | {got} food cells in ~{GROUNDED_PATCH_BYTES}-cell patches "
+              f"(target {target_food}) | grounded senses drive foraging (Exp 42)")
 
     # RESUME (opt-in, GENESIS_RESUME=1). Seed the founder cohort from the persistent best-ever
     # hall-of-fame so capability compounds across sessions instead of cold-starting every run. The
@@ -1026,14 +1200,22 @@ def sim_loop():
             if NICHE_JUMP:
                 return random.randint(0, (RAM_SIZE // LONG_JUMP_STRIDE) - 1) * LONG_JUMP_STRIDE
             return random.randint(0, RAM_SIZE - 1)
-        for _ in range(int(spawn_count)):
-            idx = _food_idx()
-            if g_ram[idx] == 0x00:
-                g_ram[idx] = 0x55
-        if random.random() < (spawn_count - int(spawn_count)):
-            idx = _food_idx()
-            if g_ram[idx] == 0x00:
-                g_ram[idx] = 0x55
+        if GROUNDED:
+            # Exp 42: replenish the food field as DENSE PATCHES back toward the standing target (bounded
+            # carrying capacity), not isolated cells — a forager sits on a patch and eats cell-after-cell
+            # (high intake/move = break-even, the Exp-11 contiguity fix on the food axis). Top up only when
+            # the field has been grazed below target, and only every restock cadence (amortised).
+            if (global_time % max(1, BOOK_RESTOCK_EVERY)) == 0:
+                _stock_food_patches(int(os.environ.get("GENESIS_GROUNDED_FOOD", "3000")))
+        else:
+            for _ in range(int(spawn_count)):
+                idx = _food_idx()
+                if g_ram[idx] == 0x00:
+                    g_ram[idx] = 0x55
+            if random.random() < (spawn_count - int(spawn_count)):
+                idx = _food_idx()
+                if g_ram[idx] == 0x00:
+                    g_ram[idx] = 0x55
 
         # World-clock step = the deepest live architecture's settle time (see stepping note above).
         # Computed BEFORE the book-restock check below, which divides by it — on the first loop
@@ -1049,10 +1231,10 @@ def sim_loop():
         # gaps that kept the economy net-negative). Exp 9 reading is non-destructive so the scroll
         # rarely depletes — this restock only repairs cells lost to food-spawn (0x55) or births
         # overwriting the block edges. Only runs when GENESIS_ECONOMY=books.
-        if GENESIS_ECONOMY == "books" and (global_time // dynamic_lif_steps) % BOOK_RESTOCK_EVERY == 0:
+        if GENESIS_ECONOMY == "books" and g_auto_inject and (global_time // dynamic_lif_steps) % BOOK_RESTOCK_EVERY == 0:
             printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
             if printable < BOOK_TARGET_BYTES:
-                inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES)
+                _lay_library()   # single book or full curriculum (g_curriculum), always contiguous
         # Exp 24 Wall-1: regrow the reading-fuel reservoir EVERY loop iteration (continuous renewal),
         # capped at CELL_STATES. Gating this on the slow restock cadence (dynamic_lif_steps *
         # BOOK_RESTOCK_EVERY ticks) starved the colony — a cell held only ~CELL_STATES/per-read = 8
@@ -1094,7 +1276,7 @@ def sim_loop():
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
             g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-            g_global_sense_type, g_global_sense_meta, g_global_act_drive
+            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf
         )
         
         for i in range(n_births):
@@ -1123,13 +1305,20 @@ def sim_loop():
         
         if now - last_ws_push >= 0.5:
             read_events = []
+            # Live cognitive-metric tallies for the dashboard (Ascent.md §5: surface the mind signals,
+            # not just population). Counted over the same read_log drain that builds read_events, so it
+            # is free. reads/miss = comprehension solve-rate; pred = anticipated-next; peer/evade = the
+            # autotelic agent-agent economy.
+            m_reads = m_miss = m_pred = m_peer = m_evade = 0
             idx = 1
             while idx < g_read_log[0] and len(read_events) < 20:
                 log_type = g_read_log[idx]
                 if log_type == 1:
+                    m_reads += 1
                     read_events.append({"type": "success", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
                 elif log_type == 2:
+                    m_miss += 1
                     guess_val = int(g_read_log[idx+3])
                     guess_str = chr(guess_val) if 32 <= guess_val <= 126 else f"0x{guess_val:02X}"
                     read_events.append({"type": "fail", "org": int(g_read_log[idx+1]), "target": chr(g_read_log[idx+2]), "guess": guess_str})
@@ -1139,18 +1328,21 @@ def sim_loop():
                     # stepped ONTO. Must be drained with the correct stride — the old `else: break`
                     # truncated the whole buffer on the first prediction, dropping every later event
                     # AND silently hiding the project's key cognitive signal (Rules 6/9).
+                    m_pred += 1
                     read_events.append({"type": "predict", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
                 elif log_type == 4:
                     # Peer prediction (type 4, stride 3): organism drained a neighbour by vocalising
                     # its byte (autotelic info-predation). Must be drained with its own stride or the
                     # old `else: break` would truncate the buffer on the first peer event.
+                    m_peer += 1
                     read_events.append({"type": "peer", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
                 elif log_type == 5:
                     # Red-Queen evasion (type 5, stride 3, Exp 19): org[idx+1] is the PREY that got paid
                     # for taking an action a neighbour confidently mis-predicted. Same stride as peer;
                     # needs its own arm so the first evasion event doesn't truncate the drain.
+                    m_evade += 1
                     read_events.append({"type": "evade", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
                 else:
@@ -1190,6 +1382,35 @@ def sim_loop():
                 screaming = [int(g_positions[i]) for i in range(MAX_ORGANISMS)
                              if g_alive[i] and 32 <= vocal_cords[i] <= 126]
 
+                # Evolvable I/O counts (Exp 37/38): count sensor/actuator neurons across LIVE organisms
+                # only (a freed neuron slot keeps a stale flag, so scan per-alive-org to avoid over-count).
+                # Only computed when the flag is on (else 0), so the default hot path is untouched.
+                m_sensors = m_actuators = 0
+                if EVOSENSE or EVOACT:
+                    for i in range(MAX_ORGANISMS):
+                        if not g_alive[i]:
+                            continue
+                        npi = int(g_org_n_ptr[i]); nci = int(g_org_n_count[i])
+                        if EVOSENSE:
+                            m_sensors += int(np.count_nonzero(g_global_sense_type[npi:npi+nci] > 0))
+                        if EVOACT:
+                            m_actuators += int(np.count_nonzero(g_global_act_drive[npi:npi+nci] > 0))
+
+                # Live action-entropy Hact (Exp 22/39 diversity metric) for the dashboard — the single
+                # scalar the niche economy is judged by. Computed inline (the _entropy helper is defined
+                # later in the print block); only when action_now is populated (peer/actprobe/niche on).
+                m_hact = 0.0
+                if PEER_PREDICT or ACT_PROBE or NICHE_ECON:
+                    _ah = {}
+                    for i in range(MAX_ORGANISMS):
+                        if g_alive[i] and action_now[i] >= 0:
+                            a = int(action_now[i]); _ah[a] = _ah.get(a, 0) + 1
+                    _tot = sum(_ah.values())
+                    if _tot > 0:
+                        for _c in _ah.values():
+                            _p = _c / _tot
+                            m_hact -= _p * math.log2(_p)
+
                 data = {
                     "type": "state",
                     "tick": int(global_time),
@@ -1206,7 +1427,33 @@ def sim_loop():
                     "screaming_orgs": screaming,
                     "terminal": terminal_text,
                     "read_events": read_events,
-                    "num_refuge": int(num_refuge)
+                    "num_refuge": int(num_refuge),
+                    # --- Live cognition metrics (2026-07-18: keep the UI honest with the engine) ---
+                    "metrics": {
+                        "reads": int(m_reads),
+                        "miss": int(m_miss),
+                        "solve_pct": round(100.0 * m_reads / (m_reads + m_miss), 1) if (m_reads + m_miss) else 0.0,
+                        "pred": int(m_pred),
+                        "peer": int(m_peer),
+                        "evade": int(m_evade),
+                        # evolvable I/O (Exp 37/38) — only meaningful when the flags are on; 0 otherwise
+                        "sensors": int(m_sensors),
+                        "actuators": int(m_actuators),
+                        # behavioural diversity (Exp 22/39): action entropy, the niche-economy success metric
+                        "hact": round(float(m_hact), 2),
+                    },
+                    # engine feature flags so the dashboard can label/enable the right panels
+                    "flags": {
+                        "economy": GENESIS_ECONOMY,
+                        "peer": bool(PEER_PREDICT),
+                        "evosense": bool(EVOSENSE),
+                        "evoact": bool(EVOACT),
+                        "remap": bool(REMAP),
+                        "niche": bool(NICHE_ECON),
+                        "grounded": bool(GROUNDED),
+                        "auto_inject": bool(g_auto_inject),
+                        "curriculum": bool(g_curriculum),
+                    },
                 }
                 asyncio.run_coroutine_threadsafe(broadcast_msg(json.dumps(data)), ws_loop)
             last_ws_push = now
@@ -1221,6 +1468,23 @@ def sim_loop():
             # drains this, so with a browser open the counts show on the dashboard instead). Reads
             # = solved current symbol, pred = anticipated next symbol, peer = drained a neighbour.
             r_success = r_fail = r_pred = r_peer = r_evade = 0
+            # Exp 42 (live REMAP): per-bit accuracy split — the 2 SWAPPED bits (SB0/SB1) vs the 6 UNCHANGED
+            # bits — so the live A/B is readable exactly like the sandbox (aggregate solve% hides whether
+            # the swap bits specifically are being re-tracked). Observation-only, gated on REMAP. type-1
+            # (solve) = all 8 bits matched the (remapped) target; type-2 (miss) carries target + emission
+            # so we recompute the remapped target and compare per bit. Never wired to selection.
+            rmp_sc = rmp_st = rmp_uc = rmp_ut = 0
+            if REMAP:
+                import neuromorphic_engine as _ne
+                _sb0 = int(_ne.REMAP_SB0); _sb1 = int(_ne.REMAP_SB1)
+                _per = int(_ne.REMAP_PERIOD); _sts = int(_ne.REMAP_STATES)
+                _swapped = (_sts > 1) and (((int(global_time) // max(1, _per)) % _sts) != 0)
+                def _rmp_tgt(nb):
+                    if not _swapped:
+                        return nb & 0xFF
+                    b0 = (nb >> _sb0) & 1; b1 = (nb >> _sb1) & 1
+                    nb2 = nb & ~((1 << _sb0) | (1 << _sb1))
+                    return (nb2 | (b1 << _sb0) | (b0 << _sb1)) & 0xFF
             # OBSERVATION-ONLY signal-diversity histograms (Rules 9<->6: NEVER wired to selection).
             # peer_hist: the vocal byte that WON each peer prediction this window; read_hist: the byte
             # each solved comprehension (type-1) read named. Built from the already-drained read_log
@@ -1233,8 +1497,21 @@ def sim_loop():
                 if t == 1:
                     r_success += 1
                     c = int(g_read_log[k+2]); read_hist[c] = read_hist.get(c, 0) + 1
+                    if REMAP:
+                        # a solve matched every bit of the remapped target -> both swap + unchanged correct
+                        rmp_sc += 2; rmp_st += 2; rmp_uc += 6; rmp_ut += 6
                     k += 3
-                elif t == 2: r_fail += 1;    k += 4
+                elif t == 2:
+                    r_fail += 1
+                    if REMAP:
+                        tgt = _rmp_tgt(int(g_read_log[k+2])); emit = int(g_read_log[k+3])
+                        for b in range(8):
+                            ok = ((emit >> b) & 1) == ((tgt >> b) & 1)
+                            if b == _sb0 or b == _sb1:
+                                rmp_st += 1; rmp_sc += 1 if ok else 0
+                            else:
+                                rmp_ut += 1; rmp_uc += 1 if ok else 0
+                    k += 4
                 elif t == 3: r_pred += 1;    k += 3
                 elif t == 4:
                     r_peer += 1
@@ -1272,7 +1549,7 @@ def sim_loop():
             # UNpredictable, so its whole thesis is that Hact RISES over deep time toward log2(6)~2.58.
             # Pure telemetry: read off the state array, printed only, never fed to energy/reproduction.
             act_hist = {}
-            if PEER_PREDICT or ACT_PROBE:
+            if PEER_PREDICT or ACT_PROBE or NICHE_ECON:
                 for i in range(MAX_ORGANISMS):
                     if g_alive[i] and action_now[i] >= 0:
                         a = int(action_now[i]); act_hist[a] = act_hist.get(a, 0) + 1
@@ -1280,9 +1557,9 @@ def sim_loop():
 
             # Exp 22: full per-action breakdown (fwd/bck/f10/b10/eat/rep = best_a 0..5) so supply-vs-
             # demand is directly visible — WHICH actions are dead, not just the aggregate entropy.
-            # Observation-only; only assembled when the probe (or peer) is populating action_now.
+            # Observation-only; only assembled when the probe (or peer / niche economy) populates action_now.
             act_line = ""
-            if PEER_PREDICT or ACT_PROBE:
+            if PEER_PREDICT or ACT_PROBE or NICHE_ECON:
                 tot_a = sum(act_hist.values()) or 1
                 names = ("fwd", "bck", "f10", "b10", "eat", "rep")
                 act_line = " | act " + " ".join(
@@ -1347,7 +1624,12 @@ def sim_loop():
                 _period = int(_ne.REMAP_PERIOD); _states = int(_ne.REMAP_STATES)
                 phase = (global_time // _period) % _states if _period > 0 else 0
                 solve_rate = (100.0 * r_success / (r_success + r_fail)) if (r_success + r_fail) else 0.0
-                remap_line = f" | remap_phase={phase}/{_states} solve%={solve_rate:.0f}"
+                # Exp 42: the swap-bit vs unchanged-bit accuracy split — the decisive live A/B signal (does
+                # the learner RE-TRACK the swapped bits under selection, or stay pinned at the echo floor?).
+                swap_acc = (100.0 * rmp_sc / rmp_st) if rmp_st else 0.0
+                unch_acc = (100.0 * rmp_uc / rmp_ut) if rmp_ut else 0.0
+                remap_line = (f" | remap_phase={phase}/{_states} solve%={solve_rate:.0f} "
+                              f"swapbit%={swap_acc:.0f} unchbit%={unch_acc:.0f}")
 
             # Exp 37 evolvable-sensor telemetry (observation-only, Rules 9<->6: NEVER selects). Count the
             # sensor neurons that exist across the LIVE colony and how many organisms carry >=1 — does an

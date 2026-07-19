@@ -103,13 +103,39 @@
 
                 <!-- Library -->
                 <div class="panel">
-                    <div class="section-head"><h2>Library</h2></div>
+                    <div class="section-head"><h2>Library <span class="dim" id="lib-role">(survival scaffold)</span></h2></div>
                     <select id="library-select" class="select"><option value="">Loading…</option></select>
-                    <button class="btn btn-primary btn-full" id="btn-inject-lib">Inject Curriculum</button>
+                    <button class="btn btn-primary btn-full" id="btn-inject-lib">Inject Selected (contiguous)</button>
+                    <button class="btn btn-ghost btn-full" id="btn-inject-seq">Inject Full Curriculum</button>
+                    <label class="toggle-row">
+                        <input type="checkbox" id="auto-inject-toggle" checked>
+                        <span>Auto-inject (keep scroll restocked)</span>
+                    </label>
+                    <label class="toggle-row">
+                        <input type="checkbox" id="curriculum-toggle">
+                        <span>Full curriculum (whole ladder, not one book)</span>
+                    </label>
                     <div class="input-row">
                         <input type="text" id="custom-book-input" class="input" placeholder="Custom text…">
                         <button class="btn btn-primary" id="btn-inject-custom">Inject</button>
                     </div>
+                </div>
+
+                <!-- Cognition (live engine metrics) -->
+                <div class="panel" id="cognition-panel">
+                    <div class="section-head"><h2>Cognition</h2></div>
+                    <div class="metric-grid">
+                        <div class="metric"><span class="metric-label">Solve %</span><span class="metric-value mono" id="m-solve">—</span></div>
+                        <div class="metric"><span class="metric-label">Reads</span><span class="metric-value mono" id="m-reads">0</span></div>
+                        <div class="metric"><span class="metric-label">Miss</span><span class="metric-value mono" id="m-miss">0</span></div>
+                        <div class="metric"><span class="metric-label">Predict</span><span class="metric-value mono" id="m-pred">0</span></div>
+                        <div class="metric" data-flag="peer"><span class="metric-label">Peer</span><span class="metric-value mono" id="m-peer">0</span></div>
+                        <div class="metric"><span class="metric-label">Act Entropy</span><span class="metric-value mono" id="m-hact">—</span></div>
+                        <div class="metric" data-flag="evosense"><span class="metric-label">Sensors</span><span class="metric-value mono" id="m-sensors">0</span></div>
+                        <div class="metric" data-flag="evoact"><span class="metric-label">Actuators</span><span class="metric-value mono" id="m-actuators">0</span></div>
+                        <div class="metric"><span class="metric-label">Brain N</span><span class="metric-value mono" id="m-brainn">0</span></div>
+                    </div>
+                    <div class="flag-bar" id="flag-bar"></div>
                 </div>
 
                 <!-- Oracle Terminal -->

@@ -97,8 +97,19 @@ alongside it, with Phases B/C — evolvable actuators, then dissolving the fixed
 - Renders the 65536-byte RAM as a folded 256×256 HTML5 canvas: food `0x55` green, living
   organisms blue, vocalising ("screaming") organisms yellow, curriculum text purple.
 - KPI tiles (era lifespan, population, extinctions, elite age), an extinction chart, a D3
-  **Brain Analyzer** that decompiles the Elite genome's synapses, an **Oracle Terminal**
-  to broadcast ASCII into the universe, and a **Library of Genesis** curriculum injector.
+  **Brain Analyzer** that decompiles the Elite genome's synapses (neuron roles derived live from
+  `N_INPUT`/`N_IO`, and evolvable sensor/actuator neurons labelled `S<aff>`/`A<act>` when those modes
+  are on — Exp 37/38), an **Oracle Terminal** to broadcast ASCII into the universe, and a **Library of
+  Genesis** curriculum injector.
+- **Live Cognition panel + feature-flag bar (2026-07-18).** The dashboard surfaces the engine's live
+  cognitive metrics — reading solve-rate (`reads`/`miss`), next-symbol `pred`, autotelic `peer`, and
+  the evolvable-I/O counts (`sensors`/`actuators`) — not just population, so the mind signals are
+  watchable, not reconstructed from logs. A flag bar shows which engine modes are running
+  (PEER / EVO-SENSE / EVO-ACT / REMAP), and the Library is labelled a **survival scaffold** (Ascent.md
+  §5). An **Auto-inject toggle** lets the user enable/disable the automatic library restock live
+  (`set_auto_inject` over the WebSocket → the `g_auto_inject` gate on the sim_loop restock); the manual
+  inject button is unaffected. The WebSocket `state` payload carries a `metrics` and `flags` block so
+  the UI stays honest with whatever engine configuration is live.
 
 ## 2. Core Mechanisms
 ### 2.1 Thermodynamics = CPU Cycles
@@ -599,6 +610,26 @@ net-positive (§2.1). Organisms are seeded and germinate **standing on** the scr
 org-grid *occupancy*, not a `0x00`-vacuum requirement (a food-economy holdover that, on a solid scroll
 with no interior vacuum, stranded the whole cohort off-text: the live-only bug behind the earlier
 floor-12 collapse).
+
+**Full-curriculum injection + UI-inject consistency (2026-07-18).** Two fixes to the survival scaffold
+(Ascent §5 — Books is now a *survival scaffold*, not the mind path). (1) The dashboard "Inject" button
+formerly called `inject_curriculum_file`, which SCATTERS word fragments as confetti — the exact
+net-negative layout Exp 11 retired — contradicting the live economy. It now lays the selected book as one
+**contiguous scroll** (`inject_contiguous_library`), matching the engine. (2) A new
+`inject_curriculum_sequence` (books_of_genesis.py) lays the **whole ordered curriculum ladder**
+(`DEFAULT_CURRICULUM`: `00_Graded` → `00_Ascent` → `Math/01_Digits` → `Math/02_Addition` →
+`02_Basic_Words` → `03_Phrases`) concatenated into a single contiguous scroll, **bootstrap-head-first** so
+a cold colony still ignites (the tiling recurs from the FULL stream, keeping the `00_Graded` runs foothold
+dense — never tiling only the hard tail, the Exp-20 cliff). Gated by `GENESIS_CURRICULUM` / the live
+`g_curriculum` toggle (dashboard "Full curriculum" checkbox + "Inject Full Curriculum" button); default OFF
+lays the single `BOOK_NAME` scroll exactly as before (byte-identical, pure driver change, no kernel/cache
+impact). **Live-verified:** the full curriculum **cold-ignites cleanly** (t≈7k: pop=597, reads=175,
+`refuge=0` — no floor-riding) and **sustains** (pop=599–600, ext=0) — the key risk (a hard-tail-dominated
+scroll cliffing the colony) is avoided by the bootstrap-first order. Steady solve-rate is lower than the
+single-book baseline (~24 vs ~137 reads/window) because the colony now spreads across the repeat-free hard
+tail (arithmetic/phrases) it cannot yet solve — the honest expected state (Exp 20: minds camp the easy band
+until the learning machinery can climb), not a regression: the scaffold keeps the colony alive *and*
+presents the whole difficulty gradient for when construction-capable learning (Exp 35) can climb it.
 
 **Curriculum *difficulty* is now load-bearing, not just layout** (Result Exp 12, 2026-07-13). Once
 reading pays for *predicting* the next symbol (§2.1), the text must present a **difficulty gradient a

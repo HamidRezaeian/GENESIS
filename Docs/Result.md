@@ -2110,6 +2110,223 @@ build (not another I/O mechanic). **Phase C** (dissolving the fixed `N_INPUT/N_O
 available but is lower priority than giving the existing evolvable apparatus an economy that selects for it.
 `GENESIS_EVOACT`/`GENESIS_EVOACT_SEED` kept as instruments; default byte-identical (re-verified).
 
+## 🧪 Experiment 39 — Niche Economy: Negative-Frequency-Dependence Achieves the Highest Diversity Ever, Then Leaks into a Reproduce-Monoculture (2026-07-18)
+
+The pre-registered next build (Exp 38 / Ascent §5): an economy that **rewards behavioural diversity**, the
+demand the whole arc has been missing (Exp 22: every economy pays for ONE behaviour → monoculture → nothing for
+peer to model, nothing to keep an evolved effector for). The mechanism is the one force that sustains diversity
+in real ecosystems — **negative-frequency-dependence**: a behaviour pays LESS the more common it is.
+
+**Design (`GENESIS_NICHE_ECON`, default-OFF, compile-gated, byte-identical off).** Positive income (reading, eat,
+jump-predict) is divided by `1 + niche_same`, where `niche_same` = living neighbours in the ±FOOD_SCAN_RADIUS
+window whose monetised action (`action_now = best_a`) matches this organism's — i.e. the income is split among
+co-located organisms exploiting the SAME behavioural niche. Honest (a finite resource shared among co-exploiters,
+Rule 15/17, no constant), autotelic (agent-agent niche crowding, Rule 9), event-driven (only when earning), zero
+when alone in a niche. **This is NOT the closed Exp-13 branch** (which failed because reading is spatially
+*exclusive* so readers don't contend) — here the contended thing is the *behaviour*, which co-located organisms
+genuinely share.
+
+**First run cliffed** (`pop→12, Hact=0` instantly): the naive always-split form starves the dense bootstrap
+cohort (300 packed founders → high `niche_same` → income ~0 → death before spreading; the Exp-13 tension). **Fix
+(a principled invariant, not a tuned magnitude):** apply the split only to an organism already **above its
+body-subsistence floor** (`footprint × CELL_STATES`, the same derived non-lethal floor the peer economy uses,
+Exp 14) — so crowding competes for *growth surplus*, never survival.
+
+**Result — two clear phases:**
+
+| phase | population | `Hact` | action distribution |
+|---|---|---|---|
+| baseline (ACTPROBE, no niche) | ~597 | ~1.5–1.8 | `fwd`-dominant (60–67%) |
+| **niche, t≈12–44 k (WIN)** | ~596 | **~2.0–2.2 (highest sustained in project history)** | genuinely spread: fwd 30% / bck 17% / eat 15% / rep 30% |
+| niche, t≈50 k+ (leak) | ~595 | **collapses 2.2 → 0.35–0.7** | **rep 85–93%** (reproduce-monoculture) |
+
+**Interpretation — a real directional success with a precisely-diagnosed leak.** For ~30 k ticks the niche
+economy did exactly what the whole arc needed: negative-frequency-dependence pushed the colony OFF monoculture
+into the **most behaviourally diverse equilibrium ever measured** (`Hact ≈ 2.2` vs the ~0.8–1.2 eat-monoculture
+and the ~1.5–1.8 reading baseline). This is the first mechanism to *actively sustain* behavioural diversity rather
+than merely permit it (Exp 23). **But it then leaks into a `rep`-monoculture:** reproduction is a *life-history*
+action, not a resource-exploitation niche — it **spends** energy rather than **earning** it, so the income split
+never touches it. Once the abundant reading scaffold lifts everyone above subsistence, `rep` becomes the
+un-penalised dominant action and `Hact` collapses. The leak is structural (the split governs *how you earn*, and
+`rep` is not earning), not a tuning failure — and it re-exposes the **abundance** problem (Exp 12): the survival
+scaffold is generous enough that everyone reaches the reproduce threshold. The secondary test (does the niche
+economy retain a seeded evolvable actuator?) was inconclusive — the actuator seed + niche split together
+over-stressed the bootstrap (`pop→12`), the two experimental perturbations interfering (Exp-38 actuator-seed
+fragility).
+
+**Verdict + next (pre-registered, honest).** Negative-frequency-dependence is **the right force for the demand
+limit** — proven by the Phase-1 diversity spike, the arc's first real answer to Exp 22 — but on the abundant books
+scaffold it is out-competed over time by unconstrained reproduction. Two clean, non-loop continuations: (1)
+**exclude `rep` from being a "niche"** and, more fundamentally, make reproduction *itself* frequency/density-
+dependent (a crowded colony's births cost more or split more) so the colony cannot escape diversity via a
+breeding pile-up — this couples directly to the long-open "carrying capacity below the array cap" item; or (2)
+run the niche economy on a **scarcer survival substrate** (the grounded food/space economy that is meant to
+replace Books, Ascent §5) where reaching the reproduce threshold is itself contested. The result strengthens the
+reframe: the diversity mechanism works, but it needs a survival economy with genuine scarcity underneath it —
+which is the grounded economy, not the abundant Books scaffold. `GENESIS_NICHE_ECON` kept as an instrument;
+default byte-identical (re-verified: cache `genesis_numba_books`, ancestor 44n/31s).
+
+## 🧪 Experiment 40 — Density-Dependent Reproduction Kills the `rep`-Monoculture: Diversity Becomes Sustained (Oscillating), Not Transient (2026-07-18)
+
+Exp 39's pre-registered continuation (1): the niche economy diversified *foraging* but the colony escaped it by
+piling into **reproduce** — `rep` SPENDS energy rather than earning, so the income-split never touched it and
+`Hact` collapsed 2.2→0.35 (rep=93%). Fix: apply the **same negative-frequency-dependence to the breeding
+niche** — the reproduction `copy_cost` is scaled by `1 + niche_same` (how many window-neighbours are also
+choosing `rep` this tick), so breeding in a crowded rep-niche costs proportionally more (**density-dependent
+fecundity**, the real-ecology brake). Constant-free (reuses the Exp-39 `niche_same`), gated under
+`GENESIS_NICHE_ECON`, byte-identical off. Couples to the long-open "carrying capacity below the array cap" item.
+
+**Result — the leak is closed.** Over a 140 k-tick run (`pop=600, ext=0` throughout, no cliff): `rep` never
+exceeds ~26 % and mostly sits **3–14 %** (vs 93 % before). The colony **can no longer permanently
+monoculture.** Instead of a stable high plateau it now shows a **slow niche-cycle**: `Hact` oscillates ~0.65 ↔
+~2.0 (mean ≈ 1.5, well above the ~0.8–1.2 eat-monoculture baseline and never permanently collapsing), the
+dominant niche rotating over deep time (fwd-heavy at t≈70 k → f10/b10/eat spread recovering to `Hact≈1.9` by
+t≈136 k). This boom–bust rotation is *more* ecologically realistic than a pinned equilibrium (real niches
+cycle) and, critically, it is the **first economy in the whole arc that structurally cannot decay into a
+behavioural monoculture** — the Exp-22 demand limit is genuinely broken, not just transiently dodged.
+
+**Honest caveat + next.** Diversity is now *sustained-but-oscillating*, not *stably-pinned-high* — the mean is
+high and the collapses are transient/self-correcting, but a downstream consumer of diversity (peer
+theory-of-mind) sees a moving target, not a constant rich field. The pre-registered payoff test — running
+`GENESIS_PEER` on top of this now-non-monoculturing colony, which Exp 18/21 could never do because a
+monoculture gave nothing to model — **was run, and returns a clean, important NEGATIVE: peer income stays ~0
+(peer=0–4/window) even on the diverse colony** (pop=596–600, ext=0, `Hact≈1.3` sustained). Sustaining
+behavioural diversity is therefore **necessary but NOT sufficient** for theory-of-mind to ignite. The reason is
+the Exp-19 lesson resurfacing at a deeper level: the niche economy created *diversity* but not *modelable
+structure* — a neighbour's action is now varied at the population level, but a predictor still cannot
+*anticipate a specific neighbour's* action from what it can sense, because the action is diverse-but-not-a-
+computable-function-of-observable-state. **Diversity ≠ predictability.** Peer needs the target to be
+*predictable-in-principle-but-hard-to-compute* (compressible complexity), and mere behavioural spread does not
+supply that. This sharpens the frontier precisely: the demand limit (Exp 22) is now genuinely broken (a real,
+banked result), but the *peer* economy additionally needs the diverse behaviour to be a **modelable function of a
+neighbour's observable state** — which is where the grounded economy (an agent's behaviour driven by its
+sensed local world, so a neighbour can model it from the shared world) and the construction-capable learner
+(Exp 35, which can build the model) come together. `GENESIS_NICHE_ECON` kept as instrument; default
+byte-identical (re-verified: cache `genesis_numba_books`, ancestor 44n/31s).
+
+## 🧪 Experiment 41 — Grounded Scarce Economy: Achievable and Honest, but the Seeded Reflex Forages Net-Negative (the Exp-4 wall) (2026-07-18)
+
+The Exp-40 peer-negative pointed here: behaviour must be a **modelable function of observable state**, which
+needs a survival economy that is (1) genuinely scarce/contested and (2) grounded — behaviour driven by sensed
+local hardware. Built `GENESIS_GROUNDED` (default-OFF, byte-identical off) composing the existing pieces: a
+**grounded ancestor** with 4 `SENSOR_MARKER` senses (Exp 37 — food byte ahead/under, occupancy-ahead for
+crowding, neighbour-energy-ahead) wired to movement/consume, running on the **food economy** (`0x55` = pristine
+RAM, Rule-15 honest, no Books), with food regrowing **locally by diffusion** (a cell sprouts food only next to
+existing food) so the field is patchy, bounded, and must be navigated — the physical gradient Rule 10 wants.
+Implies `EVOSENSE` (the grounded senses decode); pure driver+ancestor change (kernel = EVOSENSE's, cache
+`_evosense`).
+
+**Result — grounded + scarce is achievable and Rule-15-clean, but it does NOT self-sustain: the colony
+decays at every food supply tested.** Food rate 2 / 50 / 200 / 800 → population peaks at 9 / 46 / 189 / 153
+mid-run then **bleeds to the refuge floor** (ext=0, so it's a gradient decay, not a wipe). Critically,
+**raising food supply 400× barely moves it** (r=2→800 all decay) — so this is NOT a scarcity-tuning problem to
+bracket; it is a **net-negative foraging economy**: the seeded reflex converts too little of the patchy food
+into energy to break even (intake < metabolism). This is **exactly the Exp-4 wall** ("no population has ever
+been food-self-sustaining; 400× food changed survival 31→36 ticks"), now re-derived with grounded senses — and
+it is *why the whole project moved to reading (Books) in the first place*: reading is a richer per-encounter
+income (a chained predictable passage) than grazing isolated food cells.
+
+**Verdict (honest, non-loop — stopped bracketing per Rule 18).** The grounded scarce substrate is the *right
+kind* of economy for the mind path (scarce + grounded + a neighbour's behaviour a function of the shared food
+field), and building it proved it is achievable without any game abstraction. But a *seeded reflex* cannot
+forage it net-positive, so it cannot be the survival scaffold today — it would need either (a) many
+generations of evolution to tune foraging (slow, and the refugium/decay may not give it the runway), or (b) a
+**richer grounded income source** than grazing isolated cells (the role Books' chained reading currently
+plays). The clean read: **grounding and scarcity are necessary substrate properties, but they must sit on a
+foraging economy that is at least break-even for the seeded ancestor** — which is the specific, well-posed next
+problem (make grounded foraging net-positive: e.g. food in richer patches a competent forager chains, or a
+grounded income with reading's per-encounter richness), NOT another economy lever on the abundant Books. Books
+stays the survival scaffold until a break-even grounded economy exists (one column at a time). `GENESIS_GROUNDED`
+kept as an instrument; both default economies (food + books) re-verified byte-identical.
+
+**Follow-up (same experiment, the contiguity fix) — dense food PATCHES do NOT fix it; the wall is the seeded
+FORAGING REFLEX, not food geometry.** The Exp-11 lesson (contiguity made *reading* net-positive) was ported to
+the food axis: food re-laid as **dense contiguous 24-cell patches** (`_stock_food_patches`, `GENESIS_GROUNDED_
+FOOD`≈3000, bounded = carrying capacity) so a forager can sit on a patch and eat cell-after-cell (high
+intake/move), with founders seeded *adjacent to* patches. It still cliffs. A direct probe (30 grounded orgs,
+250k seed so nobody dies of the small real seed, 300 raw ticks on a 3000-cell patch field) is decisive: mean
+energy **declines ~−60/tick** and **`on_food` stays ~1/30** — organisms **almost never stand on food** and
+forage net-negative even surrounded by dense patches. So the bottleneck is not food supply, not scarcity
+tuning, and not patch geometry — it is the **seeded foraging reflex itself** (the Exp-4 diagnosis exactly:
+winner-take-all motor makes organisms skate over food, and landing on `0x55` doesn't feed without a separate
+committed CONSUME the reflex rarely wins). **This closes the seeded-reflex grounded-foraging branch:**
+hand-tuning the forage/consume reflex to force net-positive intake would be a scripted-game behaviour
+(Rule 5/9 violation) and value-chasing (Rule 18). The honest conclusion stands and is now doubly confirmed:
+**a grounded scarce economy is achievable and Rule-15-honest, but net-positive foraging on it must be an
+EVOLVED skill (not a hand-seeded reflex) or must come from a richer grounded income than grazing** — which is
+precisely the role reading plays, and why Books remains the scaffold. `GENESIS_GROUNDED_PATCH`/`GENESIS_GROUNDED_
+FOOD` kept as instruments; default byte-identical.
+
+## 🧪 Experiment 42 — Live Within-Lifetime Remap: Criterion B Affirmed UNDER SELECTION — the Constructive Learner Beats the Reflex on a Moving Optimum (2026-07-18)
+
+The three grounded/economy branches this session all closed on one lesson: *skill (foraging, theory-of-mind)
+must be LEARNED, not hand-seeded.* We have a construction-capable learner (Exp 35 `STDP_TARGET`) but it was only
+ever proven in a survival-DECOUPLED sandbox. This experiment runs the decisive live test: on the LIVE books
+`sim_loop` (survival active), with the REMAP 2-bit swap alternating every 4000 ticks (a within-lifetime moving
+optimum a fixed reflex provably cannot pre-encode), does the recruiting rule sustain a colony AND re-track the
+swap better than the ablation? Built live per-bit telemetry (swap-bit vs unchanged-bit accuracy, observation-only,
+gated on REMAP) and A/B'd 3 arms.
+
+| arm | population (live) | **swapped-phase** swap-bit acc | unswapped-phase |
+|---|---|---|---|
+| NOLEARN (fixed reflex) | 598–600, ext=0 | **~24–29 %** (fails when optimum swaps) | ~78–80 % |
+| STDP3C (DIV=32) | **12 (CLIFFS)** | 0 | — |
+| STDP_TARGET DIV=32 | **12–33 (CLIFFS)** | ~73–100 % (refuge-floor pod only) | 96–100 % |
+| **STDP_TARGET DIV=128** (gentle) | **595–600, ext=0** | **~55–70 %, RISING 58→70** | ~64–70 % |
+
+**Criterion B is affirmed UNDER LIVE SELECTION — a project first.** At the economy-compatible step (DIV=128) the
+constructive learner **sustains a full 600 colony** AND **re-tracks the moving optimum**: swapped-phase swap-bit
+accuracy holds ~55–70 % (trending up over the run) vs NOLEARN's ~24–29 % — a clear, sustained ~2× margin across
+every phase flip, on the real economy under real selection. STDP3C ≈ NOLEARN/cliff (recruit-vs-prune distinction
+transfers from sandbox to live). Step size is decisive exactly as predicted (Exp-31 bang-bang lesson on the
+teaching axis): DIV=32 cliffs under the *moving* optimum (surviving pod re-tracks but is a selected remnant);
+DIV=128 is where the colony both survives and learns. Honest trade: NOLEARN's *unswapped* accuracy (~78–80 %) is
+higher than the learner's (~64–70 %) — the reflex is optimised for the one fixed mapping while the learner is a
+jack-of-both, the correct signature of in-lifetime learning (trades peak on a fixed task for the ability to
+handle a changing one; only the learner is above chance in the swapped phase).
+
+**Scope (pre-registered honesty).** Establishes criterion **B under live selection on a reflex-proof task** — the
+Exp-35 constructive learner is not a sandbox artefact; it survives and out-comprehends the reflex live when the
+task requires learning. Does **NOT** establish criterion **A** (a sustained monotone RISE): REMAP is re-tracking
+(recover-to-plateau), so it affirms B not A; A remains open. **Next (targets A):** couple this validated learner
+to a task whose optimum keeps moving *and deepens* (00_Ascent's compute-band frontier, or a peer economy where a
+neighbour's grounded behaviour is the moving target). `GENESIS_STDP_DIV=128` = operative live step for the moving
+task; live per-bit telemetry + `GENESIS_STDP_TARGET`/`GENESIS_REMAP` kept as instruments; default byte-identical.
+Full account: `Ascent.md` §4h.
+
+## 🧪 Experiment 43 — Working-Memory DEPTH: the Substrate Holds ~1 Step of Context; Deep Memory Is the Real Criterion-A Blocker (2026-07-18)
+
+Before building a criterion-A economy, Rule 18 demands validating A's assumption: **can the substrate compute
+over HELD CONTEXT at all?** A's metric is compute-depth income (carry/arithmetic), and Exp 33 measured the tell —
+the colony sits in the arithmetic band earning ~0. Arithmetic needs holding operands across cells; the only
+cross-tick state is leaky membrane voltage (unproven sufficiency). Built the minimal test: `GENESIS_DELAY`
+(default-OFF, byte-identical off) — the reward target is the byte sensed **DELAY_N cells ago** along the walked
+passage (`org_delay_buf`, a **movement-keyed** shift ring), on no current input, so only a brain holding it can
+emit it. Measured in the survival-decoupled sandbox on repeat-free `01_Alphabet` (echo can't fake it), 3 arms.
+(First tick-keyed ring was a confound — a stationary reader's ring degenerated to the constant current byte,
+letting NOLEARN "solve" at ~100 %; the movement-keyed fix drops NOLEARN to its true ~6 % floor.)
+
+| DELAY_N | NOLEARN (memoryless floor) | STDP_TARGET (DIV=128) |
+|---|---|---|
+| **1** | **~6 % flat** | **~65–68 % STABLE** |
+| 2 | ~7 % | ~70 % transient → collapses ~2 % |
+| 3 | ~8–20 % | ~73 % transient → collapses ~9 % |
+
+**Validated for depth 1, falsified for depth ≥2 — the crisp load-bearing finding.** At DELAY_N=1 the learner
+**stably holds one step of context** (~65 % vs ~6 % floor, ~10× lift, sustained 40 k ticks) on leaky membrane +
+the Exp-35 teaching signal — real, learnable in-lifetime working memory. At depth ≥2 it is UNSTABLE: the learner
+*transiently constructs* the deeper memory (~70 % spike) but **cannot hold it** (collapses to floor), because one
+leaky trace carries ~1 step and a 2-step hold needs a value latched across an intervening cell the leak
+overwrites. **This explains the criterion-A wall exactly:** arithmetic/carry need depth ≥2 (both operands held
+across the operator), which the substrate does not stably support — so the colony sits in the arithmetic band
+earning ~0 not because it can't LEARN but because the needed held-context DEPTH exceeds the ~1 step available.
+**Criterion A therefore needs an ARCHITECTURAL working-memory pathway, not another economy lever:** a persistent,
+genome-wireable register/latch (a recurrent self-excitatory loop that holds against the leak, or an addressable
+RAM scratchpad the organism writes+reads) giving depth ≥2. That is the pre-registered next substrate change.
+`GENESIS_DELAY` + `tests/delay_sandbox_probe.py` kept as the working-memory-depth probe; default byte-identical.
+Full account: `Ascent.md` §4i.
+
+
 ## 6. Critical Audit Fixes (2026-07-11)
 
 A rigorous architectural review identified and fixed three critical engine flaws that compromised open-ended evolution:

@@ -114,6 +114,66 @@ def inject_contiguous_library(ram_substrate, size, category, book_name, target_b
     return start, tb
 
 
+# DEFAULT CURRICULUM SEQUENCE (2026-07-18): the ordered ladder the auto-injector lays as ONE contiguous
+# scroll. Order is easy -> hard, and the FIRST entries are bootstrap-dominant so a cold colony can ignite
+# (Exp 12/17: a repeat-free head cliffs the colony to the refuge floor). 00_Graded (long runs) +
+# 00_Ascent (its own bootstrap head -> successor -> carry -> arithmetic cognitive ramp) together carry
+# the ignition foothold AND the full cognitive gradient; the small books add vocabulary / arithmetic
+# variety AFTER the frontier. 01_Alphabet is repeat-free/adversarial for cold prediction, so it is left
+# OUT of the auto sequence (still injectable manually). Each entry is (category, book_name).
+DEFAULT_CURRICULUM = [
+    ("English", "00_Graded"),     # long low-change runs — the cold-start ignition foothold
+    ("English", "00_Ascent"),     # bootstrap -> successor -> carry -> arithmetic (the cognitive ramp)
+    ("Math",    "01_Digits"),
+    ("Math",    "02_Addition"),
+    ("English", "02_Basic_Words"),
+    ("English", "03_Phrases"),
+]
+
+
+def _load_glyphs(category, book_name):
+    """Read one book file and return its printable-ASCII glyph list (matches the engine's 32..126
+    injection filter). Returns [] if the file is missing/empty."""
+    base_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Books")
+    file_path = os.path.join(base_dir, category, book_name + ".txt")
+    if not os.path.exists(file_path):
+        return []
+    with open(file_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    return [ord(c) for c in text if 32 <= ord(c) <= 126]
+
+
+def inject_curriculum_sequence(ram_substrate, size, target_bytes, books=None, at=None):
+    """Lay a WHOLE CURRICULUM (several books, difficulty-ordered) as ONE CONTIGUOUS SCROLL — the honest
+    "inject everything" that the live economy needs, NOT the confetti scatter of inject_curriculum_file.
+
+    The ordered books' glyphs are concatenated head-to-tail into a single stream, then that stream is
+    laid contiguously (same pinned/centred start + 0x55/0xFF preservation + tile-to-fill as
+    inject_contiguous_library) so a saccading reader walks a continuous page across the whole curriculum.
+    Because the stream is tiled from its FULL length whenever it is shorter than target_bytes, the
+    bootstrap-dominant HEAD (books[0..1]) recurs and keeps the cold-start ignition foothold dense — never
+    tiling only the hard tail (the Exp-20 first-iteration cliff). `books` defaults to DEFAULT_CURRICULUM;
+    `at` pins the start (else the fixed centred library start, so restock renews in place). Returns
+    (start, length) or None if no glyphs loaded."""
+    if books is None:
+        books = DEFAULT_CURRICULUM
+    stream = []
+    for cat, name in books:
+        stream.extend(_load_glyphs(cat, name))
+    if not stream:
+        return None
+    tb = int(min(max(1, target_bytes), size - 1))
+    start = contiguous_library_start(size, tb) if at is None else max(0, min(int(at), size - tb - 1))
+    n = len(stream)
+    for i in range(tb):
+        p = start + i
+        if p >= size:
+            break
+        if ram_substrate[p] not in (0x55, 0xFF):
+            ram_substrate[p] = stream[i % n]
+    return start, tb
+
+
 def regrow_passage(ram_substrate, size, category, book_name, radius=64):
     """Restock the library IN PLACE: grow the next passage adjacent to text that already exists,
     so the readable region stays one persistent, contiguous shelf near the organisms grazing it,

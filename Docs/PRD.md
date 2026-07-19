@@ -44,7 +44,12 @@ themselves (via STDP) into efficient survival circuits or starve.
 - **Brain Analyzer [implemented]:** D3 decompilation of the Elite genome's synapse graph.
 - **Oracle Terminal Uplink [scaffold]:** broadcast an ASCII character into the universe and
   read back the Elite's vocal-cord output.
-- **Library of Genesis [scaffold]:** inject curriculum text as byte patterns into the RAM.
+- **Library of Genesis [scaffold → survival scaffold]:** inject curriculum text as byte patterns into
+  the RAM, with a live **Auto-inject toggle** to enable/disable automatic restock. Per the 2026-07-18
+  strategic reframe (Ascent.md §5), the library is now a *survival scaffold*, not the cognition path.
+- **Live Cognition panel [implemented, 2026-07-18]:** reading solve-rate, next-symbol prediction,
+  autotelic peer events, and evolvable sensor/actuator counts, plus a feature-flag bar — so the mind
+  signals are watchable live, keeping the dashboard honest with the engine.
 
 ## 5. Success Metrics
 - **Stability [partially met]:** populations reach a dynamic equilibrium under the global

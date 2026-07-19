@@ -60,6 +60,24 @@ RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
 # adds the write on the peer-OFF path.
 ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 
+# NICHE ECONOMY — negative-frequency-dependent behavioural selection (Exp 39, default-OFF). The whole
+# 29-experiment arc's ceiling is DEMAND-limited (Exp 22): every economy pays for exactly ONE behaviour,
+# so the colony collapses to a monoculture (eat-reader / fwd-jumper), which leaves NOTHING diverse for
+# peer theory-of-mind to model (Exp 18/21) and prunes any evolved effector (Exp 38). Real ecosystems
+# sustain diversity through ONE force: a behaviour pays LESS the more common it is (crowding a niche
+# depresses its per-capita yield). This makes the EXISTING income rivalrous PER BEHAVIOUR: when an
+# organism earns, its positive gain is divided by 1 + (how many neighbours in its sensory window are
+# exploiting the SAME behavioural niche, keyed on their monetised action best_a / action_now). So an
+# eat-monoculture makes eating pay ~1/N -> starves, while a rare gait pays full -> invades; the colony is
+# pushed OFF every monoculture and SPREADS across niches = sustained behavioural diversity at equilibrium
+# (the missing Exp-22 demand). This is NOT the closed Exp-13 branch (which failed because reading is
+# spatially EXCLUSIVE so two readers don't contend) — here the contended thing is the BEHAVIOUR, which
+# co-located organisms genuinely DO share, so the split is an honest finite-resource division (Rule
+# 15/17, no constant), autotelic (agent-agent niche crowding, Rule 9), event-driven (only when earning),
+# and zero when alone in a niche (not the forbidden flat von-Neumann tax, Exp 12.7). Compile-time gated
+# -> byte-identical when off. Reuses the crowd scan already walked for the crowding sense + action_now.
+NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "0") == "1"
+
 # READING DEPLETION (Exp 24, Wall-1 lever, default-OFF). The 23-experiment blocker "the free library is
 # an infinite uncontested resource" (Exp 13/20/22, and the wall that killed every Exp-24 stigmergy
 # design) has one root: reading income is MINTED (energy += net/8*CELL_STATES, drawn from no cell) on a
@@ -85,11 +103,18 @@ NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
 # STDP DIAGNOSTIC MODES (Exp 31, default-OFF) — isolate WHY in-lifetime STDP is net-negative (Exp 30).
 # COSTONLY: keep the plasticity ENERGY cost but ZERO the weight update — if this behaves like NOLEARN
 # (good), the harm is the weight change, not the metabolic overhead; if it behaves like full STDP
-# (bad), the harm is the energy tax. DIVISOR: scale every STDP step down by GENESIS_STDP_DIV (default 1
-# = unchanged) — the current step can move a weight up to ~32 of the 255-wide range in ONE event
-# (bang-bang, despite the "graded" comment), so a larger divisor tests whether TRULY graded plasticity
-# (tiny steps) stops the decode-good weights being slammed to the rail. Both are compile-time / cheap
-# and default to the exact current behaviour, so the learning-on path is unchanged when unset.
+# (bad), the harm is the energy tax.
+# DIVISOR (GENESIS_STDP_DIV): an OPTIONAL diagnostic multiplier on top of the now-derived graded step
+# (default 1 = the honest hardware-derived step, unchanged). HISTORY (2026-07-18, Rule 17): the step used
+# to be `a_plus * exp / STDP_DIV` with STDP_DIV a HAND-TUNED knob (values 4/32/128 were searched to stop
+# the bang-bang slam Exp 31 diagnosed) — a magic number. It is now DERIVED: the step is capped at ONE
+# MICROSTATE of the 256-state byte weight (`/(CELL_STATES/STDP_SCALE)`), so a full-scale DNA-encoded
+# amplitude moves the weight by <=1 microstate/event, graded from the register's own numbers with no
+# picked divisor. STDP_DIV survives only as a diagnostic scalar to A/B step sizes; the DEFAULT (=1) is the
+# derived graded step, which is STRONGER and healthier than the old bang-bang default (measured: default
+# books reads climb 136->175 pop=600 vs the old harmful bang-bang decaying to pop=423, Exp 30). This
+# CHANGES the default learning-on behaviour on purpose — it fixes the net-negative bang-bang Exp 30/31
+# proved was harmful, so keeping the old default would be preserving a known bug.
 STDP_COSTONLY = os.environ.get("GENESIS_STDP_COSTONLY", "0") == "1"
 STDP_DIV = np.float32(float(os.environ.get("GENESIS_STDP_DIV", "1")))
 
@@ -159,6 +184,26 @@ REMAP_PERIOD = np.int64(int(os.environ.get("GENESIS_REMAP_PERIOD", "4000")))  # 
 REMAP_STATES = np.int64(int(os.environ.get("GENESIS_REMAP_STATES", "2")))     # phases (2 = identity vs swapped)
 REMAP_SB0 = np.int64(int(os.environ.get("GENESIS_REMAP_SB0", "0")))           # the two vocal/eye bits that
 REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))           # swap in a non-zero phase
+
+# WORKING-MEMORY DELAY TASK (Exp 43, default-OFF) — validates the load-bearing assumption UNDER criterion A
+# (Ascent §2A): can a GENESIS brain COMPUTE OVER HELD CONTEXT at all? Criterion A rewards income from cells
+# that need computation over context (carry/arithmetic), and Exp 33 measured the colony SITTING in the
+# arithmetic band but earning ~0 compute income — the untested question is whether the substrate can hold a
+# value across cells. The ONLY cross-tick state is leaky membrane voltage (global_v persists, decaying), a
+# WEAK working memory of unproven sufficiency. This task isolates it: the reward target is the byte the
+# organism sensed DELAY_N ticks AGO (its own past input), on NO current sensory input — so a memoryless
+# reflex CANNOT emit it (the value is gone unless HELD across DELAY_N ticks), exactly the working memory
+# arithmetic needs. Reuses the Exp-35 teaching signal (STDP_TARGET) + eligibility machinery; the org keeps a
+# tiny ring of its recent sensed bytes (org_delay_buf). If STDP_TARGET clears the memoryless floor, the
+# substrate has usable working memory the validated learner can exploit -> the criterion-A economy is worth
+# building; if it stays pinned at the floor, an explicit working-memory pathway is the real substrate change.
+# Compile-time gated -> byte-identical when off.
+DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
+DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))   # how many ticks back the target byte is
+# Ring capacity = the register's bit-width (8 bits/byte). Rule 17 HARDWARE-DERIVED — the natural history
+# depth of a byte, not a picked "8". (BITS_PER_BYTE itself is defined below with the other byte constants;
+# this early flag block only needs the integer, so it is written as the bit-count of an 8-bit register.)
+DELAY_BUF = 8   # == BITS_PER_BYTE (bits in the RAM register), defined-below
 
 # ERROR / TEACHING-SIGNAL PLASTICITY (Exp 35, default-OFF) — the diagnosed fix for the Exp-34 negative.
 # Exp 34 proved credit-assigning STDP (STDP3C) can PRUNE a wrong-firing pathway but cannot RECRUIT a
@@ -680,7 +725,7 @@ def world_tick_numba(
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
     oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
-    global_sense_type, global_sense_meta, global_act_drive
+    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -958,7 +1003,15 @@ def world_tick_numba(
                             r_idx = global_rec_id[n_ptr + dst]
                             if not STDP_COSTONLY:
                                 w = global_conn_weight[s_ptr + c]
-                                w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / STDP_DIV * dst_gain
+                                # HARDWARE-DERIVED graded step (Rule 17, 2026-07-18): the DNA-encoded
+                                # amplitude o_rec_a_plus (raw byte / STDP_SCALE, so 0..~32) is scaled so a
+                                # FULL-scale amplitude moves the weight by at most ONE MICROSTATE (1 of
+                                # CELL_STATES=256 states) per event — i.e. divide by CELL_STATES/STDP_SCALE.
+                                # This makes plasticity graded/distributed (Rule 11) from the register's own
+                                # numbers (byte state-count / bit-width), retiring the tuned STDP_DIV knob:
+                                # evolution still sets the RATE via a_plus, but the physical quantum caps the
+                                # step so no single event can slam the rail (the bang-bang Exp-31 diagnosed).
+                                w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV * dst_gain
                                 if w > W_MAX: w = W_MAX
                                 global_conn_weight[s_ptr + c] = w
                             # Plasticity is real compute (an exp() + weight write). Charge it when
@@ -974,7 +1027,9 @@ def world_tick_numba(
                             r_idx = global_rec_id[n_ptr + dst]
                             if not STDP_COSTONLY:
                                 w = global_conn_weight[s_ptr + c]
-                                w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / STDP_DIV * dst_gain
+                                # same hardware-derived graded step as the LTP branch above (one-microstate
+                                # cap via /(CELL_STATES/STDP_SCALE)); STDP_DIV retired.
+                                w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV * dst_gain
                                 if w < W_MIN: w = W_MIN
                                 global_conn_weight[s_ptr + c] = w
                             total_atp += CYCLES_PER_STDP_UPDATE
@@ -1007,8 +1062,31 @@ def world_tick_numba(
         # organism's policy. Written before the peer block so a neighbour already stepped this tick
         # exposes its FRESH decision (t), while a not-yet-stepped neighbour still holds t-1 in
         # action_now until it overwrites here. Compile-time gated with the rest of the peer economy.
-        if PEER_PREDICT or ACT_PROBE:
+        if PEER_PREDICT or ACT_PROBE or NICHE_ECON:
             action_now[org] = best_a
+
+        # NICHE ECONOMY (Exp 39): count how many living neighbours in this organism's ±FOOD_SCAN_RADIUS
+        # window are exploiting the SAME behavioural niche (same monetised action best_a). This is the
+        # crowding of the organism's OWN niche; its positive income below is divided by 1+niche_same, so a
+        # common behaviour pays less (negative-frequency-dependence -> sustained diversity). Uses the same
+        # window the crowding sense already scans; action_now holds each neighbour's action (this tick if
+        # already processed, else t-1, the accepted Exp-18 staleness). Dead when NICHE_ECON is off.
+        # NON-LETHAL (Exp-14 invariant, no new constant): the split applies ONLY to an organism already
+        # ABOVE its body-subsistence floor (footprint*CELL_STATES) — crowding competes for GROWTH surplus,
+        # never survival, so a dense bootstrap cohort is not starved to death before it can spread across
+        # niches (the naive always-split form cliffed the colony to the refuge floor, Exp-13 tension).
+        niche_same = np.int32(0)
+        niche_active = False
+        if NICHE_ECON and best_a >= 0:
+            n_floor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
+            if energy[org] > n_floor:
+                niche_active = True
+                for noff in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
+                    if noff == 0:
+                        continue
+                    nb2 = org_grid[(pos + noff + RAM_SIZE) % RAM_SIZE]
+                    if nb2 != -1 and nb2 != org and alive[nb2] and action_now[nb2] == best_a:
+                        niche_same += 1
                 
         # A vocal bit is set if its neuron fired at all this tick. With random scratchpad synapses
         # kept OFF the vocal outputs and two max-weight copy synapses per bit driving each vocal
@@ -1190,6 +1268,18 @@ def world_tick_numba(
                 nb = nb & ~((np.int64(1) << REMAP_SB0) | (np.int64(1) << REMAP_SB1))
                 nb = nb | (b1 << REMAP_SB0) | (b0 << REMAP_SB1)
                 tgt_byte = nb & np.int64(0xFF)
+            if DELAY:
+                # WORKING-MEMORY DELAY (Exp 43): the target is the byte this organism sensed DELAY_N ticks
+                # AGO (org_delay_buf, a shift ring pushed with the CURRENT sensed byte at the top of this
+                # org's processing below). It is on NO current input, so only a brain that HELD it across
+                # DELAY_N ticks can emit it. Slot 0 = most recent pushed; slot DELAY_N = DELAY_N ago.
+                dn = int(DELAY_N)
+                if dn < DELAY_BUF:
+                    dbyte = np.int64(org_delay_buf[org, dn])
+                    if dbyte >= 32 and dbyte <= 126 and dbyte != 0x55:
+                        tgt_byte = dbyte
+                    else:
+                        tgt_byte = np.int64(next_byte)   # no valid history yet -> fall back (bootstrap)
             correct_bits = 0
             wrong_bits = 0
             for b in range(8):
@@ -1239,7 +1329,16 @@ def world_tick_numba(
                             if tsrc >= RAM_BIT0_INPUT and tsrc < RAM_BIT0_INPUT + 8:
                                 if sense_buf[tsrc] > np.float32(0.5):
                                     w = global_conn_weight[ts_ptr + tc]
-                                    w += err * (CELL_STATES / BITS_PER_BYTE) / STDP_DIV
+                                    # HARDWARE-DERIVED teaching step (Rule 17, 2026-07-18): one microstate
+                                    # (the atomic quantum of a 256-state byte weight) SHARED across the eye
+                                    # register's BITS_PER_BYTE afferents that can co-drive a vocal bit — so
+                                    # each of the (up to 8) active eye->vocal synapses moves 1/BITS_PER_BYTE
+                                    # of a microstate per event, and their SUM is at most one microstate.
+                                    # Recruiting a silent neuron across the rest->threshold gap (128) is then
+                                    # graded over ~128*8 events (Rule 11 slow/distributed), never bang-bang.
+                                    # Retires the tuned STDP_DIV knob: the step = register quantum / register
+                                    # width, both hardware facts, no picked divisor.
+                                    w += err / BITS_PER_BYTE / STDP_DIV
                                     if w > W_MAX: w = W_MAX
                                     elif w < W_MIN: w = W_MIN
                                     global_conn_weight[ts_ptr + tc] = w
@@ -1256,6 +1355,11 @@ def world_tick_numba(
                     if gain > avail:
                         gain = avail
                     read_fuel[nxt] -= gain
+                if NICHE_ECON and gain > np.float32(0.0) and niche_same > 0:
+                    # Negative-frequency-dependent niche split (Exp 39): positive reading income is shared
+                    # among the co-located organisms exploiting the SAME behavioural niche this tick, so a
+                    # crowded behaviour pays less per capita. Penalty (net<0) is never split.
+                    gain = gain / np.float32(1 + niche_same)
                 energy[org] += gain
                 read_gain_tick += gain   # Exp 32: accumulate the tick's reading reward (3rd factor)
                 if (STIGMERGY or CANVAS) and gain > np.float32(0.0):
@@ -1305,6 +1409,16 @@ def world_tick_numba(
                     org_grid[nxt] = org
                     pos = nxt
                     grazed = True
+                    if DELAY:
+                        # WORKING-MEMORY DELAY (Exp 43): push the byte of the cell just STEPPED ONTO into
+                        # the shift ring, keyed to MOVEMENT (not ticks) so the ring records the SUCCESSIVE
+                        # DISTINCT bytes the reader walked along the passage — org_delay_buf[k] = the byte
+                        # k cells back. A stationary reader no longer degenerately fills the ring with one
+                        # byte (the tick-keyed bug), so the delayed target is a genuine PAST cell the reader
+                        # cannot echo. Scored at the NEXT solve's target block (one saccade later).
+                        for _d in range(DELAY_BUF - 1, 0, -1):
+                            org_delay_buf[org, _d] = org_delay_buf[org, _d - 1]
+                        org_delay_buf[org, 0] = ram_substrate[nxt]
             if org_char_val == tgt_byte:
                 idx = read_log[0]
                 if idx < 996:
@@ -1377,6 +1491,8 @@ def world_tick_numba(
                                 if pgain > pavail:
                                     pgain = pavail
                                 read_fuel[npos] -= pgain
+                            if NICHE_ECON and pgain > np.float32(0.0) and niche_same > 0:
+                                pgain = pgain / np.float32(1 + niche_same)   # niche split (Exp 39)
                             energy[org] += pgain
                             read_gain_tick += pgain   # Exp 32: jump-predict reward (3rd factor)
                         if org_char_val == ptgt:
@@ -1396,7 +1512,11 @@ def world_tick_numba(
                     # Eating fully reclaims the cell -> its whole state-space, CELL_STATES (256), the
                     # same energy a full 8-bit solve of any cell pays. No CYCLES_PER_EAT_GAIN
                     # multiplier — food and text share one honest exchange rate.
-                    energy[org] += CELL_STATES
+                    eat_gain = CELL_STATES
+                    if NICHE_ECON and niche_same > 0:
+                        # niche split (Exp 39): the eat niche is crowded -> per-capita yield falls
+                        eat_gain = eat_gain / np.float32(1 + niche_same)
+                    energy[org] += eat_gain
                     ram_substrate[pos] = 0x00
                     if energy[org] > ATP_MAX:
                         energy[org] = ATP_MAX
@@ -1445,7 +1565,21 @@ def world_tick_numba(
             elif best_a == OUT_REPRODUCE:
                 g_count = org_g_count[org]
                 copy_cost = np.float32(g_count) * CYCLES_PER_BYTE_COPY
-                
+                # NICHE ECONOMY (Exp 40): make REPRODUCTION density-dependent too. Exp 39 found the niche
+                # income-split diversifies FORAGING but the colony escapes it by piling into REPRODUCE —
+                # reproduction SPENDS energy (it doesn't earn), so the income-split never touches it and
+                # rep becomes the un-penalised dominant action (Hact collapses 2.2 -> 0.35). Fix: apply
+                # the SAME negative-frequency-dependence to the breeding niche — the copy cost scales with
+                # how many neighbours are ALSO reproducing this tick (niche_same for a rep-org), so
+                # breeding in a crowded rep-niche costs proportionally more (density-dependent fecundity,
+                # the real-ecology brake). A rep-monoculture then makes reproduction expensive -> self-
+                # limits exactly as the eat-monoculture starves, so the colony cannot escape diversity via
+                # a breeding pile-up. Constant-free (reuses niche_same); only under NICHE_ECON, else the
+                # cost is unchanged (byte-identical). This couples to the long-open "carrying capacity
+                # below the array cap" item: crowded breeding is now genuinely costly.
+                if NICHE_ECON and niche_same > 0:
+                    copy_cost = copy_cost * np.float32(1 + niche_same)
+
                 if energy[org] >= copy_cost + 10.0 and n_births < b_pos.shape[0]:
                     energy[org] -= copy_cost
                     child_energy = energy[org] / 2.0

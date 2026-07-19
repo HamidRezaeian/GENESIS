@@ -82,6 +82,23 @@ function onState(s) {
     if (s.avg_age !== undefined) document.getElementById('val-avg-age').textContent = s.avg_age.toLocaleString();
     if (s.num_refuge !== undefined) document.getElementById('val-refuges').textContent = s.num_refuge.toLocaleString();
 
+    // Live cognition metrics (2026-07-18: dashboard kept honest with the engine)
+    if (s.metrics) {
+        const m = s.metrics;
+        const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        setTxt('m-solve', m.solve_pct != null ? m.solve_pct.toFixed(0) + '%' : '—');
+        setTxt('m-reads', m.reads);
+        setTxt('m-miss', m.miss);
+        setTxt('m-pred', m.pred);
+        setTxt('m-peer', m.peer);
+        setTxt('m-hact', m.hact != null ? m.hact.toFixed(2) : '—');
+        setTxt('m-sensors', m.sensors);
+        setTxt('m-actuators', m.actuators);
+        if (s.universe_n !== undefined) setTxt('m-brainn', s.universe_n.toLocaleString());
+    }
+    // Feature-flag reflection: show which engine modes are live, hide metrics with no active flag
+    if (s.flags) applyFlags(s.flags);
+
     // Speed calc
     const now = performance.now();
     if (s.tick > lastTick) {
@@ -387,3 +404,64 @@ document.getElementById('btn-inject-custom').addEventListener('click', () => {
         inp.value = '';
     }
 });
+
+// ── Auto-inject toggle (survival scaffold, Ascent.md §5) ──
+document.getElementById('auto-inject-toggle').addEventListener('change', (e) => {
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'set_auto_inject', enabled: e.target.checked }));
+        tprint('› Auto-inject ' + (e.target.checked ? 'ON' : 'OFF'), 't-sys');
+    }
+});
+
+// ── Full-curriculum toggle + inject-all button ──
+document.getElementById('curriculum-toggle').addEventListener('change', (e) => {
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'set_curriculum', enabled: e.target.checked }));
+        tprint('› Full curriculum ' + (e.target.checked ? 'ON' : 'OFF'), 't-sys');
+    }
+});
+document.getElementById('btn-inject-seq').addEventListener('click', () => {
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'inject_sequence' }));
+        tprint('› Injected FULL curriculum (contiguous ladder)', 't-sys');
+    }
+});
+
+// ── Feature-flag reflection ──────────────────────────────
+// Keep the dashboard honest with whatever engine mode is running: hide metrics whose flag is off,
+// keep the auto-inject checkbox in sync with the server, render a compact live flag bar.
+let _flagInit = false;
+function applyFlags(f) {
+    // sync the auto-inject checkbox to the server's authoritative state (once, and if it drifts)
+    const ai = document.getElementById('auto-inject-toggle');
+    if (ai && document.activeElement !== ai) ai.checked = !!f.auto_inject;
+    // sync the full-curriculum checkbox
+    const cu = document.getElementById('curriculum-toggle');
+    if (cu && document.activeElement !== cu) cu.checked = !!f.curriculum;
+
+    // show/hide flag-gated metrics
+    document.querySelectorAll('.metric[data-flag]').forEach(el => {
+        const on = !!f[el.getAttribute('data-flag')];
+        el.style.display = on ? '' : 'none';
+    });
+
+    // library role label reflects the economy
+    const role = document.getElementById('lib-role');
+    if (role) role.textContent = f.economy === 'books' ? '(survival scaffold)' : '(' + f.economy + ')';
+
+    // compact flag bar
+    const bar = document.getElementById('flag-bar');
+    if (bar) {
+        const tags = [];
+        if (f.peer) tags.push('PEER');
+        if (f.evosense) tags.push('EVO-SENSE');
+        if (f.evoact) tags.push('EVO-ACT');
+        if (f.niche) tags.push('NICHE-ECON');
+        if (f.grounded) tags.push('GROUNDED');
+        if (f.remap) tags.push('REMAP');
+        bar.innerHTML = tags.length
+            ? tags.map(t => '<span class="flag-tag">' + t + '</span>').join('')
+            : '<span class="dim">baseline economy</span>';
+    }
+    _flagInit = true;
+}

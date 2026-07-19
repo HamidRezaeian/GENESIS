@@ -437,6 +437,115 @@ requires **learning a new mapping** (the remap), not where a fixed reflex suffic
 next step (criterion A) must put the colony on a task whose optimum *keeps moving*, so construction is
 continuously required and the rule that can construct out-competes the one that cannot. `GENESIS_STDP_DIV=32` is
 the operative step for `STDP_TARGET`; the DIV=4 cliff is retained as the bang-bang A/B extreme.
+
+---
+
+## 4h. RESULT — Experiment 42: criterion B is affirmed UNDER LIVE SELECTION on a reflex-proof task — the constructive learner sustains a full colony AND re-tracks a moving optimum a fixed reflex cannot (2026-07-18).
+
+§4g ended on the exact next test: put the colony on a task whose optimum *keeps moving* (so construction is
+continuously required) and A/B the recruiting rule against the reflex **on the live loop under selection** — the
+one thing never shown (Exp 35 was survival-decoupled sandbox; the earlier live REMAP A/B used only NOLEARN/STDP3C,
+both of which stay flat). Built the live per-bit telemetry (observation-only, gated on REMAP: the swap-bit vs
+unchanged-bit accuracy split, mirroring the sandbox) and ran the 3-arm live A/B on `00_Graded` with the REMAP
+2-bit swap alternating every `REMAP_PERIOD`=4000 ticks.
+
+| arm | population (live, survival active) | **swapped-phase** swap-bit accuracy | unswapped-phase |
+|---|---|---|---|
+| NOLEARN (fixed reflex) | 598–600, ext=0 | **~24–29 %** (collapses when the optimum swaps) | ~78–80 % |
+| STDP3C (DIV=32) | **12 (CLIFFS)** | 0 | 86 % (pre-cliff) |
+| STDP_TARGET, DIV=32 | **12–33 (CLIFFS)** | ~73–100 % (but only a refuge-floor pod) | 96–100 % |
+| **STDP_TARGET, DIV=128** (gentle step) | **595–600, ext=0, refuge=0** | **~55–70 %, and RISING (58→70)** | ~64–70 % |
+
+**Criterion B is affirmed under live selection — the first time in the project.** At the economy-compatible step
+(DIV=128), `STDP_TARGET` **sustains a full 600 colony** (ext=0, refuge=0) AND **re-tracks the moving optimum**: in
+the swapped phases — which a fixed genome provably cannot pre-encode — its swap-bit accuracy holds **~55–70 %**
+and *trends up over the run* (58→70), versus NOLEARN's **~24–29 %** (the reflex is correct only when the mapping
+is unswapped and collapses when it flips). A clear, sustained ~2× margin across every phase flip, on the real
+economy, under real selection. STDP3C ≈ NOLEARN/cliff, confirming the recruit-vs-prune distinction transfers from
+the sandbox to live. The step size is decisive exactly as §4g predicted: DIV=32 cliffs the colony to the refuge
+floor under the *moving* optimum (the surviving pod re-tracks — swap-bit ~73–100 % — but that is a selected
+remnant, not a healthy colony), because the moving target's teaching + plasticity load is too heavy at that step;
+DIV=128 (gentler, the Exp-31 bang-bang lesson recurring on the teaching-signal axis) is where the colony both
+survives and learns.
+
+**Honest reading of the trade.** NOLEARN's *unswapped* accuracy (~78–80 %) is actually higher than the learner's
+(~64–70 %) — the reflex is optimised for the one fixed mapping, while the learner is a jack-of-both, constantly
+re-adapting between phases and so never peaking on either. That is the correct, expected signature of in-lifetime
+learning: it trades peak performance on a *fixed* task for the ability to handle a *changing* one — and only the
+learner is above chance in the swapped phase. This is precisely what makes it load-bearing where a reflex is not.
+
+**What this does and does NOT establish (pre-registered honesty).** It establishes criterion **B under live
+selection on a reflex-proof task** — the substrate's construction-capable learner (Exp 35) is not merely a
+sandbox artefact; it survives and out-comprehends the reflex on the live economy when the task genuinely requires
+learning. It does **NOT** establish criterion **A** (a sustained ≥25 % monotone RISE in the compute-depth metric):
+REMAP is a *re-tracking* (recover-to-plateau) task, so it affirms B, not A; the swap-bit rise (58→70) is
+suggestive but within a re-tracking envelope, not the open-ended climb A demands. A remains open. **Next (targets
+A):** couple this validated constructive learner to a task whose optimum keeps moving *and deepens* (the
+compute-band frontier of `00_Ascent`, or the peer economy where a neighbour's grounded behaviour is the moving
+target the learner must model) — now that we have, for the first time, a learning rule proven to construct new
+mappings live under selection. `GENESIS_REMAP` live per-bit telemetry + `GENESIS_STDP_TARGET` kept as permanent
+instruments; `GENESIS_STDP_DIV=128` is the operative live step for the moving-optimum task; default engine
+byte-identical (re-verified).
+
+---
+
+## 4i. RESULT — Experiment 43: the working-memory DEPTH under criterion A — the substrate holds ~1 step of context, and deep memory is the real A-blocker (2026-07-18).
+
+Before building the criterion-A economy, Rule 18 demands validating A's load-bearing assumption: **can a
+GENESIS brain compute over HELD CONTEXT at all?** A's metric is compute-depth income (carry/arithmetic bands),
+and Exp 33 measured the tell — the colony SITS in the arithmetic band earning `pred`≈0 (holds the hard region,
+earns no compute income). Arithmetic (`a+b=c`) needs the brain to hold operands across cells while the eye
+(current cell only) moves; the only cross-tick state is **leaky membrane voltage** (`global_v` persists,
+decaying) — a weak working memory of unproven sufficiency. Built the minimal isolating test.
+
+**Task (`GENESIS_DELAY`, default-OFF, compile-gated, byte-identical off).** The reading-reward target is the
+byte the organism sensed **`DELAY_N` cells ago** along the passage it walked (`org_delay_buf`, a per-org shift
+ring pushed on each saccade — *movement*-keyed, not tick-keyed), on **no current input**. A memoryless reflex
+cannot emit it; only a brain HOLDING it across `DELAY_N` steps can. Measured in the survival-decoupled sandbox
+(`tests/delay_sandbox_probe.py`, frozen energy-pinned cohort on repeat-free `01_Alphabet` so echo cannot fake
+it), 3 arms. (A first tick-keyed ring was a confound — a stationary reader's ring degenerated to the constant
+current byte, letting NOLEARN "solve" it at ~100 %; the movement-keyed fix makes the target a genuine past
+distinct cell, and NOLEARN drops to its true memoryless floor ~6 %.)
+
+| DELAY_N | NOLEARN (memoryless floor) | STDP_TARGET (DIV=128) |
+|---|---|---|
+| **1** (hold 1 cell) | **~6 % (flat)** | **~65–68 % (STABLE)** |
+| 2 | ~7 % | transient ~70 % → collapses to ~2 % (UNSTABLE) |
+| 3 | ~8–20 % | transient ~73 % → collapses to ~9 % (UNSTABLE) |
+
+**The assumption is validated for DEPTH 1, and falsified for DEPTH ≥2 — and that is the crisp, load-bearing
+finding.** At `DELAY_N=1` the constructive learner **stably holds one step of context** — ~65 % vs the ~6 %
+memoryless floor, a clean ~10× lift sustained over 40 k ticks — using nothing but leaky membrane voltage + the
+Exp-35 teaching signal. So the substrate DOES have real, learnable in-lifetime working memory. But at
+`DELAY_N`≥2 it is **unstable**: the learner *transiently constructs* the deeper memory (spikes to ~70 %) but
+**cannot hold it** (collapses to near-floor), because a single leaky membrane trace carries ~1 step reliably and
+a 2-step hold needs a value latched across an intervening cell the leak has already overwritten.
+
+**This directly explains the criterion-A wall and localises the substrate change.** Arithmetic/carry (A's
+compute bands) require holding ≥2 values (both operands) across the operator and `=` cells — i.e. working
+memory of depth ≥2, which the substrate does **not** stably support. That is *why* the colony sits in the
+arithmetic band earning ~0 (Exp 33): not because it can't learn, but because the held-context depth the task
+needs exceeds the ~1-step the leaky membrane provides. **Criterion A therefore does NOT need another economy
+lever — it needs an architectural working-memory pathway:** a persistent, genome-wireable register/latch (a
+recurrent self-excitatory loop that holds a value against the leak, or an addressable RAM scratchpad the
+organism can write and read) that gives depth ≥2. This is the pre-registered next substrate change, and it is
+exactly the kind of decisive, mechanism-level result the finish-line discipline exists to surface — not "tune
+the market," but "the mind needs one more organ." `GENESIS_DELAY` + `tests/delay_sandbox_probe.py` kept as
+permanent instruments (the working-memory-depth probe); default byte-identical (re-verified).
+
+**RULE-17 FOLLOW-UP (2026-07-18): the tuned STDP step `DIV=128` was a magic number — now hardware-derived, and
+the derived one is STRONGER.** The learning step used in Exp 42/43 (`a_plus/STDP_DIV`, with `STDP_DIV` a
+hand-searched 4/32/128) was a Rule-17 violation. It is now DERIVED: the weight step is capped at ONE MICROSTATE
+of the 256-state byte weight (`/(CELL_STATES/STDP_SCALE)`), so a full-scale DNA amplitude moves the weight ≤1 of
+256 states/event — graded from the register's own numbers, no picked divisor. Re-validated: the derived default
+makes the ordinary books economy HEALTHIER (reads climb 136→175, pop=600, vs the old bang-bang default decaying
+to pop=423, Exp 30), and on the live REMAP moving-optimum it re-tracks the swap to **~90 %** (rising 59→94), even
+BETTER than the old tuned step's ~70 % (§4h). This changed the default learning-on behaviour on purpose — it
+fixes the net-negative bang-bang Exp 30/31 proved harmful, so keeping the old default would preserve a known bug.
+`STDP_DIV` survives only as an explicit experiment-specific diagnostic softener for harsh moving-optimum probes
+(where the bootstrap needs a gentler step than the physical quantum), never a physics default; `DELAY_BUF`→
+`BITS_PER_BYTE`. The delay-sandbox WM-depth result (depth-1 holds, depth ≥2 unstable) is unchanged under the
+derived step (it is in fact sharper: N=1 reaches ~87 %). Rule 17's constant list updated to record the retirement.
 - `Rules.md` gains **Rule 18** (pre-registered falsifiable finish line + validate the load-bearing
   assumption before adding mechanics) so this discipline is permanent, not a one-off.
 - The UI (next task) will surface the A/B/C probes (`C(t)`, learning-ablation delta, `C/footprint`) so

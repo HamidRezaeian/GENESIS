@@ -528,3 +528,58 @@ body {
     }
     #ram-section { border-right: none; border-bottom: 1px solid var(--border); }
 }
+
+/* ── Cognition metrics + evolvable-I/O flags (2026-07-18) ── */
+.metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+.metric {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.metric-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+.metric-value { font-size: 15px; font-weight: 600; color: var(--text); }
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 8px 0 4px;
+    cursor: pointer;
+    user-select: none;
+}
+.toggle-row input { accent-color: var(--accent); cursor: pointer; }
+
+.flag-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+}
+.flag-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-dim);
+    border-radius: 4px;
+    padding: 2px 6px;
+}
