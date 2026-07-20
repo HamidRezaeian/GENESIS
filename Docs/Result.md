@@ -2326,6 +2326,101 @@ RAM scratchpad the organism writes+reads) giving depth ≥2. That is the pre-reg
 `GENESIS_DELAY` + `tests/delay_sandbox_probe.py` kept as the working-memory-depth probe; default byte-identical.
 Full account: `Ascent.md` §4i.
 
+## 🧪 Experiment 44 — Working-Memory Latch: the Held-State Primitive Works but a Passive Latch Bank Is Insufficient — Depth ≥2 Needs GATED Memory (2026-07-18)
+
+Exp 43 localised the criterion-A blocker: the substrate holds ~1 step of context (leaky membrane), depth ≥2 is
+unstable, so arithmetic (needs ≥2 operands held) earns ~0. Pre-registered fix: an architectural working-memory
+pathway. Built the minimal form — `GENESIS_WMEM` (default-OFF, byte-identical off): a new `MEMORY_MARKER = 198`
+gene declaring a **latch neuron** — a non-leaky, non-resetting integrator (skips the membrane leak, holds its
+accumulated voltage across ticks, emits a spike on threshold WITHOUT wiping the store). Genome-wireable, flagged
+`sense_type = 255`, composes with STDP_TARGET. Seeded a delay-task fabric: 8 latches + silent (STDP-tunable)
+routes `eye_k → latch_k` (write) and `latch_k → vocal_k` (read).
+
+**Micro-test (real kernel): the primitive WORKS.** A latch driven by a constant input holds and accumulates
+voltage (0→127→254→381→…→889, monotone) while an ordinary leaky neuron stays pinned at 0 (fires+resets each
+step). So held-state cross-tick memory is now a real substrate primitive.
+
+**But it does NOT unlock depth-2 (the decisive test).** Delay-sandbox N=2, STDP_TARGET, WITH the latch fabric
+vs WITHOUT: **both ~30 %** (30.7 → 32.5 % with latch; 25.2 → 30.1 % without). The latch bank buys nothing.
+
+**Diagnosis (structural, honest):** held-state alone is insufficient. The seeded `eye→latch→vocal` fabric drives
+the latch **every tick, ungated**, so the latch is continuously overwritten by the current eye byte and
+accumulates to a saturated garbage value (the 889 climb) — it holds *a* value but always the *current* one, the
+same depth-1 the bare membrane already gave. Real depth-2 memory needs **GATED write/read control** — a
+mechanism to decide WHEN to store and WHEN to read out — which STDP (re-weighting a *fixed* fabric, unable to
+invent new gating structure) cannot construct. **So the substrate change is not a passive latch but an
+ADDRESSABLE/GATED memory: a write-enable + read-enable (the RAM-scratchpad direction — an organism that
+explicitly writes a value to a held cell and reads it back on a separate control line), not a self-driven
+register.** The latch primitive is a necessary building block but the missing piece is the *control path* that
+gates it. `GENESIS_WMEM` + `MEMORY_MARKER` kept as instruments (the held-state primitive, reusable once a gating
+mechanism exists); default byte-identical (re-verified: cache `genesis_numba_books`, ancestor 31 synapses).
+Full account: `Ascent.md` §4j.
+
+
+## 🧪 Experiment 45 — Gated Latch (Write-Enable): the Store-Control Primitive Works but STDP on a Fixed Fabric Cannot Self-Clock — Depth ≥2 Needs an ACTION-DRIVEN Scratchpad (2026-07-19)
+
+Exp 44 diagnosed the gap: a passive latch holds *a* value but always the *current* one (ungated → overwritten
+every tick = depth-1). Pre-registered fix: **gated memory (write-enable)**. Built the hardware primitive — a
+kernel WRITE-GATE (`GENESIS_WMEM`, default-OFF, byte-identical off): a latch declares a gate-source neuron (gene
+slot byte, packed into the already-threaded `global_sense_meta`); in Phase-1 propagation a latch accepts afferent
+writes **only on ticks its gate neuron fired last step**, otherwise it HOLDS. Seeded a **2-stage gated shift
+register** per bit: on a write pulse `G`, `L0_k ← eye_k` and `L1_k ← L0_k`; readout `L1_k → vocal_k`; all routes
+silent (STDP_TARGET-tunable). Verified wired: 16 latches (`N_IO+5..+20`), gate = one hidden neuron, meta = gate+1
+on every latch; default ancestor unchanged (159 bytes).
+
+**Decisive test (delay-sandbox N=2): the gate does NOT unlock depth-2 either.** Gated WMEM + STDP_TARGET averaged
+~40 % (noisy 30–49 %) and sat **BELOW** the NOLEARN memoryless echo floor (~46 %, stable). The learner loses to a
+reflex that just echoes the current byte.
+
+**Diagnosis (structural, sharper than Exp 44):** the seeded gate neuron `G` fires from the eye bits — so it pulses
+on essentially every saccade (a fresh byte arrives each tick), leaving write-enable ~always ON → the gated latch
+degenerates back to the ungated Exp-44 case. Worse, a shift register needs **clock-phase separation** (write, then
+shift, then read on *distinct* ticks) which a single feed-forward LIF pass collapses into one tick. Crucially,
+**there is no store-cue in the task** telling the organism "hold THIS byte" — and STDP re-weighting a *static*
+fabric cannot invent a self-clock from nothing. Held-state (Exp 44) and gating (Exp 45) are both necessary
+building blocks, but the missing piece is a **controllable clock/address the organism drives with ACTIONS**, not
+synapse weights. **Conclusion across Exp 43–45 (consistent): a neural fabric + STDP is the wrong substrate for
+working memory.** The substrate already exposes real addressable external memory — RAM cells + CONSUME-writes +
+eye-reads (stigmergy). The honest depth-2 path is a **RAM scratchpad**: the organism writes a byte to a cell,
+saccades away, saccades back, and reads it — memory via the environment, using existing primitives, no new lever.
+`GENESIS_WMEM` + write-gate kept as instruments (reusable once an action-driven address/clock exists); default
+byte-identical (ancestor 159 bytes, WMEM-off DCE'd). Full account: `Ascent.md` §4k.
+
+
+## 🧪 Experiment 46 — External Addressable RAM Memory UNLOCKS Depth-2 Working Memory: the First Depth ≥2 Success (2026-07-19)
+
+Exp 43–45 established, consistently, that a NEURAL substrate cannot hold state: the leaky membrane holds ~1 step
+(43), a passive latch holds but ungated overwrites every tick (44), a gated latch cannot self-clock because STDP
+re-weighting a fixed fabric can't invent a store-cue (45). The pre-registered conclusion: working memory needs an
+**EXTERNAL, non-leaky, org-addressable store**, not neural-held voltage. Built exactly that — `GENESIS_SCRATCH`
+(default-OFF, byte-identical off): a `SCRATCH_MARKER = 199` gene declaring hidden-band neurons coupled to the
+organism's own **movement-keyed byte-history ring** (`org_delay_buf`, a real non-leaky external store already
+maintained by the kernel — slot 0 = current cell, slot k = k saccades ago). Two neuron kinds: a STORE effector
+(writes the eye byte on the tick it fires) and a **RECALL sensor** exposing one BIT of one SLOT of the ring
+(`(slot<<3)|bit` in `sense_meta`, affordance type 8, precomputed each tick). Seeded a fabric of 32 recall sensors
+(ring slots 0–3 × 8 bits), each wired **silent** to its vocal bit; extended the Exp-35 teaching signal to also
+teach recall→vocal routes (an active recall sensor now carries the same delta-rule error current as an active eye
+input). So to solve delay-N the learner must **potentiate the slot-N recall→vocal route and leave slot-0 (the echo
+trap) silent** — genuine learnable ADDRESSING of external memory.
+
+**Decisive test (delay-sandbox, STDP_TARGET vs NOLEARN floor) — POSITIVE, the first depth ≥2 success in project
+history:**
+- **N=2:** STDP_TARGET rises **51 % → 68 % monotone over 140 k ticks**; NOLEARN flat **~49 %**. Lift **+19 pts**,
+  still climbing.
+- **N=3:** STDP_TARGET **70–84 %**; NOLEARN flat **~49 %**. Lift **+25–35 pts**.
+
+Exactly where the neural latch bought nothing (Exp 44/45 sat at/below the echo floor), external addressable memory
++ the validated learner clears it decisively and at depth 3. **This resolves the Exp-43 criterion-A blocker: the
+substrate CAN compute over held context of depth ≥2 — just not with neural-held state. Memory is an ADDRESS the
+organism reads, not a voltage it holds.** The learnable-addressing result also means the STDP_TARGET teaching
+signal (Exp 35) generalises beyond the eye→vocal echo to a second source class (recall sensors) — the learner
+constructs a *routing* circuit, not just a copy. `GENESIS_SCRATCH` + `SCRATCH_MARKER` + the recall-teaching
+extension are permanent; default byte-identical (re-verified: ancestor 159 bytes, SCRATCH-off DCE'd). Full account:
+`Ascent.md` §4l. **NEXT (criterion A, live): put this on a LIVE economy where holding depth-2 context PAYS — a
+task whose income requires reading a slot-N past byte (e.g. copy-at-a-delay, or a two-operand grounded
+computation) — so selection, not a pinned sandbox, drives the addressing circuit, and measure whether capability
+C(t) RISES ≥25 % sustained (the still-unmet criterion A).**
+
 
 ## 6. Critical Audit Fixes (2026-07-11)
 

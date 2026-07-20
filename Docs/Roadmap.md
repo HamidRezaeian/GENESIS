@@ -631,6 +631,35 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      the org writes+reads), NOT another economy lever.** That is the pre-registered next substrate change.
      `GENESIS_DELAY` + `tests/delay_sandbox_probe.py` kept as the WM-depth probe; default byte-identical. See
      Ascent §4i, Result Exp 43.
+- 🔬 **WM latch primitive built — works but insufficient; depth ≥2 needs GATED memory (Exp 44, 2026-07-18).**
+     `GENESIS_WMEM` (`MEMORY_MARKER=198`): a genome-wireable non-leaky non-resetting latch neuron. Micro-test
+     confirms it HOLDS voltage cross-tick (127→254→…→889 vs leaky→0). BUT delay N=2 STDP_TARGET ~30% WITH latch
+     == ~30% WITHOUT: the ungated eye→latch→vocal fabric overwrites the latch every tick (holds only current) =
+     still depth-1. DIAGNOSIS: held-state alone insufficient; depth-2 needs **GATED write/read control** (decide
+     WHEN to store/read) which STDP-reweighting a fixed fabric can't invent. **Substrate change = ADDRESSABLE/
+     GATED memory (write-enable + read-enable, RAM-scratchpad direction), not a passive latch.** Latch = necessary
+     building block; missing piece = the CONTROL path. `GENESIS_WMEM`/`MEMORY_MARKER` kept as instruments;
+     default byte-identical. See Ascent §4j, Result Exp 44.
+- 🔬 **Write-gate primitive built — works but STDP can't self-clock a fixed fabric; depth ≥2 needs an ACTION-DRIVEN scratchpad (Exp 45, 2026-07-19).**
+     Added a kernel WRITE-GATE to the latch (`GENESIS_WMEM`): a latch declares a gate-source neuron (gene slot →
+     `global_sense_meta`), accepts writes only on ticks its gate fired (else HOLDS). Seeded a 2-stage gated shift
+     register (`eye→L0→L1→vocal`, gated by `G`). Delay N=2 gated+STDP_TARGET ~40% (noisy 30–49%) — **BELOW** the
+     NOLEARN echo floor (~46%). DIAGNOSIS: `G` fires from eye bits → write-enable ~always ON → degenerates to
+     ungated; shift register needs clock-phase separation a single LIF pass collapses; no store-cue + STDP can't
+     invent a self-clock. **Across Exp 43–45: neural fabric + STDP is the WRONG substrate for WM.** Next substrate
+     change = **RAM SCRATCHPAD** (write byte → saccade away → saccade back → read; existing primitives, no new
+     lever). Write-gate kept as instrument; default byte-identical (159 bytes). See Ascent §4k, Result Exp 45.
+- ✅ **EXTERNAL addressable RAM memory UNLOCKS depth-2 — first depth ≥2 success (Exp 46, 2026-07-19).**
+     `GENESIS_SCRATCH` (`SCRATCH_MARKER=199`): recall-sensor neurons reading one bit of one SLOT of the org's
+     non-leaky movement-keyed byte-history ring (`org_delay_buf`), addressed by `(slot<<3)|bit`. 32 recall
+     sensors (slots 0–3 × 8 bits) seeded silent→vocal; Exp-35 teaching signal extended to teach recall→vocal.
+     To solve delay-N the learner must potentiate slot-N→vocal and keep slot-0 (echo trap) silent = learnable
+     ADDRESSING of external memory. **POSITIVE:** delay N=2 STDP_TARGET 51→68% monotone vs NOLEARN ~49% (+19);
+     N=3 70–84% vs ~49% (+25–35). Where neural latches bought nothing (44/45), external addressable memory +
+     the validated learner clears depth-3. **Resolves the criterion-A depth blocker: memory is an ADDRESS the
+     org reads, not a voltage it holds.** Default byte-identical (159 bytes). See Ascent §4l, Result Exp 46.
+     **NEXT (criterion A, live): an economy where holding depth-2 context PAYS (copy-at-a-delay / two-operand
+     grounded compute) so selection drives the addressing circuit and C(t) can be measured for the ≥25% rise.**
 - [ ] Real-time **somatic** entropy: expose *running* phenotypes to radiation, not just their
       offspring (a phenotype is still decoded once at spawn).
 - ✅ **Instantaneous total wipes broken — refugium gradient (Exp 10A, 2026-07-12).** Extinction was

@@ -112,6 +112,12 @@ EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
 # Evolvable actuators (Exp 38 / Phase B): compile-time branch (ACTUATOR_MARKER decode + out_accum drive
 # in the LIF loop). Key the cache so it doesn't share a kernel with the fixed-motor default.
 EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
+# Working-memory latch (Exp 44): compile-time branch (MEMORY_MARKER decode + non-leaky non-resetting
+# latch neuron in the LIF loop). Key the cache so it doesn't share a kernel with the leaky-only default.
+WMEM = os.environ.get("GENESIS_WMEM", "0") == "1"
+# RAM scratchpad (Exp 46): org-controlled external register (SCRATCH_MARKER STORE effector + RECALL sensor).
+# Compile-time branch; key the cache so it doesn't share a kernel with the register-less default.
+SCRATCH = os.environ.get("GENESIS_SCRATCH", "0") == "1"
 # GROUNDED SCARCE ECONOMY (Exp 41, default-OFF). The peer-payoff negative (Exp 40) localised the blocker:
 # behavioural diversity is not enough for theory-of-mind — a neighbour's action must be a MODELABLE
 # FUNCTION of its OBSERVABLE state. On the abundant Books scaffold behaviour is diverse but not grounded
@@ -144,7 +150,7 @@ os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
     f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
     f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}{'_remap' if REMAP else ''}"
     f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}{'_evoact' if EVOACT else ''}"
-    f"{'_niche' if NICHE_ECON else ''}{'_delay' if DELAY else ''}"))
+    f"{'_niche' if NICHE_ECON else ''}{'_delay' if DELAY else ''}{'_wmem' if WMEM else ''}{'_scratch' if SCRATCH else ''}"))
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -182,6 +188,8 @@ from neuromorphic_engine import (
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     SENSOR_MARKER, EVOSENSE, N_AFFORDANCE, ACTUATOR_MARKER, EVOACT,
+    MEMORY_MARKER, WMEM,
+    SCRATCH_MARKER, SCRATCH,
     LONG_JUMP_STRIDE,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
@@ -197,8 +205,8 @@ import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + 
 # never manually deleted). Opt-in RESUME (default OFF, mirrors the peer default-OFF discipline) seeds a
 # run's founders from the accumulated best-ever bank so capability compounds across sessions; OFF keeps
 # every experiment's clean cold-start intact.
-BRAIN_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain", "Brain.npz")
+_brain_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain")
+BRAIN_PATH = os.environ.get("GENESIS_BRAIN_PATH") or os.path.join(_brain_dir, "Brain.npz")
 RESUME_BRAIN = os.environ.get("GENESIS_RESUME", "0") == "1"
 
 # Fixed centred start address of the contiguous library scroll — the anchor for the Exp 20
@@ -317,6 +325,9 @@ g_org_elig = np.zeros((MAX_ORGANISMS, 8), dtype=np.float32)
 # holding context can emit it. Always allocated (cheap); only read/written by the kernel when DELAY on.
 from neuromorphic_engine import DELAY_BUF as _DELAY_BUF
 g_org_delay_buf = np.zeros((MAX_ORGANISMS, _DELAY_BUF), dtype=np.uint8)
+# Exp 46 RAM scratchpad: per-org external register (one non-leaky held byte). Written by a STORE effector
+# neuron on the tick it fires, read back by RECALL sensors. Always allocated (cheap); used only when SCRATCH.
+g_org_scratch = np.zeros(MAX_ORGANISMS, dtype=np.uint8)
 g_read_log = np.zeros(1000, dtype=np.int32)
 g_read_log[0] = 1
 
@@ -581,7 +592,67 @@ def create_intelligent_ancestor(dna=None):
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB0, VOCAL_BIT0 + SB1, 128])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB1, VOCAL_BIT0 + SB0, 128])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + SB1, VOCAL_BIT0 + SB0, 128])
-    
+
+    # --- WORKING-MEMORY LATCH FABRIC (Exp 44/45, gated GENESIS_WMEM, default off) ---
+    # The delay task (Exp 43) needs the org to emit a byte it sensed N cells ago; the leaky membrane holds
+    # ~1 step and depth>=2 is unstable. Exp 44 seeded a passive latch bank and FAILED depth-2: an UNGATED
+    # latch (afferent writes every tick) just tracks the current byte = still depth-1. Exp 45 adds a
+    # hardware WRITE-GATE (kernel: a latch accepts writes only on ticks its gate source fired) and seeds a
+    # 2-STAGE GATED SHIFT REGISTER per bit: on a write-enable pulse G, L1_k <- L0_k and L0_k <- eye_k;
+    # readout is L1_k -> vocal_k. Held across ticks (non-leaky) AND gated (captures a value then keeps it
+    # across intervening input) = the store-control the passive latch lacked. Latches are hidden neurons
+    # N_IO+5..; gate G is one more hidden neuron. All write/read/gate routes seeded SILENT (raw 128 = w0)
+    # so STDP_TARGET can potentiate them and the echo bootstrap is uncorrupted; the latch gene's slot byte
+    # encodes the gate-source neuron index (see decode_genome). WMEM off -> whole block DCE'd, byte-ident.
+    # Gene: [MEMORY_MARKER, gate_src, rec_id, thresh, clear].
+    if os.environ.get("GENESIS_WMEM", "0") == "1":
+        L0 = N_IO + 5           # 8 stage-0 latches  N_IO+5 .. N_IO+12
+        L1 = N_IO + 13          # 8 stage-1 latches  N_IO+13 .. N_IO+20
+        GATE = N_IO + 21        # write-enable control neuron (ordinary LIF hidden)
+        # gate source byte stored +1 by decode; here we pass the raw neuron index (GATE) as the gene slot.
+        for k in range(8):      # stage-0 latches, gated by GATE (low thresh so one eye bit sets it)
+            genes.extend([MEMORY_MARKER, GATE, 0, 20, 0])
+        for k in range(8):      # stage-1 latches, gated by GATE
+            genes.extend([MEMORY_MARKER, GATE, 0, 20, 0])
+        # GATE neuron: ordinary hidden neuron, silent candidate drivers STDP_TARGET can potentiate so the
+        # learner shapes WHEN the register clocks. Seeded from every eye bit (a fresh byte -> a write pulse).
+        genes.extend([NEURON_MARKER, 0, 0, 40, 8])   # rec 0, mid threshold, tau 9
+        for k in range(8):
+            genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, GATE, 128])   # eye_k -> GATE (silent)
+        for k in range(8):
+            # WRITE stage-0: eye bit k -> L0_k (silent, gated by GATE), doubled for robustness
+            genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, L0 + k, 128])
+            genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, L0 + k, 128])
+            # SHIFT: L0_k -> L1_k (silent, gated by GATE), doubled
+            genes.extend([GENE_MARKER, L0 + k, L1 + k, 128])
+            genes.extend([GENE_MARKER, L0 + k, L1 + k, 128])
+            # READ: L1_k -> vocal bit k (silent), doubled
+            genes.extend([GENE_MARKER, L1 + k, VOCAL_BIT0 + k, 128])
+            genes.extend([GENE_MARKER, L1 + k, VOCAL_BIT0 + k, 128])
+
+    # --- RAM SCRATCHPAD FABRIC (Exp 46, gated GENESIS_SCRATCH, default off) ---
+    # Exp 43-45 proved a NEURAL substrate can't hold state (leak / no self-clock). But the movement-keyed ring
+    # org_delay_buf ALREADY holds the successive bytes the reader walked, losslessly and non-leaky — a real
+    # EXTERNAL store. The open question this tests: can the validated learner (STDP_TARGET) LEARN TO ADDRESS
+    # it — route the slot carrying the wanted past byte to the vocal cords? Seed RECALL sensors exposing every
+    # bit of the first few ring slots (slot 0 = current, slot 2 = the delay-N=2 answer), each wired SILENT to
+    # its vocal bit. To solve delay-2 the learner must POTENTIATE slot-2 recall->vocal and leave slot-0 (the
+    # echo trap) silent — genuine learnable addressing of external memory, the depth a leaky membrane cannot
+    # reach. Recall gene packs (slot<<3)|bit in param. SCRATCH off -> DCE'd, byte-identical.
+    # Gene: [SCRATCH_MARKER, kind=1, rec_id, thresh, (slot<<3)|bit].
+    if os.environ.get("GENESIS_SCRATCH", "0") == "1":
+        RECALL_SLOTS = 4        # expose ring slots 0..3 (covers delay-N up to 3)
+        RECALL0 = N_IO + 5      # recall sensors start here: slot s, bit b at N_IO+5 + s*8 + b
+        for s in range(RECALL_SLOTS):
+            for b in range(8):
+                genes.extend([SCRATCH_MARKER, 1, 0, 20, (s << 3) | b])   # recall sensor slot s, bit b
+        for s in range(RECALL_SLOTS):
+            for b in range(8):
+                rn = RECALL0 + s * 8 + b
+                # READ-OUT: recall(slot s, bit b) -> vocal bit b (silent, STDP_TARGET potentiates), doubled
+                genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
+                genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
+
     # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
     # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
     # (the food-seeking reflex pulls them onto text and halts them there), so authoring cannot bootstrap
@@ -1041,7 +1112,7 @@ def sim_loop():
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_scratch
     )
 
     for i in range(MAX_ORGANISMS):
@@ -1276,7 +1347,7 @@ def sim_loop():
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
             g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf
+            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_scratch
         )
         
         for i in range(n_births):
@@ -1690,14 +1761,18 @@ def main():
     print(f"Allocating RAM Substrate: {RAM_SIZE} Bytes")
     t = threading.Thread(target=sim_loop, daemon=True)
     t.start()
-    
-    ws_t = threading.Thread(target=start_ws_server, daemon=True)
-    ws_t.start()
 
-    http_t = threading.Thread(target=start_http_server, daemon=True)
-    http_t.start()
-    
-    print("Physics Engine running. Open http://localhost:8081 in your browser.")
+    headless = os.environ.get("GENESIS_HEADLESS", "0") == "1"
+    if not headless:
+        ws_t = threading.Thread(target=start_ws_server, daemon=True)
+        ws_t.start()
+
+        http_t = threading.Thread(target=start_http_server, daemon=True)
+        http_t.start()
+        print("Physics Engine running. Open http://localhost:8081 in your browser.")
+    else:
+        print("Physics Engine running (HEADLESS: no ws/http servers).")
+
     try:
         while True:
             time.sleep(1)

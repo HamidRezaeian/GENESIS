@@ -200,6 +200,22 @@ REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))           # 
 # Compile-time gated -> byte-identical when off.
 DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
 DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))   # how many ticks back the target byte is
+
+# RAM SCRATCHPAD — org-controlled EXTERNAL register (Exp 46, default-OFF, byte-identical off). Exp 43-45
+# proved a NEURAL substrate cannot hold state: the leaky membrane holds ~1 step (43), a passive latch holds
+# but ungated overwrites every tick (44), and a gated latch cannot SELF-CLOCK because STDP re-weighting a
+# fixed fabric can't invent a store-cue (45). Diagnosis: working memory needs a controllable clock/ADDRESS
+# the organism drives with an ACTION, not synapse weights — an EXTERNAL non-leaky store. This builds exactly
+# that: org_scratch[org], a per-organism byte register that does NOT leak or reset (like the organism's
+# position). A STORE neuron (SCRATCH_MARKER hidden neuron) writes the CURRENT eye byte into the register ON
+# THE TICK IT FIRES — so the ORG decides WHEN to store by what drives that neuron (an observable cue can
+# gate it, the learnable clock 45 lacked). A RECALL affordance (sense_affordance type 6) reads the register
+# bits back into the network on later ticks. The store persists across arbitrary intervening ticks with no
+# leak, so depth is bounded only by the org learning WHEN to write and read — the honest depth-2 pathway.
+# Reuses the Exp-37/38 evolvable-I/O machinery (flagged hidden neuron + affordance) so N_INPUT/N_OUTPUT stay
+# fixed (no genome-decode scramble). Compile-time gated (GENESIS_SCRATCH).
+SCRATCH = os.environ.get("GENESIS_SCRATCH", "0") == "1"
+SCRATCH_MARKER = 199   # hidden-neuron gene marking an external-register STORE effector
 # Ring capacity = the register's bit-width (8 bits/byte). Rule 17 HARDWARE-DERIVED — the natural history
 # depth of a byte, not a picked "8". (BITS_PER_BYTE itself is defined below with the other byte constants;
 # this early flag block only needs the integer, so it is written as the bit-count of an 8-bit register.)
@@ -341,6 +357,24 @@ EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
 # Phase C then dissolves the fixed input/output blocks entirely so N_INPUT/N_OUTPUT stop being constants.
 ACTUATOR_MARKER = 197
 EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
+
+# WORKING-MEMORY LATCH (Exp 44, default-OFF, Rules 6/11/15). Exp 43 measured the substrate holds ~1 step
+# of context (leaky membrane) and depth>=2 is UNSTABLE — the criterion-A blocker (arithmetic/carry need
+# >=2 operands held). Diagnosis: the ONLY cross-tick state is membrane voltage global_v, which (a) LEAKS
+# toward v_rest each substep and (b) is WIPED to v_reset when the neuron fires, and (c) prev_spk_buf is
+# zeroed every tick so a recurrent self-excite synapse cannot re-fire a latch across ticks. So no
+# topology can hold a value across an intervening cell. A MEMORY_MARKER gene declares a hidden-band LATCH
+# neuron that fixes exactly this: it (1) SKIPS the leak (holds its accumulated voltage indefinitely), and
+# (2) does NOT reset on fire (emits its held value as a spike when it crosses threshold, WITHOUT wiping
+# the stored voltage) — a non-leaky non-resetting integrator, the minimal hardware primitive for a
+# persistent register. Genome-wireable: the org evolves WHAT drives the latch (write), its threshold
+# (when it reads out), and WHAT clears it (a strong inhibitory synapse can push it back below threshold).
+# This is a real RAM register in neural form (Rule 15: literal held state), the "one more organ" Exp 43
+# named. Gene: [MEMORY_MARKER, slot, rec_id, thresh, clear_thresh] (5 bytes, mirrors NEURON_MARKER).
+# Compile-time gated (GENESIS_WMEM) -> off = marker skipped, byte-identical. Composes with STDP_TARGET
+# (the learner can re-weight what writes/reads the latch).
+MEMORY_MARKER = 198
+WMEM = os.environ.get("GENESIS_WMEM", "0") == "1"
 
 # V_THRESH_IO removed: was dead code (defined but never referenced)
 DT           = np.float32(1.0)
@@ -499,6 +533,16 @@ def count_genes(g_ptr, g_count, g_genome):
             # drives. EVOACT off -> dead-code-eliminated -> byte-identical count.
             h_count += 1
             i += 5
+        elif WMEM and marker == MEMORY_MARKER and i + 4 < g_ptr + g_count:
+            # A memory-latch gene declares one extra held-state NEURON (5 bytes, same width). Counted into
+            # the hidden budget; decode_genome flags it a latch. WMEM off -> DCE'd -> byte-identical count.
+            h_count += 1
+            i += 5
+        elif SCRATCH and marker == SCRATCH_MARKER and i + 4 < g_ptr + g_count:
+            # A scratchpad gene declares one extra STORE-effector NEURON (5 bytes). Counted into the hidden
+            # budget; decode_genome flags it a store neuron. SCRATCH off -> DCE'd -> byte-identical count.
+            h_count += 1
+            i += 5
         elif marker == RECEPTOR_MARKER and i + 9 < g_ptr + g_count:
             i += 10
         else:
@@ -603,6 +647,55 @@ def decode_genome(
                 if EVOSENSE:
                     global_sense_type[n_ptr + N_IO + h_idx] = 0   # not a sensor
                 global_act_drive[n_ptr + N_IO + h_idx] = act_i + 1
+                h_idx += 1
+            i += 5
+        elif WMEM and marker == MEMORY_MARKER and i + 4 < g_count:
+            # A MEMORY (LATCH) gene: a hidden-band neuron flagged as a persistent register. It integrates
+            # synaptic input like a normal neuron BUT in the LIF loop it skips the leak and does not reset
+            # on fire (see Phase 2), so it holds its accumulated voltage across ticks — a real held-state
+            # register (Exp 44). Flagged via global_sense_type = LATCH_FLAG (255, distinct from the 1..6
+            # affordance ids), reusing the already-threaded sensor-type array so no new kernel plumbing.
+            # Bytes: [MEMORY_MARKER, gate_src, rec_id, thresh, clear(unused)]. Threshold from gene so
+            # evolution tunes WHEN the latch reads out; a strong inhibitory synapse onto it is the clear.
+            if N_IO + h_idx < n_c:
+                rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
+                global_rec_id[n_ptr + N_IO + h_idx] = rec_id
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, rec_id]
+                global_sense_type[n_ptr + N_IO + h_idx] = 255   # LATCH_FLAG
+                # WRITE-GATE source (Exp 45): gene slot byte (i+1) % n_c picks a neuron whose spike
+                # last step enables writing this latch; 0 = ungated (holds Exp-44 always-write). Stored
+                # +1 so 0 stays "no gate" (kernel reads gate-1 as the source index). Evolution wires
+                # WHICH neuron controls the store — the store-control the passive latch lacked.
+                gate_raw = global_genome[g_ptr + i + 1] % n_c
+                global_sense_meta[n_ptr + N_IO + h_idx] = gate_raw + 1 if gate_raw > 0 else 0
+                if EVOACT:
+                    global_act_drive[n_ptr + N_IO + h_idx] = 0
+                h_idx += 1
+            i += 5
+        elif SCRATCH and marker == SCRATCH_MARKER and i + 4 < g_count:
+            # A SCRATCHPAD gene (Exp 46): declares a hidden-band neuron coupled to the org's EXTERNAL
+            # register org_scratch[org]. kind byte (i+1) picks role:
+            #   kind==0  STORE effector  -> global_sense_type = 254 (STORE_FLAG). On the tick it fires
+            #            (ordinary LIF integrate), the LIF loop writes the CURRENT eye byte into the
+            #            register — the org's ACTION-gated write (the learnable clock Exp 45 lacked).
+            #   kind!=0  RECALL sensor   -> global_sense_type = 8 (affordance 7). Fires stochastically
+            #            from bit `param` of the register (like an evolvable sensor), reading the held
+            #            byte back into the net on any later tick. param packed into sense_meta.
+            # Bytes: [SCRATCH_MARKER, kind, rec_id, thresh, param(bit for recall)].
+            if N_IO + h_idx < n_c:
+                rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
+                global_rec_id[n_ptr + N_IO + h_idx] = rec_id
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, rec_id]
+                kind = global_genome[g_ptr + i + 1]
+                if kind == 0:
+                    global_sense_type[n_ptr + N_IO + h_idx] = 254   # STORE_FLAG
+                else:
+                    global_sense_type[n_ptr + N_IO + h_idx] = 8     # RECALL sensor (affordance 7)
+                    global_sense_meta[n_ptr + N_IO + h_idx] = global_genome[g_ptr + i + 4]   # (slot<<3)|bit
+                if EVOACT:
+                    global_act_drive[n_ptr + N_IO + h_idx] = 0
                 h_idx += 1
             i += 5
         elif marker == RECEPTOR_MARKER and i + 9 < g_count:
@@ -725,7 +818,7 @@ def world_tick_numba(
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
     oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
-    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf
+    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf, org_scratch
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -840,7 +933,7 @@ def world_tick_numba(
             n_ptr_s = org_n_ptr[org]
             for sn in range(N_IO, n_count):
                 st = global_sense_type[n_ptr_s + sn]
-                if st > 0:
+                if st > 0 and st < 7:
                     meta = global_sense_meta[n_ptr_s + sn]
                     off = meta & 0xFF
                     if off >= 128:
@@ -848,6 +941,24 @@ def world_tick_numba(
                     prm = (meta >> 8) & 0xFF
                     sensor_act[sn] = sense_affordance(st - 1, off, prm, pos, ram_substrate,
                                                       org_grid, energy, vocal_cords, energy[org])
+                    total_atp += CYCLES_PER_SYNAPSE_READ
+
+        # RECALL PRECOMPUTE (Exp 46): a recall sensor (sense_type==8) reads one BIT of one SLOT of the org's
+        # movement-keyed sensory-history ring org_delay_buf — a non-leaky EXTERNAL store that already holds the
+        # successive bytes the reader walked (slot 0 = most recent, slot k = k saccades ago). The recall gene
+        # packs (slot<<3)|bit in sense_meta. Exposing multiple slots as addressable sources lets the learner
+        # DISCOVER which slot carries the wanted past byte (learnable addressing) — the depth a leaky membrane
+        # or an un-cued latch cannot reach. Charged one read like any sensor. Independent of EVOSENSE.
+        if SCRATCH:
+            n_ptr_s2 = org_n_ptr[org]
+            for sn in range(N_IO, n_count):
+                if global_sense_type[n_ptr_s2 + sn] == 8:
+                    pk = global_sense_meta[n_ptr_s2 + sn]
+                    slot = (pk >> 3) & 0x07
+                    bit = pk & 0x07
+                    if slot < DELAY_BUF:
+                        reg = np.int64(org_delay_buf[org, slot])
+                        sensor_act[sn] = np.float32((reg >> bit) & 1)
                     total_atp += CYCLES_PER_SYNAPSE_READ
 
         # EVENT-DRIVEN SENSING (Rule 11, 2026-07-12 — same principle as the Exp 8 membrane fix).
@@ -914,6 +1025,16 @@ def world_tick_numba(
                 src = global_conn_src[s_ptr + c]
                 dst = global_conn_dst[s_ptr + c]
                 if prev_spk_buf[src]:
+                    # WRITE-GATE (Exp 45): a latch with a gate source (sense_meta>0) accepts afferent
+                    # writes ONLY on ticks its gate neuron fired last step; otherwise it HOLDS. This is
+                    # the store-control Exp 44 lacked — an ungated latch overwrites every tick (=depth-1),
+                    # a gated latch captures a value then keeps it across intervening input (=real depth).
+                    # gate 0 (or WMEM off) => always write => byte-identical Exp-44/no-latch behaviour.
+                    if WMEM and global_sense_type[n_ptr + dst] == 255:
+                        gate = global_sense_meta[n_ptr + dst]
+                        if gate > 0 and not prev_spk_buf[gate - 1]:
+                            total_atp += CYCLES_PER_SYNAPSE_READ
+                            continue
                     w = global_conn_weight[s_ptr + c]
                     global_v[n_ptr + dst] += w
                     total_atp += CYCLES_PER_SYNAPSE_READ
@@ -929,11 +1050,19 @@ def world_tick_numba(
                         curr_spk_buf[n] = True
                         global_t_last[n_ptr + n] = t_now
                         n_spiked += 1
-                elif EVOSENSE and n >= N_IO and global_sense_type[n_ptr + n] > 0:
+                elif EVOSENSE and n >= N_IO and 0 < global_sense_type[n_ptr + n] < 255 and global_sense_type[n_ptr + n] != 254:
                     # EVOLVABLE SENSOR neuron (Exp 37): fires stochastically from its transduced affordance
                     # activation (precomputed once this tick), exactly like a fixed input neuron — NOT from
                     # LIF integration. So it is a genuine sensory SOURCE the network wired itself, coupled to
                     # a real hardware quantity. Firing is spike-gated metabolically like every other neuron.
+                    # (Also serves SCRATCH recall sensors, sense_type==8, precomputed above.)
+                    if random.random() < sensor_act[n] * spike_val:
+                        curr_spk_buf[n] = True
+                        global_t_last[n_ptr + n] = t_now
+                        n_spiked += 1
+                elif SCRATCH and n >= N_IO and global_sense_type[n_ptr + n] == 8:
+                    # RECALL sensor firing when EVOSENSE is off (scratchpad standalone). Same stochastic
+                    # source-firing as an evolvable sensor, reading the register bit precomputed above.
                     if random.random() < sensor_act[n] * spike_val:
                         curr_spk_buf[n] = True
                         global_t_last[n_ptr + n] = t_now
@@ -946,32 +1075,55 @@ def world_tick_numba(
                         v_rest = o_rec_v_rest[org, r_idx]
                         tau = global_tau[n_ptr + n]
                         thresh = global_thresh[n_ptr + n]
-                        
-                        # Leak
-                        v += (v_rest - v) / tau * DT
-                        
-                        if v >= thresh:
-                            curr_spk_buf[n] = True
-                            global_v[n_ptr + n] = o_rec_v_reset[org, r_idx]
-                            global_ref[n_ptr + n] = TAU_REF
-                            global_t_last[n_ptr + n] = t_now
-                            n_spiked += 1
 
-                            if n >= N_INPUT and n < N_IO:
-                                out_idx = n - N_INPUT
-                                out_accum[out_idx] += 1
-                            elif EVOACT and n >= N_IO:
-                                # EVOLVABLE ACTUATOR (Exp 38): a hidden effector neuron that has fired
-                                # contributes its spike to the physical action it drives — the SAME
-                                # accumulator (out_accum) the innate output neuron for that action uses.
-                                # So an evolved circuit can trigger a jump/consume/vocal-bit directly,
-                                # widening the expression channel without disturbing the fixed outputs
-                                # the reward/STDP/REMAP machinery reads. act_drive-1 is the action index.
-                                ad = global_act_drive[n_ptr + n]
-                                if ad > 0:
-                                    out_accum[ad - 1] += 1
+                        # WORKING-MEMORY LATCH (Exp 44): a held-state register neuron. It SKIPS the leak
+                        # (holds accumulated voltage across substeps AND ticks) and does NOT reset on fire
+                        # (emits its held value as a spike when it crosses threshold WITHOUT wiping the
+                        # store) — a non-leaky non-resetting integrator. So it holds a value written by its
+                        # afferents until a strong inhibitory synapse pushes it back below threshold (the
+                        # clear). This is the persistent register Exp 43 found the leaky membrane lacks.
+                        is_latch = WMEM and n >= N_IO and global_sense_type[n_ptr + n] == 255
+                        if is_latch:
+                            if v >= thresh:
+                                curr_spk_buf[n] = True
+                                global_t_last[n_ptr + n] = t_now
+                                n_spiked += 1
+                                # NO reset, NO leak: global_v[n] keeps its held value (v unchanged)
+                            # v is neither leaked nor reset -> the register holds
                         else:
-                            global_v[n_ptr + n] = v
+                            # Leak (ordinary LIF)
+                            v += (v_rest - v) / tau * DT
+
+                            if v >= thresh:
+                                curr_spk_buf[n] = True
+                                global_v[n_ptr + n] = o_rec_v_reset[org, r_idx]
+                                global_ref[n_ptr + n] = TAU_REF
+                                global_t_last[n_ptr + n] = t_now
+                                n_spiked += 1
+
+                                if n >= N_INPUT and n < N_IO:
+                                    out_idx = n - N_INPUT
+                                    out_accum[out_idx] += 1
+                                elif SCRATCH and n >= N_IO and global_sense_type[n_ptr + n] == 254:
+                                    # STORE effector (Exp 46): on the tick it fires, WRITE the byte currently
+                                    # under the reading eye into the org's external register. This is the
+                                    # ACTION-gated store — the org's own circuit decides WHEN to latch a value
+                                    # (drive this neuron from an observable cue), the learnable clock a
+                                    # weight-only fabric could not invent (Exp 45). Non-leaky: the register
+                                    # holds it across arbitrary intervening ticks until the next store fires.
+                                    org_scratch[org] = ram_substrate[pos]
+                                elif EVOACT and n >= N_IO:
+                                    # EVOLVABLE ACTUATOR (Exp 38): a hidden effector neuron that has fired
+                                    # contributes its spike to the physical action it drives — the SAME
+                                    # accumulator (out_accum) the innate output neuron for that action uses.
+                                    # So an evolved circuit can trigger a jump/consume/vocal-bit directly,
+                                    # widening the expression channel without disturbing the fixed outputs
+                                    # the reward/STDP/REMAP machinery reads. act_drive-1 is the action index.
+                                    ad = global_act_drive[n_ptr + n]
+                                    if ad > 0:
+                                        out_accum[ad - 1] += 1
+                            else:
+                                global_v[n_ptr + n] = v
 
             # Phase 3: STDP Updates only for spiking neurons. Compile-time gated on NOLEARN — when
             # ablated the entire plasticity phase (weight updates + STDP energy cost) is dead-code-
@@ -1323,11 +1475,20 @@ def world_tick_numba(
                         err = np.float32(tgt_vb - out_vb)     # +1 wanted-silent, -1 unwanted-fired, 0 ok
                         if err != np.float32(0.0):
                             tsrc = global_conn_src[ts_ptr + tc]
-                            # only afferents from an ACTIVE reading-eye input carry the teaching signal:
-                            # potentiating a silent eye's synapse would teach noise. Eye inputs are
-                            # RAM_BIT0_INPUT..+7; sense_buf holds their activation for this tick.
+                            # only afferents from an ACTIVE source carry the teaching signal (potentiating a
+                            # silent source's synapse would teach noise). Two taught source classes:
+                            #  - reading-eye inputs RAM_BIT0_INPUT..+7 (sense_buf activation), the base echo.
+                            #  - SCRATCH recall sensors (hidden band, sense_type==8; sensor_act activation),
+                            #    so the learner can potentiate the correct ring-slot->vocal route = learnable
+                            #    addressing of external memory (Exp 46). Both use the same teaching step.
+                            src_active = False
                             if tsrc >= RAM_BIT0_INPUT and tsrc < RAM_BIT0_INPUT + 8:
                                 if sense_buf[tsrc] > np.float32(0.5):
+                                    src_active = True
+                            elif SCRATCH and tsrc >= N_IO and global_sense_type[tn_ptr + tsrc] == 8:
+                                if sensor_act[tsrc] > np.float32(0.5):
+                                    src_active = True
+                            if src_active:
                                     w = global_conn_weight[ts_ptr + tc]
                                     # HARDWARE-DERIVED teaching step (Rule 17, 2026-07-18): one microstate
                                     # (the atomic quantum of a 256-state byte weight) SHARED across the eye
@@ -1625,6 +1786,17 @@ def world_tick_numba(
                             xi += 5
                         elif m == RECEPTOR_MARKER and xi + 9 < g_count:
                             xi += 10
+                        elif (EVOSENSE and m == SENSOR_MARKER) or (EVOACT and m == ACTUATOR_MARKER) \
+                                or (WMEM and m == MEMORY_MARKER) or (SCRATCH and m == SCRATCH_MARKER):
+                            # 5-byte hidden-band marker genes (Exp 37/38/44/46) carry no synapse weight, so
+                            # they advance the walk one slot WITHOUT touching s_local. Skipping them here
+                            # (the sandbox never exercised reproduction under these flags — energy pinned —
+                            # so the live economy is the first time this walk meets them) keeps the synapse
+                            # index lined up with the learned array; the old `else: xi+=1` misaligned it.
+                            if xi + 4 < g_count:
+                                xi += 5
+                            else:
+                                xi += 1
                         else:
                             xi += 1
 

@@ -546,10 +546,70 @@ fixes the net-negative bang-bang Exp 30/31 proved harmful, so keeping the old de
 (where the bootstrap needs a gentler step than the physical quantum), never a physics default; `DELAY_BUF`→
 `BITS_PER_BYTE`. The delay-sandbox WM-depth result (depth-1 holds, depth ≥2 unstable) is unchanged under the
 derived step (it is in fact sharper: N=1 reaches ~87 %). Rule 17's constant list updated to record the retirement.
+
+---
+
+## 4j. RESULT — Experiment 44: the working-memory latch primitive works but a passive latch is insufficient — depth ≥2 needs GATED memory (2026-07-18).
+
+§4i named the criterion-A substrate change: an architectural working-memory pathway. Built the minimal form,
+`GENESIS_WMEM` (`MEMORY_MARKER = 198`): a genome-wireable **latch neuron** — non-leaky, non-resetting integrator
+(holds accumulated voltage across ticks, emits on threshold without wiping the store). **The primitive works**
+(real-kernel micro-test: latch holds/accumulates 127→254→…→889 while a leaky neuron stays 0). **But it does NOT
+unlock depth-2:** delay-sandbox N=2 with STDP_TARGET, WITH vs WITHOUT the seeded `eye→latch→vocal` fabric = both
+~30 %. Diagnosis (structural): the ungated fabric writes the latch every tick, so it is continuously overwritten
+by the current byte and holds only *the current* value — depth-1 again. **Real depth-2 needs GATED write/read
+control (decide WHEN to store, WHEN to read out), which STDP re-weighting a fixed fabric cannot invent.** So the
+substrate change is not a passive latch but **ADDRESSABLE/GATED memory** — a write-enable + read-enable
+(RAM-scratchpad direction: an organism that explicitly writes a value to a held cell and reads it back on a
+separate control line). The latch is a necessary building block; the missing piece is the **control path** that
+gates it. This is the pre-registered next substrate change for criterion A. `GENESIS_WMEM`/`MEMORY_MARKER` kept
+as instruments (the held-state primitive); default byte-identical (re-verified).
 - `Rules.md` gains **Rule 18** (pre-registered falsifiable finish line + validate the load-bearing
   assumption before adding mechanics) so this discipline is permanent, not a one-off.
 - The UI (next task) will surface the A/B/C probes (`C(t)`, learning-ablation delta, `C/footprint`) so
   the finish line is watchable live, not reconstructed from logs.
+
+## 4k. RESULT — Experiment 45: the write-gate primitive works but STDP cannot self-clock a fixed fabric — depth ≥2 needs an ACTION-DRIVEN scratchpad (2026-07-19).
+
+§4j named the fix: gated memory (write-enable). Built the hardware primitive — a kernel WRITE-GATE (`GENESIS_WMEM`,
+default-OFF, byte-identical off): a latch declares a gate-source neuron (gene slot byte → `global_sense_meta`);
+in Phase-1 propagation the latch accepts afferent writes **only on ticks its gate fired last step**, else HOLDS.
+Seeded a **2-stage gated shift register** per bit (`eye→L0→L1→vocal`, gated by a control neuron `G`, all routes
+silent/STDP-tunable). Verified wired (16 latches `N_IO+5..+20`, gate meta = gate+1 on each; default ancestor 159
+bytes unchanged).
+
+**Decisive test (delay N=2): the gate does NOT unlock depth-2.** Gated WMEM + STDP_TARGET averaged ~40 % (noisy
+30–49 %), **BELOW** the NOLEARN echo floor (~46 %, stable). The learner loses to a memoryless reflex.
+
+**Diagnosis (sharper than §4j):** `G` fires from the eye bits → pulses on ~every saccade (fresh byte each tick) →
+write-enable ~always ON → degenerates to the ungated Exp-44 case. And a shift register needs **clock-phase
+separation** (write→shift→read on distinct ticks) that a single feed-forward LIF pass collapses. There is **no
+store-cue in the task** telling the org "hold THIS one," and STDP re-weighting a static fabric cannot invent a
+self-clock. **Across Exp 43–45 (consistent): a neural fabric + STDP is the wrong substrate for working memory.**
+Held-state (44) and gating (45) are necessary building blocks; the missing piece is a **controllable clock/address
+the organism drives with ACTIONS**. The substrate already exposes real addressable external memory — RAM cells +
+CONSUME-writes + eye-reads (stigmergy). **Pre-registered next substrate change: a RAM SCRATCHPAD** — the org writes
+a byte to a cell, saccades away, saccades back, reads it (memory via environment, existing primitives, no new
+lever). `GENESIS_WMEM` + write-gate kept as instruments (reusable once an action-driven address/clock exists).
+
+## 4l. RESULT — Experiment 46: external addressable RAM memory UNLOCKS depth-2 — the first depth ≥2 success (2026-07-19).
+
+§4k concluded (across Exp 43–45) that a neural substrate cannot hold state and that working memory needs an
+EXTERNAL, non-leaky, org-ADDRESSABLE store. Built it — `GENESIS_SCRATCH` (`SCRATCH_MARKER = 199`, default-OFF,
+byte-identical off): recall-sensor neurons that read one BIT of one SLOT of the organism's own movement-keyed
+byte-history ring (`org_delay_buf`, a real non-leaky external store; slot k = k saccades ago), addressed by
+`(slot<<3)|bit` in `sense_meta`. Seeded 32 recall sensors (slots 0–3 × 8 bits), each **silent** → its vocal bit;
+extended the Exp-35 teaching signal to teach recall→vocal routes too. To solve delay-N the learner must
+**potentiate the slot-N recall→vocal route and keep slot-0 (echo trap) silent** — learnable ADDRESSING of external
+memory. **POSITIVE (first depth ≥2 success in project history):** delay N=2 STDP_TARGET rises **51→68 %** monotone
+(140 k ticks) vs NOLEARN flat **~49 %** (+19 pts); N=3 **70–84 %** vs ~49 % (+25–35 pts). Exactly where the neural
+latch bought nothing (44/45 at/below floor), external addressable memory + the validated learner clears it at
+depth 3. **Resolves the §4i criterion-A blocker: the substrate CAN compute over held context of depth ≥2 — memory
+is an ADDRESS the organism reads, not a voltage it holds.** STDP_TARGET (Exp 35) also generalises to a second
+source class (recall sensors) — it constructs a routing circuit, not just a copy. Permanent; default byte-identical
+(ancestor 159 bytes). **Next (criterion A, LIVE): a live economy where holding depth-2 context PAYS (copy-at-a-
+delay / two-operand grounded computation) so selection drives the addressing circuit and C(t) can be measured for
+the ≥25 % sustained RISE — the still-unmet criterion A.**
 
 ---
 
