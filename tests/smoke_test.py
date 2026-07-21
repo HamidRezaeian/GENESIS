@@ -49,7 +49,12 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
             gl.o_rec_v_rest, gl.o_rec_v_reset, gl.o_rec_tau_def, gl.o_rec_spk_max,
             gl.g_viscosity, gl.global_time, gl.g_org_lif_steps,  # per-org architecture-derived steps
             gl.g_b_pos, gl.g_b_parent, gl.g_b_g_start, gl.g_b_g_count, gl.g_b_genomes, gl.g_b_energy,
-            gl.g_oracle_val, gl.g_oracle_target, gl.voice_buf, gl.vocal_cords, gl.g_read_log,
+            gl.g_oracle_val, gl.g_oracle_target, gl.voice_buf, gl.vocal_cords, gl.vocal_prev, gl.action_now, gl.action_prev,
+            gl.g_read_log, gl.g_read_fuel, gl.g_cell_owner, gl.g_read_hits,
+            0, 0,  # canvas_lo, canvas_hi
+            gl.g_org_reward, gl.g_org_elig,
+            gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
+            gl.g_org_delay_buf, gl.g_org_scratch
         )
         # process births exactly like sim_loop
         for i in range(n_births):

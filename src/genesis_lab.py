@@ -191,6 +191,7 @@ from neuromorphic_engine import (
     MEMORY_MARKER, WMEM,
     SCRATCH_MARKER, SCRATCH,
     LONG_JUMP_STRIDE,
+    DELAY, DELAY_N,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
 from books_of_genesis import (
@@ -1512,6 +1513,7 @@ def sim_loop():
                         "actuators": int(m_actuators),
                         # behavioural diversity (Exp 22/39): action entropy, the niche-economy success metric
                         "hact": round(float(m_hact), 2),
+                        "delay_n": int(DELAY_N),
                     },
                     # engine feature flags so the dashboard can label/enable the right panels
                     "flags": {
@@ -1524,6 +1526,9 @@ def sim_loop():
                         "grounded": bool(GROUNDED),
                         "auto_inject": bool(g_auto_inject),
                         "curriculum": bool(g_curriculum),
+                        "delay": bool(DELAY),
+                        "scratch": bool(SCRATCH),
+                        "delay_n": int(DELAY_N),
                     },
                 }
                 asyncio.run_coroutine_threadsafe(broadcast_msg(json.dumps(data)), ws_loop)

@@ -136,7 +136,8 @@ def main():
             gl.g_oracle_val, gl.g_oracle_target, gl.voice_buf, gl.vocal_cords, gl.vocal_prev,
             gl.action_now, gl.action_prev, gl.g_read_log, gl.g_read_fuel, gl.g_cell_owner, gl.g_read_hits,
             gl.CANVAS_LO, gl.CANVAS_HI, gl.g_org_reward, gl.g_org_elig,
-            gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive)
+            gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
+            gl.g_org_delay_buf, gl.g_org_scratch)
 
         # Ignore births entirely (frozen cohort): free any birth-buffer bodies were NOT allocated (the
         # kernel only fills b_* arrays; spawning happens in sim_loop which we don't call), so nothing to

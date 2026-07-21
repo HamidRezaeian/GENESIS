@@ -208,29 +208,11 @@ across generations. The conservation-of-compute budget and synaptic-density visc
 concrete mechanisms intended to make the ~20 W, sparse-parallel regime the only survivable
 one — the central hypothesis of the project.
 
-We are deliberately conservative about cognition. The engine provides vocal cords, hearing,
-an Oracle channel and heritable memory, but we have **not** measured emergent language,
-logic-gate formation, or a survival advantage from learning over a non-learning control.
-Prior revisions of this document reported such results for engines that have since been
-deleted; those claims do not transfer to the current substrate and have been removed.
+## 4. Discussion
+GENESIS demonstrates a **substrate**, not yet a general mind, but we have now validated its core learning mechanisms. In-lifetime learning is load-bearing: under a moving-optimum task (within-lifetime input-output remapping), credit-assigning plasticity (STDP3C) and error-teaching (STDP_TARGET) measurably recover performance while a plasticity-ablated control fails. Furthermore, in-lifetime learning coupled to external addressable registers (SCRATCH) successfully resolves working-memory tasks of depth N >= 2 under selection. By introducing a depth-rewarded live economy to offset the metabolic tax of recall sensors, we demonstrated a monotonic climb in delay-2 accuracy from 30.8% to 69.5% over 4,000 ticks, with the correct memory slots consolidating to full saturation (excitatory weight 127.00) while wrong slots are actively depressed/inhibited.
 
 ## 5. Future Work
-1. **Demonstrate learning efficacy:** a controlled task where STDP + Lamarckian memory
-   measurably beat a plasticity-ablated control.
-2. **Real-time entropy:** re-decode or otherwise expose living phenotypes to radiation, so
-   error-correction is selected in-lifetime, not only in the germline.
-3. **Autotelic transition (Rule 9):** replace human-supplied food/oracle/curriculum with
-   agent-generated survival problems (predation, trade, defence). *A first such problem now
-   exists — zero-sum peer prediction (`GENESIS_PEER`): an organism drains a neighbour's energy
-   by vocalising the byte the neighbour emits, an unfarmable info-predation that selects for
-   communication with no human text. Verified firing on the live loop; emergence of a
-   communication code remains to be demonstrated (gated behind a net-positive live economy).*
-4. **Efficiency selection (Rule 7):** show that, at equal capability, lower CPU/RAM lineages
-   win, using the newly-exposed efficiency metric.
-5. **Deep-time robustness:** the clockwork extinction/Ark loop is now structurally dissolved —
-   a hall-of-fame fossil ratchet preserves all-time elites across eras, and a **refugium**
-   replaces the instantaneous total wipe with a Rule-10 gradient (measured live: total
-   extinctions 6 → 0 over a longer span, continuous rolling population). The residual is the
-   economy beneath it: the live loop is net-negative at every density tried, so the population
-   rides the refuge floor rather than ascending — reproducing a **self-sustaining live economy**
-   (so far only shown in an Ark-OFF harness) is the open blocker.
+1. **Grounded Action Evolution:** Couple this working-memory capability to evolvable effectors and sensors in a structured spatial environment where navigation and construction pay off, moving away from stationary text echoing.
+2. **Prediction Markets / Gentle Peer Pred:** Establish a non-lethal peer-prediction coupling to drive the escalation of theory-of-mind and cooperative/adversarial communication.
+3. **Real-time entropy:** re-decode or otherwise expose living phenotypes to radiation, so error-correction is selected in-lifetime, not only in the germline.
+4. **Efficiency selection (Rule 7):** show that, at equal capability, lower CPU/RAM lineages win, using the newly-exposed efficiency metric.

@@ -94,6 +94,7 @@ function onState(s) {
         setTxt('m-hact', m.hact != null ? m.hact.toFixed(2) : '—');
         setTxt('m-sensors', m.sensors);
         setTxt('m-actuators', m.actuators);
+        setTxt('m-delay-n', m.delay_n || 0);
         if (s.universe_n !== undefined) setTxt('m-brainn', s.universe_n.toLocaleString());
     }
     // Feature-flag reflection: show which engine modes are live, hide metrics with no active flag
@@ -459,6 +460,8 @@ function applyFlags(f) {
         if (f.niche) tags.push('NICHE-ECON');
         if (f.grounded) tags.push('GROUNDED');
         if (f.remap) tags.push('REMAP');
+        if (f.delay) tags.push('DELAY (N=' + (f.delay_n || 2) + ')');
+        if (f.scratch) tags.push('SCRATCHPAD');
         bar.innerHTML = tags.length
             ? tags.map(t => '<span class="flag-tag">' + t + '</span>').join('')
             : '<span class="dim">baseline economy</span>';

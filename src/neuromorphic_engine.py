@@ -1506,6 +1506,10 @@ def world_tick_numba(
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
+                if DELAY and DELAY_N >= 2:
+                    # Scale reward to offset the metabolic tax of the SCRATCH addressing fabric
+                    # (which costs 32 cycles/tick for 32 recall sensors).
+                    gain *= np.float32(DELAY_N * 8.0)
                 if DEPLETE and gain > np.float32(0.0):
                     # Bound positive reading income by the target cell's finite fuel reservoir (Exp 24
                     # Wall-1): a cell pays out only what it holds, then that fuel is spent, so income is
