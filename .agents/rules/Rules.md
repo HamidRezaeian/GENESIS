@@ -2,49 +2,779 @@
 trigger: always_on
 ---
 
-RULE 1: MANDATORY FIRST STEP: At the exact start of any new session or task, BEFORE writing any code or analyzing any logic, you MUST explicitly use the list_dir and view_file tools to read Docs/ARD.md, Docs/PRD.md, Docs/Roadmap.md, Docs/Article_Draft.md, and Docs/Result.md. You are strictly forbidden from taking any other action until these files have been read. 
-MANDATORY LAST STEP: At the end of every task, especially if files were added/deleted or new phases completed, you MUST explicitly update the Docs/ files to perfectly reflect the current state of the codebase. Leaving obsolete information (like deleted scripts or old architectures) in the Docs is a critical failure.
+---
 
-RULE 2: Actively search for and utilize agent skills to improve capabilities. However, critically evaluate each skill before and after use to ensure it genuinely enhances performance and does not cause degradation.
+# GENESIS PROJECT — FUNDAMENTAL RESEARCH AND ENGINEERING RULES
 
-RULE 3: Do not install agent skills globally (e.g., using the `-g` flag). Always install skills locally inside the project to ensure they are tied to the specific project's needs.
+## DOCUMENT STATUS
 
-RULE 4: Always maintain a highly critical and rigorous perspective on the entire system architecture, code, and theoretical models. Do not blindly agree with current implementations. Actively identify flaws, biological/physical inaccuracies, performance bottlenecks, and design choices that hinder true open-ended evolution or true intelligence emergence. Challenge assumptions and point out where the simulation acts as a "scripted game" rather than a natural emergent system.
+This document defines the non-negotiable scientific, physical, evolutionary, and engineering principles governing the GENESIS project.
 
-RULE 5: THE PRE-EVOLVED BASELINE & STRICT BOTTOM-UP SURVIVAL: Do not hardcode arbitrary rules, fitness functions, or specific behaviors into the *physics engine*. However, to accelerate the emergence of AGI, the universe must be seeded with an **Intelligent Ancestor** (a highly engineered, pre-evolved baseline with complex survival circuits like homeostasis, seeking, and reproductive control) rather than a "stupid blank slate". Under no circumstances should the system implement "Extinction Learning" or top-down genetic resurrection. If an ecosystem goes extinct, it must be reseeded using this Intelligent Ancestor, and the dead DNA (fossils) must remain in the memory substrate to allow for horizontal gene transfer. Evolution's role is to take this already-intelligent baseline and push it towards AGI.
+These rules are organized conceptually into:
 
-RULE 6: THE PRIME DIRECTIVE (THE HUMAN BRAIN PARADIGM): The ultimate, non-negotiable objective of this project is to evolve a biological-style neural network that perfectly mirrors the human brain. It must possess genuine capabilities for learning, reasoning, and long-term memory maintenance. Furthermore, it must achieve this with the extreme energy and resource efficiency of the biological brain (~20 watts). All architectural decisions, physics, and evolutionary pressures must be aligned strictly with this biological model.
+1. **Scientific principles** — how claims are evaluated.
+2. **Substrate principles** — what the computational universe is allowed to do.
+3. **Evolutionary principles** — how life and capability may emerge.
+4. **Research hypotheses** — ideas that must remain falsifiable.
+5. **Engineering principles** — how the project is built and documented.
 
-RULE 7: DEFINITION OF EFFICIENCY: In the context of "minimal energy consumption" (from Rule 6), efficiency is strictly defined by CPU cycle usage and RAM footprint. If two intelligent organisms solve the same problem simultaneously, the organism that achieved the solution using fewer CPU cycles (processing power) and a smaller memory footprint (RAM) is considered superior. The simulation's physics and any guided evolutionary metrics must inherently select for this dual algorithmic and spatial efficiency.
-OPERATIONALISATION (2026-07-10): Efficiency must be selected EMERGENTLY, through honest thermodynamic accounting, never through a top-down score. (a) Every executed operation — neuron membrane update, synapse transmission, plasticity (STDP) update, byte copied, pointer move — must debit its true cycle cost from the organism's energy, so a computationally cheaper brain simply retains more energy and out-survives/out-reproduces a costlier one. Real work must be charged at its real rate: charging a neuron update a fraction of a cycle (or a held synapse nothing) is an arbitrary discount that both violates Rule 17 and silently switches efficiency selection off. (b) It is STRICTLY FORBIDDEN to select for efficiency via a fitness function or metric — e.g. ranking, killing, or reseeding organisms by an age/footprint "IQ" number. That is exactly the top-down selection Rules 5/9 forbid. Efficiency metrics may be COMPUTED FOR OBSERVATION ONLY and must never feed back into who lives, dies, or reproduces. (c) If efficiency pressure is judged too weak, the ONLY permitted remedy is to strengthen the emergent per-cycle / per-byte energy costs (or bring the food/energy economy closer to the real footprint scale), never to add or wire in a metric. (d) Beware activity-BLIND size taxes: the brain paradigm (Rule 11) is many synapses firing rarely, so hold costs must be activity-gated (pay for spikes/updates that actually occur), not a flat penalty on merely HAVING neurons/synapses, which would perversely select against the sparse-parallel substrate we want.
+A research hypothesis must never be silently treated as an established physical law.
 
-RULE 8: Maintain a pristine and organized directory structure. All evolutionary outputs (Checkpoints, Milestones) must be saved in dedicated output directories (e.g., `Milestones/`). Obsolete test scripts and temporary files must be aggressively cleaned up. Never clutter the root or source directories.
+---
 
-RULE 9: THE AUTOTELIC IMPERATIVE. Hardcoded environmental puzzles (e.g., cryptographic molecules) are strictly temporary "training wheels" to ensure baseline Turing Completeness. The final simulation environment MUST NOT contain human-defined tests or explicit rewards. The ultimate physics engine must be a zero-sum ecosystem where the only "problem" is survival against other evolving agents, thermodynamics (entropy), and spatial limitations. The agents must invent their own challenges (e.g., defense, predation, trade, error-correction) and discover solutions entirely unprompted by human design.
+# RULE 1: MANDATORY PROJECT CONTEXT AND DOCUMENT SYNCHRONISATION
 
-RULE 10: AVOID THE REPLICATION TRAP (THE TIERRA TRAP): We must actively engineer the physical laws (not biological rules) of the substrate so that simple, blind replication is NOT the ultimate survival strategy. If the environment rewards ONLY execution speed and spatial overwrite, evolution will produce hyper-optimized mindless viruses, not AGI. The physics engine MUST contain inherent complexities (e.g., non-linear resource processing, complex environmental hazards, or physical laws that reward predictive modeling) that make computational intelligence a thermodynamic necessity for survival, rather than a luxury. **Tectonic Gradient Principle:** Environmental hazards should not cause instantaneous, unpreventable wipes (which prevent learning). Instead, hazards must feature physical gradients (spatial or temporal interpolations) so that organisms have the deep-time physical opportunity to sense the shifting danger and evolve migration strategies.
+At the exact start of any new session or task, before writing code or analyzing implementation logic, the agent MUST explicitly read the current project documentation:
 
-RULE 11: REJECTION OF MODERN ANNs & BRUTE FORCE: The project explicitly rejects the architecture of modern Artificial Neural Networks (ANNs) which require massive, brute-force hardware resources for processing. The human brain achieves 20W efficiency through massive, slow, sparse parallelism, not high-speed sequential execution or matrix multiplication brute-forcing. We must actively penalize architectures that rely on hardware-heavy processing and select for agents that invent lightweight, multi-threaded, cooperative biological sub-routines (e.g., multi-cellular logic clusters) to distribute their cognitive load.
+* `Docs/ARD.md`
+* `Docs/PRD.md`
+* `Docs/Roadmap.md`
+* `Docs/Article_Draft.md`
+* `Docs/Result.md`
 
-RULE 12: ACADEMIC PUBLICATION STANDARDS: Maintain the authoritative academic article detailing the GENESIS project in Docs/Article_Draft.md. This document must be kept at the standard of a **reputable, peer-reviewed scientific journal**. You must NOT write high-level summaries. Instead, you must rigorously incorporate deep empirical data, exact quantitative metrics (e.g., cycle counts, error rates, population dynamics), and comprehensive methodologies extracted directly from `Docs/Result.md`. The paper must follow a strict academic structure (Abstract, Introduction, Methodology, Results with Data, Discussion) to ensure it is ready for formal publication.
+No implementation or architectural analysis may begin until the relevant project context has been loaded.
 
-RULE 13: COMPUTATIONAL VISCOSITY (SQUARE-CUBE LAW OF CODE): To enforce the 20W paradigm and break the Tierra Trap (where agents use bloat/Junk DNA as a physical shield), the physics engine MUST penalize dense code execution. Dense regions of memory execute slower than sparse regions due to computational viscosity (stalling probabilities proportional to local code density). This forces evolution to abandon brute-force single-thread behemoths in favor of highly distributed, parallel execution (e.g. using `OP_SPLIT`) where organisms distribute their cognitive load across multiple sparse threads, mirroring the massive parallelism of the human brain.
+At the end of every task, especially when files are added, deleted, architectures change, experiments complete, or phases advance, the authoritative `Docs/` files MUST be updated to accurately reflect the current state of the codebase and research.
 
-RULE 14: THE RESILIENCE & DIVERSITY PRINCIPLE (ASCENSION AS EMERGENT, NOT ENFORCED): The goal is open-ended, non-regressing *capability* over deep time — but ascension must EMERGE from selection, never be enforced by a top-down ratchet. Total-population extinction must be engineered to be RARE (via standing genetic diversity, spatial refugia, and self-sustaining food economics), not a scheduled event the Ark reverses. The Elite/fossil Ark is retained ONLY as an emergency backstop of last resort, and it must preserve DIVERSITY, not a single lineage: (a) the fossil pool must capture genuinely distinct lineages each era and never freeze onto one; (b) reseeding must recombine multiple diverse fossils (horizontal gene transfer) plus fresh variation, never clone a single "God genome"; (c) the Ark must never be the normal rhythm of the simulation. "No regression" means the long-run trend of capability must not collapse — it does NOT forbid short-term drift, fitness-valley crossing, or partial die-offs, which open-ended evolution requires. Capability is judged by observation-only probes (Rule 9 <-> 6), never fed back into who lives, dies, or reproduces (Rules 5/9). REVISION NOTE (2026-07-10): this supersedes the original "strictly ascending / reseed from THE Elite Genome" wording, whose literal implementation produced a frozen single-lineage monoculture that collapsed on a fixed ~8,640-tick clock with zero ascension across ~70 eras (see Result.md Exp 4) and which violated Rule 10's ban on instantaneous total wipes.
+Obsolete architecture, deleted scripts, superseded policies, and historical approaches must never remain documented as current.
 
-RULE 15: THE NO-ABSTRACTION IMPERATIVE (TRUE HARDWARE REALITY): Never introduce "video game" mechanics (e.g., abstract 2D spatial grids, abstract numerical "food", or arbitrary "poison" flags). The universe is not a virtual board game; it is raw computational hardware. Every environmental feature MUST map directly to physical computer science realities:
-- "Space" is literal RAM (memory addresses).
-- "Energy" is literal CPU execution cycles.
-- "Food" is access to pristine memory blocks or free execution threads.
-- "Poison/Hazards" are literal hardware traps, corrupted memory pointers, or areas with extreme computational viscosity (drag).
-Intelligence must emerge from organisms mastering actual machine resources, not from solving simulated abstract puzzles.
+Historical information must be explicitly marked as historical rather than silently deleted when it is required for scientific provenance.
 
-RULE 16: ALWAYS maintain a highly critical, strict, and rigorous perspective on the entire system architecture, code, and theoretical models. Do not blindly agree with current implementations. Actively identify flaws, biological/physical inaccuracies, performance bottlenecks, and design choices that hinder true open-ended evolution or true intelligence emergence. Challenge assumptions and point out where the simulation acts as a "scripted game" rather than a natural emergent system. Never let a physics inaccuracy slide.
+---
 
-RULE 17: RELATIVITY & NO HARDCODED CONSTANTS: The physics engine must not contain arbitrary hardcoded biological or environmental constants (e.g., specific ATP consumption rates, fixed synaptic STDP learning rates like A_PLUS, or arbitrary 'Food' values). True reality has no magic numbers; everything must be derived dynamically from hardware realities (e.g., energy = exact CPU cycles burned, mass = exact bytes allocated) or must be parameters encoded within the organism's DNA itself so that evolution can optimize them.
-OPERATIONALISATION (2026-07-18): This is a HARD invariant, not an aspiration — we are building an AGI substrate, not a game, and a single unjustified number is the difference. **Every numeric literal in the physics engine must fall into exactly one of three permitted classes, and carry an inline comment naming which and why:** (a) **HARDWARE-DERIVED** — a direct consequence of the substrate (RAM size, `BITS_PER_BYTE=8`, `CELL_STATES=2**8`, `1 cycle` per executed operation, the int8 range/bias `±128`, a window width that IS the number of cells scanned). These are not "constants," they are facts about the machine. (b) **DNA-ENCODED** — a biological/plasticity/behaviour parameter (STDP amplitudes/time-constants, thresholds, resting potentials, mutation rates, the Lamarckian inheritance fraction) that MUST live in the genome so evolution optimises it, never a module-level literal the designer picked. (c) **HONEST TIMESCALE / STRUCTURAL BOUND** — an array capacity (`MAX_ORGANISMS`, `UNIVERSE_MAX_*`) or an experiment's env-tunable timescale, which bound the simulation's memory footprint but do not shape selection; these must be explicit and, where they affect dynamics, derived from a hardware bound. **A bare literal with no derivation and no DNA home is a Rule-17 BUG to be fixed, not tuned** — the fix is to DERIVE it from the substrate or MOVE it into DNA, never to search for a "better" value (searching values is game design). If a magnitude cannot yet be derived or DNA-encoded, it must be logged as explicit TRACKED DEBT in `Roadmap.md` P4 with a concrete derivation plan, never left silently. The 2026-07-11 economy sweep (Exp 7) already retired the four worst offenders (`CYCLES_PER_EAT_GAIN`, `READ_REWARD_SCALE`, the `×8` payout, `SEED_ENERGY`) into the single derived `CELL_STATES`; the remaining neural-physics magnitudes (`STDP_SCALE`, viscosity denominator, `ATP_MAX`, the crowd-window divisor, the Lamarckian 0.5 blend, the indel/dup mutation rates) are being closed the same way (2026-07-18: `SYN_DENSITY_SCALE` removed as dead; `STDP_SCALE`→`BITS_PER_BYTE`; crowd divisor→the actual window width; `ATP_MAX`→`RAM_SIZE×CELL_STATES` = total universe matter-energy; the STDP **step** was `a_plus/STDP_DIV` with `STDP_DIV` a HAND-TUNED knob (4/32/128 searched to stop the bang-bang) — now DERIVED to a one-microstate cap `/(CELL_STATES/STDP_SCALE)` so a full-scale DNA amplitude moves the weight ≤1 of the byte's 256 states/event, graded from the register's own numbers; `STDP_DIV` survives only as an explicit experiment-specific diagnostic softener for harsh moving-optimum probes, never a physics default; `DELAY_BUF`→`BITS_PER_BYTE`). Remaining TRACKED DEBT: the Lamarckian 0.5 consolidation blend (→ DNA-encode). **A key lesson from this sweep (2026-07-18): the derived value is often BETTER than the tuned one — the derived one-microstate STDP step re-tracks the live moving-optimum to ~90% vs the old tuned step's ~70%, because the honest hardware quantum is the physically-right graded scale, not an approximation of it.** When a derived magnitude and survival appear to conflict on a HARSH experimental task, the softening belongs in an explicit diagnostic knob for THAT experiment (labelled as such), never baked into the physics default.
+# RULE 4: MANDATORY SCIENTIFIC SKEPTICISM
 
-RULE 18: FALSIFIABLE FINISH LINE & VALIDATE THE LOAD-BEARING ASSUMPTION FIRST (ANTI-LOOP DISCIPLINE): The project's goal (Rule 6: genuine in-lifetime LEARNING/reasoning/memory at ~20W) must be pursued against a PRE-REGISTERED, QUANTITATIVE definition of success and its falsifying kill-criterion, fixed in `Docs/Ascent.md` BEFORE experiments run — never a moving "not yet." (a) "Ascent"/capability is defined POSITIVELY (a numeric threshold + duration whose crossing means DONE and STOPS the search), plus a KILL criterion whose satisfaction FALSIFIES the current substrate/strategy and forces a substrate change rather than another mechanic. Judge each experiment against these fixed criteria; a run that does not move them is a CLOSED branch, not a prompt to bolt on a new mechanic. (b) Before adding ANY new economy/physics mechanic to increase capability, the LOAD-BEARING ASSUMPTION it rests on must first be empirically validated in isolation. The load-bearing assumption of an evolved-learner project is that the brain LEARNS WITHIN ITS LIFETIME — i.e. an ablation control (plasticity OFF) must survive/comprehend measurably WORSE than plasticity ON. Optimising the reward economy of a system whose learning is unvalidated is tuning the loss of an untrained network: it can only ever "sustain, never ascend." Validate the mind first, then shape the economy that selects for it. (c) This rule exists because Experiments 13–29 formed an open-ended "design loop" (build lever → hit new wall → build next lever) that accumulated mechanics without approaching the goal, precisely because success was never pre-defined and in-lifetime learning was never validated. The remedy is not more cleverness per lever; it is a fixed finish line and correct ordering (assumption-validation before mechanism-addition). Observation-only discipline (Rules 5/9/14) still holds: the finish-line metrics are measured, never fed back into selection.
+The entire system architecture, codebase, physical model, evolutionary model, and theoretical assumptions MUST be treated with a highly critical and rigorous perspective.
 
-RULE 18: FALSIFIABLE FINISH LINE & VALIDATE THE LOAD-BEARING ASSUMPTION FIRST (ANTI-LOOP DISCIPLINE): The project's goal (Rule 6: genuine in-lifetime LEARNING/reasoning/memory at ~20W) must be pursued against a PRE-REGISTERED, QUANTITATIVE definition of success and its falsifying kill-criterion, fixed in `Docs/Ascent.md` BEFORE experiments run — never a moving "not yet." (a) "Ascent"/capability is defined POSITIVELY (a numeric threshold + duration whose crossing means DONE and STOPS the search), plus a KILL criterion whose satisfaction FALSIFIES the current substrate/strategy and forces a substrate change rather than another mechanic. Judge each experiment against these fixed criteria; a run that does not move them is a CLOSED branch, not a prompt to bolt on a new mechanic. (b) Before adding ANY new economy/physics mechanic to increase capability, the LOAD-BEARING ASSUMPTION it rests on must first be empirically validated in isolation. The load-bearing assumption of an evolved-learner project is that the brain LEARNS WITHIN ITS LIFETIME — i.e. an ablation control (plasticity OFF) must survive/comprehend measurably WORSE than plasticity ON. Optimising the reward economy of a system whose learning is unvalidated is tuning the loss of an untrained network: it can only ever "sustain, never ascend." Validate the mind first, then shape the economy that selects for it. (c) This rule exists because Experiments 13–29 formed an open-ended "design loop" (build lever → hit new wall → build next lever) that accumulated mechanics without approaching the goal, precisely because success was never pre-defined and in-lifetime learning was never validated. The remedy is not more cleverness per lever; it is a fixed finish line and correct ordering (assumption-validation before mechanism-addition). Observation-only discipline (Rules 5/9/14) still holds: the finish-line metrics are measured, never fed back into selection.
+The agent MUST NOT blindly agree with existing implementations or project assumptions.
 
+It must actively search for:
+
+* biological inaccuracies;
+* physical inaccuracies;
+* hidden top-down selection;
+* arbitrary constants;
+* unvalidated assumptions;
+* performance bottlenecks;
+* emergent failure modes;
+* evolutionary loopholes;
+* unintended fitness shortcuts;
+* mechanisms that reward complexity without capability;
+* mechanisms that reward replication rather than intelligence;
+* and designs that make the simulation behave like a scripted game rather than an open-ended system.
+
+Every important assumption should be treated as a hypothesis until supported by evidence.
+
+A mechanism that appears to promote intelligence must not be assumed to do so merely because it was designed with that intention.
+
+---
+
+# RULE 5: THE PROTO-COGNITIVE ANCESTOR AND BOTTOM-UP EVOLUTION
+
+The universe may be seeded with a **Proto-Cognitive Ancestor** rather than a completely inert or biologically meaningless blank slate.
+
+The Proto-Cognitive Ancestor may contain minimal, general-purpose primitives necessary for autonomous biological-style existence, including:
+
+* self-maintenance;
+* basic homeostatic regulation;
+* environmental sensing;
+* energy acquisition;
+* adaptive plasticity;
+* replication;
+* and basic damage or failure response.
+
+However, the initial ancestor MUST NOT contain pre-engineered general intelligence.
+
+The following must not be directly hardcoded as completed cognitive capabilities:
+
+* general reasoning;
+* domain-specific problem-solving strategies;
+* prebuilt planning algorithms;
+* prebuilt abstract reasoning;
+* human knowledge;
+* human language;
+* predefined intelligence scores;
+* or a hidden general-purpose solution to the environment.
+
+The purpose of evolution is to transform a minimally viable proto-cognitive substrate into increasingly capable intelligence.
+
+The physics engine MUST NOT contain arbitrary fitness functions or explicit intelligence rewards.
+
+Selection must emerge from the interaction between organisms and the substrate.
+
+If total extinction requires reseeding, reseeding MUST follow Rule 14:
+
+* multiple genuinely distinct fossil lineages must be used;
+* genetic recombination and fresh variation must be introduced;
+* no single lineage may become a permanent "God genome";
+* and the Ark must remain an emergency backstop rather than the normal rhythm of evolution.
+
+Dead genetic material may remain in the memory substrate and may participate in horizontal genetic transfer where permitted by the substrate.
+
+The project must maintain a clear distinction between:
+
+```text
+Permitted:
+initial general-purpose life primitives
+
+Forbidden:
+pre-engineered general intelligence
+```
+
+Any uncertainty about this boundary must be explicitly documented as a research question rather than silently resolved through implementation.
+
+---
+
+# RULE 6: THE PRIME DIRECTIVE — OPEN-ENDED GENERAL INTELLIGENCE
+
+The ultimate objective of GENESIS is to evolve an energy-efficient, open-ended cognitive system capable of genuine:
+
+* in-lifetime learning;
+* memory formation and maintenance;
+* adaptation to novel conditions;
+* generalization;
+* reasoning;
+* goal-directed behavior;
+* and increasingly general intelligence.
+
+The human brain is a major biological reference system and a source of architectural hypotheses.
+
+However, the project MUST NOT assume that a literal structural copy of the human brain is the only path to AGI.
+
+The target is therefore:
+
+```text
+functional and computational convergence toward general intelligence,
+not mandatory structural identity with the human brain.
+```
+
+The project may draw inspiration from:
+
+* sparse temporal activity;
+* massive parallelism;
+* local learning;
+* neuromodulation;
+* long-term memory;
+* hierarchical organization;
+* energy-efficient computation;
+* and other biological principles.
+
+These are hypotheses and design references unless experimentally validated.
+
+No biological architecture is automatically correct merely because it exists in the human brain.
+
+The approximate energy efficiency of the biological brain, commonly associated with the ~20-watt scale, is a reference point for computational efficiency rather than a literal electrical-power requirement imposed on the host machine.
+
+The project must seek increasing capability without allowing computational cost to grow without bound as the only path to progress.
+
+---
+
+# RULE 7: EMERGENT COMPUTATIONAL EFFICIENCY
+
+Computational efficiency MUST be selected through real substrate costs rather than a top-down intelligence or efficiency score.
+
+If two lineages achieve comparable long-term survival and reproductive success under comparable conditions, the lineage achieving that outcome with lower real computational and memory cost demonstrates greater substrate efficiency.
+
+Efficiency must emerge from the economy of the universe.
+
+Every executed operation that consumes real computational resources must incur an honest cost according to the substrate model, including where applicable:
+
+* computation;
+* memory access;
+* memory allocation;
+* data movement;
+* communication;
+* neural state updates;
+* synaptic transmission;
+* plasticity updates;
+* and other measurable operations.
+
+It is forbidden to select organisms by an externally calculated "efficiency score" or "IQ-per-cycle" metric.
+
+Observation-only metrics are permitted.
+
+They MUST NOT directly determine:
+
+* survival;
+* death;
+* reproduction;
+* ranking;
+* reseeding;
+* or genetic inheritance.
+
+If efficiency pressure is too weak, the remedy must be to correct the underlying substrate accounting or resource economy, not to introduce a new top-down score.
+
+Costs must not punish mere existence when the real substrate cost is activity-dependent.
+
+In particular, a sparse-in-time biological-style system must not be penalized simply for possessing inactive structures whose actual physical cost is negligible or appropriately accounted for elsewhere.
+
+---
+
+# RULE 8: EXPERIMENTAL PROVENANCE AND DIRECTORY INTEGRITY
+
+The project must maintain a clean and organized directory structure.
+
+Evolutionary outputs, checkpoints, milestones, and experiment artifacts must be stored in dedicated directories.
+
+However, cleanup MUST NOT destroy scientific provenance.
+
+Any script, configuration, checkpoint, or artifact required to reproduce a numbered experiment or result cited by:
+
+* `Docs/Result.md`;
+* `Docs/Article_Draft.md`;
+* or another authoritative research document
+
+must be preserved or archived.
+
+Dead-end exploratory artifacts may be removed only when their historical value has been evaluated.
+
+Preferred structure:
+
+```text
+Milestones/
+    Experiment-001/
+    Experiment-002/
+    Experiment-003/
+
+Archive/
+    historical experiments
+    superseded implementations
+```
+
+The root and source directories must not become repositories for temporary or obsolete files.
+
+Cleanliness and reproducibility must both be preserved.
+
+---
+
+# RULE 9: THE AUTOTELIC IMPERATIVE
+
+The final evolutionary environment MUST NOT depend on human-authored puzzles, explicit intelligence rewards, or a predefined sequence of challenges.
+
+Temporary artificial tests may be used during development to validate substrate properties, provided they are clearly identified as diagnostic experiments and are not silently treated as the final evolutionary environment.
+
+The final environment must not contain a human-defined:
+
+```text
+problem → solution → reward
+```
+
+pipeline as its fundamental evolutionary mechanism.
+
+Instead, organisms must face consequences arising from the substrate itself, including where applicable:
+
+* resource competition;
+* environmental uncertainty;
+* other organisms;
+* entropy;
+* spatial constraints;
+* computational constraints;
+* failure;
+* persistence;
+* and ecological interactions.
+
+Capability probes are permitted for scientific observation.
+
+They must never become hidden selection mechanisms.
+
+The distinction is fundamental:
+
+```text
+Observation:
+measure what an organism can do.
+
+Selection:
+determine what survives and reproduces.
+
+These must remain separate.
+```
+
+---
+
+# RULE 10: AVOID THE REPLICATION TRAP
+
+The substrate must not permit simple, blind replication and spatial overwrite to become an unlimited path to evolutionary dominance.
+
+If the only meaningful advantage is:
+
+```text
+execute faster
+→ overwrite more space
+→ replicate faster
+```
+
+the system is likely to evolve optimized replicators rather than increasingly capable cognitive organisms.
+
+The substrate must therefore expose organisms to genuine constraints and interactions in which sensing, memory, adaptation, prediction, or other cognitive capabilities may provide real survival advantages.
+
+However, the project MUST NOT assume that adding complexity automatically makes intelligence necessary.
+
+The hypothesis must be empirically tested.
+
+A representative validation should compare, under the same substrate:
+
+```text
+fast blind replicator
+        VS
+sensing/predictive organism
+```
+
+under conditions where the environment contains measurable, non-instantaneous change.
+
+The result must determine whether the claimed intelligence advantage actually exists.
+
+Environmental hazards must not normally be instantaneous, perfectly unpredictable total wipes that provide no physical opportunity for sensing, adaptation, or migration.
+
+Hazards should, where physically justified, possess spatial or temporal gradients that permit organisms to encounter changing conditions and respond.
+
+---
+
+# RULE 11: BIOLOGICAL COMPUTATION AS A HYPOTHESIS, NOT A DOGMA
+
+The project must not assume that modern ANN architectures are either sufficient or optimal for general intelligence.
+
+Dense, synchronous, globally coordinated, brute-force computation must not be allowed to win solely through unlimited scaling if the substrate claims to model constrained computational resources.
+
+However, weighted summation, matrix-like operations, or other mathematical primitives must not be rejected merely because modern ANNs use them.
+
+The relevant question is computational organization.
+
+The project should investigate whether intelligence can emerge through properties such as:
+
+* temporal sparsity;
+* local computation;
+* asynchronous activity;
+* event-driven processing;
+* parallelism;
+* modularity;
+* local plasticity;
+* hierarchical organization;
+* and efficient communication.
+
+The term **sparse** must be used precisely.
+
+Unless explicitly stated otherwise, biological sparsity refers primarily to:
+
+```text
+low activity density over time
+```
+
+not necessarily:
+
+```text
+few structural connections.
+```
+
+A system with many potential connections but relatively few active events may still be temporally sparse.
+
+No architecture should be selected or rejected solely because it resembles or differs from a modern ANN.
+
+Architectures must ultimately compete under comparable physical constraints.
+
+---
+
+# RULE 12: ACADEMIC PUBLICATION AND SCIENTIFIC RECORD
+
+`Docs/Article_Draft.md` is the authoritative academic article describing the GENESIS project.
+
+It must be maintained to the standard expected of a serious peer-reviewed scientific publication.
+
+The article must not be reduced to promotional summaries.
+
+Where appropriate, it must contain:
+
+* precise methodology;
+* reproducible experimental conditions;
+* quantitative measurements;
+* cycle counts;
+* memory usage;
+* error rates;
+* population dynamics;
+* survival statistics;
+* ablation results;
+* limitations;
+* negative results;
+* and falsifying evidence.
+
+The article must distinguish clearly between:
+
+```text
+established result
+hypothesis
+engineering assumption
+historical implementation
+and unresolved question.
+```
+
+When a rule or implementation changes, the current methodology must reflect the current policy.
+
+Superseded approaches may remain in the historical record, but they must be explicitly identified as superseded.
+
+---
+
+# RULE 13: COMPUTATIONAL CONTENTION MUST BE SUBSTRATE-GROUNDED
+
+The project must prevent unlimited brute-force scaling from becoming an unbounded path to dominance where such scaling contradicts the modeled substrate.
+
+However, the system MUST NOT assume that dense code or dense memory is inherently slower.
+
+In real computational systems, density may sometimes improve locality and performance.
+
+Therefore, any density-dependent computational cost must arise from measurable substrate constraints such as:
+
+* memory bandwidth contention;
+* cache contention;
+* shared execution-resource contention;
+* communication bottlenecks;
+* synchronization cost;
+* or another explicitly modeled physical limitation.
+
+A formula whose sole purpose is to make dense computation slower in order to force biological-style sparsity is not automatically a physical law.
+
+If a contention model contains authored parameters or curves that cannot be derived from the substrate, those parameters must be:
+
+1. scientifically justified;
+2. experimentally validated;
+3. explicitly identified as model assumptions;
+4. or recorded as tracked technical debt.
+
+The system must never hide a designer-imposed selection pressure behind the word "physics."
+
+---
+
+# RULE 14: RESILIENCE, DIVERSITY, AND EMERGENT ASCENSION
+
+Capability must emerge from selection rather than from a top-down evolutionary ratchet.
+
+Total population extinction should be rare where the substrate permits:
+
+* standing genetic diversity;
+* spatial refugia;
+* ecological resilience;
+* and self-sustaining resource dynamics.
+
+The fossil or Elite Ark is an emergency backstop only.
+
+It must not become the normal rhythm of the simulation.
+
+If reseeding is required:
+
+1. multiple genuinely distinct lineages must be selected;
+2. no single lineage may dominate the fossil pool by policy;
+3. genetic recombination must occur;
+4. fresh variation must be introduced;
+5. reseeding must not clone a single "God genome."
+
+Short-term regression, drift, partial die-offs, and fitness-valley crossings are permitted and may be necessary for open-ended evolution.
+
+"No regression" must therefore refer to long-run capability potential, not the prohibition of every short-term decline.
+
+Capability measurements remain observation-only.
+
+They must never directly determine who survives, dies, reproduces, or is reseeded.
+
+The Ark must preserve diversity, not enforce a capability ratchet.
+
+---
+
+# RULE 15: SUBSTRATE-GROUNDED ABSTRACTION
+
+The universe must not introduce arbitrary game mechanics that create free energy, free information, or free computational capability.
+
+Abstract entities may exist in the simulation only when their behavior is reducible to measurable substrate operations, resources, constraints, or processes.
+
+Every resource and environmental feature must ultimately correspond to something measurable in the substrate.
+
+The simulation may model concepts such as:
+
+* memory;
+* execution capacity;
+* bandwidth;
+* latency;
+* error;
+* contention;
+* persistence;
+* storage;
+* communication;
+* and other computational resources.
+
+However, the project must not pretend that an analogy is a literal physical identity.
+
+For example:
+
+```text
+RAM is not literally geographical space.
+CPU cycles are not literally thermodynamic energy.
+Free memory is not literally biological food.
+```
+
+They may serve as modeled substrate resources only when their rules are explicitly defined and measurable.
+
+The fundamental constraint is:
+
+```text
+No free energy.
+No free information.
+No free memory.
+No free computation.
+No free capability.
+```
+
+A resource must have a real cost, limitation, or conservation relationship within the modeled substrate.
+
+The project should investigate whether heterogeneous substrate resources can naturally produce specialization, niche differentiation, cooperation, and trade.
+
+Such heterogeneity must be grounded in genuine substrate differences where possible, such as:
+
+* latency;
+* bandwidth;
+* error rate;
+* execution availability;
+* memory locality;
+* or other measurable constraints.
+
+Artificial resources must not be introduced merely to manufacture desired social behaviors.
+
+---
+
+# RULE 17: NO ARBITRARY SELECTION-RELEVANT CONSTANTS
+
+The physics engine must not contain arbitrary, unexplained, silently tuned parameters that shape selection.
+
+A numeric parameter must be classified as one of the following:
+
+### (A) HARDWARE-DERIVED
+
+A direct consequence of the modeled substrate.
+
+Examples may include:
+
+* bit width;
+* byte width;
+* address space;
+* representable numeric ranges;
+* measured hardware limits;
+* or values directly derived from substrate structure.
+
+### (B) DNA-ENCODED
+
+A biological, adaptive, plasticity, or behavioral parameter that evolution is intended to optimize.
+
+Examples may include:
+
+* learning rates;
+* thresholds;
+* time constants;
+* mutation rates;
+* behavioral tendencies;
+* and other evolvable biological parameters.
+
+### (C) STRUCTURAL OR ENGINEERING BOUND
+
+A declared resource allocation or capacity limit, such as:
+
+* maximum population;
+* allocated memory;
+* experiment duration;
+* array capacity;
+* or other engineering constraints.
+
+These must be explicitly disclosed as resource budgets and must not be misrepresented as fundamental physical laws.
+
+### (D) MATHEMATICAL OR LOGICAL INVARIANT
+
+A value required by the definition of an operation or mathematical structure rather than chosen as a selection pressure.
+
+Examples include values arising directly from:
+
+* Boolean logic;
+* mathematical identity;
+* indexing;
+* sign;
+* representation;
+* or operation semantics.
+
+### (E) EMPIRICAL MODEL PARAMETER
+
+A parameter that cannot yet be derived from hardware or encoded in DNA but is necessary for an explicitly stated scientific model.
+
+Such a parameter must:
+
+* be documented;
+* have a justification;
+* be exposed for experimental analysis;
+* never be silently tuned;
+* and be recorded as tracked debt if the project intends to replace it with a more fundamental derivation.
+
+A number is not automatically invalid merely because it is a number.
+
+The actual prohibition is:
+
+```text
+unjustified
+undocumented
+silently tuned
+selection-relevant parameters
+```
+
+Searching for a convenient value until evolution produces a desired result is not a valid substitute for physical derivation.
+
+When a derived physical magnitude conflicts with performance on a harsh diagnostic experiment, the default physics must not be silently softened.
+
+Any diagnostic softening must remain explicitly scoped to that experiment and must never become a hidden production selection mechanism.
+
+---
+
+# RULE 18: FALSIFIABLE FINISH LINE AND ANTI-DESIGN-LOOP DISCIPLINE
+
+The project must maintain a pre-registered, quantitative definition of success and a falsifying kill criterion in:
+
+```text
+Docs/Ascent.md
+```
+
+before experiments intended to evaluate ascent are run.
+
+The project must not continue indefinitely under a moving definition of success.
+
+The finish line must define:
+
+* measurable capability thresholds;
+* required duration or persistence;
+* reproducible evaluation conditions;
+* and a clear criterion that constitutes success.
+
+The kill criterion must define when the current substrate or strategy has been falsified sufficiently to require a fundamental change rather than another incremental mechanic.
+
+A failed experiment must not automatically justify adding another mechanism.
+
+Before adding a new economy, physics mechanic, or selection-relevant feature to improve capability, the load-bearing assumption behind the proposed change must first be tested in isolation whenever practical.
+
+For an evolved learner, the central load-bearing assumption is:
+
+```text
+the organism can learn during its lifetime.
+```
+
+Therefore, an appropriate ablation must compare a system with plasticity enabled against an otherwise comparable system with the relevant learning mechanism disabled.
+
+If lifetime learning is not demonstrated, repeatedly optimizing the survival economy around the organism is premature.
+
+The correct sequence is:
+
+```text
+Validate the mind.
+        ↓
+Validate that learning affects behavior.
+        ↓
+Validate that capability generalizes.
+        ↓
+Only then modify the economy to select for increasingly capable minds.
+```
+
+A run that does not move the pre-registered finish-line metrics is a closed research branch unless new evidence justifies revising the scientific hypothesis itself.
+
+The project must not enter an endless loop of:
+
+```text
+new mechanic
+→ new failure
+→ new mechanic
+→ new failure
+```
+
+without a falsifiable objective.
+
+All finish-line metrics remain observation-only and must never feed back into selection.
+
+---
+
+# OPEN RESEARCH QUESTIONS
+
+The following are genuine research questions rather than silently resolved assumptions:
+
+## 1. Proto-Cognitive Ancestor Boundary
+
+What is the maximum amount of pre-engineered structure permitted at genesis before the system ceases to be a genuinely evolutionary intelligence experiment?
+
+The current default is:
+
+```text
+general-purpose survival primitives:
+permitted
+
+pre-engineered general intelligence:
+forbidden
+```
+
+This boundary must remain explicit and reviewable.
+
+---
+
+## 2. Human Brain Convergence
+
+The human brain is a reference system, not a mandatory blueprint.
+
+The project must determine experimentally which biological principles are:
+
+* essential;
+* useful;
+* incidental;
+* or replaceable.
+
+Functional convergence is a valid success path even when structural convergence does not occur.
+
+---
+
+## 3. Substrate Heterogeneity
+
+A substrate consisting only of one fungible computational currency and one homogeneous memory resource may limit the emergence of:
+
+* specialization;
+* trade;
+* cooperation;
+* niche differentiation;
+* and ecological complexity.
+
+Before introducing artificial resources, the project should determine whether naturally modeled heterogeneous computational resources can produce these effects.
+
+---
+
+## 4. Computational Contention
+
+The project must determine whether computational contention can be derived from actual shared-substrate constraints rather than imposed as an authored density penalty.
+
+---
+
+# CORE PROJECT PRINCIPLE
+
+GENESIS must not be designed as a machine that is told how to become intelligent.
+
+It must be designed as a substrate in which:
+
+```text
+life can persist,
+variation can accumulate,
+learning can occur,
+memory can matter,
+prediction can provide real advantage,
+cooperation can emerge,
+failure has consequences,
+and intelligence can become a genuine evolutionary solution.
+```
+
+The project's responsibility is not to guarantee intelligence.
+
+Its responsibility is to create a scientifically defensible substrate in which intelligence, if it is a genuine solution to the constraints of the universe, has the opportunity to emerge.
+
+The project must continuously distinguish:
+
+```text
+what was designed,
+what was assumed,
+what was measured,
+what emerged,
+and what was falsified.
+```
+
+Anything that cannot be distinguished between these categories is a threat to the scientific validity of the project.

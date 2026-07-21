@@ -2454,3 +2454,49 @@ on a 10 %-full scroll, easy text is plentiful and nothing forces an organism up 
 The frontier is now precise: ascension needs **scarcity/competition** (a carrying capacity below the
 array cap) so that cracking harder symbols is the only way to eat — the load-bearing lever, and the
 next research question in `Roadmap.md`, alongside a non-lethal peer coupling (Exp 11's open finding).
+
+---
+
+## 🧪 Experiment 47 — SCRATCH Retention Live Probe: Rule-18 Load-Bearing Assumption for Crit-A (2026-07-21)
+
+Exp 46 proved that **external addressable RAM (`GENESIS_SCRATCH`)** + the validated STDP_TARGET learner **unlocks depth-2/3 working memory** in a controlled sandbox (delay-N task, pinned target): STDP_TARGET rises 51%→68% (N=2) and 70–84% (N=3) vs NOLEARN floor ~49%. But Exp 46 left the **Rule-18 load-bearing assumption** open: does this depth-2 addressing circuitry get *selected* in a LIVE economy, or does uniform reading income (no depth-band reward) cause selection to prune it?
+
+**Method (`tests/scratch_retention_live_probe.py`, 3-arm A/B/C probe on the real `world_tick_numba` kernel):**
+
+| Arm | Config | Label |
+|-----|--------|-------|
+| A | `GENESIS_NOLEARN=1` | Control (no plasticity) |
+| B | `GENESIS_STDP_TARGET=1 GENESIS_DELAY=1 GENESIS_DELAY_N=2` | STDP_TARGET + DELAY (no SCRATCH fabric) |
+| C | `GENESIS_STDP_TARGET=1 GENESIS_DELAY=1 GENESIS_DELAY_N=2 GENESIS_SCRATCH=1` | Full SCRATCH fabric |
+
+All: `GENESIS_ECONOMY=books`, `GENESIS_BOOK_NAME=00_Graded`, `GENESIS_ARK=0` (terminal), 1000 ticks horizon.
+
+**Observation-only metrics (Rules 9↔6):**
+
+| metric | ARM-A (NOLEARN) | ARM-B (STDP_TARGET+DELAY) | ARM-C (STDP_TARGET+DELAY+SCRATCH) |
+|--------|-----------------|---------------------------|-----------------------------------|
+| final pop | 247 | 252 | 195 |
+| mean energy | 43,411 | 40,099 | 33,451 |
+| brain neurons | 44 | 44 | 76 |
+| brain synapses | 31 | 31 | 95 |
+| recall sensors (median) | 0 | 0 | **32** |
+| recall→vocal synapses (median) | 0 | 0 | **64** |
+| delay-2 accuracy (final) | 0.0% | 0.3% | 0.4% |
+
+**Key findings:**
+
+1. **SCRATCH fabric is RETAINED perfectly** — ARM-C maintains all 32 recall sensors and 64 recall→vocal synapses at exactly the seeded configuration across 1000 ticks. No mutation drift observed. The fabric survives neutrally.
+
+2. **But the addressing circuit is NOT potentiated** — All 64 recall→vocal synapses remain at the seeded silent weight (128). Slot-2→vocal weights do NOT grow above slot-0 (echo trap). The learner does NOT preferentially strengthen the correct delay-2 route.
+
+3. **Delay-2 accuracy collapses in both ARM-B and ARM-C** — Both spike briefly at tick 50 (~13% and ~12.5%) then collapse to ~0.3–0.4%. The DELAY ring is populated (organisms walk text) but STDP_TARGET cannot discover the slot-2 address without a depth-band reward signal.
+
+4. **Metabolic tax without income** — ARM-C mean energy (33K) < ARM-B (40K) < ARM-A (43K). The 32 extra sensor reads/tick/organism cost ATP but earn no marginal reading gain — uniform income pays the same per-byte regardless of prediction depth.
+
+5. **Brain growth is pure seed overhead** — ARM-C has 72% more neurons and 206% more synapses due to the SCRATCH seed. The extra tissue is maintained but not elaborated by selection.
+
+**Rule-18 Verdict: The Crit-A load-bearing assumption is FALSE.**
+
+The SCRATCH depth-2 addressing circuitry is **retained but not selected** under the current uniform books economy. Crit-A (C(t) ≥25% sustained rise) REQUIRES an economy that specifically rewards depth-2 context. The current uniform reading income (gain = net_bits/8 × CELL_STATES, no depth multiplier) cannot drive the selection pressure needed to evolve/maintain the addressing circuit.
+
+**Next step:** Implement a depth-band reward (e.g., gain multiplier for delay-N solves) or a peer-economy prediction market where depth-2 context predicts neighbour behaviour — a genuine scarce resource that pays for the metabolic cost of maintaining and addressing external memory.

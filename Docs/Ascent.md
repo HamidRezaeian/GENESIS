@@ -612,6 +612,42 @@ delay / two-operand grounded computation) so selection drives the addressing cir
 the ≥25 % sustained RISE — the still-unmet criterion A.**
 
 ---
+## 4m. RESULT — Experiment 47: SCRATCH retention live probe — Rule-18 validation for Crit-A load-bearing assumption (2026-07-21).
+
+§4l resolved the substrate's *capacity* for depth-2 working memory (external addressable RAM + STDP_TARGET learns to address it). The **load-bearing assumption for Crit-A** is that a **live economy will select for this capability** — that the addressing circuit (slot-N→vocal) will be potentiated and retained under real selection. This experiment tests that assumption directly on the live books economy.
+
+**Design (observation-only, Rules 9↔6, no selection pressure added).** Three-arm A/B/C probe on `00_Graded`, Ark OFF, 1000 world-ticks:
+- **ARM-A (control):** `GENESIS_NOLEARN=1` — no plasticity at all.
+- **ARM-B:** `GENESIS_STDP_TARGET=1 GENESIS_DELAY=1 GENESIS_DELAY_N=2` — learner + delay ring, but NO SCRATCH recall sensors (the brain must solve delay-2 from leaky membrane only).
+- **ARM-C:** `GENESIS_STDP_TARGET=1 GENESIS_DELAY=1 GENESIS_DELAY_N=2 GENESIS_SCRATCH=1` — full SCRATCH fabric seeded (32 recall sensors slots 0–3 × 8 bits, each silent→vocal bit, doubled; teaching signal extended to recall→vocal routes per §4l).
+
+All arms use identical environment (books, contiguous scroll, same seed). Metrics per epoch: population, mean energy, brain size (neurons/synapses), recall sensor count per org, recall→vocal synapse count per org, delay-2 solve accuracy (proxy from read-log type-3 fraction).
+
+**Key results (live, 1000 ticks):**
+
+| metric | ARM-A (NOLEARN) | ARM-B (STDP_TARGET+DELAY) | ARM-C (full SCRATCH) |
+|---|---|---|---|
+| final population | 247 | 252 | 195 |
+| mean energy | 43 411 | 40 099 | 33 451 |
+| brain neurons | 44 | 44 | 76 |
+| brain synapses | 31 | 31 | 95 |
+| recall sensors (median) | 0 | 0 | **32.0 (stable)** |
+| recall→vocal synapses (median) | 0 | 0 | **64.0 (stable)** |
+| delay-2 accuracy (final) | 0.0 % | 0.3 % | 0.4 % |
+
+**Critical findings:**
+
+1. **SCRATCH fabric is RETAINED but NOT potentiated.** ARM-C maintains all 32 recall sensors and 64 recall→vocal synapses perfectly stable across 1000 ticks (no mutation drift). The seeded circuit survives neutrally.
+
+2. **Addressing circuit is NOT strengthened.** The 64 recall→vocal synapses stay at exactly the seeded weight 128 (silent). The slot-2 route (the correct delay-2 answer) is **not potentiated above the echo-trap slot-0 route**. The learner does not discover the addressing solution under live selection.
+
+3. **Delay-2 accuracy collapses to ~0.4 % in BOTH ARM-B and ARM-C.** The STDP_TARGET teaching signal is present but the uniform reading income (gain = `net_bits/8 × CELL_STATES`, no depth-band multiplier) pays the same per-byte regardless of prediction depth. The metabolic cost of the SCRATCH sensors (32 extra reads/tick) is not offset by any marginal reward, so selection has no pressure to solve depth-2.
+
+4. **Energy economy confirms the mechanism.** ARM-C mean energy (33K) < ARM-B (40K) < ARM-A (43K). The SCRATCH overhead is a net metabolic tax with no compensating income.
+
+**Rule-18 verdict: the load-bearing assumption is FALSE.** The substrate *can* do depth-2 (Exp 46 sandbox), but the live books economy **does not select for it** because the reward function is depth-agnostic. Uniform reading income + metabolic cost of addressing = the addressing circuit is neutral-to-negative and is not driven by selection.
+
+**Implication for Crit-A:** The ≥25 % sustained C(t) rise **cannot be achieved by economy shaping alone** on the current books substrate. The addressing circuit needs a **depth-band reward** (e.g., gain multiplier for delay-N solves, or a peer-economy where depth-2 context predicts neighbour behaviour). This is a *mechanism* requirement, not a *market* requirement — the teaching signal (STDP_TARGET) already exists; the economy must *pay* for its use. Next step (pre-registered): implement a depth-rewarded live economy (e.g., grounded foraging with copy-at-a-delay income, or peer prediction where the target is a deterministic function of neighbour state requiring held context).
 
 ## 5. Strategic reframe (2026-07-18, user-directed): grounded cognition, NOT human-language tuition
 
