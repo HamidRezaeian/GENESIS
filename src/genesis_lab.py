@@ -1150,6 +1150,30 @@ def _stock_food_patches(target_food, offset=0):
     return int(np.count_nonzero(g_ram == 0x55))
 
 
+def _stock_shelter_patches(target_shelter=1500, offset=0):
+    """Exp 62 Grounded Heterogeneous Substrate: stock Shelter Canvas cells (0xAA) in RAM
+    for cooperative stigmergy, shelter construction, and zero-sum trade energy transfers."""
+    present = int(np.count_nonzero(g_ram == 0xAA))
+    deficit = int(target_shelter) - present
+    pw = max(1, GROUNDED_PATCH_BYTES)
+    guard = 0
+    while deficit >= pw and guard < 10000:
+        guard += 1
+        raw_anchor = random.randint(0, RAM_SIZE - pw - 1)
+        anchor = (raw_anchor + int(offset)) % max(1, RAM_SIZE - pw)
+        ok = True
+        for k in range(pw):
+            if g_ram[anchor + k] != 0x00:
+                ok = False
+                break
+        if not ok:
+            continue
+        for k in range(pw):
+            g_ram[anchor + k] = 0xAA
+        deficit -= pw
+    return int(np.count_nonzero(g_ram == 0xAA))
+
+
 def _lay_library(at=None):
     """Lay the reading scroll: the WHOLE ordered curriculum (contiguous) when g_curriculum is on, else
     the single BOOK_NAME scroll (byte-identical to the pre-2026-07-18 behaviour when off). Both are laid
@@ -1337,12 +1361,10 @@ def sim_loop():
                 return random.randint(0, (RAM_SIZE // LONG_JUMP_STRIDE) - 1) * LONG_JUMP_STRIDE
             return random.randint(0, RAM_SIZE - 1)
         if GROUNDED:
-            # Exp 42: replenish the food field as DENSE PATCHES back toward the standing target (bounded
-            # carrying capacity), not isolated cells — a forager sits on a patch and eats cell-after-cell
-            # (high intake/move = break-even, the Exp-11 contiguity fix on the food axis). Top up only when
-            # the field has been grazed below target, and only every restock cadence (amortised).
+            # Exp 42 & Exp 62: replenish food (0x55) and shelter canvas (0xAA) as DENSE PATCHES
             if (global_time % max(1, BOOK_RESTOCK_EVERY)) == 0:
                 _stock_food_patches(int(os.environ.get("GENESIS_GROUNDED_FOOD", "3000")))
+                _stock_shelter_patches(int(os.environ.get("GENESIS_GROUNDED_SHELTER", "1500")))
         else:
             for _ in range(int(spawn_count)):
                 idx = _food_idx()

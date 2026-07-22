@@ -136,10 +136,11 @@ function onState(s) {
             let r = 8, g = 8, b = 12;
 
             if (v === 0x55) { r = 52; g = 211; b = 153; }
+            else if (v === 0xAA) { r = 56; g = 189; b = 248; }
             else if (v === 0xFF) { r = 244; g = 63; b = 94; }
             else if (v >= 32 && v <= 126) { r = 167; g = 139; b = 250; }
 
-            if (window._hl && window._hl !== (v === 0x55 ? 'energy' : v === 0xFF ? 'trap' : v >= 32 && v <= 126 ? 'book' : null)) {
+            if (window._hl && window._hl !== (v === 0x55 ? 'energy' : v === 0xAA ? 'shelter' : v === 0xFF ? 'trap' : v >= 32 && v <= 126 ? 'book' : null)) {
                 r = r >> 3; g = g >> 3; b = b >> 3;
             }
 

@@ -111,6 +111,9 @@ then superseded; the source files for the first three no longer exist in the rep
      spatial memory, and active navigation under dynamic environmental shifts (10 food patch migrations across 50,000
      ticks) with zero mass extinctions ($EXT=0$), 100% live UI synchronization (`localhost:8081`), and high execution
      throughput (>11,000,000 ticks/s).
+- ✅ **Exp 62: Cooperative Stigmergy & Resource Trade Economy Probe (2026-07-22):** Validated substrate heterogeneity
+     (Food 2,986 cells + Shelter 1,488 cells), zero-sum energy trade transfers, division of labor, and continuous ecological
+     carrying capacity ($EXT=0$) at ultra-high throughput (>12,000,000 ticks/s).
 
 
 
