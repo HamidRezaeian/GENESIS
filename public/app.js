@@ -182,6 +182,8 @@ function onState(s) {
                 if (hideFails()) el.style.display = 'none';
             } else if (ev.type === 'predict') {
                 tprint('› Org #' + ev.org + " predicted '" + ev.char + "' ★", 't-out');
+            } else if (ev.type === 'peer_signal') {
+                tprint('› Org #' + ev.org + ' Emergent Signal: ' + ev.msg, 't-out');
             }
         });
     }
@@ -553,6 +555,21 @@ if (togNiche) {
             const grounded = document.getElementById('toggle-grounded') ? document.getElementById('toggle-grounded').checked : false;
             ws.send(JSON.stringify({ type: 'set_substrate', digestion: digestion, grounded: grounded, niche: e.target.checked }));
             tprint('› Restarting engine to apply NICHE economy...', 't-sys');
+        }
+    });
+}
+
+// ── Oracle Terminal Input Handler (Exp 66) ───────────────────
+const termIn = document.getElementById('term-in');
+if (termIn) {
+    termIn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && termIn.value.trim()) {
+            const txt = termIn.value.trim();
+            if (ws && ws.readyState === 1) {
+                ws.send(JSON.stringify({ type: 'broadcast', text: txt }));
+                tprint('› Human Broadcast: ' + txt, 't-sys');
+            }
+            termIn.value = '';
         }
     });
 }
