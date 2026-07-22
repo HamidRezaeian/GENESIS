@@ -99,7 +99,7 @@ function onState(s) {
         setTxt('m-hact', m.hact != null ? m.hact.toFixed(2) : '—');
         setTxt('m-sensors', m.sensors);
         setTxt('m-actuators', m.actuators);
-        setTxt('m-delay-n', m.delay_n || 0);
+        setTxt('m-scratch', m.scratch || 0);
         if (s.universe_n !== undefined) setTxt('m-brainn', s.universe_n.toLocaleString());
     }
     // Feature-flag reflection: show which engine modes are live, hide metrics with no active flag

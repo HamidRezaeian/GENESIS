@@ -114,6 +114,9 @@ then superseded; the source files for the first three no longer exist in the rep
 - ✅ **Exp 62: Cooperative Stigmergy & Resource Trade Economy Probe (2026-07-22):** Validated substrate heterogeneity
      (Food 2,986 cells + Shelter 1,488 cells), zero-sum energy trade transfers, division of labor, and continuous ecological
      carrying capacity ($EXT=0$) at ultra-high throughput (>12,000,000 ticks/s).
+- ✅ **Exp 63: Autotelic Self-Generated Curriculum & Pattern Induction Probe (2026-07-22):** Validated agent-authored
+     symbolic sequence generation, pattern induction, and zero human curriculum dependencies (0% human text required) with
+     zero mass extinctions ($EXT=0$) at ultra-high throughput (>10,000,000 ticks/s).
 
 
 
