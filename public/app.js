@@ -504,10 +504,12 @@ function applyFlags(f) {
     if (bar) {
         const tags = [];
         if (f.peer) tags.push('PEER');
+        if (f.redqueen) tags.push('RED-QUEEN');
         if (f.evosense) tags.push('EVO-SENSE');
         if (f.evoact) tags.push('EVO-ACT');
         if (f.niche) tags.push('NICHE-ECON');
         if (f.digestion) tags.push('DIGESTION');
+        if (f.wmem) tags.push('WMEM-LATCH');
         if (f.grounded) tags.push('GROUNDED');
         if (f.remap) tags.push('REMAP');
         if (f.delay) tags.push('DELAY (N=' + (f.delay_n || 2) + ')');

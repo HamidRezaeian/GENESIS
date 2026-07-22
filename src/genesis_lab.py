@@ -1542,6 +1542,8 @@ def sim_loop():
                         "curriculum": bool(g_curriculum),
                         "delay": bool(DELAY),
                         "scratch": bool(SCRATCH),
+                        "redqueen": bool(RED_QUEEN),
+                        "wmem": bool(WMEM),
                         "delay_n": int(DELAY_N),
                     },
                 }
