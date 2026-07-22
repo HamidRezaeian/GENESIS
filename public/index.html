@@ -91,35 +91,7 @@
                     <div class="chart-wrap"><canvas id="extinctionChart"></canvas></div>
                 </div>
 
-                <!-- Environment Controls -->
-                <div class="panel">
-                    <div class="section-head"><h2>Environment</h2></div>
-                    <div class="control-row">
-                        <label class="control-label">Energy Rate</label>
-                        <span class="mono" id="energy-rate-val">10.0%</span>
-                    </div>
-                    <input type="range" id="energy-rate-slider" class="slider" min="0" max="1000" value="100" step="1">
-                </div>
 
-                <!-- Library -->
-                <div class="panel">
-                    <div class="section-head"><h2>Library <span class="dim" id="lib-role">(survival scaffold)</span></h2></div>
-                    <select id="library-select" class="select"><option value="">Loading…</option></select>
-                    <button class="btn btn-primary btn-full" id="btn-inject-lib">Inject Selected (contiguous)</button>
-                    <button class="btn btn-ghost btn-full" id="btn-inject-seq">Inject Full Curriculum</button>
-                    <label class="toggle-row">
-                        <input type="checkbox" id="auto-inject-toggle" checked>
-                        <span>Auto-inject (keep scroll restocked)</span>
-                    </label>
-                    <label class="toggle-row">
-                        <input type="checkbox" id="curriculum-toggle">
-                        <span>Full curriculum (whole ladder, not one book)</span>
-                    </label>
-                    <div class="input-row">
-                        <input type="text" id="custom-book-input" class="input" placeholder="Custom text…">
-                        <button class="btn btn-primary" id="btn-inject-custom">Inject</button>
-                    </div>
-                </div>
 
                 <!-- Cognition (live engine metrics) -->
                 <div class="panel" id="cognition-panel">

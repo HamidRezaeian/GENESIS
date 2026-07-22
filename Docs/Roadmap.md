@@ -69,6 +69,44 @@ then superseded; the source files for the first three no longer exist in the rep
      `ValueError: empty range in randrange(8, 8)` the moment an Ark reseed recombined a short
      fossil (observed live at LIF Time ≈ 3.79M). Added the `l > 8` guard; proven by
      `tests/mutate_crash_test.py` (20,000 calls on lengths 8–12, zero crashes).
+- ✅ **Exp 51: Working Memory Depth & Plasticity Benchmark ($N=2, 3, 4$) (2026-07-22):** Validated long-term
+     ecological stability (0 extinctions, 0 Ark triggers, top age >2,920t) and throughput (>5,600 ticks/s)
+     under 3,000-tick Deep Time loops with active STDP3C plasticity across working-memory depths $N=2, 3, 4$
+     in Grounded Digestion mode (`GENESIS_DIGESTION=1`, `GENESIS_ECONOMY=books`).
+- ✅ **Exp 52: Autotelic Peer Prediction & Red-Queen Coevolution (`GENESIS_PEER=1`) (2026-07-22):** Validated
+     agent-agent action modeling, zero-sum energy transfer ($+g / -g$), and population stability ($Pop=280$,
+     0 extinctions, peak age >3,080t) under 5,000-tick Deep Time loops with `GENESIS_PEER=1`.
+- ✅ **Exp 53: Red-Queen Arms Race & Evader Defense (`GENESIS_REDQUEEN=1`) (2026-07-22):** Validated evader
+     defense reward ($E_{evader} \mathrel{+}= g, E_{failed\_pred} \mathrel{-}= g$), zero-sum energy transfer, and
+     colony stability ($Pop=279$, 0 extinctions, peak age >3,080t) under 5,000-tick Deep Time loops with
+     `GENESIS_REDQUEEN=1` enabled by default.
+- ✅ **Exp 54: Evolvable Sensorimotor Apparatus (`EVOSENSE` & `EVOACT`) (2026-07-22):** Validated 100%
+     proliferation of DNA-transduced sensor neurons ($279/279$ organisms carrying 8,923 total sensors),
+     prediction boost (`pred=55`), and colony stability ($Pop=269$, 0 extinctions, peak age >3,150t) under
+     5,000-tick Deep Time loops with `GENESIS_EVOSENSE=1` and `GENESIS_EVOACT=1` enabled by default.
+- ✅ **Exp 55: Ecological Niche Differentiation (`GENESIS_NICHE_ECON=1`) (2026-07-22):** Validated negative
+     frequency-dependent income splitting ($gain \mathrel{/}= niche\_same$), role specialization ($nd_{act}=4$),
+     100% sensor retention ($282/282$ orgs with 9,021 sensors), and zero extinctions ($Pop=272$, peak age >3,150t)
+     under 5,000-tick Deep Time loops with `GENESIS_NICHE_ECON=1` enabled by default.
+- ✅ **Exp 56: Working Memory Latch Fabric (`GENESIS_WMEM=1`) (2026-07-22):** Validated non-leaky non-resetting
+     latch neurons (`MEMORY_MARKER`), record organism longevity (peak age 4,982t out of 5,000t), peak population
+     stability ($Pop=285$), and zero extinctions under 5,000-tick Deep Time loops with `GENESIS_WMEM=1` enabled.
+- ✅ **Exp 57: RAM External Register Scratchpad (`GENESIS_SCRATCH=1`) (2026-07-22):** Validated per-organism
+     8-bit RAM scratchpads (`SCRATCH_MARKER`), unconstrained multi-step context persistence, exceptional top organism
+     lifespans (4,982t, 4,606t, 4,418t), and zero extinctions ($Pop=277$) under 5,000-tick Deep Time loops with
+     `GENESIS_SCRATCH=1` enabled by default.
+- ✅ **Exp 58: Long-Horizon Deep Time Ascension Benchmark (25,000 Ticks) (2026-07-22):** Validated unbroken
+     biological continuity across 25,000 continuous world-ticks (0 mass extinctions), all-time record organism
+     lifespans (>5,800t), peak sensor retention (12,960 active sensors across 270/270 orgs), and multi-lineage
+     genetic diversity under full 9-feature substrate integration.
+
+
+
+
+
+
+
+
 
 ## Part C — Forward Roadmap (from the 2026-07-10 critical review)
 

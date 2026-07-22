@@ -26,7 +26,7 @@ FOOD_SCAN_RADIUS = 16
 # then carry local TEXT density, and the ancestor's existing FOOD_AHEAD->JMP_FWD / FOOD_BEHIND->
 # JMP_BCK wiring becomes a text-seeking reflex for free — reading as a navigable SKILL (Rule 10),
 # not a random-walk lottery. Food mode is unchanged (scans 0x55 exactly as before).
-SEEK_TEXT = os.environ.get("GENESIS_ECONOMY", "food").lower() == "books"
+SEEK_TEXT = os.environ.get("GENESIS_ECONOMY", "books").lower() == "books"
 
 # PEER PREDICTION (autotelic, Rules 9/6) — compile-time gate baked into world_tick_numba. When on,
 # an organism that vocalizes the byte a NEIGHBOUR is emitting reclaims the matched bits' state-space
@@ -34,7 +34,7 @@ SEEK_TEXT = os.environ.get("GENESIS_ECONOMY", "food").lower() == "books"
 # problems from agent-agent competition, no human curriculum. Read inside the njit as a constant, so
 # it is DEAD-CODE-ELIMINATED when off (food/books pay nothing). genesis_lab keys NUMBA_CACHE_DIR on
 # it so the peer and non-peer kernels never share a compiled cache.
-PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
+PEER_PREDICT = os.environ.get("GENESIS_PEER", "1") == "1"
 
 # RED-QUEEN (autotelic prey-defence, Rules 9/6) — the OTHER half of the peer duel, compile-time gated
 # for DCE exactly like PEER_PREDICT. Exp 18 found the predator half (predict a neighbour's hidden
@@ -48,7 +48,7 @@ PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
 # entropy -> gives the Exp 18 predator side something rich to model -> escalation. Only meaningful
 # WITH the predator economy, so the branch lives inside the PEER_PREDICT block (no effect if peer
 # off). genesis_lab folds it into NUMBA_CACHE_DIR so the kernels never share a compiled cache.
-RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
+RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "1") == "1"
 
 # ACTION-DISTRIBUTION PROBE (Exp 22, observation-only, Rules 9<->6: NEVER selects). Exp 21 concluded
 # theory-of-mind is capped at the action-stream's entropy (Hact~1.8 bits, N_OUTPUT=6 ceiling 2.58) but
@@ -76,7 +76,7 @@ ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 # 15/17, no constant), autotelic (agent-agent niche crowding, Rule 9), event-driven (only when earning),
 # and zero when alone in a niche (not the forbidden flat von-Neumann tax, Exp 12.7). Compile-time gated
 # -> byte-identical when off. Reuses the crowd scan already walked for the crowding sense + action_now.
-NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "0") == "1"
+NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "1") == "1"
 
 # READING DEPLETION (Exp 24, Wall-1 lever, default-OFF). The 23-experiment blocker "the free library is
 # an infinite uncontested resource" (Exp 13/20/22, and the wall that killed every Exp-24 stigmergy
@@ -200,6 +200,7 @@ REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))           # 
 # Compile-time gated -> byte-identical when off.
 DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
 DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))   # how many ticks back the target byte is
+DIGESTION = os.environ.get("GENESIS_DIGESTION", "0") == "1"
 
 # RAM SCRATCHPAD — org-controlled EXTERNAL register (Exp 46, default-OFF, byte-identical off). Exp 43-45
 # proved a NEURAL substrate cannot hold state: the leaky membrane holds ~1 step (43), a passive latch holds
@@ -214,7 +215,7 @@ DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))   # how many tic
 # leak, so depth is bounded only by the org learning WHEN to write and read — the honest depth-2 pathway.
 # Reuses the Exp-37/38 evolvable-I/O machinery (flagged hidden neuron + affordance) so N_INPUT/N_OUTPUT stay
 # fixed (no genome-decode scramble). Compile-time gated (GENESIS_SCRATCH).
-SCRATCH = os.environ.get("GENESIS_SCRATCH", "0") == "1"
+SCRATCH = os.environ.get("GENESIS_SCRATCH", "1") == "1"
 SCRATCH_MARKER = 199   # hidden-neuron gene marking an external-register STORE effector
 # Ring capacity = the register's bit-width (8 bits/byte). Rule 17 HARDWARE-DERIVED — the natural history
 # depth of a byte, not a picked "8". (BITS_PER_BYTE itself is defined below with the other byte constants;
@@ -339,7 +340,7 @@ MAX_RECEPTORS_PER_ORG = 16
 # N_INPUT/N_OUTPUT stop being constants) follow as their own A/Bs — see Roadmap P4.
 SENSOR_MARKER = 196
 N_AFFORDANCE = 6   # number of physical affordance types a sensor can couple to (see sense() switch)
-EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
+EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "1") == "1"
 
 # EVOLVABLE ACTUATORS (Exp 38 / Phase B, default-OFF, Rules 5/9/15/21). The MOTOR side of dissolving the
 # fixed I/O: just as SENSOR_MARKER lets an organism grow its own senses, ACTUATOR_MARKER lets it grow its
@@ -356,7 +357,7 @@ EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
 # (GENESIS_EVOACT) -> byte-identical when off. Phase B widens the action REPERTOIRE's expressivity;
 # Phase C then dissolves the fixed input/output blocks entirely so N_INPUT/N_OUTPUT stop being constants.
 ACTUATOR_MARKER = 197
-EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
+EVOACT = os.environ.get("GENESIS_EVOACT", "1") == "1"
 
 # WORKING-MEMORY LATCH (Exp 44, default-OFF, Rules 6/11/15). Exp 43 measured the substrate holds ~1 step
 # of context (leaky membrane) and depth>=2 is UNSTABLE — the criterion-A blocker (arithmetic/carry need
@@ -374,7 +375,7 @@ EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
 # Compile-time gated (GENESIS_WMEM) -> off = marker skipped, byte-identical. Composes with STDP_TARGET
 # (the learner can re-weight what writes/reads the latch).
 MEMORY_MARKER = 198
-WMEM = os.environ.get("GENESIS_WMEM", "0") == "1"
+WMEM = os.environ.get("GENESIS_WMEM", "1") == "1"
 
 # V_THRESH_IO removed: was dead code (defined but never referenced)
 DT           = np.float32(1.0)
@@ -818,7 +819,7 @@ def world_tick_numba(
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
     oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
-    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf, org_scratch
+    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf, org_stomach_fuel, org_scratch
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -1420,8 +1421,8 @@ def world_tick_numba(
                 nb = nb & ~((np.int64(1) << REMAP_SB0) | (np.int64(1) << REMAP_SB1))
                 nb = nb | (b1 << REMAP_SB0) | (b0 << REMAP_SB1)
                 tgt_byte = nb & np.int64(0xFF)
-            if DELAY:
-                # WORKING-MEMORY DELAY (Exp 43): the target is the byte this organism sensed DELAY_N ticks
+            if DELAY or DIGESTION:
+                # WORKING-MEMORY DELAY (Exp 43) & DIGESTION (Exp 48): the target is the byte this organism sensed DELAY_N ticks
                 # AGO (org_delay_buf, a shift ring pushed with the CURRENT sensed byte at the top of this
                 # org's processing below). It is on NO current input, so only a brain that HELD it across
                 # DELAY_N ticks can emit it. Slot 0 = most recent pushed; slot DELAY_N = DELAY_N ago.
@@ -1506,11 +1507,27 @@ def world_tick_numba(
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
-                if DELAY and DELAY_N >= 2:
+                if DELAY and DELAY_N >= 2 and not DIGESTION:
                     # Scale reward to offset the metabolic tax of the SCRATCH addressing fabric
                     # (which costs 32 cycles/tick for 32 recall sensors).
                     gain *= np.float32(DELAY_N * 8.0)
-                if DEPLETE and gain > np.float32(0.0):
+                
+                if DIGESTION:
+                    # GROUNDED DIGESTION (Exp 48, Rule 15 physical conservation): 
+                    # The energy cannot be scaled by a magic multiplier. Instead, the organism extracts 
+                    # the fuel it SWALLOWED DELAY_N ticks ago. If net > 0, it extracts the matching fraction.
+                    dn = int(DELAY_N)
+                    swallowed_fuel = np.float32(0.0)
+                    if dn < DELAY_BUF:
+                        swallowed_fuel = org_stomach_fuel[org, dn]
+                    
+                    if gain > np.float32(0.0):
+                        # Extract the exact physical fuel swallowed
+                        gain = (np.float32(net) / BITS_PER_BYTE) * swallowed_fuel
+                    else:
+                        gain = np.float32(0.0)
+                
+                if DEPLETE and gain > np.float32(0.0) and not DIGESTION:
                     # Bound positive reading income by the target cell's finite fuel reservoir (Exp 24
                     # Wall-1): a cell pays out only what it holds, then that fuel is spent, so income is
                     # no longer minted and a carrying capacity can form. Negative net (a wrong guess) is
@@ -1574,7 +1591,7 @@ def world_tick_numba(
                     org_grid[nxt] = org
                     pos = nxt
                     grazed = True
-                    if DELAY:
+                    if DELAY or DIGESTION:
                         # WORKING-MEMORY DELAY (Exp 43): push the byte of the cell just STEPPED ONTO into
                         # the shift ring, keyed to MOVEMENT (not ticks) so the ring records the SUCCESSIVE
                         # DISTINCT bytes the reader walked along the passage — org_delay_buf[k] = the byte
@@ -1583,7 +1600,16 @@ def world_tick_numba(
                         # cannot echo. Scored at the NEXT solve's target block (one saccade later).
                         for _d in range(DELAY_BUF - 1, 0, -1):
                             org_delay_buf[org, _d] = org_delay_buf[org, _d - 1]
+                            if DIGESTION:
+                                org_stomach_fuel[org, _d] = org_stomach_fuel[org, _d - 1]
                         org_delay_buf[org, 0] = ram_substrate[nxt]
+                        
+                        if DIGESTION:
+                            if DEPLETE:
+                                org_stomach_fuel[org, 0] = read_fuel[nxt]
+                                read_fuel[nxt] = 0.0
+                            else:
+                                org_stomach_fuel[org, 0] = CELL_STATES
             if org_char_val == tgt_byte:
                 idx = read_log[0]
                 if idx < 996:

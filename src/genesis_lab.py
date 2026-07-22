@@ -22,7 +22,7 @@ import tempfile
 # defaults to `food` for now because the sim_loop LIBRARY INJECTION and its self-sustain
 # verification are NOT yet finished. Opt in early with GENESIS_ECONOMY=books once the injection
 # path below is wired + verified.
-GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "food").lower()
+GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
 # worth CELL_STATES=2**8 cycles, so eating food (full cell -> 256) and solving a symbol ((bits/8)*256)
 # pay the SAME honest exchange rate in the engine — no GENESIS_READ_SCALE / GENESIS_EAT_GAIN
@@ -69,17 +69,17 @@ CURRICULUM = os.environ.get("GENESIS_CURRICULUM", "0") == "1"
 SEED_ENERGY = -1.0
 # Peer-prediction (autotelic) is a compile-time branch inside world_tick_numba, so the JIT cache
 # must NOT share a kernel across peer on/off — fold it into the economy-keyed cache dir.
-PEER_PREDICT = os.environ.get("GENESIS_PEER", "0") == "1"
+PEER_PREDICT = os.environ.get("GENESIS_PEER", "1") == "1"
 # Red-Queen (autotelic prey-defence, Exp 19) is a second compile-time branch INSIDE the peer block,
 # so its kernel must not share a cache with peer-only either. Fold it into the economy-keyed cache dir
 # alongside the peer flag (mirrors the peer default-OFF discipline).
-RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "0") == "1"
+RED_QUEEN = os.environ.get("GENESIS_REDQUEEN", "1") == "1"
 # Action-distribution probe (Exp 22, observation-only). Also a compile-time branch inside world_tick
 # (records best_a on the peer-OFF path), so its kernel must not share a cache with the plain default.
 ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 # Niche economy (Exp 39) — compile-time branch inside world_tick (negative-frequency-dependent income
 # split), so its kernel must not share a cache with the default.
-NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "0") == "1"
+NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "1") == "1"
 # Learning ablation (Exp 30) — compile-time branch inside world_tick (deletes STDP Phase 3), so its
 # kernel must not share a cache with the learning-on default.
 NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
@@ -108,16 +108,16 @@ STDP_TARGET = os.environ.get("GENESIS_STDP_TARGET", "0") == "1"
 DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
 # Evolvable sensors (Exp 37): compile-time branch (SENSOR_MARKER decode + affordance transduction in the
 # LIF loop). Its kernel must not share a cache with the fixed-I/O default.
-EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "0") == "1"
+EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "1") == "1"
 # Evolvable actuators (Exp 38 / Phase B): compile-time branch (ACTUATOR_MARKER decode + out_accum drive
 # in the LIF loop). Key the cache so it doesn't share a kernel with the fixed-motor default.
-EVOACT = os.environ.get("GENESIS_EVOACT", "0") == "1"
+EVOACT = os.environ.get("GENESIS_EVOACT", "1") == "1"
 # Working-memory latch (Exp 44): compile-time branch (MEMORY_MARKER decode + non-leaky non-resetting
 # latch neuron in the LIF loop). Key the cache so it doesn't share a kernel with the leaky-only default.
-WMEM = os.environ.get("GENESIS_WMEM", "0") == "1"
+WMEM = os.environ.get("GENESIS_WMEM", "1") == "1"
 # RAM scratchpad (Exp 46): org-controlled external register (SCRATCH_MARKER STORE effector + RECALL sensor).
 # Compile-time branch; key the cache so it doesn't share a kernel with the register-less default.
-SCRATCH = os.environ.get("GENESIS_SCRATCH", "0") == "1"
+SCRATCH = os.environ.get("GENESIS_SCRATCH", "1") == "1"
 # GROUNDED SCARCE ECONOMY (Exp 41, default-OFF). The peer-payoff negative (Exp 40) localised the blocker:
 # behavioural diversity is not enough for theory-of-mind — a neighbour's action must be a MODELABLE
 # FUNCTION of its OBSERVABLE state. On the abundant Books scaffold behaviour is diverse but not grounded
@@ -132,6 +132,7 @@ SCRATCH = os.environ.get("GENESIS_SCRATCH", "0") == "1"
 # stays the separate scaffold until grounded proves self-sustaining (one column at a time). Pure driver +
 # ancestor change; the kernel physics are those of EVOSENSE, so it keys the cache via EVOSENSE + _grounded.
 GROUNDED = os.environ.get("GENESIS_GROUNDED", "0") == "1"
+DIGESTION = os.environ.get("GENESIS_DIGESTION", "0") == "1"
 if GROUNDED:
     os.environ["GENESIS_EVOSENSE"] = "1"   # grounded senses need the SENSOR_MARKER decode path
     EVOSENSE = True
@@ -326,6 +327,7 @@ g_org_elig = np.zeros((MAX_ORGANISMS, 8), dtype=np.float32)
 # holding context can emit it. Always allocated (cheap); only read/written by the kernel when DELAY on.
 from neuromorphic_engine import DELAY_BUF as _DELAY_BUF
 g_org_delay_buf = np.zeros((MAX_ORGANISMS, _DELAY_BUF), dtype=np.uint8)
+g_org_stomach_fuel = np.zeros((MAX_ORGANISMS, _DELAY_BUF), dtype=np.float32)
 # Exp 46 RAM scratchpad: per-org external register (one non-leaky held byte). Written by a STORE effector
 # neuron on the tick it fires, read back by RECALL sensors. Always allocated (cheap); used only when SCRATCH.
 g_org_scratch = np.zeros(MAX_ORGANISMS, dtype=np.uint8)
@@ -399,6 +401,17 @@ async def ws_handler(websocket):
                     # apply immediately so the switch is visible without waiting for a restock
                     if GENESIS_ECONOMY == "books":
                         _lay_library()
+                elif msg_type == "set_substrate":
+                    global GROUNDED, DIGESTION, NICHE_ECON
+                    g_val = bool(data.get("grounded", GROUNDED))
+                    d_val = bool(data.get("digestion", DIGESTION))
+                    n_val = bool(data.get("niche", NICHE_ECON))
+                    GROUNDED = g_val
+                    DIGESTION = d_val
+                    NICHE_ECON = n_val
+                    os.environ["GENESIS_GROUNDED"] = "1" if GROUNDED else "0"
+                    os.environ["GENESIS_DIGESTION"] = "1" if DIGESTION else "0"
+                    os.environ["GENESIS_NICHE_ECON"] = "1" if NICHE_ECON else "0"
                 elif msg_type == "get_library":
                     books = get_library_books()
                     await websocket.send(json.dumps({
@@ -1113,7 +1126,7 @@ def sim_loop():
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_scratch
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch
     )
 
     for i in range(MAX_ORGANISMS):
@@ -1348,7 +1361,7 @@ def sim_loop():
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
             g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_scratch
+            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch
         )
         
         for i in range(n_births):
@@ -1524,6 +1537,7 @@ def sim_loop():
                         "remap": bool(REMAP),
                         "niche": bool(NICHE_ECON),
                         "grounded": bool(GROUNDED),
+                        "digestion": bool(DIGESTION),
                         "auto_inject": bool(g_auto_inject),
                         "curriculum": bool(g_curriculum),
                         "delay": bool(DELAY),

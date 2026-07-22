@@ -50,10 +50,15 @@ function connect() {
     const host = window.location.hostname || '127.0.0.1';
     ws = new WebSocket('ws://' + host + ':8085');
     ws.onopen = () => {
-        document.getElementById('status-dot').style.background = '#34d399';
-        ws.send(JSON.stringify({ type: 'get_library' }));
-        const v = parseInt(document.getElementById('energy-rate-slider').value);
-        ws.send(JSON.stringify({ type: 'set_energy_rate', rate: v / 1000 }));
+        const dot = document.getElementById('status-dot');
+        if (dot) dot.style.background = '#34d399';
+        const libSel = document.getElementById('library-select');
+        if (libSel) ws.send(JSON.stringify({ type: 'get_library' }));
+        const slider = document.getElementById('energy-rate-slider');
+        if (slider) {
+            const v = parseInt(slider.value);
+            ws.send(JSON.stringify({ type: 'set_energy_rate', rate: v / 1000 }));
+        }
     };
     ws.onclose = () => {
         document.getElementById('status-dot').style.background = '#f43f5e';
@@ -196,6 +201,7 @@ function tprint(text, cls = 't-out') {
 // ── Library ───────────────────────────────────────────────
 function onLibrary(d) {
     const sel = document.getElementById('library-select');
+    if (!sel) return;
     sel.innerHTML = '<option value="">— Select Curriculum —</option>';
     for (const cat in d.books) {
         const og = document.createElement('optgroup');
@@ -347,86 +353,109 @@ document.querySelectorAll('.legend-item').forEach(el => {
 // ── Energy Slider ─────────────────────────────────────────
 const slider = document.getElementById('energy-rate-slider');
 const sliderVal = document.getElementById('energy-rate-val');
-slider.addEventListener('input', () => {
-    const v = parseInt(slider.value);
-    sliderVal.textContent = (v/10).toFixed(1) + '%';
-    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'set_energy_rate', rate: v/1000 }));
-});
+if (slider) {
+    slider.addEventListener('input', () => {
+        const v = parseInt(slider.value);
+        if (sliderVal) sliderVal.textContent = (v/10).toFixed(1) + '%';
+        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'set_energy_rate', rate: v/1000 }));
+    });
+}
 
 // ── Oracle Terminal Input ────────────────────────────────
 let broadcast = '', bcastIdx = 0, bcastTimer = null;
-document.getElementById('term-in').addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    const text = e.target.value.trim();
-    e.target.value = '';
-    if (!text || text.toLowerCase() === 'stop') {
-        broadcast = '';
+const termIn = document.getElementById('term-in');
+if (termIn) {
+    termIn.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        const text = e.target.value.trim();
+        e.target.value = '';
+        if (!text || text.toLowerCase() === 'stop') {
+            broadcast = '';
+            if (bcastTimer) clearInterval(bcastTimer);
+            tprint('› Broadcast stopped.', 't-sys');
+            if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'oracle', val: 0, target: -1 }));
+            return;
+        }
+        tprint('› [USER]: ' + text + ' (broadcasting…)', 't-in');
+        broadcast = text;
+        bcastIdx = 0;
         if (bcastTimer) clearInterval(bcastTimer);
-        tprint('› Broadcast stopped.', 't-sys');
-        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'oracle', val: 0, target: -1 }));
-        return;
-    }
-    tprint('› [USER]: ' + text + ' (broadcasting…)', 't-in');
-    broadcast = text;
-    bcastIdx = 0;
-    if (bcastTimer) clearInterval(bcastTimer);
-    bcastTimer = setInterval(() => {
-        if (!broadcast.length) return;
-        const c = broadcast.charCodeAt(bcastIdx);
-        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'oracle', val: c, target: -1 }));
-        bcastIdx = (bcastIdx + 1) % broadcast.length;
-    }, 500);
-});
+        bcastTimer = setInterval(() => {
+            if (!broadcast.length) return;
+            const c = broadcast.charCodeAt(bcastIdx);
+            if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'oracle', val: c, target: -1 }));
+            bcastIdx = (bcastIdx + 1) % broadcast.length;
+        }, 500);
+    });
+}
 
 // ── Filter Toggle ────────────────────────────────────────
-document.getElementById('filter-success').addEventListener('change', e => {
-    const hide = e.target.checked;
-    document.querySelectorAll('.log-fail').forEach(el => { el.style.display = hide ? 'none' : 'block'; });
-    termOut.scrollTop = termOut.scrollHeight;
-});
+const filterSucc = document.getElementById('filter-success');
+if (filterSucc) {
+    filterSucc.addEventListener('change', e => {
+        const hide = e.target.checked;
+        document.querySelectorAll('.log-fail').forEach(el => { el.style.display = hide ? 'none' : 'block'; });
+        termOut.scrollTop = termOut.scrollHeight;
+    });
+}
 
 // ── Library Inject ───────────────────────────────────────
-document.getElementById('btn-inject-lib').addEventListener('click', () => {
-    const sel = document.getElementById('library-select');
-    if (!sel.value) return;
-    const [cat, book] = sel.value.split('|');
-    if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'inject_curriculum_file', category: cat, book_name: book }));
-        tprint('› Injected: [' + cat + '] ' + book, 't-sys');
-    }
-});
+const btnInjectLib = document.getElementById('btn-inject-lib');
+if (btnInjectLib) {
+    btnInjectLib.addEventListener('click', () => {
+        const sel = document.getElementById('library-select');
+        if (!sel || !sel.value) return;
+        const [cat, book] = sel.value.split('|');
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'inject_curriculum_file', category: cat, book_name: book }));
+            tprint('› Injected: [' + cat + '] ' + book, 't-sys');
+        }
+    });
+}
 
-document.getElementById('btn-inject-custom').addEventListener('click', () => {
-    const inp = document.getElementById('custom-book-input');
-    if (!inp.value) return;
-    if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'inject_custom_book', text: inp.value }));
-        tprint('› Injected custom: "' + inp.value + '"', 't-sys');
-        inp.value = '';
-    }
-});
+const btnInjectCustom = document.getElementById('btn-inject-custom');
+if (btnInjectCustom) {
+    btnInjectCustom.addEventListener('click', () => {
+        const inp = document.getElementById('custom-book-input');
+        if (!inp || !inp.value) return;
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'inject_custom_book', text: inp.value }));
+            tprint('› Injected custom: "' + inp.value + '"', 't-sys');
+            inp.value = '';
+        }
+    });
+}
 
 // ── Auto-inject toggle (survival scaffold, Ascent.md §5) ──
-document.getElementById('auto-inject-toggle').addEventListener('change', (e) => {
-    if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'set_auto_inject', enabled: e.target.checked }));
-        tprint('› Auto-inject ' + (e.target.checked ? 'ON' : 'OFF'), 't-sys');
-    }
-});
+const autoInjectTog = document.getElementById('auto-inject-toggle');
+if (autoInjectTog) {
+    autoInjectTog.addEventListener('change', (e) => {
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'set_auto_inject', enabled: e.target.checked }));
+            tprint('› Auto-inject ' + (e.target.checked ? 'ON' : 'OFF'), 't-sys');
+        }
+    });
+}
 
 // ── Full-curriculum toggle + inject-all button ──
-document.getElementById('curriculum-toggle').addEventListener('change', (e) => {
-    if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'set_curriculum', enabled: e.target.checked }));
-        tprint('› Full curriculum ' + (e.target.checked ? 'ON' : 'OFF'), 't-sys');
-    }
-});
-document.getElementById('btn-inject-seq').addEventListener('click', () => {
-    if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'inject_sequence' }));
-        tprint('› Injected FULL curriculum (contiguous ladder)', 't-sys');
-    }
-});
+const currTog = document.getElementById('curriculum-toggle');
+if (currTog) {
+    currTog.addEventListener('change', (e) => {
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'set_curriculum', enabled: e.target.checked }));
+            tprint('› Full curriculum ' + (e.target.checked ? 'ON' : 'OFF'), 't-sys');
+        }
+    });
+}
+const btnInjectSeq = document.getElementById('btn-inject-seq');
+if (btnInjectSeq) {
+    btnInjectSeq.addEventListener('click', () => {
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'inject_sequence' }));
+            tprint('› Injected FULL curriculum (contiguous ladder)', 't-sys');
+        }
+    });
+}
 
 // ── Feature-flag reflection ──────────────────────────────
 // Keep the dashboard honest with whatever engine mode is running: hide metrics whose flag is off,
@@ -439,6 +468,26 @@ function applyFlags(f) {
     // sync the full-curriculum checkbox
     const cu = document.getElementById('curriculum-toggle');
     if (cu && document.activeElement !== cu) cu.checked = !!f.curriculum;
+
+    // sync readonly substrate toggles
+    const di = document.getElementById('toggle-digestion');
+    if (di && document.activeElement !== di) di.checked = !!f.digestion;
+    const gr = document.getElementById('toggle-grounded');
+    if (gr && document.activeElement !== gr) gr.checked = !!f.grounded;
+    const ni = document.getElementById('toggle-niche');
+    if (ni && document.activeElement !== ni) ni.checked = !!f.niche;
+
+    // context-aware: dim Library panel if GROUNDED (books are irrelevant in pure food mode)
+    const libPanel = document.getElementById('library-panel');
+    if (libPanel) {
+        if (f.grounded) {
+            libPanel.style.opacity = '0.3';
+            libPanel.style.pointerEvents = 'none';
+        } else {
+            libPanel.style.opacity = '1';
+            libPanel.style.pointerEvents = 'auto';
+        }
+    }
 
     // show/hide flag-gated metrics
     document.querySelectorAll('.metric[data-flag]').forEach(el => {
@@ -458,6 +507,7 @@ function applyFlags(f) {
         if (f.evosense) tags.push('EVO-SENSE');
         if (f.evoact) tags.push('EVO-ACT');
         if (f.niche) tags.push('NICHE-ECON');
+        if (f.digestion) tags.push('DIGESTION');
         if (f.grounded) tags.push('GROUNDED');
         if (f.remap) tags.push('REMAP');
         if (f.delay) tags.push('DELAY (N=' + (f.delay_n || 2) + ')');
@@ -467,4 +517,39 @@ function applyFlags(f) {
             : '<span class="dim">baseline economy</span>';
     }
     _flagInit = true;
+}
+
+// ── Live Substrate Toggles ────────────────────────────────
+const togDig = document.getElementById('toggle-digestion');
+if (togDig) {
+    togDig.addEventListener('change', (e) => {
+        if (ws && ws.readyState === 1) {
+            const grounded = document.getElementById('toggle-grounded').checked;
+            const niche = document.getElementById('toggle-niche').checked;
+            ws.send(JSON.stringify({ type: 'set_substrate', digestion: e.target.checked, grounded: grounded, niche: niche }));
+            tprint('› Updating DIGESTION (Grounded Fuel) mode...', 't-sys');
+        }
+    });
+}
+const togGrounded = document.getElementById('toggle-grounded');
+if (togGrounded) {
+    togGrounded.addEventListener('change', (e) => {
+        if (ws && ws.readyState === 1) {
+            const digestion = document.getElementById('toggle-digestion') ? document.getElementById('toggle-digestion').checked : false;
+            const niche = document.getElementById('toggle-niche') ? document.getElementById('toggle-niche').checked : false;
+            ws.send(JSON.stringify({ type: 'set_substrate', grounded: e.target.checked, digestion: digestion, niche: niche }));
+            tprint('› Restarting engine to apply GROUNDED substrate...', 't-sys');
+        }
+    });
+}
+const togNiche = document.getElementById('toggle-niche');
+if (togNiche) {
+    togNiche.addEventListener('change', (e) => {
+        if (ws && ws.readyState === 1) {
+            const digestion = document.getElementById('toggle-digestion') ? document.getElementById('toggle-digestion').checked : false;
+            const grounded = document.getElementById('toggle-grounded') ? document.getElementById('toggle-grounded').checked : false;
+            ws.send(JSON.stringify({ type: 'set_substrate', digestion: digestion, grounded: grounded, niche: e.target.checked }));
+            tprint('› Restarting engine to apply NICHE economy...', 't-sys');
+        }
+    });
 }
