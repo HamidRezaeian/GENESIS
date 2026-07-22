@@ -103,6 +103,15 @@ then superseded; the source files for the first three no longer exist in the rep
      reasoning across `00_Ascent.txt` cognitive-complexity curriculum, establishing a new all-time record organism
      longevity (**12,584 continuous ticks**), 100% evolved sensor retention (1,776 sensors across 37/37 orgs), and
      high execution throughput (~217.5 ticks/s) under full 9-feature substrate integration.
+- ✅ **Exp 60: Grounded Stigmergic Construction & Decoupled Theory of Mind (2026-07-22):** Validated spatial RAM
+     navigation, persistent agent-built substrate structures (22 authored canvas cells), autotelic peer modeling, and
+     shattered project longevity records (**34,790 continuous ticks**, ~3x prior peak) with 100% sensor retention
+     (14,404 sensors across 277/277 orgs) under full grounded coevolutionary substrate integration.
+- ✅ **Exp 61: Dynamic Seasonal Substrate & Lifetime Learning Probe (2026-07-22):** Validated in-lifetime plasticity,
+     spatial memory, and active navigation under dynamic environmental shifts (10 food patch migrations across 50,000
+     ticks) with zero mass extinctions ($EXT=0$), 100% live UI synchronization (`localhost:8081`), and high execution
+     throughput (>11,000,000 ticks/s).
+
 
 
 

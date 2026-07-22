@@ -19,3 +19,11 @@ When writing scripts, tests, or scratch files:
 1. The agent MUST NOT hardcode absolute file paths (e.g., `C:\Users\...` or `/home/...`) directly into the code.
 2. Paths MUST be resolved dynamically. For workspace-relative imports, the agent should run the script from the project root and use relative resolution like `sys.path.append(os.path.abspath("src"))` or calculate paths relative to `os.environ.get("PYTHONPATH")`.
 3. Temporary scratch scripts must be written as if they are part of a portable, version-controlled repository.
+
+# RULE: MANDATORY FRONTEND (UI) AND BACKEND (genesis_lab.py) SYNCHRONIZATION
+
+Whenever modifying the state loop, metrics, feature flags, or telemetric outputs in `src/genesis_lab.py` or `src/neuromorphic_engine.py`, the agent MUST ensure that:
+1. **Latest Experiment Default**: Default environment settings in `src/genesis_lab.py` MUST align with the project's latest benchmarked experiment state (e.g. Grounded Spatial Stigmergy, Decoupled Theory of Mind, WMEM, Scratchpad) rather than legacy scaffold defaults.
+2. **WebSocket Telemetry Contract**: The `state` broadcast payload emitted over WebSocket (`ws://<host>:8085`) continuously includes all live engine metrics (`reads`, `pred`, `peer`, `sensors`, `actuators`) and active feature flags (`PEER`, `EVOSENSE`, `EVOACT`, `REMAP`, `WMEM`, `SCRATCH`, `NICHE`, `GROUNDED`, `STIGMERGY`, `CANVAS`).
+3. **Observation Deck Integrity**: The Vanilla-JS frontend (`public/`) remains fully coupled to `genesis_lab.py` without schema drift, correctly rendering live RAM canvas states, KPI tiles, feature flag indicators, and Brain Analyzer decompilations.
+4. **Honest UI Telemetry**: The UI visualizer must never mock or decouple from live backend states; all surfaced signals must originate directly from real engine execution.

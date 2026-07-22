@@ -1,0 +1,15 @@
+{
+  "experiment": "Exp 60 \u2014 Grounded Stigmergic Construction & Decoupled Theory of Mind",
+  "horizon_ticks": 5000,
+  "wall_clock_sec": 51.62,
+  "ticks_per_sec": 96.9,
+  "final_population": 277,
+  "peak_population": 557,
+  "mass_extinctions": 1,
+  "refugium_triggers": 0,
+  "peak_organism_lifespan": 34790,
+  "active_sensor_orgs": "277/277",
+  "total_active_sensors": 14404,
+  "persistent_authored_cells": 22,
+  "active_scratchpad_registers": 0
+}

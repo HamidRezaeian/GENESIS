@@ -22,7 +22,7 @@ import tempfile
 # defaults to `food` for now because the sim_loop LIBRARY INJECTION and its self-sustain
 # verification are NOT yet finished. Opt in early with GENESIS_ECONOMY=books once the injection
 # path below is wired + verified.
-GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
+GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "food").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
 # worth CELL_STATES=2**8 cycles, so eating food (full cell -> 256) and solving a symbol ((bits/8)*256)
 # pay the SAME honest exchange rate in the engine — no GENESIS_READ_SCALE / GENESIS_EAT_GAIN
@@ -131,7 +131,7 @@ SCRATCH = os.environ.get("GENESIS_SCRATCH", "1") == "1"
 # implies EVOSENSE (the grounded senses must decode). This is the substrate the mind path needs; Books
 # stays the separate scaffold until grounded proves self-sustaining (one column at a time). Pure driver +
 # ancestor change; the kernel physics are those of EVOSENSE, so it keys the cache via EVOSENSE + _grounded.
-GROUNDED = os.environ.get("GENESIS_GROUNDED", "0") == "1"
+GROUNDED = os.environ.get("GENESIS_GROUNDED", "1") == "1"
 DIGESTION = os.environ.get("GENESIS_DIGESTION", "0") == "1"
 if GROUNDED:
     os.environ["GENESIS_EVOSENSE"] = "1"   # grounded senses need the SENSOR_MARKER decode path
@@ -498,13 +498,57 @@ async def ws_handler(websocket):
     finally:
         WS_CLIENTS.remove(websocket)
 
+def free_port(port=8085):
+    """Ensure port is free by terminating any other process currently bound to it (Rule 15 hardware-honest)."""
+    import subprocess
+    import sys
+    import os
+    if sys.platform == "win32":
+        try:
+            res = subprocess.run(f"netstat -ano", shell=True, capture_output=True, text=True)
+            pids = set()
+            for line in res.stdout.splitlines():
+                if f":{port}" in line and "LISTENING" in line:
+                    parts = line.strip().split()
+                    if parts and parts[-1].isdigit():
+                        pid = int(parts[-1])
+                        if pid != os.getpid():
+                            pids.add(pid)
+            for pid in pids:
+                subprocess.run(f"taskkill /F /PID {pid}", shell=True, capture_output=True)
+        except Exception:
+            pass
+    else:
+        try:
+            res = subprocess.run(f"lsof -t -i:{port}", shell=True, capture_output=True, text=True)
+            for pid_str in res.stdout.splitlines():
+                if pid_str.strip().isdigit():
+                    pid = int(pid_str.strip())
+                    if pid != os.getpid():
+                        os.kill(pid, 9)
+        except Exception:
+            pass
+
 async def ws_main():
     if websockets is None:
         print("[WS Server] WARNING: 'websockets' package is not installed. WebSocket server disabled.")
         return
-    print("WebSocket Server running on ws://0.0.0.0:8085")
-    async with websockets.serve(ws_handler, "0.0.0.0", 8085):
-        await asyncio.Future()  # run forever
+    for attempt in range(5):
+        free_port(8085)
+        try:
+            print(f"WebSocket Server running on ws://0.0.0.0:8085 (Attempt {attempt+1})")
+            async with websockets.serve(ws_handler, "0.0.0.0", 8085):
+                await asyncio.Future()  # run forever
+            break
+        except OSError as e:
+            if attempt < 4:
+                print(f"[WS Server] Port 8085 busy ({e}), releasing and retrying...")
+                await asyncio.sleep(0.5)
+            else:
+                print(f"[WS Server] Could not bind to port 8085 after 5 attempts.")
+        except Exception as e:
+            print(f"[WS Server] Error: {e}")
+            break
 
 def start_ws_server():
     if websockets is None:
@@ -1077,12 +1121,12 @@ def seed_refuge(n):
     return born
 
 
-def _stock_food_patches(target_food):
+def _stock_food_patches(target_food, offset=0):
     """Exp 42 grounded foraging substrate: keep ~target_food cells of 0x55 laid as DENSE CONTIGUOUS
     PATCHES (each GROUNDED_PATCH_BYTES wide) rather than isolated cells, so a forager sits on a patch and
     eats cell-after-cell (high intake per move = break-even, the Exp-11 contiguity fix on the food axis).
     Only tops up toward target (bounded total = carrying capacity below the array cap); patches are placed
-    at random anchors on empty runs, never overwriting the reading scroll region or other organisms' cells.
+    at random anchors on empty runs. Optional offset supports seasonal food migration (Exp 61).
     Returns the number of food cells present after stocking."""
     present = int(np.count_nonzero(g_ram == 0x55))
     deficit = int(target_food) - present
@@ -1090,7 +1134,8 @@ def _stock_food_patches(target_food):
     guard = 0
     while deficit >= pw and guard < 10000:
         guard += 1
-        anchor = random.randint(0, RAM_SIZE - pw - 1)
+        raw_anchor = random.randint(0, RAM_SIZE - pw - 1)
+        anchor = (raw_anchor + int(offset)) % max(1, RAM_SIZE - pw)
         # lay a patch only on a run of empty (0x00) cells, so we never clobber text/traps/food/orgs
         ok = True
         for k in range(pw):
