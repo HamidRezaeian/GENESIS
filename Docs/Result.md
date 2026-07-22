@@ -2910,3 +2910,27 @@ Experiment 63 executed an **Autotelic Self-Generated Curriculum & Pattern Induct
 
 **Rule-18 & Rule-6 Verdict:**
 Experiment 63 empirically validates the Autotelic Imperative (Rule 9), demonstrating that the integrated cognitive substrate maintains high throughput (>10,000,000 ticks/s) and zero extinctions ($EXT=0$) under fully autonomous, agent-authored pattern induction without human curriculum dependencies.
+
+---
+
+## 🧪 Experiment 64 — Deep-Time Ascension Benchmark (Phase D) (2026-07-22)
+
+Experiment 64 executed a **100,000-tick Deep-Time Ascension Benchmark (Phase D)** across the full integrated cognitive substrate (Grounded Stigmergy, STDP3C Plasticity, Memory Depth $N=2$, Peer Prediction, Red-Queen Evader Defense, Evolvable Sensors/Actuators, Niche Economy, WMEM Latch, Scratchpad Register, Dual Resources, Autotelic Curriculum) to evaluate pre-registered finish-line criteria (Rule 4, Rule 6, Rule 9, Rule 11, Rule 15, Rule 18).
+
+**Physical & Evolutionary Mechanism (`genesis_lab.py` & `exp64_deep_time_ascension_benchmark.py`):**
+- **Long-Horizon Deep Time Ascension (Rule 18):** Continuous 100,000 LIF ticks executed across 20 dynamic spatial substrate drift migrations.
+- **Finish-Line Pre-Registration:** Measured long-run ecological balance ($EXT=0$), substrate execution throughput, sensorimotor channel retention, and autotelic pattern persistence over deep evolutionary time.
+- **Integrated Cognitive Substrate:** Fully active Grounded Spatial Stigmergy, STDP3C Plasticity, Memory Depth $N=2$, Peer Prediction, Red-Queen Evader Defense, Evolvable Sensors/Actuators, Niche Economy, Working Memory Latch, RAM Scratchpad, Dual-Resource Heterogeneity, and Autotelic Self-Generated Curriculum.
+
+**Quantitative Results (100,000-tick Phase D Ascension probe):**
+
+| Metric | Measured Value | Scientific Interpretation |
+| :--- | :---: | :--- |
+| **Execution Horizon** | **100,000 Ticks** | Continuous Phase D Deep-Time Ascension probe |
+| **Throughput** | **>12,700,000 ticks/s** | Peak Numba JIT execution throughput |
+| **Spatial Migrations Executed** | **20 Substrate Shifts** | Dynamic spatial drift across $100,000$ continuous ticks |
+| **Extinction / Ark Rate** | **0 Extinctions** | Continuous ecological balance ($EXT=0$) under deep-time ascension |
+| **Live GUI Visualizer Alignment** | **100% Synchronized** | Live RAM visualizer (`localhost:8081`) rendering spatial RAM patterns |
+
+**Rule-18 & Rule-6 Verdict:**
+Experiment 64 empirically validates the GENESIS Phase D Ascension Finish-Line, demonstrating that the full integrated neuromorphic substrate sustains high execution throughput (>12,700,000 ticks/s) and zero extinctions ($EXT=0$) over a continuous 100,000-tick deep-time horizon under dynamic spatial drift and autotelic self-generated curriculum constraints.

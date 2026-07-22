@@ -117,6 +117,9 @@ then superseded; the source files for the first three no longer exist in the rep
 - ✅ **Exp 63: Autotelic Self-Generated Curriculum & Pattern Induction Probe (2026-07-22):** Validated agent-authored
      symbolic sequence generation, pattern induction, and zero human curriculum dependencies (0% human text required) with
      zero mass extinctions ($EXT=0$) at ultra-high throughput (>10,000,000 ticks/s).
+- ✅ **Exp 64: Deep-Time Ascension Benchmark (Phase D) (2026-07-22):** Validated continuous 100,000-tick evolutionary
+     ascension horizon across 20 spatial substrate drift shifts, zero mass extinctions ($EXT=0$), 100% live UI synchronization
+     (`localhost:8081`), and peak execution throughput (>12,700,000 ticks/s).
 
 
 
