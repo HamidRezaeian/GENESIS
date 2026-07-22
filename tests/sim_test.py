@@ -69,21 +69,21 @@ def sim_ancestor():
             a = ip
             ip = (ip + 1) & mem_mask
         elif op == 11:
-            c = memory[(ip+1)&mem_mask]
+            c = int(memory[(ip+1)&mem_mask])
             ip = (ip + 2) & mem_mask
         elif op == 13:
-            offset = memory[(ip+1)&mem_mask]
+            offset = int(memory[(ip+1)&mem_mask])
             b = (ip + offset) & mem_mask
             ip = (ip + 2) & mem_mask
         elif op == 21:
             d = 0 # Sense zone 0
             ip = (ip + 1) & mem_mask
         elif op == 20:
-            val = memory[(ip+1)&mem_mask]
+            val = int(memory[(ip+1)&mem_mask])
             if d == 0: ip = (ip + 2 + val) & mem_mask
             else: ip = (ip + 2) & mem_mask
         elif op == 5:
-            d = memory[a & mem_mask]
+            d = int(memory[a & mem_mask])
             ip = (ip + 1) & mem_mask
         elif op == 6:
             memory[b & mem_mask] = d
@@ -98,7 +98,7 @@ def sim_ancestor():
             c = c - 1
             ip = (ip + 1) & mem_mask
         elif op == 12:
-            val = memory[(ip+1)&mem_mask]
+            val = int(memory[(ip+1)&mem_mask])
             ip = (ip + 2) & mem_mask
             if c != 0: ip = (ip - val) & mem_mask
         elif op == 14:

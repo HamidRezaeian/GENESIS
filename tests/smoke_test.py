@@ -54,7 +54,7 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
             0, 0,  # canvas_lo, canvas_hi
             gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
-            gl.g_org_delay_buf, gl.g_org_scratch
+            gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch
         )
         # process births exactly like sim_loop
         for i in range(n_births):

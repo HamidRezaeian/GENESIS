@@ -58,7 +58,7 @@ def _world_tick(steps):
         0, 0,  # canvas_lo, canvas_hi
         gl.g_org_reward, gl.g_org_elig,
         gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
-        gl.g_org_delay_buf, gl.g_org_scratch
+        gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch
     )
 
 

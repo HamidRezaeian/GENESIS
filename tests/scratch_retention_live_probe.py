@@ -208,7 +208,7 @@ def main():
             0, 0,  # canvas_lo, canvas_hi (not used in books mode)
             gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
-            gl.g_org_delay_buf, gl.g_org_scratch
+            gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch
         )
         sst._process_births(n_births)
         gl.global_time += steps

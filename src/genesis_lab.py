@@ -376,7 +376,7 @@ g_auto_inject = (GENESIS_ECONOMY == "books")
 g_curriculum = CURRICULUM
 
 async def broadcast_msg(msg):
-    if WS_CLIENTS:
+    if WS_CLIENTS and websockets is not None:
         websockets.broadcast(WS_CLIENTS, msg)
 
 async def ws_handler(websocket):
@@ -493,17 +493,23 @@ async def ws_handler(websocket):
                     await websocket.send(json.dumps(response))
             except:
                 pass
-    except websockets.exceptions.ConnectionClosed:
+    except (websockets.exceptions.ConnectionClosed if websockets else Exception):
         pass
     finally:
         WS_CLIENTS.remove(websocket)
 
 async def ws_main():
+    if websockets is None:
+        print("[WS Server] WARNING: 'websockets' package is not installed. WebSocket server disabled.")
+        return
     print("WebSocket Server running on ws://0.0.0.0:8085")
     async with websockets.serve(ws_handler, "0.0.0.0", 8085):
         await asyncio.Future()  # run forever
 
 def start_ws_server():
+    if websockets is None:
+        print("[WS Server] WARNING: 'websockets' package is not installed. WebSocket server disabled.")
+        return
     global ws_loop
     ws_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(ws_loop)
