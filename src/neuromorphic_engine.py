@@ -144,6 +144,19 @@ CAM_WRITE_THRESHOLD = np.int64(3)
 # This creates associative memory: (cue -> answer) learned from correct predictions.
 CAM_WRITE_ON_REWARD = True
 
+# ── STRUCTURAL PLASTICITY (2026-07-23) ──
+# Allows organisms to REWIRE and PRUNE synapses during their lifetime.
+# Growth: when a hidden neuron fires but has no strong outgoing synapse,
+#   rewire the weakest outgoing synapse to a new target (cost: 10 cycles).
+# Pruning: synapses with |weight| < 0.5 are set to 0 (free, saves energy).
+# This breaks the fixed-topology limitation (finite-state transducer ceiling).
+STRUCTURAL_PLASTICITY = os.environ.get("GENESIS_STRUCTURAL_PLASTICITY", "1") == "1"
+SP_GROWTH_COST = np.float32(10.0)      # energy cost per new connection
+SP_PRUNE_THRESHOLD = np.float32(0.5)   # prune synapses below this |weight|
+SP_MAX_GROWTH = np.int64(3)            # max new connections per tick per org
+SP_MAX_PRUNE = np.int64(5)             # max pruned synapses per tick per org
+SP_REWIRE_WEIGHT = np.float32(5.0)     # initial weight for new connections
+
 
 # THREE-FACTOR / NEUROMODULATED PLASTICITY (Exp 32, default-OFF) — the diagnosed fix for net-negative
 # STDP (Exp 31). Plain two-factor Hebbian STDP is UNSUPERVISED: it reinforces any temporal coincidence
@@ -1061,6 +1074,48 @@ def world_tick_numba(
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
+
+        # ── STRUCTURAL PLASTICITY: Rewiring + Pruning ──
+        s_ptr = org_s_ptr[org]
+        s_count = org_s_count[org]
+        if STRUCTURAL_PLASTICITY:
+            # GROWTH: rewire weak synapses from active hidden neurons
+            sp_growth = np.int64(0)
+            for n in range(N_IO, n_count):
+                if sp_growth >= SP_MAX_GROWTH:
+                    break
+                if curr_spk_buf[n]:
+                    # Find weakest outgoing synapse from this neuron
+                    weak_c = np.int64(-1)
+                    weak_w = np.float32(999.0)
+                    for c in range(s_count):
+                        if global_conn_src[s_ptr + c] == n:
+                            w_abs = global_conn_weight[s_ptr + c]
+                            if w_abs < np.float32(0.0):
+                                w_abs = -w_abs
+                            if w_abs < weak_w:
+                                weak_w = w_abs
+                                weak_c = c
+                    if weak_c >= np.int64(0) and weak_w < np.float32(5.0):
+                        # Rewire to a new pseudo-random target
+                        new_dst = N_IO + np.int64((global_time * 7 + n * 13 + sp_growth * 31) % max(np.int64(1), np.int64(n_count - N_IO)))
+                        global_conn_dst[s_ptr + weak_c] = new_dst
+                        global_conn_weight[s_ptr + weak_c] = SP_REWIRE_WEIGHT
+                        total_atp += SP_GROWTH_COST
+                        sp_growth += np.int64(1)
+            
+            # PRUNING: remove synapses with very small weights
+            sp_prune = np.int64(0)
+            for c in range(s_count):
+                if sp_prune >= SP_MAX_PRUNE:
+                    break
+                w = global_conn_weight[s_ptr + c]
+                if w > np.float32(0.0) and w < SP_PRUNE_THRESHOLD:
+                    global_conn_weight[s_ptr + c] = np.float32(0.0)
+                    sp_prune += np.int64(1)
+                elif w < np.float32(0.0) and w > -SP_PRUNE_THRESHOLD:
+                    global_conn_weight[s_ptr + c] = np.float32(0.0)
+                    sp_prune += np.int64(1)
 
         # ── CAM READ (Exp 30 fix): feed CAM output as input channel 1 ──
         if CAM:
