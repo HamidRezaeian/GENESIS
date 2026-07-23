@@ -134,6 +134,10 @@ CAM = os.environ.get("GENESIS_CAM", "0") == "1"
 CAM_SLOTS = 8
 CAM_MATCH_THRESHOLD = np.int64(6)
 CAM_WRITE_THRESHOLD = np.int64(3)
+# CAM v2: write on CORRECT PREDICTION instead of hidden spike threshold.
+# Key = cue byte from delay_buffer[curriculum_delay-1], Value = answer byte.
+# This creates associative memory: (cue -> answer) learned from correct predictions.
+CAM_WRITE_ON_REWARD = True
 
 
 # THREE-FACTOR / NEUROMODULATED PLASTICITY (Exp 32, default-OFF) — the diagnosed fix for net-negative
