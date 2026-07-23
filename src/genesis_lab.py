@@ -209,7 +209,7 @@ import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + 
 # every experiment's clean cold-start intact.
 _brain_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Brain")
 BRAIN_PATH = os.environ.get("GENESIS_BRAIN_PATH") or os.path.join(_brain_dir, "Brain.npz")
-RESUME_BRAIN = os.environ.get("GENESIS_RESUME", "0") == "1"
+RESUME_BRAIN = os.environ.get("GENESIS_RESUME", "1") == "1"
 
 # Fixed centred start address of the contiguous library scroll — the anchor for the Exp 20
 # ascent-frontier probe (a book position maps to a difficulty band via its offset from here).
@@ -226,6 +226,10 @@ CANVAS_SEED = os.environ.get("GENESIS_CANVAS_SEED", "0") == "1"
 ASCENT_BANDS = (0.55, 0.75, 0.87)
 
 g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
+g_ram_bank_access = np.zeros(RAM_SIZE, dtype=np.int32)
+g_ram_bank_access_next = np.zeros(RAM_SIZE, dtype=np.int32)
+g_curriculum_delay = 0
+
 for i in range(1000):
     g_ram[random.randint(0, RAM_SIZE-1)] = 0x55
 
@@ -244,6 +248,8 @@ g_global_tau = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.float32)
 g_global_conn_src = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_dst = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_weight = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+g_global_conn_elig = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+g_global_conn_elig_t = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 
 g_global_genome = np.zeros(UNIVERSE_MAX_DNA, dtype=np.uint8)
 
@@ -268,6 +274,7 @@ o_rec_v_rest = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32
 o_rec_v_reset = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32)
 o_rec_tau_def = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32)
 o_rec_spk_max = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32)
+o_rec_tau_e = np.zeros((MAX_ORGANISMS, MAX_RECEPTORS_PER_ORG), dtype=np.float32)
 g_global_rec_id = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 
 # EVOLVABLE SENSORS (Exp 37): per-NEURON affordance coupling. sense_type = 0 for an ordinary LIF neuron,
@@ -296,6 +303,7 @@ g_b_genomes = np.zeros((BIRTH_BUF_SZ, MAX_DNA_PER_ORG), dtype=np.uint8)
 g_b_energy = np.zeros(BIRTH_BUF_SZ, dtype=np.float32)
 
 global_time = 0
+g_curriculum_delay = 1
 g_oracle_val = 0
 g_oracle_target = -1
 voice_buf = np.zeros(10, dtype=np.uint8)
@@ -377,7 +385,7 @@ g_curriculum = CURRICULUM
 
 async def broadcast_msg(msg):
     if WS_CLIENTS and websockets is not None:
-        websockets.broadcast(WS_CLIENTS, msg)
+        websockets.broadcast(set(WS_CLIENTS), msg)
 
 async def ws_handler(websocket):
     global g_oracle_val, g_oracle_target, g_energy_spawn_rate, g_auto_inject, g_curriculum
@@ -848,7 +856,7 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
     if not parse_receptors(
         g_ptr, g_count, g_global_genome, org_id,
         o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m,
-        o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max
+        o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max, o_rec_tau_e
     ):
         free_block(g_ptr, g_count, g_genome_map)
         free_block(n_ptr, n_c, g_neuron_map)
@@ -1023,6 +1031,12 @@ def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
                 if g_org_grid[p] == -1 and (g_ram[p] == 0x00 or (books and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55)):
                     pos = p
                     break
+        if pos < 0:  # FALLBACK: If RAM is polluted, pick ANY empty physical slot
+            for _ in range(1000):
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1:
+                    pos = p
+                    break
         if pos < 0:
             break
 
@@ -1106,6 +1120,12 @@ def seed_refuge(n):
             for _ in range(1000):
                 p = random.randint(0, RAM_SIZE - 1)
                 if g_org_grid[p] == -1 and (g_ram[p] == 0x00 or (books and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55)):
+                    pos = p
+                    break
+        if pos < 0:  # FALLBACK: If RAM is polluted, pick ANY empty physical slot
+            for _ in range(1000):
+                p = random.randint(0, RAM_SIZE - 1)
+                if g_org_grid[p] == -1:
                     pos = p
                     break
         if pos < 0:
@@ -1193,16 +1213,17 @@ def sim_loop():
     world_tick_numba(
         g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
         g_global_v, g_global_ref, g_global_t_last, g_global_thresh, g_global_tau, g_global_rec_id,
-        g_global_conn_src, g_global_conn_dst, g_global_conn_weight,
+        g_global_conn_src, g_global_conn_dst, g_global_conn_weight, g_global_conn_elig, g_global_conn_elig_t,
         g_neuron_map, g_synapse_map, g_genome_map,
         g_org_n_ptr, g_org_n_count, g_org_s_ptr, g_org_s_count,
         g_global_genome, g_org_g_ptr, g_org_g_count,
-        o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
+        o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max, o_rec_tau_e,
         g_viscosity, global_time, g_org_lif_steps,
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch
-    )
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
+            g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay
+        )
 
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
@@ -1426,15 +1447,16 @@ def sim_loop():
         n_alive, n_births = world_tick_numba(
             g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
             g_global_v, g_global_ref, g_global_t_last, g_global_thresh, g_global_tau, g_global_rec_id,
-            g_global_conn_src, g_global_conn_dst, g_global_conn_weight,
+            g_global_conn_src, g_global_conn_dst, g_global_conn_weight, g_global_conn_elig, g_global_conn_elig_t,
             g_neuron_map, g_synapse_map, g_genome_map,
             g_org_n_ptr, g_org_n_count, g_org_s_ptr, g_org_s_count,
             g_global_genome, g_org_g_ptr, g_org_g_count,
-            o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
+            o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max, o_rec_tau_e,
             g_viscosity, global_time, g_org_lif_steps,
             g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
             g_oracle_val, g_oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
-            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch
+            g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
+            g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay
         )
         
         for i in range(n_births):
@@ -1507,7 +1529,10 @@ def sim_loop():
                     break
             g_read_log[0] = 1
 
-            if ws_loop and WS_CLIENTS:
+            if ws_loop and WS_CLIENTS and (now - getattr(sim_loop, 'last_ws_push', 0) >= 0.2):
+
+
+                sim_loop.last_ws_push = now
                 alive_count = np.sum(g_alive)
                 universe_n = np.sum(g_neuron_map)
                 ram_b64 = base64.b64encode(g_ram.tobytes()).decode('utf-8')
@@ -1579,9 +1604,12 @@ def sim_loop():
                     "ram_b64": ram_b64,
                     "elite_age": int(max_ark_age),
                     "elite_iq": elite_iq,
+                    "elite_pos": int(g_positions[elite_id]) if elite_id >= 0 else -1,
                     "avg_age": int(global_avg_age),
                     "universe_n": int(universe_n),
                     "orgs": [int(g_positions[i]) for i in range(MAX_ORGANISMS) if g_alive[i]],
+                    "org_ages": [int(g_age[i]) for i in range(MAX_ORGANISMS) if g_alive[i]],
+                    "org_iqs": [round(float(g_age[i]) / max(1.0, float(g_org_n_count[i] + g_org_s_count[i])), 2) for i in range(MAX_ORGANISMS) if g_alive[i]],
                     "screaming_orgs": screaming,
                     "terminal": terminal_text,
                     "read_events": read_events,

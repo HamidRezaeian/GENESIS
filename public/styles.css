@@ -181,12 +181,13 @@ body {
 #ramCanvas {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: fill;
     image-rendering: pixelated;
 }
 
 .legend-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     flex-shrink: 0;
     justify-content: center;

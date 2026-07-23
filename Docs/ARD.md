@@ -96,11 +96,11 @@ alongside it, with Phases B/C — evolvable actuators, then dissolving the fixed
 ### 1.7 Frontend: The Observation Deck (`public/`)
 - Renders the 65536-byte RAM as a folded 256×256 HTML5 canvas: food `0x55` green, living
   organisms blue, vocalising ("screaming") organisms yellow, curriculum text purple.
-- KPI tiles (era lifespan, population, extinctions, elite age), an extinction chart, a D3
+- KPI tiles (era lifespan, population, extinctions, elite age), a **Behavior Summary** that translates live metrics into human-readable insights, a D3
   **Brain Analyzer** that decompiles the Elite genome's synapses (neuron roles derived live from
   `N_INPUT`/`N_IO`, and evolvable sensor/actuator neurons labelled `S<aff>`/`A<act>` when those modes
   are on — Exp 37/38), an **Oracle Terminal** to broadcast ASCII into the universe, and a **Library of
-  Genesis** curriculum injector.
+  Genesis** curriculum injector. The Elite organism is visually tracked with a glowing white halo on the canvas.
 - **Live Cognition panel + feature-flag bar (2026-07-18).** The dashboard surfaces the engine's live
   cognitive metrics — reading solve-rate (`reads`/`miss`), next-symbol `pred`, autotelic `peer`, and
   the evolvable-I/O counts (`sensors`/`actuators`) — not just population, so the mind signals are

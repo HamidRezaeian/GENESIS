@@ -21,6 +21,10 @@
                 <span class="tag">SNN ENGINE</span>
             </div>
             <div class="topbar-right">
+                <div class="topbar-stat" style="background: rgba(167, 139, 250, 0.15); border-color: rgba(167, 139, 250, 0.3);">
+                    <span class="stat-label" style="color: #a78bfa;">AGI PROGRESS</span>
+                    <span class="stat-value mono" id="val-agi-progress" style="color: #c4b5fd;">0%</span>
+                </div>
                 <div class="topbar-stat">
                     <span class="stat-label">TICK</span>
                     <span class="stat-value mono" id="val-tick">0</span>
@@ -57,7 +61,6 @@
                 <div class="legend-bar">
                     <span class="legend-item" data-type="energy"><i style="background:#34d399"></i>Energy</span>
                     <span class="legend-item" data-type="shelter"><i style="background:#38bdf8"></i>Shelter</span>
-                    <span class="legend-item" data-type="trap"><i style="background:#f43f5e"></i>Trap</span>
                     <span class="legend-item" data-type="ip"><i style="background:#60a5fa"></i>Organism</span>
                     <span class="legend-item" data-type="voice"><i style="background:#facc15"></i>Voice</span>
                     <span class="legend-item" data-type="book"><i style="background:#a78bfa"></i>Book</span>
@@ -86,13 +89,13 @@
                     </div>
                 </div>
 
-                <!-- Extinction Chart -->
-                <div class="panel" id="chart-panel">
-                    <div class="section-head"><h2>Era Lifespan</h2></div>
-                    <div class="chart-wrap"><canvas id="extinctionChart"></canvas></div>
+                <!-- Behavior Summary -->
+                <div class="panel" id="behavior-panel">
+                    <div class="section-head"><h2>چکیده رفتار (Behavior)</h2></div>
+                    <div id="behavior-text" class="mono" style="font-size: 13px; color: var(--accent); line-height: 1.8; overflow-y: auto; direction: rtl; text-align: right;">
+                        در حال تحلیل رفتار موجودات...
+                    </div>
                 </div>
-
-
 
                 <!-- Cognition (live engine metrics) -->
                 <div class="panel" id="cognition-panel">
@@ -116,7 +119,10 @@
                 <div class="panel terminal-panel">
                     <div class="section-head">
                         <h2>Oracle Terminal</h2>
-                        <label class="check-label"><input type="checkbox" id="filter-success"> Success only</label>
+                        <div style="display: flex; gap: 10px;">
+                            <label class="check-label"><input type="checkbox" id="auto-inject-toggle"> Auto-Inject</label>
+                            <label class="check-label"><input type="checkbox" id="filter-success"> Success only</label>
+                        </div>
                     </div>
                     <div class="terminal-output" id="term-out">
                         <div class="t-line t-sys">Listening for Elite Vocal Cords…</div>

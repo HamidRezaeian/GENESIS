@@ -41,12 +41,12 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
         n_alive, n_births = gl.world_tick_numba(
             gl.g_ram, gl.g_org_grid, gl.g_positions, gl.g_alive, gl.g_energy, gl.g_age,
             gl.g_global_v, gl.g_global_ref, gl.g_global_t_last, gl.g_global_thresh, gl.g_global_tau, gl.g_global_rec_id,
-            gl.g_global_conn_src, gl.g_global_conn_dst, gl.g_global_conn_weight,
+            gl.g_global_conn_src, gl.g_global_conn_dst, gl.g_global_conn_weight, gl.g_global_conn_elig, gl.g_global_conn_elig_t,
             gl.g_neuron_map, gl.g_synapse_map, gl.g_genome_map,
             gl.g_org_n_ptr, gl.g_org_n_count, gl.g_org_s_ptr, gl.g_org_s_count,
             gl.g_global_genome, gl.g_org_g_ptr, gl.g_org_g_count,
             gl.o_rec_a_plus, gl.o_rec_a_minus, gl.o_rec_tau_p, gl.o_rec_tau_m,
-            gl.o_rec_v_rest, gl.o_rec_v_reset, gl.o_rec_tau_def, gl.o_rec_spk_max,
+            gl.o_rec_v_rest, gl.o_rec_v_reset, gl.o_rec_tau_def, gl.o_rec_spk_max, gl.o_rec_tau_e,
             gl.g_viscosity, gl.global_time, gl.g_org_lif_steps,  # per-org architecture-derived steps
             gl.g_b_pos, gl.g_b_parent, gl.g_b_g_start, gl.g_b_g_count, gl.g_b_genomes, gl.g_b_energy,
             gl.g_oracle_val, gl.g_oracle_target, gl.voice_buf, gl.vocal_cords, gl.vocal_prev, gl.action_now, gl.action_prev,
@@ -54,7 +54,8 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
             0, 0,  # canvas_lo, canvas_hi
             gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
-            gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch
+            gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch,
+            gl.g_ram_bank_access, gl.g_ram_bank_access_next
         )
         # process births exactly like sim_loop
         for i in range(n_births):

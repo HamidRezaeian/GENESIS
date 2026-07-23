@@ -11,38 +11,10 @@ canvas.width = 256;
 canvas.height = 256;
 let imgData = ctx.createImageData(256, 256);
 
+
+
 // ── Chart ─────────────────────────────────────────────────
-let chart = null;
-function initChart() {
-    const c = document.getElementById('extinctionChart').getContext('2d');
-    chart = new Chart(c, {
-        type: 'line',
-        data: { labels: [], datasets: [{
-            label: 'Era Lifespan',
-            data: [],
-            borderColor: '#f43f5e',
-            backgroundColor: 'rgba(244,63,94,0.08)',
-            borderWidth: 1.5,
-            pointRadius: 0,
-            fill: true,
-            tension: 0.3
-        }]},
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            scales: {
-                x: { display: false },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-                    ticks: { color: '#555', font: { size: 9 }, callback: v => (v/1000).toFixed(0)+'k' }
-                }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-}
-initChart();
+// Chart removed to make room for Behavior Summary
 
 // ── WebSocket ─────────────────────────────────────────────
 let ws = null;
@@ -75,6 +47,7 @@ connect();
 
 // ── State Handler ─────────────────────────────────────────
 let lastTick = 0, lastTime = performance.now();
+let lastExtinctions = -1;
 const hideFails = () => document.getElementById('filter-success').checked;
 
 function onState(s) {
@@ -84,6 +57,7 @@ function onState(s) {
     document.getElementById('val-ext').textContent = s.extinctions.toLocaleString();
     if (s.elite_age !== undefined) document.getElementById('val-elite-age').textContent = s.elite_age.toLocaleString();
     if (s.elite_iq !== undefined) document.getElementById('val-elite-iq').textContent = s.elite_iq + '%';
+    if (s.agi_progress !== undefined) document.getElementById('val-agi-progress').textContent = s.agi_progress + '%';
     if (s.avg_age !== undefined) document.getElementById('val-avg-age').textContent = s.avg_age.toLocaleString();
     if (s.num_refuge !== undefined) document.getElementById('val-refuges').textContent = s.num_refuge.toLocaleString();
 
@@ -117,12 +91,52 @@ function onState(s) {
         }
     }
 
-    // Chart
-    if (chart && s.ext_history) {
-        chart.data.labels = s.ext_history.map(h => '');
-        chart.data.datasets[0].data = s.ext_history.map(h => h.rate);
-        chart.update();
+    // Behavior Summary
+    const behavEl = document.getElementById('behavior-text');
+    if (behavEl) {
+        let text = "";
+        if (lastExtinctions !== -1 && s.extinctions > lastExtinctions) {
+            text = "💥 انقراض رخ داد! نسل فعلی نابود شد و نسل جدید با جهش‌های ژنتیکی جدید متولد شد.\\n\\n";
+        } else if (s.metrics && s.metrics.solve_pct !== undefined) {
+            const pct = s.metrics.solve_pct;
+            if (pct > 75) {
+                text = "🧠 ارگانیسم‌ها باهوش شده‌اند! با درصد بالایی زنده می‌مانند و خطرها را پیش‌بینی می‌کنند.\\n\\n";
+            } else if (pct < 25) {
+                text = "⚠️ ارگانیسم‌ها سردرگم هستند. مرگ و میر بالاست و در تقلا برای درک محیط هستند.\\n\\n";
+            } else {
+                text = "🔍 ارگانیسم‌ها در حال کاوش، آزمون و خطا، و یادگیری تدریجی الگوهای محیط هستند.\\n\\n";
+            }
+        }
+        
+        // Elite Behavior Analysis
+        if (s.elite_iq !== undefined) {
+            let eliteDesc = `👑 **رفتار الیت (باهوش‌ترین موجود با سن ${s.elite_age} و هوش ${s.elite_iq}%)**: `;
+            
+            if (s.elite_iq > 80) {
+                eliteDesc += "مغز الیت بسیار پیشرفته شده است. او محیط را به خوبی درک می‌کند ";
+                if (s.metrics && s.metrics.pred > 5) {
+                    eliteDesc += "و توانایی شگفت‌انگیزی در «پیش‌بینی» اتفاقات آینده پیدا کرده است. ";
+                } else {
+                    eliteDesc += "و به سرعت واکنش نشان می‌دهد. ";
+                }
+            } else if (s.elite_iq > 40) {
+                eliteDesc += "مغز الیت در مرحله یادگیری الگوهاست و تا حدودی ارتباط سنسورها با موتورهای حرکتی را کشف کرده است. ";
+            } else {
+                eliteDesc += "مغز الیت هنوز نتوانسته ساختار پیچیده‌ای برای بقا شکل دهد و بیشتر بر اساس شانس زنده مانده است. ";
+            }
+
+            if (s.metrics && s.metrics.hact !== undefined) {
+                if (s.metrics.hact < 0.5) {
+                    eliteDesc += "همچنین حرکات او کاملاً هدفمند، بهینه‌سازی شده و دقیق است (آنتروپی پایین).";
+                } else if (s.metrics.hact > 1.5) {
+                    eliteDesc += "با این حال، هنوز حرکات تصادفی و اکتشافی (آزمون و خطا) در رفتار او دیده می‌شود.";
+                }
+            }
+            text += eliteDesc;
+        }
+        behavEl.innerHTML = text.replace(/\\n/g, "<br>");
     }
+    lastExtinctions = s.extinctions;
 
     // RAM Canvas
     if (s.ram_b64 && imgData) {
@@ -137,33 +151,79 @@ function onState(s) {
 
             if (v === 0x55) { r = 52; g = 211; b = 153; }
             else if (v === 0xAA) { r = 56; g = 189; b = 248; }
-            else if (v === 0xFF) { r = 244; g = 63; b = 94; }
             else if (v >= 32 && v <= 126) { r = 167; g = 139; b = 250; }
 
-            if (window._hl && window._hl !== (v === 0x55 ? 'energy' : v === 0xAA ? 'shelter' : v === 0xFF ? 'trap' : v >= 32 && v <= 126 ? 'book' : null)) {
+            if (window._hl && window._hl !== (v === 0x55 ? 'energy' : v === 0xAA ? 'shelter' : v >= 32 && v <= 126 ? 'book' : null)) {
                 r = r >> 3; g = g >> 3; b = b >> 3;
             }
 
             px[p] = r; px[p+1] = g; px[p+2] = b; px[p+3] = 255;
         }
 
-        // Organisms
         const orgs = s.orgs;
+        const org_ages = s.org_ages || [];
+        const org_iqs = s.org_iqs || [];
         const screaming = new Set(s.screaming_orgs || []);
         for (let i = 0; i < orgs.length; i++) {
             const pos = orgs[i];
             if (pos >= 0 && pos < len) {
                 const p = pos << 2;
                 const sc = screaming.has(pos);
+                const isElite = (pos === s.elite_pos);
                 const type = sc ? 'voice' : 'ip';
                 let r, g, b;
-                if (sc) { r = 250; g = 204; b = 21; }
+                if (isElite) { r = 255; g = 255; b = 255; }
+                else if (sc) { r = 250; g = 204; b = 21; }
                 else { r = 96; g = 165; b = 250; }
                 if (window._hl && window._hl !== type) { r >>= 3; g >>= 3; b >>= 3; }
                 px[p] = r; px[p+1] = g; px[p+2] = b;
             }
         }
         ctx.putImageData(imgData, 0, 0);
+
+        const w = canvas.width;
+        const maxAge = s.elite_age || 1;
+
+        for (let i = 0; i < orgs.length; i++) {
+            const pos = orgs[i];
+            if (pos < 0 || pos >= len) continue;
+            const age = org_ages[i] || 0;
+            const iq = org_iqs[i] || 0;
+            const isElite = (pos === s.elite_pos);
+            const x = pos % w;
+            const y = Math.floor(pos / w);
+            
+            if (isElite) {
+                // Elite glow scales with its IQ (baseline ~400 for a very smart elite)
+                let iqRatio = Math.min((s.elite_iq || 0) / 400, 1.0);
+                let eRad = 4 + (iqRatio * 4);
+                let eBlur = 5 + (iqRatio * 15);
+                let eOp = 0.4 + (iqRatio * 0.6);
+                
+                ctx.beginPath();
+                ctx.arc(x, y, eRad, 0, 2 * Math.PI);
+                ctx.fillStyle = `rgba(255, 255, 255, ${eOp})`;
+                ctx.shadowColor = 'white';
+                ctx.shadowBlur = eBlur;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#facc15';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                // Normal organisms scale with IQ (baseline ~200 for bright)
+                let ratio = Math.min(iq / 200, 1.0);
+                if (ratio > 0.05) {
+                    ctx.beginPath();
+                    let rad = 2 + ratio * 3;
+                    ctx.arc(x, y, rad, 0, 2 * Math.PI);
+                    ctx.fillStyle = `rgba(96, 165, 250, ${0.2 + ratio * 0.6})`;
+                    ctx.fill();
+                }
+            }
+        }
     }
 
     // Terminal events
@@ -559,17 +619,4 @@ if (togNiche) {
     });
 }
 
-// ── Oracle Terminal Input Handler (Exp 66) ───────────────────
-const termIn = document.getElementById('term-in');
-if (termIn) {
-    termIn.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && termIn.value.trim()) {
-            const txt = termIn.value.trim();
-            if (ws && ws.readyState === 1) {
-                ws.send(JSON.stringify({ type: 'broadcast', text: txt }));
-                tprint('› Human Broadcast: ' + txt, 't-sys');
-            }
-            termIn.value = '';
-        }
-    });
-}
+

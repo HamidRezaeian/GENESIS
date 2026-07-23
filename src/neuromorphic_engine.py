@@ -78,6 +78,10 @@ ACT_PROBE = os.environ.get("GENESIS_ACTPROBE", "0") == "1"
 # -> byte-identical when off. Reuses the crowd scan already walked for the crowding sense + action_now.
 NICHE_ECON = os.environ.get("GENESIS_NICHE_ECON", "1") == "1"
 
+# TRUE COMPUTATIONAL CONTENTION (Rule 13) — Replaces authored density viscosity with shared memory bus.
+# When ON, organisms contend for limited bandwidth per memory bank.
+TRUE_CONTENTION = os.environ.get("GENESIS_TRUE_CONTENTION", "0") == "1"
+
 # READING DEPLETION (Exp 24, Wall-1 lever, default-OFF). The 23-experiment blocker "the free library is
 # an infinite uncontested resource" (Exp 13/20/22, and the wall that killed every Exp-24 stigmergy
 # design) has one root: reading income is MINTED (energy += net/8*CELL_STATES, drawn from no cell) on a
@@ -220,7 +224,7 @@ SCRATCH_MARKER = 199   # hidden-neuron gene marking an external-register STORE e
 # Ring capacity = the register's bit-width (8 bits/byte). Rule 17 HARDWARE-DERIVED — the natural history
 # depth of a byte, not a picked "8". (BITS_PER_BYTE itself is defined below with the other byte constants;
 # this early flag block only needs the integer, so it is written as the bit-count of an 8-bit register.)
-DELAY_BUF = 8   # == BITS_PER_BYTE (bits in the RAM register), defined-below
+DELAY_BUF = 256 # curriculum maximum delay capacity (bits in the RAM register), defined-below
 
 # ERROR / TEACHING-SIGNAL PLASTICITY (Exp 35, default-OFF) — the diagnosed fix for the Exp-34 negative.
 # Exp 34 proved credit-assigning STDP (STDP3C) can PRUNE a wrong-firing pathway but cannot RECRUIT a
@@ -469,7 +473,7 @@ def free_block(start, count, g_map):
 def parse_receptors(
     g_ptr, g_count, global_genome, org_id,
     o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m,
-    o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max
+    o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max, o_rec_tau_e
 ):
     for i in range(MAX_RECEPTORS_PER_ORG):
         o_rec_a_plus[org_id, i] = 0.0
@@ -479,6 +483,7 @@ def parse_receptors(
         o_rec_v_rest[org_id, i] = 0.0
         o_rec_v_reset[org_id, i] = 0.0
         o_rec_tau_def[org_id, i] = 1.0
+        o_rec_tau_e[org_id, i] = 1.0
         o_rec_spk_max[org_id, i] = 1.0
         
     i = 0
@@ -497,6 +502,7 @@ def parse_receptors(
             o_rec_v_rest[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 6])
             o_rec_v_reset[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 7])
             o_rec_tau_def[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 8]) + 1.0
+            o_rec_tau_e[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 8]) * 4.0 + 1.0
             o_rec_spk_max[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 9]) / 255.0
             rec_found += 1
             i += 10
@@ -712,7 +718,7 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     sense_buf[1] = 0.5
     sense_buf[2] = 0.5
     
-    addr = pos % RAM_SIZE
+    addr = pos
     ram_byte = ram_substrate[addr]
     v = ram_byte / np.float32(255.0)
     sense_buf[3] = v
@@ -725,8 +731,8 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
         if (ram_byte >> bit) & 1:
             sense_buf[RAM_BIT0_INPUT + bit] = 1.0
     
-    left_pos = (pos - 1) % RAM_SIZE
-    right_pos = (pos + 1) % RAM_SIZE
+    left_pos = pos - 1 if pos > 0 else 0
+    right_pos = pos + 1 if pos < RAM_SIZE - 1 else pos
     
     voice_acc = 0
     # Neighbour-voice sense (inputs 4-6): live vocal_cords. NOTE (Exp 15 isolation): this is the
@@ -751,8 +757,8 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     food_ahead = np.float32(0.0)
     food_behind = np.float32(0.0)
     for k in range(1, FOOD_SCAN_RADIUS + 1):
-        ba = ram_substrate[(addr + k) % RAM_SIZE]
-        bb = ram_substrate[(addr - k + RAM_SIZE) % RAM_SIZE]
+        ba = ram_substrate[addr + k] if addr + k < RAM_SIZE else 0
+        bb = ram_substrate[addr - k] if addr - k >= 0 else 0
         if SEEK_TEXT:
             # Books economy: climb toward readable symbols (printable, non-food, non-empty).
             if ba >= 32 and ba <= 126 and ba != 0x55:
@@ -777,7 +783,10 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
     array). Called once per tick per sensor neuron; its memory reads are charged as honest work by the
     caller. NOTE: a sampled neighbour affordance (energy/voice) at an EMPTY cell reads 0 — absence is
     information too. own_energy is the calling organism's own reserve (for interoception)."""
-    addr = (pos + offset + RAM_SIZE) % RAM_SIZE
+    target = pos + offset
+    if target < 0 or target >= RAM_SIZE:
+        return 0.0
+    addr = target
     if aff_type == 0:
         # RAM byte value at offset (analog chemoreception of the substrate)
         return np.float32(ram_substrate[addr]) / np.float32(255.0)
@@ -811,15 +820,17 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
 def world_tick_numba(
     ram_substrate, org_grid, positions, alive, energy, age,
     global_v, global_ref, global_t_last, global_thresh, global_tau, global_rec_id,
-    global_conn_src, global_conn_dst, global_conn_weight,
+    global_conn_src, global_conn_dst, global_conn_weight, global_conn_elig, global_conn_elig_t,
     neuron_map, synapse_map, genome_map,
     org_n_ptr, org_n_count, org_s_ptr, org_s_count,
     global_genome, org_g_ptr, org_g_count,
-    o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max,
+    o_rec_a_plus, o_rec_a_minus, o_rec_tau_p, o_rec_tau_m, o_rec_v_rest, o_rec_v_reset, o_rec_tau_def, o_rec_spk_max, o_rec_tau_e,
     viscosity, global_time, org_lif_steps,
     b_pos, b_parent, b_g_start, b_g_count, b_genomes, b_energy,
     oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
-    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf, org_stomach_fuel, org_scratch
+    global_sense_type, global_sense_meta, global_act_drive, org_delay_buf, org_stomach_fuel, org_scratch,
+    ram_bank_access, ram_bank_access_next,
+    curriculum_delay
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -893,7 +904,8 @@ def world_tick_numba(
         # width IS the count of cells scanned, a fact of the scan, so density = occupied / cells-looked-at.
         crowd_count = np.float32(0.0)
         for offset in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
-            if org_grid[(pos + offset + RAM_SIZE) % RAM_SIZE] != -1:
+            target = pos + offset
+            if 0 <= target < RAM_SIZE and org_grid[target] != -1:
                 crowd_count += 1.0
         crowding = crowd_count / np.float32(2 * FOOD_SCAN_RADIUS + 1)
 
@@ -909,9 +921,29 @@ def world_tick_numba(
         # it fills half the largest body the substrate allows, not at an invented 500. Derived purely from
         # the DNA cap + the bytes-per-synapse decode width; no tuned number.
         footprint = np.float32(n_count) + np.float32(org_s_count[org])
-        local_viscosity = footprint / np.float32(MAX_DNA_PER_ORG / 2)
-        if local_viscosity > np.float32(0.5):
-            local_viscosity = np.float32(0.5)
+        
+        if TRUE_CONTENTION:
+            # TRUE CONTENTION: memory bandwidth is rivalrous.
+            # 65536 bytes RAM is divided into 256 banks of 256 bytes.
+            bank_id = (pos // 256) % 256
+            
+            # The more memory footprint (synapses) the organism has, the more it hits the bank.
+            # Instead of arbitrary prob, viscosity is scaled by actual local contention in the previous tick.
+            # If a bank had > 4 dense brains in it last tick, contention rises steeply.
+            bank_load = np.float32(ram_bank_access[bank_id])
+            local_viscosity = bank_load / np.float32(4000.0) # Assume saturation starts at ~4000 synapse reads/tick
+            
+            if local_viscosity > np.float32(0.5):
+                local_viscosity = np.float32(0.5)
+            
+            # Record our own memory footprint onto the bank for the NEXT tick
+            ram_bank_access_next[bank_id] += np.int32(footprint)
+            
+        else:
+            local_viscosity = footprint / np.float32(MAX_DNA_PER_ORG / 2)
+            if local_viscosity > np.float32(0.5):
+                local_viscosity = np.float32(0.5)
+            
         viscosity[org] = local_viscosity
 
         # Sensory input is invariant across this organism's LIF sub-steps: energy, pointer
@@ -1155,18 +1187,17 @@ def world_tick_numba(
                             dt = np.float32(t_now - t_pre) * DT
                             r_idx = global_rec_id[n_ptr + dst]
                             if not STDP_COSTONLY:
-                                w = global_conn_weight[s_ptr + c]
-                                # HARDWARE-DERIVED graded step (Rule 17, 2026-07-18): the DNA-encoded
-                                # amplitude o_rec_a_plus (raw byte / STDP_SCALE, so 0..~32) is scaled so a
-                                # FULL-scale amplitude moves the weight by at most ONE MICROSTATE (1 of
-                                # CELL_STATES=256 states) per event — i.e. divide by CELL_STATES/STDP_SCALE.
-                                # This makes plasticity graded/distributed (Rule 11) from the register's own
-                                # numbers (byte state-count / bit-width), retiring the tuned STDP_DIV knob:
-                                # evolution still sets the RATE via a_plus, but the physical quantum caps the
-                                # step so no single event can slam the rail (the bang-bang Exp-31 diagnosed).
-                                w += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV * dst_gain
-                                if w > W_MAX: w = W_MAX
-                                global_conn_weight[s_ptr + c] = w
+                                t_last_elig = global_conn_elig_t[s_ptr + c]
+                                dt_elig = np.float32(t_now - t_last_elig)
+                                e = global_conn_elig[s_ptr + c]
+                                tau_e = o_rec_tau_e[org, r_idx]
+                                if dt_elig > 0 and tau_e > 1.0:
+                                    e = e * np.exp(-dt_elig / tau_e)
+                                elif dt_elig > 0:
+                                    e = np.float32(0.0)
+                                e += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV
+                                global_conn_elig[s_ptr + c] = e
+                                global_conn_elig_t[s_ptr + c] = t_now
                             # Plasticity is real compute (an exp() + weight write). Charge it when
                             # it actually fires, so learning carries its own honest energy cost and
                             # a brain thrashing a huge plastic fabric pays for it — activity-gated,
@@ -1179,12 +1210,17 @@ def world_tick_numba(
                             dt = np.float32(t_now - t_post) * DT
                             r_idx = global_rec_id[n_ptr + dst]
                             if not STDP_COSTONLY:
-                                w = global_conn_weight[s_ptr + c]
-                                # same hardware-derived graded step as the LTP branch above (one-microstate
-                                # cap via /(CELL_STATES/STDP_SCALE)); STDP_DIV retired.
-                                w -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV * dst_gain
-                                if w < W_MIN: w = W_MIN
-                                global_conn_weight[s_ptr + c] = w
+                                t_last_elig = global_conn_elig_t[s_ptr + c]
+                                dt_elig = np.float32(t_now - t_last_elig)
+                                e = global_conn_elig[s_ptr + c]
+                                tau_e = o_rec_tau_e[org, r_idx]
+                                if dt_elig > 0 and tau_e > 1.0:
+                                    e = e * np.exp(-dt_elig / tau_e)
+                                elif dt_elig > 0:
+                                    e = np.float32(0.0)
+                                e -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV
+                                global_conn_elig[s_ptr + c] = e
+                                global_conn_elig_t[s_ptr + c] = t_now
                             total_atp += CYCLES_PER_STDP_UPDATE
 
             # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
@@ -1237,7 +1273,8 @@ def world_tick_numba(
                 for noff in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
                     if noff == 0:
                         continue
-                    nb2 = org_grid[(pos + noff + RAM_SIZE) % RAM_SIZE]
+                    target = pos + noff
+                    nb2 = org_grid[target] if 0 <= target < RAM_SIZE else -1
                     if nb2 != -1 and nb2 != org and alive[nb2] and action_now[nb2] == best_a:
                         niche_same += 1
                 
@@ -1304,7 +1341,9 @@ def world_tick_numba(
                 if (org_char_val >> b) & 1:
                     s_bits += 1
             for side in range(2):
-                npos = (pos - 1 + RAM_SIZE) % RAM_SIZE if side == 0 else (pos + 1) % RAM_SIZE
+                npos = pos - 1 if side == 0 else pos + 1
+                if npos < 0 or npos >= RAM_SIZE:
+                    continue
                 nb = org_grid[npos]
                 if nb != -1 and nb != org and alive[nb]:
                     a_now = action_now[nb]       # neighbour's FRESH motor decision (t) if it stepped this tick
@@ -1402,8 +1441,11 @@ def world_tick_numba(
         # prediction. Silence (0) scores 0 (no spurious reward). Full 8-bit match logs type 1
         # (a solved prediction); a nonzero wrong guess logs type 2 (miss).
         grazed = False
-        nxt = (pos + 1) % RAM_SIZE
-        next_byte = ram_substrate[nxt]
+        nxt = pos + 1
+        if nxt < RAM_SIZE:
+            next_byte = ram_substrate[nxt]
+        else:
+            next_byte = 0
         if next_byte >= 32 and next_byte <= 126 and next_byte != 0x55:
             # WITHIN-LIFETIME REMAP (Exp 34): the reward target is next_byte LEFT-ROTATED by this tick's
             # phase (remap_rot bits). rot==0 is the ordinary echo/predict target (byte-identical to the
@@ -1426,7 +1468,7 @@ def world_tick_numba(
                 # AGO (org_delay_buf, a shift ring pushed with the CURRENT sensed byte at the top of this
                 # org's processing below). It is on NO current input, so only a brain that HELD it across
                 # DELAY_N ticks can emit it. Slot 0 = most recent pushed; slot DELAY_N = DELAY_N ago.
-                dn = int(DELAY_N)
+                dn = int(curriculum_delay)
                 if dn < DELAY_BUF:
                     dbyte = np.int64(org_delay_buf[org, dn])
                     if dbyte >= 32 and dbyte <= 126 and dbyte != 0x55:
@@ -1450,6 +1492,40 @@ def world_tick_numba(
                     if STDP3C:
                         org_elig[org, b] = np.float32(0.0)
             net = correct_bits - wrong_bits
+            
+            if STDP3C and (correct_bits > 0 or wrong_bits > 0):
+                dopamine = np.float32(net)
+                # Apply Reward-Modulated STDP using eligibility traces
+                t_end = global_time + n_steps
+                learning_rate = np.float32(1.0) # We use a static learning rate instead of org_reward which is set later
+                for c in range(s_count):
+                    s_idx = s_ptr + c
+                    dst = global_conn_dst[s_idx]
+                    r_idx = global_rec_id[n_ptr + dst]
+                    tau_e = o_rec_tau_e[org, r_idx]
+                    
+                    t_last_elig = global_conn_elig_t[s_idx]
+                    dt_elig = np.float32(t_end - t_last_elig)
+                    e = global_conn_elig[s_idx]
+                    
+                    if dt_elig > 0 and tau_e > 1.0:
+                        e = e * np.exp(-dt_elig / tau_e)
+                    elif dt_elig > 0:
+                        e = np.float32(0.0)
+                    
+                    if dst >= N_INPUT + 6 and dst < N_IO:
+                        D = org_elig[org, dst - N_INPUT - 6]
+                    else:
+                        D = dopamine
+                    
+                    w = global_conn_weight[s_idx]
+                    w += e * D * learning_rate
+                    if w > W_MAX: w = W_MAX
+                    elif w < W_MIN: w = W_MIN
+                    global_conn_weight[s_idx] = w
+                    
+                    global_conn_elig[s_idx] = e
+                    global_conn_elig_t[s_idx] = t_end
 
             # ERROR / TEACHING-SIGNAL PLASTICITY (Exp 35): the local delta rule that supplies the
             # RECRUITMENT gradient STDP3C structurally cannot (Exp 34). For each vocal bit b, the error
@@ -1507,16 +1583,16 @@ def world_tick_numba(
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
-                if DELAY and DELAY_N >= 2 and not DIGESTION:
+                if DELAY and curriculum_delay >= 2 and not DIGESTION:
                     # Scale reward to offset the metabolic tax of the SCRATCH addressing fabric
                     # (which costs 32 cycles/tick for 32 recall sensors).
-                    gain *= np.float32(DELAY_N * 8.0)
+                    gain *= np.float32(curriculum_delay * 8.0)
                 
                 if DIGESTION:
                     # GROUNDED DIGESTION (Exp 48, Rule 15 physical conservation): 
                     # The energy cannot be scaled by a magic multiplier. Instead, the organism extracts 
                     # the fuel it SWALLOWED DELAY_N ticks ago. If net > 0, it extracts the matching fraction.
-                    dn = int(DELAY_N)
+                    dn = int(curriculum_delay)
                     swallowed_fuel = np.float32(0.0)
                     if dn < DELAY_BUF:
                         swallowed_fuel = org_stomach_fuel[org, dn]
@@ -1629,10 +1705,10 @@ def world_tick_numba(
         if best_n > 0 and best_a >= 0:
             if (not grazed) and best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
                 npos = pos
-                if best_a == OUT_JMP_FWD: npos = (pos + 1) % RAM_SIZE
-                elif best_a == OUT_JMP_BCK: npos = (pos - 1 + RAM_SIZE) % RAM_SIZE
-                elif best_a == OUT_JMP_FWD_10: npos = (pos + LONG_JUMP_STRIDE) % RAM_SIZE
-                elif best_a == OUT_JMP_BCK_10: npos = (pos - LONG_JUMP_STRIDE + RAM_SIZE) % RAM_SIZE
+                if best_a == OUT_JMP_FWD: npos = min(pos + 1, RAM_SIZE - 1)
+                elif best_a == OUT_JMP_BCK: npos = max(pos - 1, 0)
+                elif best_a == OUT_JMP_FWD_10: npos = min(pos + LONG_JUMP_STRIDE, RAM_SIZE - 1)
+                elif best_a == OUT_JMP_BCK_10: npos = max(pos - LONG_JUMP_STRIDE, 0)
                 
                 energy[org] -= CYCLES_PER_MOVE
                 if org_grid[npos] == -1:
