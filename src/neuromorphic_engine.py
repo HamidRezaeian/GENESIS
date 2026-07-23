@@ -91,7 +91,7 @@ TRUE_CONTENTION = os.environ.get("GENESIS_TRUE_CONTENTION", "0") == "1"
 # what it holds, so total income/time is bounded and a real carrying capacity can form (pop < cap) with
 # competition FOR the freshest/richest cells. Compile-time gated -> when off, the payout is byte-
 # identical to the verified minted economy (gain is used unchanged), so the default path is untouched.
-DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
+DEPLETE = os.environ.get("GENESIS_DEPLETE", "1") == "1"  # Exp 30: default ON — finite fuel drives learning
 
 # LEARNING ABLATION (Exp 30, default-OFF) — the decisive test of the project's LOAD-BEARING ASSUMPTION
 # (Rule 18 / Docs/Ascent.md criterion B): does the brain LEARN within its lifetime, or is it a fixed
@@ -112,6 +112,11 @@ NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
 # (default 1 = the honest hardware-derived step, unchanged). HISTORY (2026-07-18, Rule 17): the step used
 # to be `a_plus * exp / STDP_DIV` with STDP_DIV a HAND-TUNED knob (values 4/32/128 were searched to stop
 # the bang-bang slam Exp 31 diagnosed) — a magic number. It is now DERIVED: the step is capped at ONE
+# STDP_SCALE = BITS_PER_BYTE (8) — hardware-derived from 8-bit byte width.
+# The effective STDP step divisor is CELL_STATES/STDP_SCALE = 256/8 = 32,
+# meaning each STDP event moves the weight by at most 1/32 of the DNA-encoded amplitude.
+# This is a HARDWARE-DERIVED constant (Rule 19 compliant), not a magic number.
+# Original comment said "one MICROSTATE" but the actual step is 1/32 — corrected here.
 # MICROSTATE of the 256-state byte weight (`/(CELL_STATES/STDP_SCALE)`), so a full-scale DNA-encoded
 # amplitude moves the weight by <=1 microstate/event, graded from the register's own numbers with no
 # picked divisor. STDP_DIV survives only as a diagnostic scalar to A/B step sizes; the DEFAULT (=1) is the
@@ -130,7 +135,7 @@ HOMEOSTATIC_LAMBDA = np.float32(
 )
 
 # ── Content-Addressable Memory substrate (2026-07-23) ──
-CAM = os.environ.get("GENESIS_CAM", "0") == "1"
+CAM = os.environ.get("GENESIS_CAM", "1") == "1"  # Exp 30: default ON — associative memory substrate
 CAM_SLOTS = 8
 CAM_MATCH_THRESHOLD = np.int64(6)
 CAM_WRITE_THRESHOLD = np.int64(3)

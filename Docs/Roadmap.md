@@ -859,3 +859,34 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
       `eat_gain_sweep.py` / `book_read_test.py` / `tierra_trap_test.py` (which set `GENESIS_EAT_GAIN`/
       `GENESIS_READ_SCALE` and one of which asserts `ne.CYCLES_PER_EAT_GAIN`) are now **obsolete** and
       should be retired or rewritten to the CELL_STATES currency.
+
+
+---
+
+## Post-Exp 30 Roadmap (2026-07-23)
+
+### Proven Architecture (Default)
+- Homeostatic STDP (λ=0.01) — prevents weight drift
+- CAM v2 (write-on-reward) — associative working memory
+- DEPLETE mode — finite fuel creates selective pressure
+- Phased Refugium — prevents extinction while maintaining pressure
+- Hard_WM curriculum — 16 cues, random permutation, delays 4-64
+
+### Next Milestones
+
+1. **Scalability Test**: CAM_SLOTS 8→32, initial pop 500
+   - Does the architecture work with larger populations?
+   
+2. **Compositionality Test**: Multi-step problems (A→B→C chains)
+   - Can organisms chain multiple CAM lookups?
+   
+3. **Structural Plasticity**: Synapse creation/pruning during lifetime
+   - Grow new circuits, not just adjust weights
+   
+4. **Dendritic Computation**: Non-linear local processing
+   - Branch-level computation before soma integration
+
+### Kill Criteria
+- If scalability test shows accuracy < 20% with pop > 200: architecture doesn't scale
+- If compositionality test shows no improvement over single-step: CAM is insufficient
+- If structural plasticity doesn't improve accuracy: weight-only plasticity is the ceiling
