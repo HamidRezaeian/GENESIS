@@ -122,6 +122,20 @@ NOLEARN = os.environ.get("GENESIS_NOLEARN", "0") == "1"
 STDP_COSTONLY = os.environ.get("GENESIS_STDP_COSTONLY", "0") == "1"
 STDP_DIV = np.float32(float(os.environ.get("GENESIS_STDP_DIV", "1")))
 
+# ── Homeostatic STDP anchoring (Exp 30 fix, 2026-07-23) ──
+# λ = 0 → byte-identical to current STDP (DCE eliminates the branch).
+# λ = 0.01 → weights anchored ±10% around DNA baseline.
+HOMEOSTATIC_LAMBDA = np.float32(
+    float(os.environ.get("GENESIS_HOMEOSTATIC_LAMBDA", "0.01"))
+)
+
+# ── Content-Addressable Memory substrate (2026-07-23) ──
+CAM = os.environ.get("GENESIS_CAM", "0") == "1"
+CAM_SLOTS = 8
+CAM_MATCH_THRESHOLD = np.int64(6)
+CAM_WRITE_THRESHOLD = np.int64(3)
+
+
 # THREE-FACTOR / NEUROMODULATED PLASTICITY (Exp 32, default-OFF) — the diagnosed fix for net-negative
 # STDP (Exp 31). Plain two-factor Hebbian STDP is UNSUPERVISED: it reinforces any temporal coincidence
 # with no notion of whether the prediction was CORRECT, so it drifts the decode-good weights toward
@@ -469,6 +483,82 @@ def free_block(start, count, g_map):
         for i in range(start, start + count):
             g_map[i] = False
 
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CAM: Content-Addressable Memory (Exp 30 fix, 2026-07-23)
+# A per-organism, non-leaky key-value store for working memory substrate.
+# Numba-safe: flat NumPy arrays, pure math, no Python objects.
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@njit(cache=True)
+def cam_read(
+    g_cam_keys,          # (MAX_ORG, CAM_SLOTS, 8) float32 — stored key bits
+    g_cam_vals,          # (MAX_ORG, CAM_SLOTS) int64 — stored value bytes
+    g_cam_valid,         # (MAX_ORG, CAM_SLOTS) int64 — slot occupancy
+    org,                 # organism id
+    sense_buf,           # (N_INPUT,) float32 — current sensor readings
+    RAM_BIT0_INPUT,      # first input channel of the reading eye
+    CAM_SLOTS,           # number of slots per organism
+    CAM_MATCH_THRESHOLD, # minimum Hamming distance for a match
+):
+    """
+    Hamming similarity search: compare the current 8-bit sensory byte
+    against all stored keys. Return the best-matching value.
+    Returns (found: bool represented as int64, value: int64)
+    """
+    best_sim = np.int64(0)
+    best_val = np.int64(0)
+    for slot in range(CAM_SLOTS):
+        if g_cam_valid[org, slot]:
+            sim = np.int64(0)
+            for bit in range(8):
+                key_bit = g_cam_keys[org, slot, bit]
+                sense_bit = sense_buf[RAM_BIT0_INPUT + bit]
+                if (key_bit > 0.5) == (sense_bit > 0.5):
+                    sim += 1
+            if sim > best_sim:
+                best_sim = sim
+                best_val = g_cam_vals[org, slot]
+    if best_sim >= CAM_MATCH_THRESHOLD:
+        return (np.int64(1), best_val)
+    else:
+        return (np.int64(0), np.int64(0))
+
+
+@njit(cache=True)
+def cam_write(
+    g_cam_keys,          # (MAX_ORG, CAM_SLOTS, 8) float32
+    g_cam_vals,          # (MAX_ORG, CAM_SLOTS) int64
+    g_cam_valid,         # (MAX_ORG, CAM_SLOTS) int64
+    g_cam_tick,          # (MAX_ORG, CAM_SLOTS) int64 — write timestamps
+    org,                 # organism id
+    key_byte,            # int64 — sensory byte to store as key
+    val_byte,            # int64 — vocal byte to store as value
+    current_tick,        # int64 — current global time (for LRU age)
+    CAM_SLOTS,           # number of slots per organism
+):
+    """
+    LRU-evicting CAM write. Overwrites the least-recently-used slot.
+    """
+    target_slot = np.int64(0)
+    found_empty = False
+    lru_tick = g_cam_tick[org, 0] if g_cam_valid[org, 0] else np.int64(-1)
+    for slot in range(CAM_SLOTS):
+        if g_cam_valid[org, slot] == 0:
+            target_slot = slot
+            found_empty = True
+            break
+        if g_cam_tick[org, slot] < lru_tick:
+            lru_tick = g_cam_tick[org, slot]
+            target_slot = slot
+    for bit in range(8):
+        g_cam_keys[org, target_slot, bit] = np.float32((key_byte >> bit) & 1)
+    g_cam_vals[org, target_slot] = val_byte
+    g_cam_valid[org, target_slot] = np.int64(1)
+    g_cam_tick[org, target_slot] = current_tick
+
 @njit(cache=True)
 def parse_receptors(
     g_ptr, g_count, global_genome, org_id,
@@ -564,7 +654,8 @@ def decode_genome(
     global_conn_src, global_conn_dst, global_conn_weight,
     global_thresh, global_tau, global_rec_id,
     o_rec_v_rest, o_rec_tau_def, org_id,
-    global_sense_type, global_sense_meta, global_act_drive
+    global_sense_type, global_sense_meta, global_act_drive,
+    g_conn_w_dna,  # (N_SYN,) float32: DNA birth weight
 ):
     s_idx = 0
     h_idx = 0
@@ -594,6 +685,7 @@ def decode_genome(
                     global_conn_src[s_ptr + s_idx] = actual_src
                     global_conn_dst[s_ptr + s_idx] = actual_dst
                     global_conn_weight[s_ptr + s_idx] = np.float32(w_raw) - 128.0
+                    g_conn_w_dna[s_ptr + s_idx] = np.float32(w_raw) - 128.0
                     s_idx += 1
             i += 4
         elif marker == NEURON_MARKER and i + 4 < g_count:
@@ -830,7 +922,12 @@ def world_tick_numba(
     oracle_val, oracle_target, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, read_log, read_fuel, cell_owner, read_hits, canvas_lo, canvas_hi, org_reward, org_elig,
     global_sense_type, global_sense_meta, global_act_drive, org_delay_buf, org_stomach_fuel, org_scratch,
     ram_bank_access, ram_bank_access_next,
-    curriculum_delay
+    curriculum_delay,
+    g_conn_w_dna,            # (N_SYN,) float32: DNA birth weights
+    g_cam_keys,              # (MAX_ORG, CAM_SLOTS, 8) float32: CAM key bits
+    g_cam_vals,              # (MAX_ORG, CAM_SLOTS) int64: CAM values
+    g_cam_valid,             # (MAX_ORG, CAM_SLOTS) int64: CAM slot occupancy
+    g_cam_tick,              # (MAX_ORG, CAM_SLOTS) int64: CAM write timestamps
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -955,6 +1052,19 @@ def world_tick_numba(
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
+
+        # ── CAM READ (Exp 30 fix): feed CAM output as input channel 1 ──
+        if CAM:
+            cam_found, cam_val = cam_read(
+                g_cam_keys, g_cam_vals, g_cam_valid,
+                org, sense_buf, RAM_BIT0_INPUT,
+                CAM_SLOTS, CAM_MATCH_THRESHOLD,
+            )
+            if cam_found:
+                sense_buf[1] = np.float32(cam_val) / np.float32(255.0)
+            else:
+                sense_buf[1] = np.float32(0.0)
+            total_atp += np.float32(CAM_SLOTS)
 
         # EVOLVABLE SENSORS (Exp 37): transduce each DNA-declared sensor neuron ONCE per tick from its
         # physical affordance (tick-invariant, exactly like sense() above). A sensor neuron lives in the
@@ -1202,6 +1312,13 @@ def world_tick_numba(
                             # it actually fires, so learning carries its own honest energy cost and
                             # a brain thrashing a huge plastic fabric pays for it — activity-gated,
                             # so sparse-firing large brains are not penalised (Rule 7/11/17).
+                            # ── Homeostatic anchoring (Exp 30 fix) ──
+                            if HOMEOSTATIC_LAMBDA > np.float32(0.0):
+                                w_now = global_conn_weight[s_ptr + c]
+                                w_now -= HOMEOSTATIC_LAMBDA * (w_now - g_conn_w_dna[s_ptr + c])
+                                if w_now > W_MAX: w_now = W_MAX
+                                elif w_now < W_MIN: w_now = W_MIN
+                                global_conn_weight[s_ptr + c] = w_now
                             total_atp += CYCLES_PER_STDP_UPDATE
 
                     elif curr_spk_buf[src]:
@@ -1221,6 +1338,13 @@ def world_tick_numba(
                                 e -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV
                                 global_conn_elig[s_ptr + c] = e
                                 global_conn_elig_t[s_ptr + c] = t_now
+                            # ── Homeostatic anchoring (Exp 30 fix) ──
+                            if HOMEOSTATIC_LAMBDA > np.float32(0.0):
+                                w_now = global_conn_weight[s_ptr + c]
+                                w_now -= HOMEOSTATIC_LAMBDA * (w_now - g_conn_w_dna[s_ptr + c])
+                                if w_now > W_MAX: w_now = W_MAX
+                                elif w_now < W_MIN: w_now = W_MIN
+                                global_conn_weight[s_ptr + c] = w_now
                             total_atp += CYCLES_PER_STDP_UPDATE
 
             # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
@@ -1520,6 +1644,8 @@ def world_tick_numba(
                     
                     w = global_conn_weight[s_idx]
                     w += e * D * learning_rate
+                    # Homeostatic anchoring: pull toward DNA birth weight
+                    w -= HOMEOSTATIC_LAMBDA * (w - g_conn_w_dna[s_idx])
                     if w > W_MAX: w = W_MAX
                     elif w < W_MIN: w = W_MIN
                     global_conn_weight[s_idx] = w
@@ -1580,6 +1706,13 @@ def world_tick_numba(
                                     if w > W_MAX: w = W_MAX
                                     elif w < W_MIN: w = W_MIN
                                     global_conn_weight[ts_ptr + tc] = w
+                                    # ── Homeostatic anchoring (Exp 30 fix) ──
+                                    if HOMEOSTATIC_LAMBDA > np.float32(0.0):
+                                        w_now = global_conn_weight[s_ptr + c]
+                                        w_now -= HOMEOSTATIC_LAMBDA * (w_now - g_conn_w_dna[s_ptr + c])
+                                        if w_now > W_MAX: w_now = W_MAX
+                                        elif w_now < W_MIN: w_now = W_MIN
+                                        global_conn_weight[s_ptr + c] = w_now
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES

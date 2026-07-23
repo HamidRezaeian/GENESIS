@@ -185,7 +185,7 @@ CANVAS = os.environ.get("GENESIS_CANVAS", "0") == "1"
 os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "") + ("_lease" if STIG_LEASE else "") + ("_canvas" if CANVAS else "")
 
 from neuromorphic_engine import (
-    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX,
+    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX, CAM_SLOTS,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     SENSOR_MARKER, EVOSENSE, N_AFFORDANCE, ACTUATOR_MARKER, EVOACT,
@@ -248,6 +248,13 @@ g_global_tau = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.float32)
 g_global_conn_src = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_dst = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_weight = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+g_conn_w_dna = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+
+# ── CAM arrays (Exp 30 fix) ──
+g_cam_keys  = np.zeros((MAX_ORGANISMS, CAM_SLOTS, 8), dtype=np.float32)
+g_cam_vals  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
+g_cam_valid = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
+g_cam_tick  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
 g_global_conn_elig = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_global_conn_elig_t = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 
@@ -869,7 +876,8 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
         g_global_conn_src, g_global_conn_dst, g_global_conn_weight,
         g_global_thresh, g_global_tau, g_global_rec_id,
         o_rec_v_rest, o_rec_tau_def, org_id,
-        g_global_sense_type, g_global_sense_meta, g_global_act_drive
+        g_global_sense_type, g_global_sense_meta, g_global_act_drive,
+        g_conn_w_dna,
     )
 
     # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
@@ -1222,9 +1230,10 @@ def sim_loop():
         g_b_pos, g_b_parent, g_b_g_start, g_b_g_count, g_b_genomes, g_b_energy,
         0, 0, voice_buf, vocal_cords, vocal_prev, action_now, action_prev, g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI, g_org_reward, g_org_elig,
         g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
-            g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay
-        )
-
+            g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
+        g_conn_w_dna,
+        g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+    )
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
             g_alive[i] = False
