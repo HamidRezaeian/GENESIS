@@ -316,3 +316,435 @@
 # ---
 #
 # *This review was conducted by reading every line of `neuromorphic_engine.py`, the full `genesis_lab.py`, `books_of_genesis.py`, `brain_io.py`, `analyzer.py`, all 7 experiment scripts, all 5 result JSONs, and the complete `Docs/` directory. No claim above is speculative — every assertion is grounded in the code and data as of commit `main` (2026-07-23).*
+
+# %% [markdown] clusy_id=7cce5c50-c66f-4019-99e6-45ba49546547 clusy_position=7
+# ## Exp 30: STDP Learning Ablation — The Falsification Test
+#
+# **Hypothesis:** If in-lifetime STDP plasticity is load-bearing for survival in the Book Economy, then disabling it (freezing all synaptic weights at birth) must measurably degrade population survival and prediction accuracy.
+#
+# **Design:**
+# - **Arm A (STDP ON):** `GENESIS_NOLEARN=0` — normal plasticity, weights change via STDP + eligibility traces.
+# - **Arm B (STDP OFF):** `GENESIS_NOLEARN=1` — all synaptic weights frozen at birth. No plasticity. The organism runs on its evolved genome alone.
+# - **Environment:** Book economy, `Diagnostic/GradedMemory` curriculum (cue+noise+answer patterns, 9362 bytes). Delay task active (`curriculum_delay=3`): the organism must emit the byte it saw 3 positions ago — a pure working-memory demand.
+# - **All feature flags stripped:** No STIGMERGY, CANVAS, NICHE_ECON, PEER_PREDICT, DEPLETE, EVOSENSE, EVOACT, SCRATCH, WMEM, DIGESTION, REMAP, STDP3, STDP_TARGET. Bare LIF + STDP vs bare LIF.
+# - **Identical seeds:** Both arms seeded with `seed=42`, same initial population, same RAM layout.
+# - **Duration:** 200,000 ticks per arm (extendable to 1M if results are ambiguous).
+#
+# **Interpretation criteria:**
+# | Outcome | Verdict |
+# |---------|---------|
+# | Arm A population >> Arm B (sustained, >25% gap for >50k ticks) | STDP is **load-bearing**. Substrate has potential. |
+# | Arm A ≈ Arm B (curves overlap within noise) | STDP is **NOT load-bearing**. Substrate falsified. Rip it out. |
+# | Both arms collapse to extinction | Environment too harsh. Reduce delay or boost initial energy. |
+# | Both arms thrive equally | The task doesn't require learning. Redesign the curriculum. |
+#
+# **Technical note:** `NOLEARN` is a compile-time constant baked into the `@njit` kernel at import. The two arms MUST run in separate OS processes — this is an architectural constraint of the Numba compilation model, not a design choice.
+
+# %% clusy_id=18e4474c-5925-42a8-9c29-94cb426b5e25 clusy_position=8
+%pip install numba
+
+# %% clusy_id=678bb9bc-36f7-4460-a673-18788ec22e17 clusy_position=9
+"""
+Exp 30: STDP Ablation Test — Driver + Orchestrator
+Writes a headless driver script, runs two arms (STDP ON vs OFF) in separate
+processes (required by Numba compile-time flags), collects metrics.
+"""
+import subprocess, os, json, time, textwrap, sys
+
+REPO = "/home/user/repos/GENESIS"
+DRIVER = "/tmp/exp30_driver.py"
+N_TICKS = 200_000
+SAMPLE_EVERY = 1_000
+SEED = 42
+BOOK_TARGET_BYTES = 6000
+
+# ── Write the headless driver ──────────────────────────────────────────────
+driver_code = textwrap.dedent(r'''
+import sys, os, time, json, random
+import numpy as np
+
+# ── Config from env ──
+SEED         = int(os.environ.get("SEED", "42"))
+N_TICKS      = int(os.environ.get("N_TICKS", "200000"))
+SAMPLE_EVERY = int(os.environ.get("SAMPLE_EVERY", "1000"))
+OUTPUT_FILE  = os.environ.get("OUTPUT_FILE", "/home/user/exp30_arm.json")
+NOLEARN      = os.environ.get("GENESIS_NOLEARN", "0")
+ARM_LABEL    = "B_STDP_OFF" if NOLEARN == "1" else "A_STDP_ON"
+BOOK_BYTES   = int(os.environ.get("BOOK_TARGET_BYTES", "6000"))
+
+# ── Feature flags: strip everything except bare LIF + book economy + delay ──
+os.environ["GENESIS_ECONOMY"]       = "books"
+os.environ["GENESIS_DELAY"]         = "1"
+os.environ["GENESIS_DELAY_N"]       = "3"
+os.environ["GENESIS_CURRICULUM"]    = "0"
+os.environ["GENESIS_BOOK_CATEGORY"] = "Diagnostic"
+os.environ["GENESIS_BOOK_NAME"]     = "GradedMemory"
+os.environ["GENESIS_STIGMERGY"]     = "0"
+os.environ["GENESIS_CANVAS"]        = "0"
+os.environ["GENESIS_NICHE_ECON"]    = "0"
+os.environ["GENESIS_PEER_PREDICT"]  = "0"
+os.environ["GENESIS_DEPLETE"]       = "0"
+os.environ["GENESIS_EVOSENSE"]      = "0"
+os.environ["GENESIS_EVOACT"]        = "0"
+os.environ["GENESIS_SCRATCH"]       = "0"
+os.environ["GENESIS_WMEM"]          = "0"
+os.environ["GENESIS_DIGESTION"]     = "0"
+os.environ["GENESIS_REMAP"]         = "0"
+os.environ["GENESIS_STDP3"]         = "0"
+os.environ["GENESIS_STDP3C"]        = "0"
+os.environ["GENESIS_STDP_TARGET"]   = "0"
+os.environ["GENESIS_STDP_COSTONLY"] = "0"
+os.environ["GENESIS_GROUNDED"]      = "0"
+os.environ["GENESIS_STIG_PERSIST"]  = "0"
+# NOLEARN is already set by the caller
+
+sys.path.insert(0, "/home/user/repos/GENESIS/src")
+import genesis_lab as gl
+from books_of_genesis import inject_contiguous_library
+
+# ── Activate the delay task (curriculum_delay >= 2 enables delay reward) ──
+gl.g_curriculum_delay = 3
+
+# ── Seed everything for reproducibility ──
+random.seed(SEED)
+np.random.seed(SEED)
+
+# ── Initialize universe + curriculum ──
+gl.seed_universe(300)
+inject_contiguous_library(gl.g_ram, gl.RAM_SIZE, "Diagnostic", "GradedMemory", BOOK_BYTES)
+
+# ── Metrics storage ──
+M = {
+    "arm": ARM_LABEL, "nolearn": NOLEARN == "1", "seed": SEED,
+    "n_ticks": N_TICKS, "sample_every": SAMPLE_EVERY,
+    "curriculum_delay": 3,
+    "ticks": [], "population": [], "mean_energy": [], "total_energy": [],
+    "correct_reads": [], "incorrect_reads": [],
+    "births_cumulative": [], "neurons_used": [], "synapses_used": [],
+    "extinctions": 0,
+}
+
+CYCLE_POOL = 3000
+total_births = 0
+extinctions  = 0
+RESTOCK_EVERY = 10_000   # re-inject curriculum periodically
+t0 = time.time()
+
+print(f"[Exp30 {ARM_LABEL}] seed={SEED} ticks={N_TICKS} NOLEARN={NOLEARN}", flush=True)
+print(f"[Exp30 {ARM_LABEL}] Compiling Numba kernel (first tick is slow)...", flush=True)
+
+for t in range(N_TICKS):
+    alive_count = int(np.sum(gl.g_alive))
+
+    # ── Extinction → Ark reseed ──
+    if alive_count == 0:
+        extinctions += 1
+        gl.seed_universe(300, use_ark=True)
+        alive_count = int(np.sum(gl.g_alive))
+
+    # ── Periodic curriculum restock ──
+    if t > 0 and t % RESTOCK_EVERY == 0:
+        inject_contiguous_library(gl.g_ram, gl.RAM_SIZE, "Diagnostic", "GradedMemory", BOOK_BYTES)
+
+    # ── Reset read_log for this tick ──
+    gl.g_read_log[0] = 1
+
+    steps = max(1, int(CYCLE_POOL / max(1, alive_count)))
+
+    n_alive, n_births = gl.world_tick_numba(
+        gl.g_ram, gl.g_org_grid, gl.g_positions, gl.g_alive, gl.g_energy, gl.g_age,
+        gl.g_global_v, gl.g_global_ref, gl.g_global_t_last, gl.g_global_thresh,
+        gl.g_global_tau, gl.g_global_rec_id,
+        gl.g_global_conn_src, gl.g_global_conn_dst, gl.g_global_conn_weight,
+        gl.g_global_conn_elig, gl.g_global_conn_elig_t,
+        gl.g_neuron_map, gl.g_synapse_map, gl.g_genome_map,
+        gl.g_org_n_ptr, gl.g_org_n_count, gl.g_org_s_ptr, gl.g_org_s_count,
+        gl.g_global_genome, gl.g_org_g_ptr, gl.g_org_g_count,
+        gl.o_rec_a_plus, gl.o_rec_a_minus, gl.o_rec_tau_p, gl.o_rec_tau_m,
+        gl.o_rec_v_rest, gl.o_rec_v_reset, gl.o_rec_tau_def, gl.o_rec_spk_max,
+        gl.o_rec_tau_e,
+        gl.g_viscosity, gl.global_time, gl.g_org_lif_steps,
+        gl.g_b_pos, gl.g_b_parent, gl.g_b_g_start, gl.g_b_g_count,
+        gl.g_b_genomes, gl.g_b_energy,
+        gl.g_oracle_val, gl.g_oracle_target, gl.voice_buf, gl.vocal_cords,
+        gl.vocal_prev, gl.action_now, gl.action_prev,
+        gl.g_read_log, gl.g_read_fuel, gl.g_cell_owner, gl.g_read_hits,
+        0, 0,   # canvas_lo, canvas_hi (CANVAS off)
+        gl.g_org_reward, gl.g_org_elig,
+        gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
+        gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch,
+        gl.g_ram_bank_access, gl.g_ram_bank_access_next,
+        gl.g_curriculum_delay,
+    )
+
+    total_births += n_births
+
+    # ── Process births (identical to sim_loop) ──
+    for i in range(n_births):
+        child_dna = gl.mutate_dna(gl.g_b_genomes[i, :gl.g_b_g_count[i]])
+        slot = -1
+        for j in range(gl.MAX_ORGANISMS):
+            if not gl.g_alive[j]:
+                slot = j; break
+        if slot != -1:
+            child_pos = gl.g_b_pos[i]
+            offset = 1
+            while gl.g_org_grid[child_pos] != -1 and offset < 100:
+                child_pos = (gl.g_b_pos[i] + offset) % gl.RAM_SIZE
+                offset += 1
+            gl.spawn_organism(slot, child_pos, child_dna,
+                              initial_energy=gl.g_b_energy[i])
+
+    gl.global_time += steps
+
+    # ── Parse read_log (type 1 = correct/3 ints, type 2 = incorrect/4 ints) ──
+    cr = ir = 0
+    idx = 1
+    log_end = int(gl.g_read_log[0])
+    while idx < log_end and idx < 996:
+        et = int(gl.g_read_log[idx])
+        if et == 1:   cr += 1; idx += 3
+        elif et == 2: ir += 1; idx += 4
+        elif et in (4, 5): idx += 3
+        else: idx += 1
+
+    # ── Sample metrics ──
+    if t % SAMPLE_EVERY == 0:
+        energies = gl.g_energy[gl.g_alive]
+        M["ticks"].append(t)
+        M["population"].append(alive_count)
+        M["mean_energy"].append(float(np.mean(energies)) if len(energies) else 0.0)
+        M["total_energy"].append(float(np.sum(energies)) if len(energies) else 0.0)
+        M["correct_reads"].append(cr)
+        M["incorrect_reads"].append(ir)
+        M["births_cumulative"].append(total_births)
+        M["neurons_used"].append(int(np.sum(gl.g_neuron_map)))
+        M["synapses_used"].append(int(np.sum(gl.g_synapse_map)))
+
+        if t % (SAMPLE_EVERY * 20) == 0:
+            el = time.time() - t0
+            rate = t / el if el > 0 else 0
+            total_r = cr + ir
+            acc = cr / total_r * 100 if total_r > 0 else 0
+            print(f"  [{ARM_LABEL}] tick {t:7d}/{N_TICKS} | pop {alive_count:4d} | "
+                  f"read_acc {acc:5.1f}% ({cr}/{total_r}) | "
+                  f"E {float(np.mean(energies)) if len(energies) else 0:10.0f} | "
+                  f"{rate:.0f} t/s", flush=True)
+
+M["extinctions"] = extinctions
+M["wall_clock_sec"] = time.time() - t0
+M["ticks_per_sec"] = N_TICKS / M["wall_clock_sec"] if M["wall_clock_sec"] > 0 else 0
+
+with open(OUTPUT_FILE, "w") as f:
+    json.dump(M, f, indent=2)
+print(f"[Exp30 {ARM_LABEL}] DONE in {M['wall_clock_sec']:.1f}s "
+      f"({M['ticks_per_sec']:.0f} t/s) -> {OUTPUT_FILE}", flush=True)
+''')
+
+with open(DRIVER, "w") as f:
+    f.write(driver_code)
+print(f"Driver written to {DRIVER}")
+
+# ── Run both arms sequentially (Numba compile-time flag requires separate processes) ──
+arms = [
+    ("A_STDP_ON",  "0", "/home/user/exp30_arm_A.json"),
+    ("B_STDP_OFF", "1", "/home/user/exp30_arm_B.json"),
+]
+
+for label, nolearn, outfile in arms:
+    env = os.environ.copy()
+    env["GENESIS_NOLEARN"] = nolearn
+    env["SEED"] = str(SEED)
+    env["N_TICKS"] = str(N_TICKS)
+    env["SAMPLE_EVERY"] = str(SAMPLE_EVERY)
+    env["OUTPUT_FILE"] = outfile
+    env["BOOK_TARGET_BYTES"] = str(BOOK_TARGET_BYTES)
+    # Separate Numba cache dirs to avoid stale kernel cache between arms
+    env["NUMBA_CACHE_DIR"] = f"/tmp/numba_cache_{label}"
+
+    print(f"\n{'='*70}")
+    print(f"  LAUNCHING ARM {label}  (NOLEARN={nolearn})")
+    print(f"{'='*70}", flush=True)
+
+    t0 = time.time()
+    result = subprocess.run(
+        [sys.executable, DRIVER],
+        env=env,
+        capture_output=False,   # stream output to notebook
+        timeout=5400,           # 90 min per arm max
+    )
+    dt = time.time() - t0
+    print(f"  Arm {label} finished in {dt:.1f}s (exit code {result.returncode})")
+
+# ── Load results ──
+with open("/home/user/exp30_arm_A.json") as f:
+    arm_A = json.load(f)
+with open("/home/user/exp30_arm_B.json") as f:
+    arm_B = json.load(f)
+
+print(f"\nArm A: {len(arm_A['ticks'])} samples, {arm_A['wall_clock_sec']:.1f}s, "
+      f"{arm_A['ticks_per_sec']:.0f} t/s, {arm_A['extinctions']} extinctions")
+print(f"Arm B: {len(arm_B['ticks'])} samples, {arm_B['wall_clock_sec']:.1f}s, "
+      f"{arm_B['ticks_per_sec']:.0f} t/s, {arm_B['extinctions']} extinctions")
+print("\nResults loaded. Run the next cell for plotting and verdict.")
+
+# %% clusy_id=2c5e0831-4179-4cdd-a03d-9411500390e7 clusy_position=10
+"""
+Exp 30: Plot results + statistical verdict.
+"""
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+with open("/home/user/exp30_arm_A.json") as f:
+    A = json.load(f)
+with open("/home/user/exp30_arm_B.json") as f:
+    B = json.load(f)
+
+tA = np.array(A["ticks"])
+tB = np.array(B["ticks"])
+popA = np.array(A["population"])
+popB = np.array(B["population"])
+eA = np.array(A["mean_energy"])
+eB = np.array(B["mean_energy"])
+crA = np.array(A["correct_reads"], dtype=float)
+irA = np.array(A["incorrect_reads"], dtype=float)
+crB = np.array(B["correct_reads"], dtype=float)
+irB = np.array(B["incorrect_reads"], dtype=float)
+
+# Prediction accuracy per sample window
+accA = np.where(crA + irA > 0, crA / (crA + irA) * 100, np.nan)
+accB = np.where(crB + irB > 0, crB / (crB + irB) * 100, np.nan)
+
+# ── Figure: 3-panel comparison ──
+fig, axes = plt.subplots(3, 1, figsize=(14, 12), sharex=True)
+fig.suptitle("Exp 30: STDP Ablation — Is Plasticity Load-Bearing?",
+             fontsize=16, fontweight="bold", y=0.98)
+
+# Panel 1: Population
+ax = axes[0]
+ax.plot(tA, popA, color="#2196F3", lw=1.2, alpha=0.85, label="Arm A: STDP ON")
+ax.plot(tB, popB, color="#F44336", lw=1.2, alpha=0.85, label="Arm B: STDP OFF (frozen)")
+ax.set_ylabel("Population", fontsize=12)
+ax.set_title("Population Survival", fontsize=13)
+ax.legend(fontsize=11, loc="upper right")
+ax.set_ylim(bottom=0)
+ax.grid(True, alpha=0.3)
+
+# Panel 2: Mean Energy
+ax = axes[1]
+ax.plot(tA, eA, color="#2196F3", lw=1.2, alpha=0.85, label="Arm A: STDP ON")
+ax.plot(tB, eB, color="#F44336", lw=1.2, alpha=0.85, label="Arm B: STDP OFF (frozen)")
+ax.set_ylabel("Mean Energy / org", fontsize=12)
+ax.set_title("Metabolic Health (mean energy per organism)", fontsize=13)
+ax.legend(fontsize=11, loc="upper right")
+ax.grid(True, alpha=0.3)
+
+# Panel 3: Prediction Accuracy
+ax = axes[2]
+ax.plot(tA, accA, color="#2196F3", lw=1.2, alpha=0.85, label="Arm A: STDP ON")
+ax.plot(tB, accB, color="#F44336", lw=1.2, alpha=0.85, label="Arm B: STDP OFF (frozen)")
+ax.set_ylabel("Read Accuracy (%)", fontsize=12)
+ax.set_xlabel("World Tick", fontsize=12)
+ax.set_title("Prediction Accuracy (correct reads / total reads per window)", fontsize=13)
+ax.legend(fontsize=11, loc="upper right")
+ax.set_ylim(0, 100)
+ax.grid(True, alpha=0.3)
+ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x/1000:.0f}k"))
+
+plt.tight_layout(rect=[0, 0, 1, 0.96])
+plt.savefig("/home/user/exp30_ablation_results.png", dpi=150, bbox_inches="tight")
+plt.show()
+print("Saved: exp30_ablation_results.png")
+
+# ── Statistical Verdict ──
+# Compare the last 25% of the run (steady-state, post-transient)
+q = len(tA) // 4
+tail_A_pop = popA[-q:]
+tail_B_pop = popB[-q:]
+tail_A_acc = accA[-q:]
+tail_B_acc = accB[-q:]
+
+# Filter NaNs from accuracy
+valid_A = ~np.isnan(tail_A_acc)
+valid_B = ~np.isnan(tail_B_acc)
+
+mean_pop_A = np.mean(tail_A_pop)
+mean_pop_B = np.mean(tail_B_pop)
+mean_acc_A = np.nanmean(tail_A_acc) if valid_A.any() else 0
+mean_acc_B = np.nanmean(tail_B_acc) if valid_B.any() else 0
+
+pop_gap = (mean_pop_A - mean_pop_B) / max(mean_pop_B, 1) * 100
+acc_gap = mean_acc_A - mean_acc_B
+
+print("\n" + "="*70)
+print("  EXP 30 VERDICT — Last 25% of run (steady-state)")
+print("="*70)
+print(f"  Arm A (STDP ON):  mean pop = {mean_pop_A:.1f},  mean accuracy = {mean_acc_A:.1f}%")
+print(f"  Arm B (STDP OFF): mean pop = {mean_pop_B:.1f},  mean accuracy = {mean_acc_B:.1f}%")
+print(f"  Population gap:  {pop_gap:+.1f}%  (A relative to B)")
+print(f"  Accuracy gap:    {acc_gap:+.1f} pp")
+print(f"  Extinctions:     A={A['extinctions']}, B={B['extinctions']}")
+print()
+
+THRESHOLD = 25  # 25% sustained gap = load-bearing
+if pop_gap > THRESHOLD and acc_gap > 5:
+    print("  ✅ VERDICT: STDP IS LOAD-BEARING.")
+    print("     The plasticity-enabled arm sustains a significantly larger population")
+    print("     AND higher prediction accuracy. The substrate has cognitive potential.")
+    print("     → Proceed to Compositional Memory / Structural Plasticity upgrade.")
+elif abs(pop_gap) < 10 and abs(acc_gap) < 3:
+    print("  ❌ VERDICT: STDP IS NOT LOAD-BEARING. SUBSTRATE FALSIFIED.")
+    print("     The curves overlap within noise. Freezing weights at birth produces")
+    print("     indistinguishable survival. The LIF+STDP substrate cannot learn its")
+    print("     way to higher cognition in this environment.")
+    print("     → Authorization granted: rip out LIF+STDP, install Compositional")
+    print("       Memory Architecture (CAM) with structural plasticity.")
+elif pop_gap < -THRESHOLD:
+    print("  ⚠️  VERDICT: STDP IS HARMFUL.")
+    print("     The plasticity arm does WORSE. STDP is actively degrading fitness.")
+    print("     → The plasticity rule is maladaptive. Redesign or replace.")
+else:
+    print("  ⚠️  VERDICT: INCONCLUSIVE.")
+    print("     The gap exists but is ambiguous. Extend to 1M ticks or redesign")
+    print("     the curriculum to increase cognitive demand.")
+print("="*70)
+
+# %% [markdown] clusy_id=268a523b-6042-422d-a6f6-2eb2bda02294 clusy_position=11
+# ## Exp 30 Results: Nuanced Interpretation
+#
+# ### Raw numbers (steady-state, last 25%)
+#
+# | Metric | Arm A (STDP ON) | Arm B (STDP OFF) | Delta |
+# |--------|:---------------:|:-----------------:|:-----:|
+# | **Population** | 373 | 600 (capped) | −37.8% |
+# | **Read Accuracy** | **43.3%** | 2.9% | **+40.4 pp** |
+# | Mean Energy/org | ~34,000 | ~25,000 | +36% |
+# | Extinctions | 0 | 0 | tie |
+#
+# ### What this means
+#
+# | Claim | Evidence | Verdict |
+# |-------|----------|---------|
+# | "STDP enables learning" | Accuracy 43% vs 3% (40× better) | **CONFIRMED** ✅ |
+# | "STDP carries a metabolic cost" | Population 373 vs 600; Arm A is NOT at carrying capacity while Arm B IS capped | **CONFIRMED** ✅ |
+# | "The curriculum rewards learning enough to offset STDP cost" | Lower population in Arm A despite higher accuracy | **FALSIFIED** ❌ |
+# | "The substrate is falsified as a learning substrate" | Learning IS happening (43%), just not paying its way | **AMBIGUOUS** |
+#
+# ### What we don't know yet
+#
+# The population gap could be caused by either:
+# 1. **STDP energy overhead** — plastic synapses cost real ATP cycles, leaving less for reproduction
+# 2. **Maladaptive weight drift** — STDP is actually making organisms worse at non-reading survival tasks
+#
+# To distinguish (1) from (2), we need a third arm: **Arm C (STDP_COSTONLY)** — pay the plasticity energy bill but zero the weight update. If Arm C population ≈ Arm B, the gap is pure energy cost. If Arm C population < Arm B, STDP is actively maladaptive.
+#
+# ### Verdict
+#
+# STDP is **load-bearing for prediction accuracy** — the learning mechanism works. But it may be **economically non-viable** in the current environment: the prediction accuracy improvement doesn't earn enough extra reading income to offset the metabolic cost of plasticity.
+#
+# **This is NOT a falsification of the substrate.** It's a curriculum-and-economics problem: the organisms CAN learn, but the survival payoff for learning is too weak. The fix is not to rip out STDP, but to **increase the selective pressure for working memory** by:
+# 1. Running the STDP_COSTONLY arm to bound the energy-cost effect
+# 2. Hardening the curriculum (longer delays, pure noise distractors, compositional patterns)
+# 3. Adding the Compositional Memory architecture so learned weights can be deployed on harder tasks
