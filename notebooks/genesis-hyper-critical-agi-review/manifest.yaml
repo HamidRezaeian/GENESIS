@@ -1,0 +1,34 @@
+name: GENESIS Hyper-Critical AGI Review
+id: c763631c-7352-4976-867b-c6ceac4ec530
+branches:
+  - id: 887c7b0f-6ba1-4da0-81ec-4ab99b7d86df
+    name: main
+    cells:
+      - id: 3b37e9c5-726f-40bb-a3f6-b607d59c673e
+        type: markdown
+        position: 0
+        parent: null
+      - id: fed520d1-b5ce-4e3e-9db0-880a8eb30a4a
+        type: markdown
+        position: 1
+        parent: 3b37e9c5-726f-40bb-a3f6-b607d59c673e
+      - id: e737e692-815f-4b0a-bf4f-0c88ad433521
+        type: markdown
+        position: 2
+        parent: fed520d1-b5ce-4e3e-9db0-880a8eb30a4a
+      - id: e6999228-3bbb-4f58-967a-3f7ec5e23513
+        type: markdown
+        position: 3
+        parent: e737e692-815f-4b0a-bf4f-0c88ad433521
+      - id: 685b636c-4fcf-4771-9bc5-08ef2262748f
+        type: markdown
+        position: 4
+        parent: e6999228-3bbb-4f58-967a-3f7ec5e23513
+      - id: 010c15b0-ea78-4301-9431-2bdd6013c68e
+        type: markdown
+        position: 5
+        parent: 685b636c-4fcf-4771-9bc5-08ef2262748f
+      - id: 8f1988fc-3fc5-4118-bd19-3dc68445838b
+        type: markdown
+        position: 6
+        parent: 010c15b0-ea78-4301-9431-2bdd6013c68e
