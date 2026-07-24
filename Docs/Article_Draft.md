@@ -236,6 +236,14 @@ This is a **negative result** — no positive cognitive claim is being made — 
 informative one: it characterises the substrate's current limitation as
 **shortcut‑dependent rather than compositionally generalising**. See §3.5.
 
+
+**Figure 1.** Per-seed compositionality signal Δ = acc(RULE) − acc(NULL) for 8 seeds.
+Bar colour: green (positive, favours RULE), red (negative, favours NULL). Dashed line:
+mean Δ = −7.2 pp. Source data: `exp68_shortcut_proof_results_overall.json`.
+*Image: `exp68_verdict.png` in repository root.*
+
+![Figure 1 — Per-seed compositionality signal](exp68_verdict.png)
+
 *Full results: `exp68_shortcut_proof_results_overall.json`; source probe:
 `src/exp68_shortcut_proof_compositionality_probe.py`.*
 
