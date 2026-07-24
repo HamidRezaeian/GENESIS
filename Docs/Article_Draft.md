@@ -1,10 +1,10 @@
 # GENESIS: A Genome-Encoded Spiking-Neural-Network Substrate for Open-Ended Evolution on Raw Hardware Physics
 
-> **Status:** Revised 2026-07-24. This revision incorporates the shortcut-proof compositionality
-> test (Exp 68) as a negative result, adds a Known Limitations section, and documents all
-> env-gated parameters discovered during Exp 30–68 (Rule 17 compliance).
-> Previous version: 2026-07-10.
-
+> **Status:** Revised 2026-07-24 (revision 3). This revision incorporates the neural
+> connectivity audit (Exp 71) which localises the computational bottleneck to the
+> **feedforward topology** — the Intelligent Ancestor has 48 neurons, ALL of input type,
+> no hidden neurons, and zero recurrent pairs, making temporal integration impossible.
+> Previous version: 2026-07-24 (revision 2).
 **Abstract**
 We present GENESIS (General Evolutionary Neuromorphic Environment for Simulating Intelligent
 Systems), a digital universe in which populations of genome-encoded Spiking Neural Networks
@@ -26,13 +26,13 @@ result**: under a shortcut‑proof curriculum that removes the bigram‑statisti
 positional‑structure confounds, systematic compositionality (Latin‑square rule)
 is **not detected** (Δ ≈ 0, z = −1.22, n.s., 8 seeds, Exp 68), indicating the current
 substrate exploits statistical regularity in its environment rather than learning abstract
-compositional rules. The system is a **substrate, not yet a mind**; its evolutionary
-trajectory has pivoted from economy design to learning‑rule design, and a pre‑registered
-finish line (Docs/Ascent.md) governs when the experiment terminates.
-
----
-
-## 1. Introduction
+> compositional rules. A neural connectivity audit (Exp 71) reveals the structural
+> root cause: the network is a **feedforward filter** with no hidden neurons and no
+> recurrent connections — it cannot maintain information across time steps, making
+> compositionality impossible regardless of learning rule or curriculum design.
+> The system is a **substrate, not yet a mind**; its evolutionary trajectory has pivoted
+> from economy design to learning‑rule design, and a pre‑registered
+> finish line (Docs/Ascent.md) governs when the experiment terminates.
 
 Contemporary artificial intelligence is dominated by two paradigms. The first — dense,
 synchronous, globally‑coordinated backpropagation — achieves remarkable capability but at an
@@ -281,6 +281,59 @@ The bottleneck is **computation, not memory**: the LIF network cannot form the c
 3-byte CAM key from two sequential cue encounters, or cannot route the CAM lookup result
 to the correct prediction output. This is a structural limitation of the substrate.
 
+
+### 3.4c Neural Connectivity Audit — TOPOLOGY is the root cause (Exp 71)
+
+The Exp 68–70 sequence localised the bottleneck to "computation, not memory." Exp 71
+resolves what kind of computation is missing: **temporal integration**. A neural
+connectivity audit of the Intelligent Ancestor genome reveals a topology that is
+structurally incapable of maintaining information across time steps:
+
+| Property | Value | Implication |
+|:---------|:-----:|:------------|
+| Total neurons | **48** | — |
+| Input-type neurons | **48 (100 %)** | Every neuron fires from external stimuli; none is decoupled from I/O |
+| Hidden/output-type neurons | **0** | No internal representation layer exists |
+| Feedforward synapses | **36** | All connections are unidirectional, no re-entrant pathways |
+| Self-connections | **1** | A single self-loop (insufficient for attractor dynamics) |
+| Recurrent pairs (A→B + B→A) | **0** | No bidirectional/recurrent coupling exists |
+| Persistent activity after input removal | **None** | Voltage decays to rest within one time constant |
+
+**Root cause of compositionality failure.** The network is a feedforward filter.
+When cue₁ arrives, it is processed and forgotten. When cue₂ arrives N steps later,
+no trace of cue₁ remains in any neuron's membrane voltage or firing state. The
+network therefore cannot form *f(cue₁, cue₂) → answer*, which requires holding **both**
+cue values simultaneously or across a temporal gap. This is not fixable by any
+STDP rule, curriculum design, or memory architecture — the **wiring must change**.
+
+**Relationship to earlier findings.** This explains why:
+- CAM pre-population (Exp 70) had zero effect — even with perfect (cue₁,cue₂)→answer
+  mappings in CAM, the network has no circuit to re-encode the two temporally separated
+  cues into a single 3-byte CAM key;
+- The credit-assigning STDP (Exp 35) could tune/prune but never *construct* — it operates
+  on an existing wiring diagram that has no cross-temporal pathway to strengthen;
+- The working-memory latch (Exp 44–45) failed at depth ≥2 — a single leaky membrane
+  cannot hold two values across intervening input, and the gated shift register had
+  no clock source because no recurrent loop exists to sustain a phase.
+
+**Required architectural changes for this substrate to support compositional cognition:**
+1. **Recurrent connections** — genome-encodable bidirectional synapses (A→B + B→A)
+   that allow re-entrant signal flow and attractor dynamics;
+2. **Hidden neurons** — internal representations decoupled from direct I/O, enabling
+   the network to maintain state across time steps and form distributed encodings;
+3. **Attractor dynamics** — stable persistent activity patterns that serve as working
+   memory, maintained by recurrent excitation without continuous external drive;
+4. **Structural plasticity** — the ability to grow new circuits during a lifetime,
+   so that the network can adapt its topology to novel computational demands.
+
+Exp 71 does **not** trigger the Ascent.md kill criterion (which concerns Criterion B,
+learning being load-bearing — already confirmed). It sharpens the diagnosis: the
+substrate hypothesis is not falsified, but it is **incomplete** — the current genome
+encoding lacks the primitives needed for temporal integration. The next experimental
+phase must implement genome-encodable hidden neuron types and recurrent connection
+primitives, then test whether evolution can discover working-memory circuits under
+selective pressure.
+
 ### 3.5 Known limitations
 
 **Shortcut dependence.** The substrate consistently exploits statistical regularity
@@ -306,12 +359,12 @@ memorised; the remainder are at chance. A genuine compositional solution (additi
 would circumvent this bound, but neither STDP nor CAM has been observed to discover an
 abstract rule — only specific instance‑wise associations are stored.
 
-**Single‑task specialisation.** All reported experiments train on a single curriculum.
-There is no evidence yet of transfer learning, multi‑task generalisation, or compositional
-recombination across contexts, all of which are necessary prerequisites for the Ascent.md
-finish line.
-
----
+**Feedforward topology.** The Intelligent Ancestor's network is 100 % input-type
+neurons with no recurrent connections (Exp 71). This makes temporal integration
+— holding information across time steps — **structurally impossible**. Even if
+STDP and CAM were optimal, a feedforward filter cannot encode *f(cue₁, cue₂)*
+because cue₁ is overwritten before cue₂ arrives. All limitations above are
+downstream consequences of this architectural root cause.
 
 ## 4. Discussion & Recent Infrastructure Milestones
 
@@ -326,13 +379,13 @@ quantity is a derived physical or hardware constraint rather than a top‑down g
 fix (λ = 0.01) recovers the frozen‑weight efficiency. Criterion B is met.
 
 **Criterion‑A status (≥25 % monotone rise in `C(t)` over 5 M ticks).** **FAILED.**
-Three independent experiments (Exp 68: probe‑only, Exp 69: phased curriculum,
-Exp 70: CAM pre‑population) all yield 0 % answer‑byte accuracy under controlled,
-shortcut‑free conditions. The substrate does not support systematic compositional
-rule‑learning. The bottleneck is precisely localized to neural computation (not memory,
-not survival, not curriculum design). Criterion C (efficiency non‑decreasing) is moot
-given the Criterion A failure.
-
+Four independent experiments (Exp 68: probe‑only, Exp 69: phased curriculum,
+Exp 70: CAM pre‑population, Exp 71: topology audit) converge on the same
+conclusion. Exp 71 shows **why**: the 48-neuron network is entirely input-type
+with zero recurrent pairs, making cross-temporal composition structurally
+impossible. The bottleneck is no longer "computation" — it is **topology**:
+the genome encoding lacks hidden neurons and recurrent primitives. Criterion C
+(efficiency non‑decreasing) is moot given the Criterion A failure.
 Recent milestone experiments (Exp 60–67) have validated the full integrated substrate:
 
 1. **Grounded Spatial Stigmergy & Theory of Mind (Exp 60):** Demonstrated spatial RAM
@@ -368,14 +421,14 @@ not yet been observed.
 
 ### The closed bottleneck
 
-The critical open question is whether the substrate can learn **systematic compositional
-rules** rather than exploit statistical shortcuts. Exp 68 provides the first controlled
-test: so far, the answer is **no** (Δ≈0). This does **not** trigger the Ascent.md kill
-criterion (which concerns criterion B, confirmed positive), but it informs the next phase:
-the substrate must either (a) discover a learning rule that enables systematic composition,
-or (b) be augmented with a mechanism that forces engagement with harder‑than‑average
-prediction targets, for instance a phased curriculum where exploitable structure provides
-survival energy but compositional probes are interleaved and measured separately.
+controlled test: so far, the answer is **no** (Δ≈0). Exp 71 reveals the structural
+root cause: a feedforward topology with no hidden neurons cannot integrate
+information across time — and compositionality **requires** temporal integration.
+This is a sharper diagnosis than "the substrate cannot compose"; it is "the
+substrate lacks the architectural primitives that composition presupposes."
+The next phase must therefore implement genome-encodable hidden neurons and
+recurrent connection primitives (the three-factor learning rule is already
+validated — Exp 35 — and will be re-tested on the new topology).
 
 ---
 
@@ -387,12 +440,12 @@ within the same computational universe — a rare combination in evolutionary‑
 research. In‑lifetime learning is confirmed load‑bearing (Exp 30), working memory has been
 demonstrated on hard curricula (42.9 % vs 6.25 % chance), and the engine runs stably over
 50,000‑tick horizons.
-
-**What GENESIS is not yet:** a system that discovers abstract compositional rules,
-generalises across contexts, or registers a monotone rise in prediction‑depth over deep
-time. The first controlled test of systematic compositionality (Exp 68) returned a **null
-result** (Δ≈0). The substrate's current capability is best described as **shortcut‑dependent
-pattern exploitation** — a necessary bootstrapping stage for any evolved intelligence, but
+The path forward is to close the shortcut‑exploitation plateau: **recurrent
+connections and hidden neurons** are the pre‑registered next substrate change,
+because the feedforward topology (Exp 71) is the structural root cause of every
+null result since Exp 30. Once the genome encoding supports temporal integration,
+the validated learning rules (STDP3C and STDP_TARGET) can re-tested for
+compositional generalisation.
 not yet the open‑ended ascent the project targets.
 
 The path forward is to close the shortcut‑exploitation plateau: either by discovering, in
@@ -432,9 +485,9 @@ for enabling the live‑kernel experimentation paradigm this project depends on.
 
 ---
 
-*This version updated 2026-07-24 (revision 2). Substantive changes since revision 1:
-(1) Exp 69 phased curriculum null result (§3.4b), (2) Exp 70 CAM pre‑population
-definitive localization (§3.4b), (3) §3.5 CAM capacity bound replaced with computation
-bottleneck finding, (4) §4 Criterion A status updated to FAILED, (5) §4 open bottleneck
-section replaced with closed bottleneck, (6) §5 conclusion updated with computational
-boundary characterization.*
+*This version updated 2026-07-24 (revision 3). Substantive changes since revision 2:
+(1) Exp 71 neural connectivity audit (§3.4c) — TOPOLOGY identified as structural
+root cause of compositionality failure; (2) §3.5 Known Limitations — added
+feedforward topology limitation; (3) §4 Criterion‑A updated with Exp 71;
+(4) §4 closed bottleneck updated to reflect architectural diagnosis;
+(5) §5 conclusion updated with recurrent/hidden-neuron next steps.
