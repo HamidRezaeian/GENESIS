@@ -49,6 +49,16 @@ stands and what the next step is.
 - `Docs/Result.md` — Exp 68 entry added
 - `Docs/Roadmap.md` — current status section added
 
+### Exp 70 (2026-07-24): CAM Pre-Population — COMPUTATION Bottleneck Confirmed
+
+**Finding:** Pre-loaded all 64 Latin-square (c1,c2)->answer mappings into CAM (24-bit keys,
+64 slots). Answer accuracy = 0% across all 10 runs. The bottleneck is definitively
+COMPUTATION (neural key formation), not MEMORY (CAM recall).
+
+**Article updated:** Article_Draft.md revision 2 now includes the complete Exp 68-70
+falsification sequence. Ascent Criterion A: FAILED. The substrate hypothesis for
+compositional cognition is falsified.
+
 ### Exp 69 (2026-07-24): Phased Curriculum — Null Result
 
 **Finding:** Adding survival padding ('a' runs) between probes destroys answer-byte prediction ability

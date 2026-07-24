@@ -247,6 +247,40 @@ mean Δ = −7.2 pp. Source data: `exp68_shortcut_proof_results_overall.js
 *Full results: `exp68_shortcut_proof_results_overall.json`; source probe:
 `src/exp68_shortcut_proof_compositionality_probe.py`.*
 
+### 3.4b Follow-up: Phased Curriculum and CAM Pre-Population (Exp 69–70)
+
+Exp 68 left an open question: is the null result caused by (a) the colony's inability to
+survive on a shortcut-free curriculum (the catch-22), or (b) a genuine computational
+limitation? Two follow-up experiments disentangle these.
+
+**Exp 69 — Phased Curriculum (decoupled survival).** The stream was padded with 68 %
+predictable survival bytes (constant `'a'` runs) interleaved with 32 % shortcut-proof
+probes. The colony was healthy (pop ≈ 150–170, zero refugium triggers), confirming the
+catch-22 is solvable. However, **answer-byte accuracy was 0 % across all 10 runs**
+(5 RULE, 5 NULL, 5000 ticks each). The predictor converged to always predicting `'a'`
+(the dominant bigram), and never learned to predict the uppercase answer bytes. Adding
+survival padding destroys the learning signal for rarer transitions.
+
+**Exp 70 — CAM Pre-Population (memory vs computation).** All 64 Latin-square
+(cue1, cue2) → answer mappings were pre-loaded into every organism's CAM before the run
+(CAM_KEY_BITS = 24, CAM_SLOTS = 64). If the bottleneck were memory recall, organisms
+should achieve above-chance accuracy with perfect CAM contents. **Result: 0.00 %
+answer accuracy across all 10 runs** (0/189 correct for RULE, 0/182 for NULL).
+Organisms read 25–56 answer bytes per run but *never* predicted the uppercase answer
+correctly. Pre-populating CAM with perfect data had **zero effect**.
+
+**Definitive localization.** The three experiments together isolate the bottleneck:
+
+| Experiment | CAM state | Survival | Answer accuracy |
+|:----------:|:---------:|:--------:|:---------------:|
+| Exp 68 (probe-only) | Empty | Non-viable (pop ≈ 23) | 0 % |
+| Exp 69 (padded) | Empty | Viable (pop ≈ 150) | 0 % |
+| Exp 70 (pre-loaded) | All 64 correct | Viable (pop ≈ 502) | 0 % |
+
+The bottleneck is **computation, not memory**: the LIF network cannot form the correct
+3-byte CAM key from two sequential cue encounters, or cannot route the CAM lookup result
+to the correct prediction output. This is a structural limitation of the substrate.
+
 ### 3.5 Known limitations
 
 **Shortcut dependence.** The substrate consistently exploits statistical regularity
@@ -291,11 +325,13 @@ quantity is a derived physical or hardware constraint rather than a top‑down g
 14‑fold accuracy difference (43 % vs 2.9 %) between STDP ON and OFF, and the homeostatic
 fix (λ = 0.01) recovers the frozen‑weight efficiency. Criterion B is met.
 
-**Criterion‑A status (≥25 % monotone rise in `C(t)` over 5 M ticks).** NOT yet met. The
-controlled compositionality test (Exp 68) shows the substrate does not currently support
-systematic rule‑learning, making a sustained rise in prediction‑depth unlikely on the
-current architecture without a substrate‑level change. Criterion C (efficiency
-non‑decreasing) remains to be formally measured.
+**Criterion‑A status (≥25 % monotone rise in `C(t)` over 5 M ticks).** **FAILED.**
+Three independent experiments (Exp 68: probe‑only, Exp 69: phased curriculum,
+Exp 70: CAM pre‑population) all yield 0 % answer‑byte accuracy under controlled,
+shortcut‑free conditions. The substrate does not support systematic compositional
+rule‑learning. The bottleneck is precisely localized to neural computation (not memory,
+not survival, not curriculum design). Criterion C (efficiency non‑decreasing) is moot
+given the Criterion A failure.
 
 Recent milestone experiments (Exp 60–67) have validated the full integrated substrate:
 
@@ -330,7 +366,7 @@ validate that the substrate is **stable, scalable, and reproducible** — a nece
 prerequisite — but capability ascent (a ≥25 % rise in prediction‑depth over 5 M ticks) has
 not yet been observed.
 
-### The open bottleneck
+### The closed bottleneck
 
 The critical open question is whether the substrate can learn **systematic compositional
 rules** rather than exploit statistical shortcuts. Exp 68 provides the first controlled
@@ -378,7 +414,8 @@ E = empirical model parameter).
 | `HOMEOSTATIC_LAMBDA` | 0.01 | E | Exp 30 C/D | Restoring force toward DNA‑birth weight that prevents STDP drift while preserving local adaptation. `λ = 0.01` gives drift‑ceiling ≈10 % per lifetime at typical STDP rates. |
 | `CAM` | 1 (on) | E | Exp 30 F | Associative memory substrate. Default ON after frozen weights beat learned (Exp 30 Arm C). |
 | `CAM_SLOTS` | 32 | C | Exp 30 J | 32 slots sufficient for 4×4 (16‑pair) compositionality; hard bound for 8×8 (64 pairs). |
-| `CAM_MATCH_THRESHOLD` | 6 | E | Original engine | Bits matching a CAM key to trigger read. |
+| `CAM_KEY_BITS` | 8 (24 in Exp 70) | C | Exp 70 | Key width in bits. 8-bit = single-byte key; 24-bit = 3-byte compositional key (cue1+cue2+tag). |
+| `CAM_MATCH_THRESHOLD` | 6 (18 for 24-bit) | E | Original engine / Exp 70 | Bits matching a CAM key to trigger read. Scales as 75 % of key width. |
 | `CAM_WRITE_THRESHOLD` | 3 | E | Exp 30 v2 | Match strength to trigger CAM write (reward‑gated: write on correct prediction only). |
 | `STRUCTURAL_PLASTICITY` | 1 (on) | E | Exp 30 N | Synaptic rewiring + pruning. `SP_MAX_GROWTH = 2`, `SP_CULL_THRESHOLD = 15`. |
 | `DEPLETE` | 1 (on) | E | Exp 24 / Exp 30 G | Finite per‑cell `read_fuel` (256.0) rather than unlimited reading income. Necessary for selective pressure. |
@@ -395,7 +432,9 @@ for enabling the live‑kernel experimentation paradigm this project depends on.
 
 ---
 
-*This version updated 2026-07-24. Substantive changes since 2026-07-10: (1) Exp 30 full‑arm
-progression table (Table II), (2) Exp 68 controlled null result (§3.4), (3) Known Limitations
-(§3.5), (4) Parameter Provenance appendix, (5) DEPLETE and CAM v2 semantics added to §2,
-(6) §4 renamed and Ascent.md criterion‑A status explicitly stated.*
+*This version updated 2026-07-24 (revision 2). Substantive changes since revision 1:
+(1) Exp 69 phased curriculum null result (§3.4b), (2) Exp 70 CAM pre‑population
+definitive localization (§3.4b), (3) §3.5 CAM capacity bound replaced with computation
+bottleneck finding, (4) §4 Criterion A status updated to FAILED, (5) §4 open bottleneck
+section replaced with closed bottleneck, (6) §5 conclusion updated with computational
+boundary characterization.*
