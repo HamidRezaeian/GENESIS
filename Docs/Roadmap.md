@@ -936,43 +936,36 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
    reading income depends on statistical regularity to exploit. The refugium fires ~50% of
    ticks = life support, not equilibrium.
 
-### Current Bottleneck (Updated Exp 74–75, 2026-07-24)
+### Current Bottleneck (Updated Exp 76, 2026-07-24)
 
-**Exp 74 SOLVED attractor discrimination:** Bistable independent hidden neurons
-(2× self-connection, no bidirectional pairs, thresh=100, tau=30) produce 16/16
-distinct persistent states across a 30-tick delay window. The hidden layer can
-now faithfully hold an input pattern indefinitely.
-
-**Exp 75 revealed the NEXT bottleneck: Write Selectivity.** Bistable neurons only
-turn ON, never OFF. The hidden state at the answer tick is the cumulative OR of
-ALL bytes seen (c1, noise, c2, noise...), not a clean c1 representation. 64
-distinct (c1,c2) pairs collapse into 8 OR patterns → max theoretical accuracy
-1.6% (below chance 12.5%).
+**Exp 76 SOLVED write selectivity (architecturally):** Two-bank gated hidden neurons
+with oracle gates achieve 100% theoretical compositionality accuracy (64/64 unique
+16-bit combined keys, 0 ambiguous). The GATED_NEURON_MARKER (201) extends the WMEM
+gate mechanism to ordinary LIF neurons: afferent writes gated, self-connections not.
 
 **The bottleneck progression:**
 1. ~~Memory storage~~ → Exp 70: CAM pre-population failed (computation, not memory)
 2. ~~Topology~~ → Exp 71: zero recurrent pairs (fixed in Exp 73)
 3. ~~Attractor discrimination~~ → Exp 74: bistable neurons (SOLVED)
-4. **Write selectivity** → Exp 75: OR accumulation destroys temporal structure (CURRENT)
+4. ~~Write selectivity~~ → Exp 76: gated two-bank design (SOLVED architecturally)
+5. **Gate learnability** → CURRENT: can evolution learn the cue-detection circuit?
 
 ### Recommended Next Step
 
-**Exp 76: Gated Write Hidden Layer**
-1. Add a WRITE GATE neuron that controls when hidden neurons accept afferent input.
-2. Gate ON during cue ticks (c1, c2) → hidden layer accepts and latches the input.
-3. Gate OFF during noise ticks → hidden layer holds its state (preserves c1 during delay).
-4. This enables a clean c1 representation at the answer tick.
-5. Combined (gated_hidden, c2_input) → unique CAM key → correct answer.
-
-**Implementation options:**
-- (A) Extend the existing MEMORY_MARKER gate mechanism (Exp 44/45 WMEM) to ordinary
-  hidden neurons. The gate source neuron fires only during cue ticks.
-- (B) Add a new GATED_NEURON_MARKER that combines LIF dynamics with afferent gating.
-- (C) Use two separate hidden banks (8 for c1, 8 for c2) with alternating gates.
-
-**Prerequisite:** The gate neuron must be driven by a cue-detection signal (e.g.,
-"current byte is NOT noise"). This requires either a dedicated sensor or a learned
-gate driver.
+**Exp 77: Learnable Gate Drive**
+1. The ancestor's gate-drive synapses are wired silent (weight 128 = zero).
+   STDP must potentiate them to create a functional cue detector.
+2. Challenge: noise 'a'=97 shares bits 5,6 with all cues (98-104). No simple
+   linear threshold on eye bits separates noise from all cues.
+3. Possible solutions:
+   - (A) Multi-layer gate: intermediate hidden neuron computes a non-linear
+     feature (e.g., "bit 0 XOR bit 1") that separates noise from cues.
+   - (B) Temporal gate: a slow-decaying "position counter" neuron that tracks
+     tick-within-unit (fires on 1st cue, silent on 2nd → distinguishes c1/c2).
+   - (C) Evolutionary search: let mutation discover the gate drive topology.
+4. Test: run the full genesis_lab simulation with the Exp 76 ancestor on a
+   Latin-square curriculum. Measure answer-byte accuracy over generations.
+5. Success criterion: answer accuracy > 12.5% (chance) sustained over 1000+ ticks.
 
 ### Docs/ Files Status
 
@@ -983,7 +976,7 @@ gate driver.
 | `Docs/Article_Draft_Review.md` | ✅ 2026-07-24 | Full audit |
 | `Docs/Result.md` | ✅ Updated 2026-07-24 | Exp 74 + 75 entries added |
 | `Docs/Roadmap.md` | ⬆️ This file | Updated: write-selectivity bottleneck, Exp 76 plan |
-| `Docs/RESUME_NEXT_SESSION.md` | ✅ Updated 2026-07-24 | Exp 74/75 findings, Exp 76 plan |
+| `Docs/RESUME_NEXT_SESSION.md` | ✅ Updated 2026-07-24 | Exp 76 findings, Exp 77 plan |
 | `Docs/ARD.md` | ❌ Stale (2026-07-10) | Needs update for Exp 30+ engine |
 | `Docs/PRD.md` | ❌ Needs review | Not read this session |
 

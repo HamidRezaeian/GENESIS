@@ -437,6 +437,43 @@ The hidden layer needs a WRITE GATE: accept input only during cue ticks, hold st
 during noise ticks. This is the prerequisite for compositional cognition on this
 substrate.
 
+**Exp 76 — Gated write selectivity (architecturally solved).** Exp 75's OR
+accumulation is fixed by gating afferent writes: hidden neurons accept input only
+when a gate neuron fires. A two-bank architecture (Bank A for c1, Bank B for c2,
+16 neurons total) with oracle gates achieves 100% theoretical compositionality
+accuracy — 64/64 unique 16-bit combined keys, zero ambiguous. The engine now
+supports `GATED_NEURON_MARKER` (201): ordinary LIF neurons whose input synapses
+are gated by a specified source neuron, while self-connections remain ungated for
+bistable persistence. The ancestor's gate-drive synapses are wired silent (weight
+128) for STDP to learn. The remaining challenge is gate learnability: can evolution
+discover the cue-detection circuit that opens the right gate at the right time?
+
+
+
+**Exp 74 — Bistable attractor discrimination (solved).** Exp 73's uniform attractor
+was caused by bidirectional pairs (+72 each direction) spreading activation across all
+8 hidden neurons. The fix: remove bidirectional pairs entirely, double the
+self-connections (2 genes × +54 = +108 total > threshold 100), and lower the threshold
+from 128 to 100 with faster leak (τ = 30 vs 129). Each hidden neuron becomes an
+independent bistable switch: input bit ON → neuron latches ON (self-sustaining at
+108 × 29/30 = 104.4 > 100), input bit OFF → stays OFF (v_rest = 0 ≪ 100). A
+standalone LIF probe confirmed 16/16 unique persistent states across a 30-tick delay
+window, with 120/120 pairwise Hamming distances > 0.
+
+**Exp 75 — Write selectivity bottleneck (current).** With discriminable attractors
+verified, the Latin-square compositionality probe was re-run. Result: 0% accuracy
+(below chance 12.5%). Root cause: bistable neurons only turn ON, never OFF. The hidden
+state at the answer tick is the cumulative bitwise OR of ALL bytes seen (c1, noise, c2,
+noise…), not a clean c1 representation. Analytically, 64 distinct (c1, c2) pairs
+collapse into only 8 OR patterns, 7 of which map to multiple answers (up to 8). Maximum
+theoretical accuracy with OR-based CAM keys = 1.6%.
+
+The bottleneck progression is now: ~~memory~~ (Exp 70) → ~~topology~~ (Exp 71) →
+~~attractor discrimination~~ (Exp 74, solved) → **write selectivity** (Exp 75, current).
+The hidden layer needs a WRITE GATE: accept input only during cue ticks, hold state
+during noise ticks. This is the prerequisite for compositional cognition on this
+substrate.
+
 
 1. **Grounded Spatial Stigmergy & Theory of Mind (Exp 60):** Demonstrated spatial RAM
    construction (22 authored canvas cells), autotelic peer modelling, and record longevity
