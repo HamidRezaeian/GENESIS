@@ -83,6 +83,18 @@ stands and what the next step is.
 
 ---
 
+
+
+## ⚠️ CRITICAL: GitHub Token
+
+**Before the next session, DO THIS FIRST:**
+1. Go to github.com → Settings → Developer settings → Personal access tokens
+2. DELETE the old token (it was exposed in chat)
+3. Create a NEW token with scope 
+4. Send the NEW token in your FIRST message of the next session
+
+The token is needed for . Without it, commits stay local.
+
 ## Quick-Start Prompt
 
 Copy this into the next session's first message (after the agent introduces itself):
@@ -109,5 +121,6 @@ Multi-seed (5+ seeds). This decouples survival viability from the compositionali
 PENDING DOCS: ARD.md and PRD.md are stale (2026-07-10).
 ALL RULES: Docs/FixedRules.md.
 
+GITHUB TOKEN: [SEND NEW TOKEN IN FIRST MESSAGE]
 MODEL: Qwen3.8 Max ONLY. Never Auto.
 ```
