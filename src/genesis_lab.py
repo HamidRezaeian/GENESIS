@@ -732,6 +732,30 @@ def create_intelligent_ancestor(dna=None):
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
 
+    # ── RECURRENT HIDDEN NEURONS (Exp 73: topology fix) ──
+    # 8 hidden neurons at N_IO+5..N_IO+12 with:
+    # - INPUT→HIDDEN: reading eye drives hidden layer (so stim activates them)
+    # - Self-connections: each hidden neuron feeds itself (attractor dynamics)
+    # - Recurrent pairs: bidirectional connections (working memory)
+    # - HIDDEN→OUTPUT: maintained activity drives vocal readout
+    HIDDEN_REC = N_IO + 5
+    for k in range(8):
+        genes.extend([NEURON_MARKER, HIDDEN_REC + k, 40, 128, 128])
+    # INPUT→HIDDEN: each reading eye bit drives one hidden neuron (max weight, like echo)
+    for k in range(8):
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_REC + k, 255])
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_REC + k, 255])
+    # Self-connections for attractor dynamics
+    for k in range(8):
+        genes.extend([GENE_MARKER, HIDDEN_REC + k, HIDDEN_REC + k, 200])
+    # Bidirectional recurrent pairs: 0↔1, 2↔3, 4↔5, 6↔7
+    for k in range(0, 8, 2):
+        genes.extend([GENE_MARKER, HIDDEN_REC + k, HIDDEN_REC + k + 1, 200])
+        genes.extend([GENE_MARKER, HIDDEN_REC + k + 1, HIDDEN_REC + k, 200])
+    # HIDDEN→OUTPUT: maintained activity drives vocal readout
+    for k in range(8):
+        genes.extend([GENE_MARKER, HIDDEN_REC + k, VOCAL_BIT0 + k, 150])
+
     # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
     # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
     # (the food-seeking reflex pulls them onto text and halts them there), so authoring cannot bootstrap
