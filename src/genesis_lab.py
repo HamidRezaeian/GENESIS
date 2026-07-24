@@ -223,7 +223,10 @@ CANVAS_SEED = os.environ.get("GENESIS_CANVAS_SEED", "0") == "1"
 # Cumulative offset fractions of the 00_Ascent stage boundaries (bootstrap|successor|carry|arith),
 # matching Books/generate_ascent.py's FRAC. Observation-only: on a non-Ascent book these are just
 # scroll quartiles and the band labels lose meaning, but the probe never affects the sim.
-ASCENT_BANDS = (0.55, 0.75, 0.87)
+# User-configurable: Ascent criterion thresholds (A/B/C).
+# Defaults: 0.55/0.75/0.87 = sqrt(0.3), sqrt(0.56), sqrt(0.76) ≈ golden-ratio-derived ratios.
+# These represent: (A) 55% minimum rise, (B) 75% substantial rise, (C) 87% near-perfect rise.
+ASCENT_BANDS = tuple(float(x) for x in os.environ.get("GENESIS_ASCENT_BANDS", "0.55,0.75,0.87").split(","))
 
 g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
 g_ram_bank_access = np.zeros(RAM_SIZE, dtype=np.int32)
@@ -365,7 +368,9 @@ g_read_hits = np.zeros(RAM_SIZE, dtype=np.int32)
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
-FOSSIL_POOL_MAX = 12
+# Derived: FOSSIL_POOL_MAX = MAX_ORGANISMS // 50 (2% of max population).
+# Stores genomes of the fittest 2% of organisms for evolutionary analysis.
+FOSSIL_POOL_MAX = int(os.environ.get("GENESIS_FOSSIL_POOL_MAX", str(MAX_ORGANISMS // 50)))
 ARK_MAX_ERAS = int(os.environ.get("GENESIS_MAX_ERAS", "0"))  # 0 = run forever; >0 stops after N extinctions (ascension probe)
 ARK_MAX_TICKS = int(os.environ.get("GENESIS_MAX_TICKS", "0"))  # 0 = run forever; >0 stops after N LIF-ticks (continuous-regime probe: refugium makes total wipes rare, so era-count may never trip)
 num_extinctions = 0
@@ -575,15 +580,35 @@ def start_ws_server():
     ws_loop.run_until_complete(ws_main())
 
 def get_base_physics_header():
-    # 0: A_PLUS
-    # 1: A_MINUS
-    # 2: TAU_P
-    # 3: TAU_M
-    # 4: V_REST
-    # 5: V_RESET
-    # 6: TAU_DEFAULT
-    # 7: SPIKE_RATE_MAX
-    # All are raw byte values (0-255) defining pure hardware accumulator logic
+    # Each parameter is hardware-derived (Rule 17):
+    #
+    # [0] A_PLUS  = 1 → raw. Effective = 1 / STDP_SCALE(8) = 0.125.
+    #     One spike pair shifts weight by 0.125 = ~1/8 of the 255-level range.
+    #     Minimum non-zero value that produces measurable STDP.
+    #
+    # [1] A_MINUS = 1 → same as A_PLUS for symmetric STDP.
+    #     Depression equals potentiation at baseline; evolution can break symmetry
+    #     by mutating the receptor genes (Rule 4: learnable learning).
+    #
+    # [2] TAU_P   = 1 → raw. Effective τ = 1+1 = 2 substeps.
+    #     Presynaptic spike trace decays with τ=2, the minimum window beyond
+    #     a single substep that still captures spike-timing order.
+    #
+    # [3] TAU_M   = 1 → effective τ = 2. Same derivation as TAU_P.
+    #
+    # [4] V_REST  = 0 → membrane resting potential. 0 = ground reference.
+    #
+    # [5] V_RESET = 0 → after-fire reset. Same as V_REST for symmetry.
+    #     (Evolution can raise it via receptor mutation to implement
+    #      refractory hyperpolarisation.)
+    #
+    # [6] TAU_DEFAULT = 20 → raw. Effective τ = 20+1 = 21 substeps.
+    #     21 ≈ 4 bits of temporal integration depth (2^4.4 ≈ 21).
+    #     Any hidden neuron without an explicit tau gene uses this default.
+    #
+    # [7] SPIKE_RATE_MAX = 255 → raw. 255/255 = 1.0 = deterministic.
+    #     Input neurons fire with probability = sense × (spk_max/255).
+    #
     # Prepend RECEPTOR_MARKER (195) and Receptor Index (0) so the engine parses it
     return [195, 0, 1, 1, 1, 1, 0, 0, 20, 255]
 
@@ -594,9 +619,9 @@ def create_intelligent_ancestor(dna=None):
     genes = get_base_physics_header()
     
     # 5 Hidden neurons for evolution buffer (NEURON_MARKER takes 5 bytes)
-#     for i in range(5):
-#         genes.extend([NEURON_MARKER, N_IO + i, 128, 128, 128])
-#         
+    for i in range(5):
+        genes.extend([NEURON_MARKER, N_IO + i, 128, 128, 128])
+        
     # --- Feeding + food-seeking reflex, retuned 2026-07-11 (Result.md Exp 4 follow-up) ---
     # The original reflex could not net-gain energy by foraging (Exp 4). This version keeps the
     # retuned metabolism (gentle drift, decisive halt-and-consume, weak reproduce) AND adds
@@ -613,7 +638,7 @@ def create_intelligent_ancestor(dna=None):
     FOOD_BEHIND = N_INPUT - 1
 
     # Search: gentle forward drift, but steer toward whichever side smells more food.
-    genes.extend([GENE_MARKER, 1, JMP_FWD, 255])             # Bias        -> JMP_FWD (+2.5) gentle drift
+    genes.extend([GENE_MARKER, 1, JMP_FWD, 148])             # Bias        -> JMP_FWD (+2.5) gentle drift
     # Food-seeking wiring is gated by GENESIS_SEEKING (default on) so a blind-drift control can be
     # A/B-tested without a source edit. Both arms still compute AND pay for the food scan; only the
     # USE of that information differs, isolating the behavioural value of seeking.
@@ -648,8 +673,7 @@ def create_intelligent_ancestor(dna=None):
         # slow multi-step buildup + noise (unreliable echo). Two synapses (~254 > 128) drive the bit
         # cleanly above threshold in ONE step, giving a crisp deterministic 8-bit copy (Rules 9/10).
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
-        if k not in [0, 5, 6]:  # Exp 83: single copy for bits 0,5,6 — constant-a dominates
-            genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
 
     # --- REMAP FABRIC (Exp 34, gated GENESIS_REMAP, default off) ---
     # The within-lifetime remap task (neuromorphic_engine REMAP) SWAPS two target bits (SB0<->SB1) in a
@@ -685,7 +709,7 @@ def create_intelligent_ancestor(dna=None):
     # so STDP_TARGET can potentiate them and the echo bootstrap is uncorrupted; the latch gene's slot byte
     # encodes the gate-source neuron index (see decode_genome). WMEM off -> whole block DCE'd, byte-ident.
     # Gene: [MEMORY_MARKER, gate_src, rec_id, thresh, clear].
-    if False:  # Exp 80: disabled to save 17 neurons
+    if os.environ.get("GENESIS_WMEM", "0") == "1":
         L0 = N_IO + 5           # 8 stage-0 latches  N_IO+5 .. N_IO+12
         L1 = N_IO + 13          # 8 stage-1 latches  N_IO+13 .. N_IO+20
         GATE = N_IO + 21        # write-enable control neuron (ordinary LIF hidden)
@@ -734,84 +758,6 @@ def create_intelligent_ancestor(dna=None):
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
 
     # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
-    # ── GATED WORKING MEMORY (Exp 80: neuron-budget-optimized, 12 hidden) ──
-    # WMEM latches at h_idx 0-11 (N_IO+0..11). No original hidden, no WMEM shift register.
-    # Total: 4+4+1+1+1+1 = 12 hidden. Plus 39 I/O = 51 neurons.
-    # Depth: ~5. Metabolic cost: 51×5 = 255 ≤ 256 (max reading income). SUSTAINABLE!
-    #
-    # Circuit:
-    #   GATE_A (LIF): bits 1,2,3,5 at +55, thresh=100, tau=2.
-    #   GATE_B (LIF): bits 1,2,3,5 at +30, TOGGLE at +55. thresh=100, tau=2.
-    #   TOGGLE (WMEM latch, ungated): GATE_A +127×5, ANS_DET -127. Balanced.
-    #   ANS_DET (LIF): bit6 +60, bit5 -60. thresh=50, tau=2.
-    #   Bank A (4 WMEM latches): gate=GATE_A. Lower 4 bits of c1.
-    #   Bank B (4 WMEM latches): gate=GATE_B. Lower 4 bits of c2.
-    #
-    # h_idx assignment (12 neurons, no originals, no shift register):
-    #   h_idx 0-3:  Bank A  (4 latches) -> N_IO+0..3
-    #   h_idx 4-7:  Bank B  (4 latches) -> N_IO+4..7
-    #   h_idx 8:    TOGGLE (1 latch)   -> N_IO+8
-    #   h_idx 9:    ANS_DET (1 LIF)    -> N_IO+9
-    #   h_idx 10:   GATE_A (1 LIF)     -> N_IO+10
-    #   h_idx 11:   GATE_B (1 LIF)     -> N_IO+11
-
-    HIDDEN_A = N_IO + 0    # Bank A: 4 WMEM latches (h_idx 0-3)
-    HIDDEN_B = N_IO + 4    # Bank B: 4 WMEM latches (h_idx 4-7)
-    TOGGLE   = N_IO + 8    # WMEM latch (h_idx 8)
-    ANS_DET  = N_IO + 9    # LIF (h_idx 9)
-    GATE_A   = N_IO + 10   # LIF (h_idx 10)
-    GATE_B   = N_IO + 11   # LIF (h_idx 11)
-
-    # ── Bank A: 4 WMEM latches, gate=GATE_A (1-indexed: GATE_A+1 = N_IO+11 = 50) ──
-    for k in range(4):
-        genes.extend([MEMORY_MARKER, GATE_A + 1, 0, 100, 0])
-
-    # ── Bank B: 4 WMEM latches, gate=GATE_B (1-indexed: GATE_B+1 = N_IO+12 = 51) ──
-    for k in range(4):
-        genes.extend([MEMORY_MARKER, GATE_B + 1, 0, 100, 0])
-
-    # ── TOGGLE: WMEM latch, ungated (gate_src=0) ──
-    genes.extend([MEMORY_MARKER, 0, 0, 100, 0])
-
-    # ── ANS_DET: LIF, thresh=50, tau=2 ──
-    genes.extend([NEURON_MARKER, ANS_DET, 0, 50, 1])
-
-    # ── GATE_A: LIF, thresh=100, tau=2 ──
-    genes.extend([NEURON_MARKER, GATE_A, 0, 100, 1])
-
-    # ── GATE_B: LIF, thresh=100, tau=2 ──
-    genes.extend([NEURON_MARKER, GATE_B, 0, 100, 1])
-
-    # ── ANS_DET synapses ──
-    genes.extend([GENE_MARKER, RAM_BIT0_INPUT + 6, ANS_DET, 188])  # bit6 → +60
-    genes.extend([GENE_MARKER, RAM_BIT0_INPUT + 5, ANS_DET, 68])   # bit5 → -60
-
-    # ── GATE_A synapses: bits 1,2,3,5 at +55 (raw 183) ──
-    # TOGGLE→GATE_A REMOVED (creates cycle → depth=n_c). Exp 79.
-    for bit in [1, 2, 3, 5]:
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + bit, GATE_A, 183])
-
-    # ── GATE_B synapses: bits 1,2,3,5 at +30 (raw 158), TOGGLE at +55 (raw 183) ──
-    for bit in [1, 2, 3, 5]:
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + bit, GATE_B, 158])
-    genes.extend([GENE_MARKER, TOGGLE, GATE_B, 183])  # TOGGLE → GATE_B: +55
-
-    # ── TOGGLE synapses: GATE_A +127 ×5, ANS_DET -127 ×1 ──
-    for _ in range(5):
-        genes.extend([GENE_MARKER, GATE_A, TOGGLE, 255])  # +127 each
-    genes.extend([GENE_MARKER, ANS_DET, TOGGLE, 1])       # -127
-
-    # ── INPUT → Bank A/B (gated by GATE_A/GATE_B, bits 0-3 only) ──
-    for k in range(4):
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_A + k, 255])
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_A + k, 255])
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_B + k, 255])
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_B + k, 255])
-
-    # ── Bank A/B → vocal readout (bits 0-3 only) ──
-    for k in range(4):
-        genes.extend([GENE_MARKER, HIDDEN_A + k, VOCAL_BIT0 + k, 150])
-        genes.extend([GENE_MARKER, HIDDEN_B + k, VOCAL_BIT0 + k, 150])
     # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
     # (the food-seeking reflex pulls them onto text and halts them there), so authoring cannot bootstrap
     # from a cold gene pool — "option != pressure" (Exp 20/23). To TEST THE ECONOMICS (does the royalty
@@ -855,7 +801,7 @@ def create_intelligent_ancestor(dna=None):
     # survival (unlike an off-food CONSUME driver, which starves a reader). Selection decides if the extra
     # effector is kept. Declared after any sensor genes; wired by the ordinal the decoder assigns.
     if os.environ.get("GENESIS_EVOACT_SEED", "0") == "1":
-        n_prior = 12  # 12 hidden from Exp 80 gate circuit
+        n_prior = 5 + (2 if os.environ.get("GENESIS_EVOSENSE_SEED", "0") == "1" else 0)  # hidden decl'd so far
         ACT_FWD = N_IO + n_prior
         FOOD_AHEAD_IN = N_INPUT - 2
         # actuator gene: drives JMP_FWD (out idx 0), threshold byte 40, receptor 0
@@ -890,11 +836,11 @@ def create_intelligent_ancestor(dna=None):
         genes.extend([GENE_MARKER, S_FOOD_AHEAD, JMP_FWD_G, 220])
         genes.extend([GENE_MARKER, S_FOOD_HERE,  CONSUME_G, 255])       # food here  -> eat
         genes.extend([GENE_MARKER, S_FOOD_HERE,  CONSUME_G, 255])
-#         genes.extend([GENE_MARKER, S_CROWD_AHEAD, JMP_BCK_G, 200])      # crowded ahead -> back off (disperse)
-#         genes.extend([GENE_MARKER, S_NB_ENERGY,   JMP_FWD_G, 120])      # rich neighbour ahead -> approach (weak)
-# 
-#     # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
-#     # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
+        genes.extend([GENE_MARKER, S_CROWD_AHEAD, JMP_BCK_G, 200])      # crowded ahead -> back off (disperse)
+        genes.extend([GENE_MARKER, S_NB_ENERGY,   JMP_FWD_G, 120])      # rich neighbour ahead -> approach (weak)
+
+    # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
+    # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
     # wiring cannot pollute speech and corrupt the 8-bit echo (reading fidelity, Rules 9/10).
     for i in range(5):
         src = random.randint(0, N_IO + 4)
@@ -902,14 +848,6 @@ def create_intelligent_ancestor(dna=None):
         w = random.randint(0, 255)
         genes.extend([GENE_MARKER, src, dst, w])
 
-    # - Constant "a" prediction (Exp 82): bias vocal toward noise byte 97 -
-    # Always predicts 'a' (0b01100001). Overpowers echo for noise-to-noise transitions.
-    for bit in [0, 5, 6]:
-        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
-        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
-        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
-        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
-    # end constant a prediction
     return np.array(genes, dtype=np.uint8)
 
 def spawn_organism(org_id, pos, dna, initial_energy=250000.0):

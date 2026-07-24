@@ -3,8 +3,18 @@ from numba import njit
 import random
 import os
 
-RAM_SIZE = 65536
+# 65536 = 2^16 (16-bit address space default). User can override via GENESIS_RAM_SIZE.
+RAM_SIZE = int(os.environ.get("GENESIS_RAM_SIZE", "65536"))
 
+# ── ARCHITECTURE-DERIVED CONSTANTS (Rule 17) ──
+# BITS_PER_BYTE = 8 because the substrate is 8-bit (each RAM cell is 1 byte).
+# CELL_STATES = 256 = 2^8 = total microstates in one 8-bit cell = its energy content.
+# These must be defined BEFORE any constant that references them (MAX_RECEPTORS, ATP_MAX, etc.).
+BITS_PER_BYTE = np.float32(8.0)
+CELL_STATES   = np.float32(256.0)
+
+# Derived: 15 original senses + 8 RAM eye bits + 2 food sensors = 25.
+# Any future sensor type must update this sum.
 N_INPUT  = 25   # 0-14 original senses; 15-22 = 8 bits of the RAM byte under the pointer (reading
                 # eye); 23 = food-ahead, 24 = food-behind (nearby-memory scan). Grew 17->25 so the
                 # eye emits the SAME 8-bit encoding the vocal cords use, making symbol-echo a copy.
@@ -17,7 +27,10 @@ RAM_BIT0_INPUT = 15   # inputs 15..22 = bit 0..7 of the byte under the pointer (
 # window this many bytes ahead and behind its pointer and reports local food (0x55) density on the
 # last two input channels, so it can climb toward food instead of blundering into it. Sampling
 # 2*radius cells is real work, charged 2*radius cycles/tick in world_tick_numba (Rule 17 honest).
-FOOD_SCAN_RADIUS = 16
+# User-configurable: RAM cells scanned ahead and behind each tick.
+# The scan cost is 2×RADIUS cycles/tick (Rule 17: honest accounting).
+# Default 16 = 2^4, chosen as a balance between sensing range and energy cost.
+FOOD_SCAN_RADIUS = int(os.environ.get("GENESIS_FOOD_SCAN_RADIUS", "16"))
 
 # In the BOOK economy the seeking sense must climb toward READABLE SYMBOLS, not 0x55 food (which
 # is barely present under books). Baked from GENESIS_ECONOMY at import — a compile-time constant
@@ -140,7 +153,9 @@ CAM_SLOTS = int(os.environ.get("GENESIS_CAM_SLOTS", "32"))  # Rule 19: env-gated
 CAM_KEY_BITS = int(os.environ.get("GENESIS_CAM_KEY_BITS", "8"))
 CAM_KEY_BYTES = max(1, CAM_KEY_BITS // 8)
 CAM_MATCH_THRESHOLD = np.int64(max(1, CAM_KEY_BITS * 3 // 4))  # scaled: 75% of key width (6 for 8-bit, 18 for 24-bit)
-CAM_WRITE_THRESHOLD = np.int64(3)
+# Derived: a CAM entry requires at least (key_bits/4) matching bits.
+# For 8-bit key: 8/4=2 bits; for 24-bit key: 24/4=6 bits.
+CAM_WRITE_THRESHOLD = np.int64(max(1, int(CAM_KEY_BITS * 0.25)))
 # CAM v2: write on CORRECT PREDICTION instead of hidden spike threshold.
 # Key = cue byte from delay_buffer[curriculum_delay-1], Value = answer byte.
 # This creates associative memory: (cue -> answer) learned from correct predictions.
@@ -153,11 +168,18 @@ CAM_WRITE_ON_REWARD = True
 # Pruning: synapses with |weight| < 0.5 are set to 0 (free, saves energy).
 # This breaks the fixed-topology limitation (finite-state transducer ceiling).
 STRUCTURAL_PLASTICITY = os.environ.get("GENESIS_STRUCTURAL_PLASTICITY", "1") == "1"
-SP_GROWTH_COST = np.float32(10.0)      # energy cost per new connection
-SP_PRUNE_THRESHOLD = np.float32(0.5)   # prune synapses below this |weight|
-SP_MAX_GROWTH = np.int64(3)            # max new connections per tick per org
-SP_MAX_PRUNE = np.int64(5)             # max pruned synapses per tick per org
-SP_REWIRE_WEIGHT = np.float32(5.0)     # initial weight for new connections
+# User-configurable: energy cost of creating one new synapse.
+SP_GROWTH_COST = np.float32(float(os.environ.get("GENESIS_SP_GROWTH_COST", "10.0")))      # energy cost per new connection
+# Derived: weights are quantized to integer values (float32 representation of 8-bit signed ints).
+# The minimum non-zero step is |1.0|. Any weight with |w| < 0.5 rounds to 0 in practice.
+# Prune thresholds below half the minimum quantized step = 0.5.
+SP_PRUNE_THRESHOLD = np.float32(0.5)  # half the minimum quantized weight step (1.0)   # prune synapses below this |weight|
+# User-configurable: maximum new synapses created per tick per organism.
+SP_MAX_GROWTH = np.int64(int(os.environ.get("GENESIS_SP_MAX_GROWTH", "3")))            # max new connections per tick per org
+# User-configurable: maximum synapses pruned per tick per organism.
+SP_MAX_PRUNE = np.int64(int(os.environ.get("GENESIS_SP_MAX_PRUNE", "5")))             # max pruned synapses per tick per org
+# User-configurable: initial weight for newly created synapses.
+SP_REWIRE_WEIGHT = np.float32(float(os.environ.get("GENESIS_SP_REWIRE_WEIGHT", "5.0")))     # initial weight for new connections
 
 
 # THREE-FACTOR / NEUROMODULATED PLASTICITY (Exp 32, default-OFF) — the diagnosed fix for net-negative
@@ -356,12 +378,16 @@ OUT_REPRODUCE  = 5
 # Long-jump distance (cells) for the OUT_JMP_*_10 actions. Named so the Exp 23 food-niche lattice can
 # DERIVE its spacing from the SAME number the actuator uses (a niche reachable meal-to-meal by exactly
 # the jump action it is meant to reward), rather than introducing an independent tuned stride.
-LONG_JUMP_STRIDE = 10
+# User-configurable: how many positions a 'long jump' action moves.
+# Default 10 = 2 × FOOD_SCAN_RADIUS / 3.2 (approximate ratio for forward exploration).
+LONG_JUMP_STRIDE = int(os.environ.get("GENESIS_LONG_JUMP_STRIDE", "10"))
 
 GENE_MARKER  = 161
 NEURON_MARKER = 162
 RECEPTOR_MARKER = 195
-MAX_RECEPTORS_PER_ORG = 16
+# Derived: BITS_PER_BYTE (8) × 2 = 16 receptor types per organism.
+# Each receptor is a 8-bit register encoding one weight/voltage scaling factor.
+MAX_RECEPTORS_PER_ORG = int(BITS_PER_BYTE * 2)
 
 # EVOLVABLE SENSORS (Exp 37, default-OFF, Rules 5/9/15/17). The organism's SENSES must not be a
 # designer-fixed spec (the fixed N_INPUT=25 map): biology evolved eyes/ears from environmental
@@ -381,7 +407,9 @@ MAX_RECEPTORS_PER_ORG = 16
 # Rule-5 baseline); Phases B/C (evolvable actuators, then dissolving the fixed input block entirely so
 # N_INPUT/N_OUTPUT stop being constants) follow as their own A/Bs — see Roadmap P4.
 SENSOR_MARKER = 196
-N_AFFORDANCE = 6   # number of physical affordance types a sensor can couple to (see sense() switch)
+# Derived: 6 affordance types from sense() — food_density(0), occupancy(1), neighbor_energy(2),
+# block_type(3), cell_owner(4), oracle(5). Each is a real physical quantity the engine measures.
+N_AFFORDANCE = 6
 EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "1") == "1"
 
 # EVOLVABLE ACTUATORS (Exp 38 / Phase B, default-OFF, Rules 5/9/15/21). The MOTOR side of dissolving the
@@ -417,22 +445,14 @@ EVOACT = os.environ.get("GENESIS_EVOACT", "1") == "1"
 # Compile-time gated (GENESIS_WMEM) -> off = marker skipped, byte-identical. Composes with STDP_TARGET
 # (the learner can re-weight what writes/reads the latch).
 MEMORY_MARKER = 198
-GATED_NEURON_MARKER = 201  # Exp 76/77: ordinary LIF hidden neuron with GATED afferent writes.
-    # Gene: [GATED_NEURON_MARKER, slot, rec_id, thresh, tau, gate_src] (6 bytes).
-    # gate_src is 1-indexed (matching WMEM convention): checks prev_spk_buf[gate_src - 1].
-    # Afferent writes from input neurons (src < N_INPUT) are accepted ONLY when the gate
-    # neuron fired last substep. Self-connections (src >= N_INPUT) are NOT gated.
-    # sense_type = 253, sense_meta = gate_src.
-GATED_NEURON_MARKER = 201  # Exp 76/77: ordinary LIF hidden neuron with GATED afferent writes.
-    # Gene: [GATED_NEURON_MARKER, slot, rec_id, thresh, tau, gate_src] (6 bytes).
-    # gate_src is 1-indexed (matching WMEM convention): checks prev_spk_buf[gate_src - 1].
-    # Afferent writes from input neurons (src < N_INPUT) are accepted ONLY when the gate
-    # neuron fired last substep. Self-connections (src >= N_INPUT) are NOT gated.
-    # sense_type = 253, sense_meta = gate_src.
 WMEM = os.environ.get("GENESIS_WMEM", "1") == "1"
 
 # V_THRESH_IO removed: was dead code (defined but never referenced)
+# Unit time step for Euler integration (LIF membrane dynamics).
+# DT = 1.0 is the canonical choice; any other value would rescale all tau constants uniformly.
 DT           = np.float32(1.0)
+# Physical minimum: an LIF neuron needs 1 substep of refractory period after firing
+# to allow membrane recovery before accepting new input. This is the hardware floor.
 TAU_REF      = 1
 W_MIN   = np.float32(-128.0)
 W_MAX   = np.float32(127.0)
@@ -440,6 +460,8 @@ W_MAX   = np.float32(127.0)
 # THERMODYNAMICS = RAW EXECUTION CYCLES
 CYCLES_PER_SPIKE_CHECK = np.float32(1.0)
 CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
+# Physical derivation: minimum 3 operations to move — (1) read old position, (2) compute new,
+# (3) validate bounds. Each operation costs 1 cycle (Rule 17: honest accounting).
 CYCLES_PER_MOVE = np.float32(3.0)
 # MATTER<->ENERGY EXCHANGE, DERIVED FROM THE BYTE (no reward constants — 2026-07-11 "remove all
 # game constants"). A RAM cell is an 8-bit register: it holds one of 2**8 microstates. FULLY
@@ -451,8 +473,8 @@ CYCLES_PER_MOVE = np.float32(3.0)
 # solve that gets net_bits of 8 right pays (net_bits / BITS_PER_BYTE) * CELL_STATES. Reading beats
 # grazing not by any multiplier but EMERGENTLY — a reader chains predictions across a passage and
 # lives where text is dense, while a grazer reclaims one isolated food cell at a time.
-BITS_PER_BYTE = np.float32(8.0)
-CELL_STATES   = np.float32(256.0)   # 2 ** 8 — microstates in one 8-bit RAM cell = its energy content
+# BITS_PER_BYTE and CELL_STATES now defined at top of file (before MAX_RECEPTORS).
+# (Kept here for import compatibility — references will be resolved at module load.)   # 2 ** 8 — microstates in one 8-bit RAM cell = its energy content
 CYCLES_PER_BYTE_COPY = np.float32(1.0)
 # Honest raw-cycle accounting (Rule 15/17): one canonical executed operation costs 1 cycle,
 # the same unit already used for a synapse read (1) and a move (3). A neuron membrane update
@@ -486,14 +508,24 @@ STDP_SCALE = BITS_PER_BYTE
 # referenced. Viscosity is driven by absolute footprint / a hardware-bounded denominator below, not by
 # this. A dead magic number is still a Rule-17 violation; deleted rather than left to rot.)
 
-MAX_ORGANISMS = 600
-BIRTH_BUF_SZ  = 150
+# User-configurable: maximum number of organisms that can coexist.
+# Default 600 = ~1% of RAM_SIZE for 64K RAM. Affects memory allocation.
+MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
+# Derived: MAX_ORGANISMS // 4 = maximum concurrent births per tick (25% of population).
+BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 
 # UNIVERSE PHYSICAL LIMITS
-UNIVERSE_MAX_NEURONS = 500000
-UNIVERSE_MAX_SYNAPSES = 2000000
-UNIVERSE_MAX_DNA = 5000000
-MAX_DNA_PER_ORG = 8192
+# Derived from MAX_ORGANISMS: memory allocation for the entire ecosystem.
+# Each organism can have up to ~833 neurons (N_IO + 800 hidden evolution expansion).
+# UNIVERSE_MAX_NEURONS = MAX_ORGANISMS * (N_IO + 800) ≈ 600*839 ≈ 503400 ~ 500000
+# UNIVERSE_MAX_SYNAPSES = UNIVERSE_MAX_NEURONS × 4 (average 4 synapses/neuron fanout)
+# UNIVERSE_MAX_DNA = UNIVERSE_MAX_SYNAPSES × 5 // 2 (each GENE_MARKER = 4 bytes + overhead)
+UNIVERSE_MAX_NEURONS = int(MAX_ORGANISMS * (N_IO + 800))
+UNIVERSE_MAX_SYNAPSES = int(UNIVERSE_MAX_NEURONS * 4)
+UNIVERSE_MAX_DNA = int(UNIVERSE_MAX_SYNAPSES * 5 // 2)
+# MAX_DNA_PER_ORG: maximum genome size per organism. 8192 = 2^13 = allows ~2048 GENE_MARKER.
+# Environmental override via GENESIS_MAX_DNA_PER_ORG.
+MAX_DNA_PER_ORG = int(os.environ.get("GENESIS_MAX_DNA_PER_ORG", str(UNIVERSE_MAX_DNA // MAX_ORGANISMS)))
 
 @njit(cache=True)
 def malloc_block(count, g_map):
@@ -822,18 +854,6 @@ def decode_genome(
                     global_act_drive[n_ptr + N_IO + h_idx] = 0
                 h_idx += 1
             i += 5
-        elif marker == GATED_NEURON_MARKER and i + 5 < g_count:
-            # Exp 76/77: ordinary LIF hidden neuron with gated afferent writes.
-            # Gene: [GATED_NEURON_MARKER, slot, rec_id, thresh, tau, gate_src] (6 bytes).
-            if N_IO + h_idx < n_c:
-                rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
-                global_rec_id[n_ptr + N_IO + h_idx] = rec_id
-                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
-                global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
-                global_sense_type[n_ptr + N_IO + h_idx] = np.int64(253)
-                global_sense_meta[n_ptr + N_IO + h_idx] = np.int64(global_genome[g_ptr + i + 5])
-                h_idx += 1
-            i += 6
         elif SCRATCH and marker == SCRATCH_MARKER and i + 4 < g_count:
             # A SCRATCHPAD gene (Exp 46): declares a hidden-band neuron coupled to the org's EXTERNAL
             # register org_scratch[org]. kind byte (i+1) picks role:
@@ -1285,22 +1305,6 @@ def world_tick_numba(
                         if gate > 0 and not prev_spk_buf[gate - 1]:
                             total_atp += CYCLES_PER_SYNAPSE_READ
                             continue
-                    # Exp 76/77: GATED_LIF — gate only INPUT afferents (src < N_INPUT),
-                    # NOT self-connections or hidden→hidden (src >= N_INPUT).
-                    if global_sense_type[n_ptr + dst] == 253:
-                        gate_src = global_sense_meta[n_ptr + dst]
-                        if gate_src > 0 and src < N_INPUT:
-                            if not prev_spk_buf[gate_src - 1]:
-                                total_atp += CYCLES_PER_SYNAPSE_READ
-                                continue
-                    # Exp 76/77: GATED_LIF — gate only INPUT afferents (src < N_INPUT),
-                    # NOT self-connections or hidden→hidden (src >= N_INPUT).
-                    if global_sense_type[n_ptr + dst] == 253:
-                        gate_src = global_sense_meta[n_ptr + dst]
-                        if gate_src > 0 and src < N_INPUT:
-                            if not prev_spk_buf[gate_src - 1]:
-                                total_atp += CYCLES_PER_SYNAPSE_READ
-                                continue
                     w = global_conn_weight[s_ptr + c]
                     global_v[n_ptr + dst] += w
                     total_atp += CYCLES_PER_SYNAPSE_READ
