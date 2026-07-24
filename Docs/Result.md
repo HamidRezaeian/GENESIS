@@ -4052,3 +4052,33 @@ or adding movement incentives to the Latin-square curriculum.
 
 **Next:** Increase income (constant 'a' prediction) or decrease cost.
 
+
+
+---
+
+## Experiment 82 — Constant 'a' Prediction: Metabolic Limit Confirmed (2026-07-24)
+
+(Standalone Probe + genesis_lab, Latin-Square RAM, 5 Seeds)
+
+**Design:** Added 12 synapses from bias neuron to vocal bits 0,5,6, predicting
+noise byte 'a' (97=0b01100001) for every tick. 4 copies per bit overpower the
+echo reflex (2 copies per bit).
+
+**Results:**
+- 55 neurons, 88 synapses, **depth=4** (no cycles)
+- Constant 'a' conflicts with echo reflex → mixed predictions
+- Max income: 4/7 × 256 = **146/tick** (theoretical)
+- Min cost: 55 × 4 = **220/tick** (actual)
+- **Net loss: -74/tick even in best case**
+- Survival: ~3,378 ticks (best case, up from ~1,562)
+
+**Final Finding — The Hard Metabolic Limit:**
+The GENESIS engine's metabolic model (1 cycle/neuron/substep) creates a
+hard ceiling: n_neurons × depth × cycle_cost ≤ reading_income.
+With max reading income 146/tick and min cost 220/tick, NO circuit can
+sustain a colony on this stream. The substrate fundamentally cannot
+support compositional cognition within its current metabolic budget.
+
+**Next:** Options: increase reading reward, reduce per-neuron cost, or
+modify the curriculum to provide more predictable structure.
+
