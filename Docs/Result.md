@@ -4010,3 +4010,45 @@ next bottleneck is behavioral: the organism must READ to survive.
 
 **Next Step:** Exp 81 — Increase reading income by improving the echo reflex
 or adding movement incentives to the Latin-square curriculum.
+
+
+---
+
+## Experiment 81 — Reading Income Debug: Cost > Income (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
+
+**Fixed:** Random synapses removed (caused depth=56). Oracle scalar passed correctly. CAM reset between runs.
+
+**Results:**
+- 55 neurons, 76 synapses, **depth=4** ✓
+- Oracle working: correct predictions at noise→noise transitions
+- CAM writes only on **stationary reads** (rare with JMP_FWD +127)
+- Avg energy loss: ~160/tick. Survival: ~1,562 ticks (up from <1,000)
+- Income: ~73/tick (2/7 × 256). Cost: ~220/tick (base). Net loss: ~147/tick.
+
+**Hard constraint confirmed:** metabolic cost exceeds reading income. The organism cannot sustain a 55-neuron gate circuit on a Latin-square stream where only 2/7 of bytes are predictable.
+
+**Next:** Increase income (constant 'a' prediction, partial credit RMSE) or decrease cost (fewer neurons).
+
+
+
+---
+
+## Experiment 81 — Reading Income Debug: Cost > Income (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
+
+**Fixed:** Random synapses removed (caused depth=56). Oracle scalar passed correctly. CAM reset between runs.
+
+**Results:**
+- 55 neurons, 76 synapses, **depth=4** ✓
+- Oracle working: correct predictions at noise→noise transitions
+- CAM writes only on **stationary reads** (rare with JMP_FWD +127)
+- Avg energy loss: ~160/tick. Survival: ~1,562 ticks (up from <1,000)
+- Income: ~73/tick (2/7 × 256). Cost: ~220/tick (base). Net loss: ~147/tick.
+
+**Hard constraint confirmed:** metabolic cost exceeds reading income.
+
+**Next:** Increase income (constant 'a' prediction) or decrease cost.
+

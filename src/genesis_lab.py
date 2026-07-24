@@ -613,7 +613,7 @@ def create_intelligent_ancestor(dna=None):
     FOOD_BEHIND = N_INPUT - 1
 
     # Search: gentle forward drift, but steer toward whichever side smells more food.
-    genes.extend([GENE_MARKER, 1, JMP_FWD, 148])             # Bias        -> JMP_FWD (+2.5) gentle drift
+    genes.extend([GENE_MARKER, 1, JMP_FWD, 255])             # Bias        -> JMP_FWD (+2.5) gentle drift
     # Food-seeking wiring is gated by GENESIS_SEEKING (default on) so a blind-drift control can be
     # A/B-tested without a source edit. Both arms still compute AND pay for the food scan; only the
     # USE of that information differs, isolating the behavioural value of seeking.
@@ -889,11 +889,11 @@ def create_intelligent_ancestor(dna=None):
         genes.extend([GENE_MARKER, S_FOOD_AHEAD, JMP_FWD_G, 220])
         genes.extend([GENE_MARKER, S_FOOD_HERE,  CONSUME_G, 255])       # food here  -> eat
         genes.extend([GENE_MARKER, S_FOOD_HERE,  CONSUME_G, 255])
-        genes.extend([GENE_MARKER, S_CROWD_AHEAD, JMP_BCK_G, 200])      # crowded ahead -> back off (disperse)
-        genes.extend([GENE_MARKER, S_NB_ENERGY,   JMP_FWD_G, 120])      # rich neighbour ahead -> approach (weak)
-
-    # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
-    # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
+#         genes.extend([GENE_MARKER, S_CROWD_AHEAD, JMP_BCK_G, 200])      # crowded ahead -> back off (disperse)
+#         genes.extend([GENE_MARKER, S_NB_ENERGY,   JMP_FWD_G, 120])      # rich neighbour ahead -> approach (weak)
+# 
+#     # Random scratchpad synapses for evolutionary raw material. Restrict destinations to the ACTION
+#     # motors (outputs 0-5: moves/consume/reproduce), never the vocal cords (outputs 6-13), so random
     # wiring cannot pollute speech and corrupt the 8-bit echo (reading fidelity, Rules 9/10).
     for i in range(5):
         src = random.randint(0, N_IO + 4)
