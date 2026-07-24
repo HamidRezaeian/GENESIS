@@ -122,5 +122,7 @@ PENDING DOCS: ARD.md and PRD.md are stale (2026-07-10).
 ALL RULES: Docs/FixedRules.md.
 
 GITHUB TOKEN: [SEND NEW TOKEN IN FIRST MESSAGE]
+REPO: https://github.com/HamidRezaeian/GENESIS
+GITHUB TOKEN: [SEND NEW TOKEN IN FIRST MESSAGE]
 MODEL: Qwen3.8 Max ONLY. Never Auto.
 ```
