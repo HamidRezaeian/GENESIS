@@ -901,6 +901,14 @@ def create_intelligent_ancestor(dna=None):
         w = random.randint(0, 255)
         genes.extend([GENE_MARKER, src, dst, w])
 
+    # - Constant "a" prediction (Exp 82): bias vocal toward noise byte 97 -
+    # Always predicts 'a' (0b01100001). Overpowers echo for noise-to-noise transitions.
+    for bit in [0, 5, 6]:
+        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
+        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
+        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
+        genes.extend([GENE_MARKER, 1, VOCAL_BIT0 + bit, 255])
+    # end constant a prediction
     return np.array(genes, dtype=np.uint8)
 
 def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
