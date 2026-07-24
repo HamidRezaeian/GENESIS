@@ -417,6 +417,12 @@ EVOACT = os.environ.get("GENESIS_EVOACT", "1") == "1"
 # Compile-time gated (GENESIS_WMEM) -> off = marker skipped, byte-identical. Composes with STDP_TARGET
 # (the learner can re-weight what writes/reads the latch).
 MEMORY_MARKER = 198
+GATED_NEURON_MARKER = 201  # Exp 76/77: ordinary LIF hidden neuron with GATED afferent writes.
+    # Gene: [GATED_NEURON_MARKER, slot, rec_id, thresh, tau, gate_src] (6 bytes).
+    # gate_src is 1-indexed (matching WMEM convention): checks prev_spk_buf[gate_src - 1].
+    # Afferent writes from input neurons (src < N_INPUT) are accepted ONLY when the gate
+    # neuron fired last substep. Self-connections (src >= N_INPUT) are NOT gated.
+    # sense_type = 253, sense_meta = gate_src.
 WMEM = os.environ.get("GENESIS_WMEM", "1") == "1"
 
 # V_THRESH_IO removed: was dead code (defined but never referenced)
@@ -1261,6 +1267,14 @@ def world_tick_numba(
                         if gate > 0 and not prev_spk_buf[gate - 1]:
                             total_atp += CYCLES_PER_SYNAPSE_READ
                             continue
+                    # Exp 76/77: GATED_LIF — gate only INPUT afferents (src < N_INPUT),
+                    # NOT self-connections or hidden→hidden (src >= N_INPUT).
+                    if global_sense_type[n_ptr + dst] == 253:
+                        gate_src = global_sense_meta[n_ptr + dst]
+                        if gate_src > 0 and src < N_INPUT:
+                            if not prev_spk_buf[gate_src - 1]:
+                                total_atp += CYCLES_PER_SYNAPSE_READ
+                                continue
                     w = global_conn_weight[s_ptr + c]
                     global_v[n_ptr + dst] += w
                     total_atp += CYCLES_PER_SYNAPSE_READ

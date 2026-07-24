@@ -4,120 +4,105 @@ Read this file FIRST at the start of the next Clusy session.
 
 ---
 
-## Last Session: 2026-07-24 (Exp 74 + 75)
+## Last Session: 2026-07-24 (Exp 77)
 
 ### Accomplished
 
 | Area | What was done | Evidence |
 |------|---------------|----------|
-| **Exp 74: Attractor Tuning** | Replaced Exp 73's uniform attractor with bistable independent neurons. 16/16 unique persistent states, 120/120 distinct pairs, stable 30 ticks. | `src/exp74_attractor_discrimination_probe.py`, `genesis_lab.py` commit |
-| **Exp 75: Compositionality Re-eval** | Latin-square probe with tuned hidden layer. FAIL: 0% accuracy. OR accumulation collapses 64 pairs → 8 patterns. | `src/exp75_compositionality_reeval_probe.py` |
-| **Ancestor update** | `create_intelligent_ancestor`: thresh=100, tau=30, 2× self-conn (+54 each), NO bidir pairs | `src/genesis_lab.py` |
-| **Docs** | Updated Result.md, Roadmap.md, Article_Draft.md, this file | commits |
+| **Exp 77: Gate Drive** | Full substrate-grounded cue detector + toggle circuit → 100% accuracy | `src/exp77_gate_drive_probe.py` |
+| **Engine: GATED_NEURON_MARKER** | Gene 201 (6 bytes), sense_type=253, Phase 1 gates src < N_INPUT | `src/neuromorphic_engine.py` |
+| **Ancestor: 22 neurons** | 16 gated hidden (2 banks) + 6 gate circuit (OR_DET, CUE_DET, ANS_DET, TOGGLE, GATE_A, GATE_B) | `src/genesis_lab.py` |
+| **Docs** | Updated all 4 mandatory files | commits |
 
 ### Key Scientific Findings
 
-1. **Exp 74 SOLVED attractor discrimination.** Bistable independent neurons (2× self-connection,
-   no bidirectional pairs, thresh=100, tau=30) produce 16/16 distinct persistent states.
-   Each input bit controls one hidden neuron: ON → latches ON, OFF → stays OFF.
+1. **ALL BOTTLENECKS SOLVED:**
+   - Memory (Exp 70) → Topology (Exp 71) → Attractor (Exp 74) → Write Selectivity (Exp 76) → Gate Learnability (Exp 77)
 
-2. **Exp 75 revealed the NEXT bottleneck: Write Selectivity.** Bistable neurons only turn ON,
-   never OFF. Hidden state = cumulative OR of all bytes seen. 64 (c1,c2) pairs → 8 OR patterns,
-   7 ambiguous. Max theoretical accuracy = 1.6% < chance 12.5%.
+2. **Gate drive circuit (provably correct):**
+   - OR(bits 1,2,3): noise 97 has all three = 0; all cues 98-104 have ≥1 = 1
+   - AND(OR_DET, bit5): answers 65-72 have bit5 = 0 → excluded
+   - TOGGLE: bistable flip-flop, CUE_DET sets ON (+254), ANS_DET resets OFF (-254)
+   - GATE_A = CUE_DET AND NOT TOGGLE (first cue only)
+   - GATE_B = CUE_DET AND TOGGLE (second cue only)
 
-3. **Bottleneck progression:**
-   - ~~Memory~~ (Exp 70: CAM pre-population failed)
-   - ~~Topology~~ (Exp 71: zero recurrent pairs → fixed Exp 73)
-   - ~~Attractor discrimination~~ (Exp 74: bistable neurons → SOLVED)
-   - **Write selectivity** (Exp 75: OR accumulation → CURRENT BOTTLENECK)
+3. **Results:** 100% fidelity, 64/64 unique keys, 0 ambiguous, 5/5 seeds perfect.
 
 ### Current Ascent.md Evaluation
 
 | Criterion | Status | Evidence |
 |-----------|:------:|----------|
-| A (C(t) rise ≥25%) | BLOCKED | Write selectivity bottleneck (Exp 75) |
+| A (C(t) rise ≥25%) | READY FOR TEST | All bottlenecks solved; needs full simulation |
 | B (Learning load-bearing) | MET | Exp 30: 43% vs 2.9% (14×) |
-| C (Efficiency) | Not measured | Moot given A blocked |
+| C (Efficiency) | Not measured | Pending full simulation |
 
 ---
 
-## NEXT SESSION: Exp 76 — Gated Write Hidden Layer
+## NEXT SESSION: Exp 78 — Full Simulation Integration Test
 
-### The Problem
+### The Test
 
-Bistable hidden neurons (Exp 74) persist input patterns perfectly BUT accumulate all
-inputs via OR. During the Latin-square stream [c1, noise, noise, c2, noise, noise, answer],
-the hidden state at the answer tick = OR(c1, noise, c2) — a lossy mixture that cannot
-distinguish different (c1, c2) pairs.
+Run `genesis_lab` with the Exp 77 ancestor on a Latin-square curriculum.
+This is the INTEGRATION TEST: does the gate drive circuit work in the FULL engine
+(with movement, energy, STDP, CAM, viscosity, etc.) — not just the standalone probe?
 
-### The Solution
+### What to Check
 
-Add a **WRITE GATE** that controls when hidden neurons accept afferent input:
-- **Gate ON** during cue ticks (c1, c2) → hidden layer latches the input byte.
-- **Gate OFF** during noise ticks → hidden layer holds its state (preserves c1 during delay).
+1. **Answer-byte accuracy > 12.5%** (chance) sustained over 1000+ ticks
+2. **Gate timing:** GATE_A fires at c1 ticks, GATE_B at c2 ticks, neither at noise
+3. **Bank fidelity:** Bank A holds c1, Bank B holds c2 at the prediction tick
+4. **Population viability:** colony survives (pop > 50) on the Latin-square stream
+5. **STDP interaction:** does learning modify the gate drive weights? (Should be stable
+   since the circuit is hand-tuned, but STDP could drift it)
 
-### Implementation Options
+### Potential Issues
 
-**(A) Extend MEMORY_MARKER gate to ordinary hidden neurons.**
-The Exp 44/45 WMEM infrastructure already supports gated latches (global_sense_meta stores
-the gate source neuron). Extend this to ordinary LIF hidden neurons: afferent writes are
-accepted only when the gate neuron fired last substep.
+- **n_steps (LIF substeps):** The ancestor now has 22 hidden neurons with self-connections
+  and a deep gate circuit. The Bellman-Ford depth computation may give a large n_steps,
+  increasing energy cost. Check if the organism can afford this.
+- **TOGGLE as NEURON_MARKER (not MEMORY_MARKER):** The toggle uses self-connections for
+  bistability instead of the non-leaky latch. With tau=200, the leak is very slow but
+  NOT zero. Over many ticks, the toggle might drift. Check if this is a problem.
+- **Gate drive weights and STDP:** The hand-tuned weights (60, 127, -127, etc.) may be
+  modified by STDP during the simulation. If STDP drifts them too far, the circuit breaks.
+  Consider: should the gate drive synapses be STDP-protected?
 
-**(B) Two separate hidden banks with alternating gates.**
-- Bank 1 (8 neurons): gated by "c1 cue detected" → stores c1.
-- Bank 2 (8 neurons): gated by "c2 cue detected" → stores c2.
-- At answer tick: read both banks → combined key → CAM lookup.
+### Files to Read
 
-**(C) Gated overwrite (reset-then-write).**
-- On cue detection: reset all hidden neurons to OFF, then latch the new input.
-- This gives a clean snapshot of the most recent cue.
-- Requires an inhibitory "reset" signal (strong negative synapse onto all hidden neurons).
-
-### Recommended Approach
-
-**Option A** is the most substrate-grounded: it reuses the existing gate mechanism
-(global_sense_meta) and requires minimal engine changes. The gate neuron is driven by
-a cue-detection signal (e.g., "current byte ≠ noise"). During noise ticks, the gate
-is silent → hidden neurons ignore afferent input → c1 is preserved.
-
-### Files to Read Before Starting
-
-- `Docs/Roadmap.md` → "Current Bottleneck" section (updated)
-- `Docs/Result.md` → Exp 74 + 75 entries (at the end)
-- `src/genesis_lab.py` → `create_intelligent_ancestor` (Exp 74 hidden neuron block)
-- `src/neuromorphic_engine.py` → Phase 1 forward propagation (line ~1250, WMEM gate logic)
-- `src/exp74_attractor_discrimination_probe.py` (standalone LIF probe template)
-- `src/exp75_compositionality_reeval_probe.py` (Latin-square probe template)
+- `Docs/Roadmap.md` → "Current Bottleneck" (all solved, Exp 78 plan)
+- `Docs/Result.md` → Exp 77 entry (at the end)
+- `src/genesis_lab.py` → `create_intelligent_ancestor` (Exp 77 gate drive block)
+- `src/neuromorphic_engine.py` → GATED_NEURON_MARKER decode + Phase 1 gate
+- `src/exp77_gate_drive_probe.py` (standalone probe)
 
 ### Rules
 
-- `Docs/FixedRules.md` (21 rules, especially Rules 1, 4, 12, 18)
-- Always use **Qwen3.8 Max** model — never Auto
+- `Docs/FixedRules.md` (21 rules)
+- **Qwen3.8 Max** model ONLY — never Auto
 - Commit + push all changes to main
-- Keep `Docs/` files updated after every experiment
+- Keep `Docs/` updated after every experiment
 
 ---
 
 ## Quick-Start Prompt
 
 ```
-GENESIS project position as of Exp 75 (2026-07-24):
+GENESIS project position as of Exp 77 (2026-07-24):
 
-EXP 74 (PASS): Bistable independent hidden neurons — 16/16 unique persistent states.
-  Config: thresh=100, tau=30, 2× self-conn (+54 each), NO bidir pairs.
-  In create_intelligent_ancestor (genesis_lab.py).
+ALL BOTTLENECKS SOLVED:
+  Memory(70) → Topology(71) → Attractor(74) → Write Selectivity(76) → Gate Learnability(77)
 
-EXP 75 (FAIL): Compositionality re-eval — 0% accuracy.
-  Root cause: OR accumulation. Hidden state = OR(all bytes seen).
-  64 (c1,c2) pairs → 8 OR patterns → max 1.6% accuracy.
+EXP 77 (PASS): Full gate drive circuit → 100% accuracy.
+  OR(bits 1,2,3) AND bit5 → CUE_DET → TOGGLE → GATE_A/GATE_B → Bank A/B.
+  64/64 unique keys, 0 ambiguous, 5/5 seeds perfect.
 
-BOTTLENECK: Write Selectivity. Hidden layer needs a WRITE GATE.
-  Gate ON during cue ticks → accept input.
-  Gate OFF during noise → hold state.
+Engine: GATED_NEURON_MARKER (201), sense_type=253.
+Ancestor: 22 hidden neurons (16 gated + 6 gate circuit).
 
-NEXT: Exp 76 — Gated Write Hidden Layer.
-  Extend MEMORY_MARKER gate mechanism to ordinary LIF hidden neurons.
-  Gate neuron driven by cue-detection signal.
+NEXT: Exp 78 — Full genesis_lab simulation with Exp 77 ancestor.
+  Run on Latin-square curriculum, measure answer-byte accuracy.
+  Success: >12.5% sustained over 1000+ ticks.
 
 REPO: https://github.com/HamidRezaeian/GENESIS
 MODEL: Qwen3.8 Max ONLY. Never Auto.

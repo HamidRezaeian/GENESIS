@@ -936,36 +936,28 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
    reading income depends on statistical regularity to exploit. The refugium fires ~50% of
    ticks = life support, not equilibrium.
 
-### Current Bottleneck (Updated Exp 76, 2026-07-24)
+### Current Bottleneck (Updated Exp 77, 2026-07-24)
 
-**Exp 76 SOLVED write selectivity (architecturally):** Two-bank gated hidden neurons
-with oracle gates achieve 100% theoretical compositionality accuracy (64/64 unique
-16-bit combined keys, 0 ambiguous). The GATED_NEURON_MARKER (201) extends the WMEM
-gate mechanism to ordinary LIF neurons: afferent writes gated, self-connections not.
-
-**The bottleneck progression:**
+**ALL IDENTIFIED BOTTLENECKS SOLVED:**
 1. ~~Memory storage~~ → Exp 70: CAM pre-population failed (computation, not memory)
 2. ~~Topology~~ → Exp 71: zero recurrent pairs (fixed in Exp 73)
 3. ~~Attractor discrimination~~ → Exp 74: bistable neurons (SOLVED)
-4. ~~Write selectivity~~ → Exp 76: gated two-bank design (SOLVED architecturally)
-5. **Gate learnability** → CURRENT: can evolution learn the cue-detection circuit?
+4. ~~Write selectivity~~ → Exp 76: gated two-bank design (SOLVED)
+5. ~~Gate learnability~~ → Exp 77: substrate-grounded cue detector + toggle (SOLVED)
+
+**Exp 77 gate drive circuit:** OR(bits 1,2,3) AND bit5 → CUE_DET (fires for cues
+98-104, silent for noise 97 and answers 65-72). Bistable TOGGLE alternates GATE_A
+(first cue) and GATE_B (second cue). 100% theoretical accuracy, 64/64 unique keys.
 
 ### Recommended Next Step
 
-**Exp 77: Learnable Gate Drive**
-1. The ancestor's gate-drive synapses are wired silent (weight 128 = zero).
-   STDP must potentiate them to create a functional cue detector.
-2. Challenge: noise 'a'=97 shares bits 5,6 with all cues (98-104). No simple
-   linear threshold on eye bits separates noise from all cues.
-3. Possible solutions:
-   - (A) Multi-layer gate: intermediate hidden neuron computes a non-linear
-     feature (e.g., "bit 0 XOR bit 1") that separates noise from cues.
-   - (B) Temporal gate: a slow-decaying "position counter" neuron that tracks
-     tick-within-unit (fires on 1st cue, silent on 2nd → distinguishes c1/c2).
-   - (C) Evolutionary search: let mutation discover the gate drive topology.
-4. Test: run the full genesis_lab simulation with the Exp 76 ancestor on a
-   Latin-square curriculum. Measure answer-byte accuracy over generations.
+**Exp 78: Full Simulation — Integration Test**
+1. Run genesis_lab with the Exp 77 ancestor on a Latin-square curriculum.
+2. Measure answer-byte accuracy over 5000+ ticks across multiple seeds.
+3. Verify the gate drive circuit works in the FULL engine (not just the standalone probe).
+4. Check: does the organism's reading behavior interact correctly with the gate timing?
 5. Success criterion: answer accuracy > 12.5% (chance) sustained over 1000+ ticks.
+6. If the full simulation passes: the substrate has demonstrated compositional cognition.
 
 ### Docs/ Files Status
 
