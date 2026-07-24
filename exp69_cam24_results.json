@@ -1,0 +1,88 @@
+{
+  "experiment": "exp69_cam24",
+  "cam_key_bits": 24,
+  "seeds": [],
+  "runs": {
+    "RULE": [
+      {
+        "seed": 42,
+        "acc": 0.0,
+        "pop": 44.55,
+        "refugium": 1051
+      },
+      {
+        "seed": 123,
+        "acc": 0.0,
+        "pop": 43.31666666666667,
+        "refugium": 1229
+      },
+      {
+        "seed": 7,
+        "acc": 0.0,
+        "pop": 44.7,
+        "refugium": 1235
+      },
+      {
+        "seed": 2024,
+        "acc": 0.0,
+        "pop": 44.88333333333333,
+        "refugium": 1047
+      },
+      {
+        "seed": 999,
+        "acc": 0.0,
+        "pop": 44.416666666666664,
+        "refugium": 1179
+      }
+    ],
+    "NULL": [
+      {
+        "seed": 42,
+        "acc": 0.0,
+        "pop": 44.3,
+        "refugium": 1189
+      },
+      {
+        "seed": 123,
+        "acc": 0.0,
+        "pop": 44.35,
+        "refugium": 1117
+      },
+      {
+        "seed": 7,
+        "acc": 0.0,
+        "pop": 44.4,
+        "refugium": 1278
+      },
+      {
+        "seed": 2024,
+        "acc": 0.0,
+        "pop": 44.4,
+        "refugium": 1116
+      },
+      {
+        "seed": 999,
+        "acc": 0.0,
+        "pop": 44.233333333333334,
+        "refugium": 1097
+      }
+    ]
+  },
+  "summary": {
+    "rule_mean": 0.0,
+    "rule_std": 0.0,
+    "null_mean": 0.0,
+    "null_std": 0.0,
+    "delta_mean": 0.0,
+    "delta_std": 0.0,
+    "delta_z": Infinity,
+    "delta_per_seed": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "total_wall": 215.09768748283386
+  }
+}
