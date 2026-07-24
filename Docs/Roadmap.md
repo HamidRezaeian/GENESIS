@@ -890,3 +890,82 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 - If scalability test shows accuracy < 20% with pop > 200: architecture doesn't scale
 - If compositionality test shows no improvement over single-step: CAM is insufficient
 - If structural plasticity doesn't improve accuracy: weight-only plasticity is the ceiling
+
+---
+
+## Current Status (2026-07-24)
+
+### Experiments Completed (since last Roadmap update)
+
+| Exp | Title | Key finding |
+|:---:|-------|-------------|
+| 30 | STDP Ablation (14 arms A–N) | STDP weight drift is harmful → Fix deployed: Homeostatic STDP (λ=0.01) + CAM v2 (32 slots, write-on-reward) + DEPLETE |
+| 34 | REMAP (target remap) | Reward target rotated from echo to next-byte prediction → deployed |
+| 59 | Abstract AGI probe | Zero extinctions, stable population |
+| 60 | Grounded spatial stigmergy + Theory of Mind | Record 34,790 continuous ticks, 100% sensor retention |
+| 61 | Dynamic seasonal substrate | 10 migrations, 50k ticks, zero extinctions |
+| 62 | Dual-resource heterogeneity + zero-sum trade | Co-allocation of Food + Shelter cells |
+| 63 | Autotelic self-generated curriculum | 0% human text; substrate-authored sequences |
+| 64 | Deep-time ascension benchmark | 50k ticks across all biomes without crash |
+| 65 | Emergent peer language | 3,586 decoded peer reads across 11k history |
+| 66 | Interactive human-organism culture | 70.3% human→organism glyph recognition |
+| 67 | Open-ended AGI evolution probe | 500k continuous ticks, full UI sync |
+| **68** | **Shortcut-proof compositionality test** | **Δ = −7.2pp ± 16.6, z = −1.22 (n.s.) → NO compositionality** |
+
+### Current Ascent.md Evaluation
+
+| Criterion | Status | Evidence |
+|-----------|:------:|----------|
+| **A** — `C(t)` rise ≥25% over 5M ticks | ❌ **NOT met** | No compositionality → unlikely on current substrate |
+| **B** — Learning load-bearing | ✅ **MET** | Exp 30 A/B/C: 43% vs 2.9% (14×) |
+| **C** — Efficiency non-decreasing | ⏳ Not measured | — |
+
+### Key Findings
+
+1. **STDP drift is the load-bearing pathology.** Frozen weights (Arm C, 56.9%) beat learned
+   (Arm A, 43.3%). Fix: homeostatic STDP (λ=0.01) deployed and working (Arm D, 67.6%).
+2. **Working memory is real.** Arm E: 42.9% on Hard_WM vs 6.25% chance = 6.9×. First proof
+   that CAM provides genuine working memory.
+3. **DEPLETE mode creates selective pressure.** Arm G: 2.7× chance (bursts of 78%) on
+   Hard_WM with finite fuel → learn or die.
+4. **Compositionality is NOT real** (under controlled conditions, 2026-07-24).
+   The prior ~70% was a structure + bigram artifact (Exp 68, 8 seeds: Δ≈0, z=−1.22).
+5. **Shortcut-free curricula are non-viable.** Colony collapses on uniform streams because
+   reading income depends on statistical regularity to exploit. The refugium fires ~50% of
+   ticks = life support, not equilibrium.
+
+### Current Bottleneck
+
+**The catch-22:** Removing statistical shortcuts is necessary to test for genuine
+compositionality, but doing so collapses the energy gradient that sustains the colony.
+The substrate demonstrates `no compositionality` under controlled conditions — an honest
+negative — but cannot demonstrate positive compositionality because the test condition is
+non-viable.
+
+### Recommended Next Step
+
+**Design a phased curriculum:**
+1. **Survival stream** (80% of text length): exploitable structure (repeated patterns,
+   predictable bigrams, constant noise segments) that provides baseline reading income →
+   keeps the colony healthy (pop ≈ 100–300).
+2. **Compositionality probes** (20%): periodically interleave shortcut-proof test items
+   (Latin-square, uniform marginals) and measure answer-byte-specific accuracy SEPARATELY
+   from the survival stream.
+3. This decouples survival energy from the test signal — the colony can thrive on the
+   survival stream while the probes measure genuine compositionality without shortcut
+   confound.
+
+**Alternative:** CAM capacity test — test whether pre-populating CAM with the 64 correct
+mappings enables compositionality, revealing whether the bottleneck is memory or computation.
+
+### Docs/ Files Status
+
+| File | Status | Notes |
+|------|:------:|-------|
+| `Docs/Article_Draft.md` | ✅ Updated 2026-07-24 | Includes Exp 68 null result, §3.5 Limitations, Figure 1, Parameter Appendix A |
+| `Docs/FixedRules.md` | ✅ New 2026-07-24 | 21 rules with footnotes for every change (Rules 2,3,10,16,19,20 new) |
+| `Docs/Article_Draft_Review.md` | ✅ New 2026-07-24 | Full audit with 3 fatal + 5 serious + 2 cosmetic issues |
+| `Docs/Result.md` | ✅ Updated 2026-07-24 | Exp 68 entry added |
+| `Docs/Roadmap.md` | ⬆️ This file | Now updated |
+| `Docs/ARD.md` | ❌ Stale (2026-07-10) | Describes pre-Exp-30 engine without Homeostatic STDP, CAM v2, DEPLETE, STRUCTURAL_PLASTICITY |
+| `Docs/PRD.md` | ❌ Needs review | Not read this session |

@@ -3160,3 +3160,54 @@ Homeostatic STDP (λ=0.01) + CAM v2 (write-on-reward)
 + DEPLETE (finite fuel) + Phased Refugium + Hard_WM curriculum
 = 70-89% accuracy on 16-cue random-permutation working memory task
 ```
+
+---
+
+## Experiment 68 — Shortcut-Proof Compositionality Test (2026-07-24)
+
+(Anti-Bigram Shortcut, Controlled RULE vs NULL, Multi-Seed, 8 seeds)
+
+**Hypothesis:** If the prior ~70% compositionality (Exp 30 K/L) is genuine, then organisms
+should still predict the compositional answer when bigram and structure shortcuts are removed.
+
+**Method:**
+- Uniform 8-symbol alphabet (`abcdefgh`) for cue1, cue2, noise **and** answer → every byte
+  has the same marginal distribution (chance = 12.5%).
+- **RULE:** `answer = (cue1 + cue2) mod 8` (Latin square / quasigroup).
+  `P(answer|cue1) = P(answer|cue2) = P(answer|prev_noise) = uniform` → a bigram predictor
+  gets **exactly chance** on the answer; only a model holding BOTH cues beats it.
+- **NULL:** answer = uniform random. Identical format, marginals, structure.
+- Stream: `[c1 n n c2 n n A]` period 7; constant noise `['a']` survival scaffold.
+- 8 seeds × 2 conditions = 16 runs, 80k ticks/run.
+- Metric: `Δ = acc(RULE) − acc(NULL)`. Everything except cue→answer dependency is identical,
+  so Δ isolates compositionality with bigram + structure confounds controlled out.
+
+**Results:**
+- RULE: 63.0% ± 9.4 (pop~23, refugium triggers 37k–50k/80k)
+- NULL: 70.2% ± 9.6 (pop~21, refugium triggers 37k–60k/80k)
+- **Δ = −7.2pp ± 16.6, z = −1.22 (n.s.)**
+- Per-seed Δ (pp): [`+12.4`, `−16.6`, `−4.9`, `−33.1`, `+2.8`, `+10.8`, `−25.8`, `−2.9`]
+
+**Verdict:** Δ ≈ 0. No compositionality detected when shortcuts are controlled. The prior
+~70% was a measurement artifact (structural position + bigram prediction + single-seed noise).
+
+**Deeper finding:** The shortcut-free curriculum is **non-viable** — the colony survives only
+via constant refugium reseeding (~50% of ticks, pop stabilising at 20–24). Removing shortcuts
+is necessary to test compositionality, but doing so collapses the survival gradient.
+
+**Variant results:**
+- **v1 (uniform noise, 5 seeds):** colony collapsed (pop~7–14, refugium ~50% ticks).
+  Δ = −5.3pp (n.s.). Finding: maximally shortcut-free = non-viable.
+- **Tagged mode (uppercase answers, 1 seed):** population viable (pop~23). Answer-specific
+  Δ = +11.4pp on 1 seed, but answer-read counts too low (~10/run).
+
+**Files:**
+| Artifact | Path |
+|----------|------|
+| Probe source | `src/exp68_shortcut_proof_compositionality_probe.py` |
+| Full raw results | `exp68_shortcut_proof_results_overall.json` |
+| Verdict figure (Figure 1) | `exp68_verdict.png` |
+| Commit (probe + results) | `93c0ec5` |
+| Commit (Figure 1 in article) | `fc430ea` |
+
+**Next:** Design phased curriculum to decouple survival income from compositionality test.
