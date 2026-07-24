@@ -911,6 +911,7 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 | 66 | Interactive human-organism culture | 70.3% human→organism glyph recognition |
 | 67 | Open-ended AGI evolution probe | 500k continuous ticks, full UI sync |
 | **68** | **Shortcut-proof compositionality test** | **Δ = −7.2pp ± 16.6, z = −1.22 (n.s.) → NO compositionality** |
+| **69** | **Phased Curriculum (short-run)** | **Answer prediction = 0% across ALL seeds. Survival padding destroys probe learning. Catch-22 confirmed.** |
 
 ### Current Ascent.md Evaluation
 
@@ -969,3 +970,4 @@ mappings enables compositionality, revealing whether the bottleneck is memory or
 | `Docs/Roadmap.md` | ⬆️ This file | Now updated |
 | `Docs/ARD.md` | ❌ Stale (2026-07-10) | Describes pre-Exp-30 engine without Homeostatic STDP, CAM v2, DEPLETE, STRUCTURAL_PLASTICITY |
 | `Docs/PRD.md` | ❌ Needs review | Not read this session |
+

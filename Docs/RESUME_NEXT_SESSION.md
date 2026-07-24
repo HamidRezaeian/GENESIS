@@ -49,7 +49,26 @@ stands and what the next step is.
 - `Docs/Result.md` — Exp 68 entry added
 - `Docs/Roadmap.md` — current status section added
 
+### Exp 69 (2026-07-24): Phased Curriculum — Null Result
+
+**Finding:** Adding survival padding ('a' runs) between probes destroys answer-byte prediction ability
+(0% answer accuracy across all seeds). The substrate's predictor converges to always predicting the
+most frequent byte ('a'), and never learns to predict uppercase answer bytes. This confirms the
+catch-22 as a structural limitation of the substrate, not just a curriculum design issue.
+
+**Ascent.md update:** Criterion A (capability rise ≥25%) is now FAILED. No compositionality under any
+viable curriculum. The substrate fails to demonstrate the primary ascent criterion.
+
 ### Open Problems
+
+1. **Compositionality catch-22 is CONFIRMED as a structural limitation.** Probe-only: colony starves
+   (pop~23). Survival-padded: answer prediction = 0%. These are not separate problems — they are the
+   same problem viewed from two angles. The substrate's prediction mechanism (first-order Markov) is
+   fundamentally incompatible with compositionality testing.
+
+2. **Ascent Criterion A is FAILED.** The project's primary metric shows no capability rise. Exp 68
+   and 69 together demonstrate that compositionality is absent under any controlled condition.
+
 
 1. **CAM_KEY_BITS=24: 0% accuracy bug** — when CAM=1 and KEY_BITS=24, all correct_reads are 0 despite colony surviving. Likely cause: false CAM match from zero-filled high-order bits in the 24-bit key. Fix option: use CAM_MATCH_THRESHOLD proportionally scaled OR add a sentinel bit in the key encoding that prevents empty slots from matching.
 

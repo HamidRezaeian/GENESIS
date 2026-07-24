@@ -3211,3 +3211,38 @@ is necessary to test compositionality, but doing so collapses the survival gradi
 | Commit (Figure 1 in article) | `fc430ea` |
 
 **Next:** Design phased curriculum to decouple survival income from compositionality test.
+
+
+
+---
+
+## Experiment 69 — Phased Curriculum: Decoupling Survival from Compositionality (2026-07-24)
+
+(Phased Curriculum Design, Short-Run, Multi-Seed)
+
+**Hypothesis:** Adding predictable survival padding (runs of constant a) between shortcut-proof
+compositionality probes will keep the colony healthy while allowing answer-byte-specific accuracy
+measurement.
+
+**Method:**
+- 10 runs (5 seeds x 2 conditions: RULE vs NULL), 5000 ticks/run, initial_energy=5000/org.
+- Stream: 15x a (survival padding) + 7-byte probe [c1 a a c2 a a ANSWER] repeated.
+- Survival fraction 68 percent = constant a. Probe fraction 32 percent.
+- Answer uppercase A-H, Latin-square for RULE, uniform for NULL.
+
+**Results:**
+- Context reads: active at t=0 (62-92 percent accuracy), dropped to 0 by t=1000.
+- Answer reads: 0-6 per run, ALL incorrect (0 percent accuracy across all runs).
+- Population: stable at 150-170 across all runs (no refugium, no extinction).
+- Delta = 0 pp (n.s.). No compositionality.
+
+**Verdict:** Adding predictable survival padding destroys answer-byte prediction.
+The predictor converges to always predicting a. This strengthens the Exp 68 conclusion:
+compositionality is absent on this substrate.
+
+**Updated Ascent.md evaluation:**
+| Criterion | Status | Evidence |
+|-----------|:------:|----------|
+| A (C(t) rise >=25 percent) | FAILED | No compositionality under any viable curriculum |
+| B (Learning load-bearing) | MET | Exp 30: 43 percent vs 2.9 percent (14x) |
+| C (Efficiency) | Not measured | - |
