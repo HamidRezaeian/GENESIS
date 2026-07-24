@@ -1890,6 +1890,10 @@ def world_tick_numba(
                     read_log[idx+1] = org
                     read_log[idx+2] = next_byte
                     read_log[0] = idx + 3
+                if CAM:
+                    cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+                              org, np.int64(ram_substrate[pos]), np.int64(next_byte),
+                              global_time, CAM_SLOTS)
             elif org_char_val != 0:
                 idx = read_log[0]
                 if idx < 993:
@@ -1966,6 +1970,10 @@ def world_tick_numba(
                                 read_log[idx+1] = org
                                 read_log[idx+2] = pval
                                 read_log[0] = idx + 3
+                            if CAM:
+                                cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+                                          org, np.int64(ram_substrate[pos]), np.int64(pval),
+                                          global_time, CAM_SLOTS)
                     org_grid[pos] = -1
                     positions[org] = npos
                     org_grid[npos] = org
