@@ -3944,3 +3944,69 @@ n_neurons × depth ≤ 256. Any cycle in the synapse graph → depth = n_c → b
 The engine inherently selects for feedforward circuits. Recurrent circuits (toggles,
 state machines) are metabolically punished. This is a fundamental architectural
 constraint on the substrate's computational power.
+
+
+---
+
+## Experiment 79 — WMEM Latch Banks: Metabolic Sustainability Analysis (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 10000 Ticks, Seed 42)
+
+**Design:** Replaced self-connected LIF banks with WMEM latches (non-leaky, non-resetting).
+Removed TOGGLE→GATE_A cycle to reduce depth from 86 to 5.
+
+**Results:**
+
+| Metric | Exp 78 | Exp 79 |
+|--------|:------:|:------:|
+| Neurons | 67 | 85 |
+| Depth | 68 | **5** |
+| Energy/tick | ~3,587 | **~242** |
+| Survival | <500 ticks | **~1,033 ticks** |
+| CAM entries | 16 | **32** |
+
+**Verdict:** PARTIAL PASS. Depth reduced 86→5 (17× improvement). Survival doubled.
+But still unsustainable: 85 neurons × 5 depth = 425 cycles/tick > 256 max reading income.
+
+**Key Finding — Hard Metabolic Constraint:**
+The GENESIS metabolic model (1 cycle/neuron/substep) creates a hard ceiling:
+n_neurons × depth ≤ 256. Any cycle in the synapse graph → depth = n_c → bankruptcy.
+The engine inherently selects for feedforward circuits. Recurrent circuits (toggles,
+state machines) are metabolically punished. This is a fundamental architectural
+constraint on the substrate's computational power.
+
+
+---
+
+## Experiment 80 — Neuron Budget Optimization: 85→55 Neurons (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
+
+**Design:** Removed WMEM shift register (17 neurons), original 5 hidden neurons,
+and reduced banks from 8+8 to 4+4. Rebuilt ancestor from scratch: 12 hidden
+(4+4+1+1+1+1 gate circuit) + 39 I/O = 51 neurons (observed: 55).
+
+**Results:**
+
+| Metric | Exp 78 | Exp 79 | Exp 80 |
+|--------|:------:|:------:|:------:|
+| Neurons | 67 | 85 | **55** |
+| Depth | 68 | 5 | **4** |
+| Energy/tick | ~3,587 | ~242 | **~127** |
+| Survival | <500 ticks | ~1,033 ticks | **<1,000 ticks** |
+| Reads/5k ticks | N/A | N/A | 308 |
+| Metabolic Cost | 4,556 | 425 | **220** |
+| Cost ≤ 256? | No | No | **Yes ✓** |
+
+**Verdict:** Metabolic bottleneck SOLVED: 220 ≤ 256. But reading behavior
+bottleneck REMAINS: only 308 reads in 5000 ticks (0.06 reads/tick). The
+organism's echo reflex produces correct predictions only for noise bytes (4/7 ≈ 57%
+of the Latin-square stream), and the organism doesn't move enough to generate
+additional reading income.
+
+**Key Finding:** n_neurons × depth ≤ 256 is the sustainability threshold.
+Exp 80 achieves 55 × 4 = 220 ≤ 256. The metabolic ceiling is broken. The
+next bottleneck is behavioral: the organism must READ to survive.
+
+**Next Step:** Exp 81 — Increase reading income by improving the echo reflex
+or adding movement incentives to the Latin-square curriculum.

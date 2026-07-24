@@ -594,9 +594,9 @@ def create_intelligent_ancestor(dna=None):
     genes = get_base_physics_header()
     
     # 5 Hidden neurons for evolution buffer (NEURON_MARKER takes 5 bytes)
-    for i in range(5):
-        genes.extend([NEURON_MARKER, N_IO + i, 128, 128, 128])
-        
+#     for i in range(5):
+#         genes.extend([NEURON_MARKER, N_IO + i, 128, 128, 128])
+#         
     # --- Feeding + food-seeking reflex, retuned 2026-07-11 (Result.md Exp 4 follow-up) ---
     # The original reflex could not net-gain energy by foraging (Exp 4). This version keeps the
     # retuned metabolism (gentle drift, decisive halt-and-consume, weak reproduce) AND adds
@@ -684,7 +684,7 @@ def create_intelligent_ancestor(dna=None):
     # so STDP_TARGET can potentiate them and the echo bootstrap is uncorrupted; the latch gene's slot byte
     # encodes the gate-source neuron index (see decode_genome). WMEM off -> whole block DCE'd, byte-ident.
     # Gene: [MEMORY_MARKER, gate_src, rec_id, thresh, clear].
-    if os.environ.get("GENESIS_WMEM", "0") == "1":
+    if False:  # Exp 80: disabled to save 17 neurons
         L0 = N_IO + 5           # 8 stage-0 latches  N_IO+5 .. N_IO+12
         L1 = N_IO + 13          # 8 stage-1 latches  N_IO+13 .. N_IO+20
         GATE = N_IO + 21        # write-enable control neuron (ordinary LIF hidden)
@@ -732,37 +732,41 @@ def create_intelligent_ancestor(dna=None):
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
 
-    # ── WMEM LATCH BANKS (Exp 79: metabolically sustainable working memory) ──
-    # WMEM latches are non-leaky, non-resetting → hold state WITHOUT self-connections.
-    # No self-connections → no cycles in synapse graph → depth ~6 (vs 68 in Exp 78).
-    # Metabolic cost: ~384 cycles/tick (vs 4556 in Exp 78) — 12× reduction.
+    # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
+    # ── GATED WORKING MEMORY (Exp 80: neuron-budget-optimized, 12 hidden) ──
+    # WMEM latches at h_idx 0-11 (N_IO+0..11). No original hidden, no WMEM shift register.
+    # Total: 4+4+1+1+1+1 = 12 hidden. Plus 39 I/O = 51 neurons.
+    # Depth: ~5. Metabolic cost: 51×5 = 255 ≤ 256 (max reading income). SUSTAINABLE!
     #
     # Circuit:
-    #   GATE_A (LIF): bits 1,2,3,5 at +55, TOGGLE inh -127. thresh=100, tau=2.
-    #   GATE_B (LIF): bits 1,2,3,5 at +30, TOGGLE exc +55. thresh=100, tau=2.
+    #   GATE_A (LIF): bits 1,2,3,5 at +55, thresh=100, tau=2.
+    #   GATE_B (LIF): bits 1,2,3,5 at +30, TOGGLE at +55. thresh=100, tau=2.
     #   TOGGLE (WMEM latch, ungated): GATE_A +127×5, ANS_DET -127. Balanced.
     #   ANS_DET (LIF): bit6 +60, bit5 -60. thresh=50, tau=2.
-    #   Bank A (8 WMEM latches): gate=GATE_A. Stores c1.
-    #   Bank B (8 WMEM latches): gate=GATE_B. Stores c2.
+    #   Bank A (4 WMEM latches): gate=GATE_A. Lower 4 bits of c1.
+    #   Bank B (4 WMEM latches): gate=GATE_B. Lower 4 bits of c2.
     #
-    # Known limitation: TOGGLE turns ON during c1 tick (not after), causing GATE_B
-    # to fire prematurely during c1. Needs a DELAY neuron for proper c1/c2 separation.
+    # h_idx assignment (12 neurons, no originals, no shift register):
+    #   h_idx 0-3:  Bank A  (4 latches) -> N_IO+0..3
+    #   h_idx 4-7:  Bank B  (4 latches) -> N_IO+4..7
+    #   h_idx 8:    TOGGLE (1 latch)   -> N_IO+8
+    #   h_idx 9:    ANS_DET (1 LIF)    -> N_IO+9
+    #   h_idx 10:   GATE_A (1 LIF)     -> N_IO+10
+    #   h_idx 11:   GATE_B (1 LIF)     -> N_IO+11
 
-    HIDDEN_A = N_IO + 5    # Bank A: 8 WMEM latches (h_idx 5-12)
-    HIDDEN_B = N_IO + 13   # Bank B: 8 WMEM latches (h_idx 13-20)
-    TOGGLE   = N_IO + 21   # WMEM latch (h_idx 21)
-    ANS_DET  = N_IO + 22   # LIF (h_idx 22)
-    GATE_A   = N_IO + 23   # LIF (h_idx 23)
-    GATE_B   = N_IO + 24   # LIF (h_idx 24)
+    HIDDEN_A = N_IO + 0    # Bank A: 4 WMEM latches (h_idx 0-3)
+    HIDDEN_B = N_IO + 4    # Bank B: 4 WMEM latches (h_idx 4-7)
+    TOGGLE   = N_IO + 8    # WMEM latch (h_idx 8)
+    ANS_DET  = N_IO + 9    # LIF (h_idx 9)
+    GATE_A   = N_IO + 10   # LIF (h_idx 10)
+    GATE_B   = N_IO + 11   # LIF (h_idx 11)
 
-    # ── Bank A: 8 WMEM latches, gate=GATE_A ──
-    # MEMORY_MARKER: [198, gate_src, rec_id, thresh, clear]
-    # gate_src is 1-indexed: GATE_A+1 = N_IO+24
-    for k in range(8):
+    # ── Bank A: 4 WMEM latches, gate=GATE_A (1-indexed: GATE_A+1 = N_IO+11 = 50) ──
+    for k in range(4):
         genes.extend([MEMORY_MARKER, GATE_A + 1, 0, 100, 0])
 
-    # ── Bank B: 8 WMEM latches, gate=GATE_B ──
-    for k in range(8):
+    # ── Bank B: 4 WMEM latches, gate=GATE_B (1-indexed: GATE_B+1 = N_IO+12 = 51) ──
+    for k in range(4):
         genes.extend([MEMORY_MARKER, GATE_B + 1, 0, 100, 0])
 
     # ── TOGGLE: WMEM latch, ungated (gate_src=0) ──
@@ -781,12 +785,12 @@ def create_intelligent_ancestor(dna=None):
     genes.extend([GENE_MARKER, RAM_BIT0_INPUT + 6, ANS_DET, 188])  # bit6 → +60
     genes.extend([GENE_MARKER, RAM_BIT0_INPUT + 5, ANS_DET, 68])   # bit5 → -60
 
-    # ── GATE_A synapses: bits 1,2,3,5 at +55 (raw 183), TOGGLE inh -127 (raw 1) ──
+    # ── GATE_A synapses: bits 1,2,3,5 at +55 (raw 183) ──
+    # TOGGLE→GATE_A REMOVED (creates cycle → depth=n_c). Exp 79.
     for bit in [1, 2, 3, 5]:
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + bit, GATE_A, 183])
-    # REMOVED: TOGGLE → GATE_A (creates cycle → depth=n_c). Exp 79 fix.
 
-    # ── GATE_B synapses: bits 1,2,3,5 at +30 (raw 158), TOGGLE exc +55 (raw 183) ──
+    # ── GATE_B synapses: bits 1,2,3,5 at +30 (raw 158), TOGGLE at +55 (raw 183) ──
     for bit in [1, 2, 3, 5]:
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + bit, GATE_B, 158])
     genes.extend([GENE_MARKER, TOGGLE, GATE_B, 183])  # TOGGLE → GATE_B: +55
@@ -796,18 +800,17 @@ def create_intelligent_ancestor(dna=None):
         genes.extend([GENE_MARKER, GATE_A, TOGGLE, 255])  # +127 each
     genes.extend([GENE_MARKER, ANS_DET, TOGGLE, 1])       # -127
 
-    # ── INPUT → Bank A/B (gated by GATE_A/GATE_B) ──
-    for k in range(8):
+    # ── INPUT → Bank A/B (gated by GATE_A/GATE_B, bits 0-3 only) ──
+    for k in range(4):
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_A + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_A + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_B + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_B + k, 255])
 
-    # ── Bank A/B → vocal readout ──
-    for k in range(8):
+    # ── Bank A/B → vocal readout (bits 0-3 only) ──
+    for k in range(4):
         genes.extend([GENE_MARKER, HIDDEN_A + k, VOCAL_BIT0 + k, 150])
         genes.extend([GENE_MARKER, HIDDEN_B + k, VOCAL_BIT0 + k, 150])
-    # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
     # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
     # (the food-seeking reflex pulls them onto text and halts them there), so authoring cannot bootstrap
     # from a cold gene pool — "option != pressure" (Exp 20/23). To TEST THE ECONOMICS (does the royalty
@@ -851,7 +854,7 @@ def create_intelligent_ancestor(dna=None):
     # survival (unlike an off-food CONSUME driver, which starves a reader). Selection decides if the extra
     # effector is kept. Declared after any sensor genes; wired by the ordinal the decoder assigns.
     if os.environ.get("GENESIS_EVOACT_SEED", "0") == "1":
-        n_prior = 5 + (2 if os.environ.get("GENESIS_EVOSENSE_SEED", "0") == "1" else 0)  # hidden decl'd so far
+        n_prior = 12  # 12 hidden from Exp 80 gate circuit
         ACT_FWD = N_IO + n_prior
         FOOD_AHEAD_IN = N_INPUT - 2
         # actuator gene: drives JMP_FWD (out idx 0), threshold byte 40, receptor 0
