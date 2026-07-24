@@ -1,0 +1,244 @@
+{
+  "experiment": "exp68_shortcut_proof_overall",
+  "K": 8,
+  "period": 7,
+  "rule": "answer=(cue1+cue2)%K",
+  "noise_symbols": [
+    "a"
+  ],
+  "answers": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+  ],
+  "ans_range": [
+    0,
+    255
+  ],
+  "metric_mode": "overall",
+  "seeds": [
+    42,
+    123,
+    7,
+    2024,
+    999,
+    314,
+    2718,
+    1618
+  ],
+  "n_ticks": 80000,
+  "runs": {
+    "RULE": [
+      {
+        "seed": 42,
+        "ans_acc": 73.73839009287926,
+        "ctx_acc": NaN,
+        "ans_reads": 358.0,
+        "pop": 22.45,
+        "extinctions": 0,
+        "refugium": 41587,
+        "wall_sec": 15.050239562988281,
+        "tps": 5897.057236904853
+      },
+      {
+        "seed": 123,
+        "ans_acc": 65.95888618605338,
+        "ctx_acc": NaN,
+        "ans_reads": 360.0,
+        "pop": 20.5,
+        "extinctions": 0,
+        "refugium": 50592,
+        "wall_sec": 15.321993589401245,
+        "tps": 5761.235655645382
+      },
+      {
+        "seed": 7,
+        "ans_acc": 61.61739352838423,
+        "ctx_acc": NaN,
+        "ans_reads": 389.0,
+        "pop": 24.45,
+        "extinctions": 0,
+        "refugium": 39745,
+        "wall_sec": 15.170833826065063,
+        "tps": 5846.2882950344
+      },
+      {
+        "seed": 2024,
+        "ans_acc": 44.152156018776694,
+        "ctx_acc": NaN,
+        "ans_reads": 377.0,
+        "pop": 24.65,
+        "extinctions": 0,
+        "refugium": 37624,
+        "wall_sec": 14.84281849861145,
+        "tps": 5968.061588094367
+      },
+      {
+        "seed": 999,
+        "ans_acc": 71.48273351362597,
+        "ctx_acc": NaN,
+        "ans_reads": 401.0,
+        "pop": 24.4,
+        "extinctions": 0,
+        "refugium": 41608,
+        "wall_sec": 15.592016696929932,
+        "tps": 5661.106349905013
+      },
+      {
+        "seed": 314,
+        "ans_acc": 66.7193125501949,
+        "ctx_acc": NaN,
+        "ans_reads": 281.0,
+        "pop": 22.25,
+        "extinctions": 0,
+        "refugium": 44712,
+        "wall_sec": 14.323419094085693,
+        "tps": 6232.856475364856
+      },
+      {
+        "seed": 2718,
+        "ans_acc": 56.061672847276554,
+        "ctx_acc": NaN,
+        "ans_reads": 338.0,
+        "pop": 22.1,
+        "extinctions": 0,
+        "refugium": 45380,
+        "wall_sec": 15.26022219657898,
+        "tps": 5792.756206222021
+      },
+      {
+        "seed": 1618,
+        "ans_acc": 64.31676003734827,
+        "ctx_acc": NaN,
+        "ans_reads": 327.0,
+        "pop": 21.65,
+        "extinctions": 0,
+        "refugium": 41651,
+        "wall_sec": 14.937402486801147,
+        "tps": 5927.468846697833
+      }
+    ],
+    "NULL": [
+      {
+        "seed": 42,
+        "ans_acc": 61.38798920377867,
+        "ctx_acc": NaN,
+        "ans_reads": 297.0,
+        "pop": 22.7,
+        "extinctions": 0,
+        "refugium": 41530,
+        "wall_sec": 13.876548767089844,
+        "tps": 6450.95212224345
+      },
+      {
+        "seed": 123,
+        "ans_acc": 82.56043956043956,
+        "ctx_acc": NaN,
+        "ans_reads": 277.0,
+        "pop": 19.3,
+        "extinctions": 0,
+        "refugium": 56247,
+        "wall_sec": 14.587597608566284,
+        "tps": 6114.899995591657
+      },
+      {
+        "seed": 7,
+        "ans_acc": 66.52367131062951,
+        "ctx_acc": NaN,
+        "ans_reads": 327.0,
+        "pop": 21.5,
+        "extinctions": 0,
+        "refugium": 41529,
+        "wall_sec": 14.293679237365723,
+        "tps": 6265.833869624716
+      },
+      {
+        "seed": 2024,
+        "ans_acc": 77.25711951447246,
+        "ctx_acc": NaN,
+        "ans_reads": 287.0,
+        "pop": 21.6,
+        "extinctions": 0,
+        "refugium": 47236,
+        "wall_sec": 14.796679496765137,
+        "tps": 5991.863713123387
+      },
+      {
+        "seed": 999,
+        "ans_acc": 68.72284571723426,
+        "ctx_acc": NaN,
+        "ans_reads": 339.0,
+        "pop": 19.85,
+        "extinctions": 0,
+        "refugium": 47900,
+        "wall_sec": 14.500609874725342,
+        "tps": 6113.972313139731
+      },
+      {
+        "seed": 314,
+        "ans_acc": 55.94292326180871,
+        "ctx_acc": NaN,
+        "ans_reads": 384.0,
+        "pop": 22.85,
+        "extinctions": 0,
+        "refugium": 41507,
+        "wall_sec": 14.638086557388306,
+        "tps": 6095.082424965096
+      },
+      {
+        "seed": 2718,
+        "ans_acc": 81.8543956043956,
+        "ctx_acc": NaN,
+        "ans_reads": 287.0,
+        "pop": 21.65,
+        "extinctions": 0,
+        "refugium": 45598,
+        "wall_sec": 14.396303415298462,
+        "tps": 6185.9047474373365
+      },
+      {
+        "seed": 1618,
+        "ans_acc": 67.2549019607843,
+        "ctx_acc": NaN,
+        "ans_reads": 310.0,
+        "pop": 18.45,
+        "extinctions": 0,
+        "refugium": 60547,
+        "wall_sec": 14.724525451660156,
+        "tps": 6031.900783430531
+      }
+    ]
+  },
+  "summary": {
+    "rule_ans_mean": 63.00591309681741,
+    "rule_ans_std": 9.38756675692794,
+    "null_ans_mean": 70.18803576669289,
+    "null_ans_std": 9.5893836014397,
+    "rule_ctx_mean": NaN,
+    "null_ctx_mean": NaN,
+    "rule_pop_mean": 22.80625,
+    "null_pop_mean": 20.987499999999997,
+    "rule_ans_reads_mean": 353.875,
+    "null_ans_reads_mean": 313.5,
+    "delta_per_seed": [
+      12.350400889100584,
+      -16.601553374386185,
+      -4.906277782245283,
+      -33.10496349569577,
+      2.759887796391709,
+      10.776389288386191,
+      -25.79272275711905,
+      -2.938141923436021
+    ],
+    "delta_mean": -7.182122669875478,
+    "delta_std": 16.618130502824123,
+    "delta_z": -1.2224064896636901,
+    "chance": 12.5,
+    "total_wall_sec": 236.40633153915405
+  }
+}
