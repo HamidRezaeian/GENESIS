@@ -1,3 +1,24 @@
-.vs/
-
+# Python
+__pycache__/
 *.pyc
+*.pyo
+*.nbi
+*.nbc
+*.egg-info/
+dist/
+build/
+
+# Numba cache
+numba_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.token
