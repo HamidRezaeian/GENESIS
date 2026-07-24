@@ -912,12 +912,13 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 | 67 | Open-ended AGI evolution probe | 500k continuous ticks, full UI sync |
 | **68** | **Shortcut-proof compositionality test** | **Δ = −7.2pp ± 16.6, z = −1.22 (n.s.) → NO compositionality** |
 | **69** | **Phased Curriculum (short-run)** | **Answer prediction = 0% across ALL seeds. Survival padding destroys probe learning. Catch-22 confirmed.** |
+| **70** | **CAM Pre-Population (memory vs computation)** | **0% answer accuracy even with all 64 correct mappings pre-loaded. Bottleneck is COMPUTATION, not memory. Substrate falsified for compositionality.** |
 
 ### Current Ascent.md Evaluation
 
 | Criterion | Status | Evidence |
 |-----------|:------:|----------|
-| **A** — `C(t)` rise ≥25% over 5M ticks | ❌ **NOT met** | No compositionality → unlikely on current substrate |
+| **A** — `C(t)` rise ≥25% over 5M ticks | ❌ **FAILED** | Exp 68+69+70: 0% compositionality under all conditions (probe-only, padded, CAM pre-loaded) |
 | **B** — Learning load-bearing | ✅ **MET** | Exp 30 A/B/C: 43% vs 2.9% (14×) |
 | **C** — Efficiency non-decreasing | ⏳ Not measured | — |
 

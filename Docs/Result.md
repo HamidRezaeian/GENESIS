@@ -3246,3 +3246,39 @@ compositionality is absent on this substrate.
 | A (C(t) rise >=25 percent) | FAILED | No compositionality under any viable curriculum |
 | B (Learning load-bearing) | MET | Exp 30: 43 percent vs 2.9 percent (14x) |
 | C (Efficiency) | Not measured | - |
+
+
+---
+
+## Experiment 70 — CAM Pre-Population: Memory vs Computation Bottleneck (2026-07-24)
+
+(CAM Pre-Loaded, 24-bit Keys, 64 Slots, Multi-Seed)
+
+**Hypothesis:** If CAM is pre-loaded with all 64 correct Latin-square (c1,c2)->answer mappings,
+organisms should achieve above-chance answer accuracy IF the bottleneck is memory recall.
+If answer accuracy remains at 0 percent, the bottleneck is neural computation.
+
+**Method:**
+- 10 runs (5 seeds x 2 conditions: RULE vs NULL), 5000 ticks/run.
+- CAM_KEY_BITS=24, CAM_SLOTS=64. All 64 Latin-square entries pre-populated per organism.
+- Probe-only stream (Exp 68 v3 format): [c1 a a c2 a a A] repeated.
+- Metric: answer-byte-specific accuracy (target byte in {A..H}).
+
+**Results:**
+- RULE: 0/189 answer reads correct (0.0 percent), ctx_acc ~28 percent, pop ~502
+- NULL: 0/182 answer reads correct (0.0 percent), ctx_acc ~29 percent, pop ~507
+- Delta = 0.00 pp. Organisms read 25-56 answer bytes per run but NEVER predict correctly.
+
+**Verdict:** Pre-populating CAM with perfect data has ZERO effect. The bottleneck is
+COMPUTATION, not memory. The LIF network cannot form the correct 3-byte CAM key from
+two sequential cue encounters, or cannot route the CAM lookup result to the correct
+prediction output. This is a structural limitation of the substrate.
+
+**Ascent.md evaluation (final):**
+| Criterion | Status | Evidence |
+|-----------|:------:|----------|
+| A (C(t) rise >=25 percent) | FAILED | Exp 68+69+70: 0 percent compositionality under all conditions |
+| B (Learning load-bearing) | MET | Exp 30: 43 percent vs 2.9 percent (14x) |
+| C (Efficiency) | Not measured | Moot given A failure |
+
+The substrate hypothesis is falsified for compositional cognition.
