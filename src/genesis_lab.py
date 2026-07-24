@@ -185,7 +185,7 @@ CANVAS = os.environ.get("GENESIS_CANVAS", "0") == "1"
 os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "") + ("_lease" if STIG_LEASE else "") + ("_canvas" if CANVAS else "")
 
 from neuromorphic_engine import (
-    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX, CAM_SLOTS,
+    RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX, CAM_SLOTS, CAM_KEY_BITS, CAM_KEY_BYTES,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     SENSOR_MARKER, EVOSENSE, N_AFFORDANCE, ACTUATOR_MARKER, EVOACT,
@@ -251,7 +251,7 @@ g_global_conn_weight = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_conn_w_dna = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 
 # ── CAM arrays (Exp 30 fix) ──
-g_cam_keys  = np.zeros((MAX_ORGANISMS, CAM_SLOTS, 8), dtype=np.float32)
+g_cam_keys  = np.zeros((MAX_ORGANISMS, CAM_SLOTS, CAM_KEY_BITS), dtype=np.float32)
 g_cam_vals  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
 g_cam_valid = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
 g_cam_tick  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)

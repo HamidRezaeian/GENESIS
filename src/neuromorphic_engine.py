@@ -138,6 +138,8 @@ HOMEOSTATIC_LAMBDA = np.float32(
 CAM = os.environ.get("GENESIS_CAM", "1") == "1"  # Exp 30: default ON — associative memory substrate
 CAM_SLOTS = int(os.environ.get("GENESIS_CAM_SLOTS", "32"))  # Rule 19: env-gated, default 32 (Arm J proven: stores all 16 cue->answer mappings)
 CAM_MATCH_THRESHOLD = np.int64(6)
+CAM_KEY_BITS = int(os.environ.get("GENESIS_CAM_KEY_BITS", "8"))
+CAM_KEY_BYTES = max(1, CAM_KEY_BITS // 8)
 CAM_WRITE_THRESHOLD = np.int64(3)
 # CAM v2: write on CORRECT PREDICTION instead of hidden spike threshold.
 # Key = cue byte from delay_buffer[curriculum_delay-1], Value = answer byte.
@@ -516,12 +518,13 @@ def free_block(start, count, g_map):
 
 @njit(cache=True)
 def cam_read(
-    g_cam_keys,          # (MAX_ORG, CAM_SLOTS, 8) float32 — stored key bits
-    g_cam_vals,          # (MAX_ORG, CAM_SLOTS) int64 — stored value bytes
-    g_cam_valid,         # (MAX_ORG, CAM_SLOTS) int64 — slot occupancy
+    g_cam_keys,          # (MAX_ORG, CAM_SLOTS, CAM_KEY_BITS) float32
+    g_cam_vals,          # (MAX_ORG, CAM_SLOTS) int64
+    g_cam_valid,         # (MAX_ORG, CAM_SLOTS) int64
     org,                 # organism id
-    sense_buf,           # (N_INPUT,) float32 — current sensor readings
-    RAM_BIT0_INPUT,      # first input channel of the reading eye
+    byte0,               # int64 — current byte (always used)
+    byte1,               # int64 — prev byte (used if CAM_KEY_BITS > 8)
+    byte2,               # int64 — prev-prev byte (used if CAM_KEY_BITS > 16)
     CAM_SLOTS,           # number of slots per organism
     CAM_MATCH_THRESHOLD, # minimum Hamming distance for a match
 ):
@@ -535,10 +538,15 @@ def cam_read(
     for slot in range(CAM_SLOTS):
         if g_cam_valid[org, slot]:
             sim = np.int64(0)
-            for bit in range(8):
+            for bit in range(CAM_KEY_BITS):
                 key_bit = g_cam_keys[org, slot, bit]
-                sense_bit = sense_buf[RAM_BIT0_INPUT + bit]
-                if (key_bit > 0.5) == (sense_bit > 0.5):
+                if bit < 8:
+                    ref_bit = np.float32((byte0 >> bit) & 1)
+                elif bit < 16:
+                    ref_bit = np.float32((byte1 >> (bit - 8)) & 1)
+                else:
+                    ref_bit = np.float32((byte2 >> (bit - 16)) & 1)
+                if (key_bit > 0.5) == (ref_bit > 0.5):
                     sim += 1
             if sim > best_sim:
                 best_sim = sim
@@ -551,12 +559,14 @@ def cam_read(
 
 @njit(cache=True)
 def cam_write(
-    g_cam_keys,          # (MAX_ORG, CAM_SLOTS, 8) float32
+    g_cam_keys,          # (MAX_ORG, CAM_SLOTS, CAM_KEY_BITS) float32
     g_cam_vals,          # (MAX_ORG, CAM_SLOTS) int64
     g_cam_valid,         # (MAX_ORG, CAM_SLOTS) int64
     g_cam_tick,          # (MAX_ORG, CAM_SLOTS) int64 — write timestamps
     org,                 # organism id
-    key_byte,            # int64 — sensory byte to store as key
+    byte0,               # int64 — current byte (always encoded)
+    byte1,               # int64 — prev byte (encoded if CAM_KEY_BITS > 8)
+    byte2,               # int64 — prev-prev byte (encoded if CAM_KEY_BITS > 16)
     val_byte,            # int64 — vocal byte to store as value
     current_tick,        # int64 — current global time (for LRU age)
     CAM_SLOTS,           # number of slots per organism
@@ -575,8 +585,14 @@ def cam_write(
         if g_cam_tick[org, slot] < lru_tick:
             lru_tick = g_cam_tick[org, slot]
             target_slot = slot
-    for bit in range(8):
-        g_cam_keys[org, target_slot, bit] = np.float32((key_byte >> bit) & 1)
+    for bit in range(CAM_KEY_BITS):
+        if bit < 8:
+            bv = (byte0 >> bit) & 1
+        elif bit < 16:
+            bv = (byte1 >> (bit - 8)) & 1
+        else:
+            bv = (byte2 >> (bit - 16)) & 1
+        g_cam_keys[org, target_slot, bit] = np.float32(bv)
     g_cam_vals[org, target_slot] = val_byte
     g_cam_valid[org, target_slot] = np.int64(1)
     g_cam_tick[org, target_slot] = current_tick
@@ -1119,9 +1135,12 @@ def world_tick_numba(
 
         # ── CAM READ (Exp 30 fix): feed CAM output as input channel 1 ──
         if CAM:
+            b0 = np.int64(ram_substrate[pos])
+            b1 = np.int64(ram_substrate[pos-1]) if pos > 0 else np.int64(0)
+            b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
             cam_found, cam_val = cam_read(
                 g_cam_keys, g_cam_vals, g_cam_valid,
-                org, sense_buf, RAM_BIT0_INPUT,
+                org, b0, b1, b2,
                 CAM_SLOTS, CAM_MATCH_THRESHOLD,
             )
             if cam_found:
@@ -1891,8 +1910,11 @@ def world_tick_numba(
                     read_log[idx+2] = next_byte
                     read_log[0] = idx + 3
                 if CAM:
+                    b0 = np.int64(ram_substrate[pos])
+                    b1 = np.int64(ram_substrate[pos-1]) if pos > 0 else np.int64(0)
+                    b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                     cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
-                              org, np.int64(ram_substrate[pos]), np.int64(next_byte),
+                              org, b0, b1, b2, np.int64(next_byte),
                               global_time, CAM_SLOTS)
             elif org_char_val != 0:
                 idx = read_log[0]
@@ -1971,8 +1993,11 @@ def world_tick_numba(
                                 read_log[idx+2] = pval
                                 read_log[0] = idx + 3
                             if CAM:
+                                b0 = np.int64(ram_substrate[pos])
+                                b1 = np.int64(ram_substrate[pos-1]) if pos > 0 else np.int64(0)
+                                b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                                 cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
-                                          org, np.int64(ram_substrate[pos]), np.int64(pval),
+                                          org, b0, b1, b2, np.int64(pval),
                                           global_time, CAM_SLOTS)
                     org_grid[pos] = -1
                     positions[org] = npos
