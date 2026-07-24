@@ -423,6 +423,12 @@ GATED_NEURON_MARKER = 201  # Exp 76/77: ordinary LIF hidden neuron with GATED af
     # Afferent writes from input neurons (src < N_INPUT) are accepted ONLY when the gate
     # neuron fired last substep. Self-connections (src >= N_INPUT) are NOT gated.
     # sense_type = 253, sense_meta = gate_src.
+GATED_NEURON_MARKER = 201  # Exp 76/77: ordinary LIF hidden neuron with GATED afferent writes.
+    # Gene: [GATED_NEURON_MARKER, slot, rec_id, thresh, tau, gate_src] (6 bytes).
+    # gate_src is 1-indexed (matching WMEM convention): checks prev_spk_buf[gate_src - 1].
+    # Afferent writes from input neurons (src < N_INPUT) are accepted ONLY when the gate
+    # neuron fired last substep. Self-connections (src >= N_INPUT) are NOT gated.
+    # sense_type = 253, sense_meta = gate_src.
 WMEM = os.environ.get("GENESIS_WMEM", "1") == "1"
 
 # V_THRESH_IO removed: was dead code (defined but never referenced)
@@ -816,6 +822,18 @@ def decode_genome(
                     global_act_drive[n_ptr + N_IO + h_idx] = 0
                 h_idx += 1
             i += 5
+        elif marker == GATED_NEURON_MARKER and i + 5 < g_count:
+            # Exp 76/77: ordinary LIF hidden neuron with gated afferent writes.
+            # Gene: [GATED_NEURON_MARKER, slot, rec_id, thresh, tau, gate_src] (6 bytes).
+            if N_IO + h_idx < n_c:
+                rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
+                global_rec_id[n_ptr + N_IO + h_idx] = rec_id
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
+                global_sense_type[n_ptr + N_IO + h_idx] = np.int64(253)
+                global_sense_meta[n_ptr + N_IO + h_idx] = np.int64(global_genome[g_ptr + i + 5])
+                h_idx += 1
+            i += 6
         elif SCRATCH and marker == SCRATCH_MARKER and i + 4 < g_count:
             # A SCRATCHPAD gene (Exp 46): declares a hidden-band neuron coupled to the org's EXTERNAL
             # register org_scratch[org]. kind byte (i+1) picks role:
@@ -1267,6 +1285,14 @@ def world_tick_numba(
                         if gate > 0 and not prev_spk_buf[gate - 1]:
                             total_atp += CYCLES_PER_SYNAPSE_READ
                             continue
+                    # Exp 76/77: GATED_LIF — gate only INPUT afferents (src < N_INPUT),
+                    # NOT self-connections or hidden→hidden (src >= N_INPUT).
+                    if global_sense_type[n_ptr + dst] == 253:
+                        gate_src = global_sense_meta[n_ptr + dst]
+                        if gate_src > 0 and src < N_INPUT:
+                            if not prev_spk_buf[gate_src - 1]:
+                                total_atp += CYCLES_PER_SYNAPSE_READ
+                                continue
                     # Exp 76/77: GATED_LIF — gate only INPUT afferents (src < N_INPUT),
                     # NOT self-connections or hidden→hidden (src >= N_INPUT).
                     if global_sense_type[n_ptr + dst] == 253:

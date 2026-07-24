@@ -951,13 +951,13 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 
 ### Recommended Next Step
 
-**Exp 78: Full Simulation — Integration Test**
-1. Run genesis_lab with the Exp 77 ancestor on a Latin-square curriculum.
-2. Measure answer-byte accuracy over 5000+ ticks across multiple seeds.
-3. Verify the gate drive circuit works in the FULL engine (not just the standalone probe).
-4. Check: does the organism's reading behavior interact correctly with the gate timing?
+**Exp 78b: Extended Simulation (50k+ ticks)**
+1. Exp 78 (5000 ticks) confirmed colony viability (pop 1→5, energy growing, active reading).
+2. CAM is empty — colony too young for compositionality measurement.
+3. Run 50k–100k ticks to let the colony mature.
+4. Monitor: CAM fill, answer-byte accuracy, gate drive weight stability (STDP drift).
 5. Success criterion: answer accuracy > 12.5% (chance) sustained over 1000+ ticks.
-6. If the full simulation passes: the substrate has demonstrated compositional cognition.
+6. If STDP drifts the gate drive weights: consider STDP-protecting the gate circuit synapses.
 
 ### Docs/ Files Status
 

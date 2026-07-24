@@ -460,6 +460,18 @@ synapses. The complete bottleneck ladder (memory → topology → attractor → 
 selectivity → gate learnability) is now resolved.
 
 
+**Exp 77 — Learnable gate drive (solved).** The oracle gates from Exp 76 are replaced
+by a substrate-grounded cue-detection circuit: OR(eye bits 1,2,3) fires for all cues
+(98–104) but not noise (97, which has bits 1,2,3 all zero); AND with bit 5 excludes
+answers (65–72, which have bit 5 = 0). A bistable toggle neuron (ordinary LIF with
+self-connections, τ = 200) alternates between GATE_A (first cue → Bank A stores c1)
+and GATE_B (second cue → Bank B stores c2), reset by an answer detector (bit 6 AND
+NOT bit 5). The full circuit achieves 100% theoretical compositionality accuracy with
+zero oracle information — every component is an ordinary LIF neuron with Hebbian-wireable
+synapses. The complete bottleneck ladder (memory → topology → attractor → write
+selectivity → gate learnability) is now resolved.
+
+
 
 
 **Exp 74 — Bistable attractor discrimination (solved).** Exp 73's uniform attractor
