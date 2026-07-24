@@ -3385,3 +3385,106 @@ not noise ticks.
 - Combined (gated_hidden, c2_input) → unique CAM key → correct answer.
 - Requires engine modification: gated afferent write for ordinary LIF hidden neurons
   (currently only MEMORY_MARKER latches have gates via Exp 44/45 WMEM).
+
+
+---
+
+## Experiment 74 — Input-Specific Attractor Tuning: Bistable Independent Neurons (2026-07-24)
+
+(Standalone LIF Probe, 16 Byte Patterns, 30-Tick Delay)
+
+**Hypothesis:** Exp 73's uniform attractor (all inputs → same hidden state) is caused by
+bidirectional pairs spreading activation across all 8 neurons. Removing cross-excitation
+and tuning self-connections for bistability should yield input-specific persistent states.
+
+**Method:**
+- Standalone Numba LIF simulation mirroring neuromorphic_engine.py dynamics.
+- 16 distinct byte inputs: 8 single-bit (0x01..0x80) + 8 multi-bit (0x03, 0x0C, 0x30, 0xC0, 0x55, 0xAA, 0x0F, 0xFF).
+- Input present for 3 ticks, then 30 ticks of zero input.
+- Measure Hamming/cosine distance of hidden-layer activity at delay ticks 10, 20, 30.
+- Compare Exp 73 config (self-conn +72, bidir +72, thresh=128, tau=129) vs
+  Exp 74 config (2× self-conn +54, NO bidir, thresh=100, tau=30).
+
+**Exp 74 Design — Bistable Independent Neurons:**
+- Each hidden neuron is an independent bistable switch (ON/OFF).
+- Doubled self-connections: 2 genes × +54 = +108 total > threshold (100).
+- Sustained firing: 108 × (1 − 1/30) = 104.4 > 100 ✓
+- Input trigger: +127 > 100 ✓
+- OFF stability: v_rest = 0 << 100 ✓
+- NO bidirectional pairs → no cross-excitation → input-specific basins.
+
+**Results:**
+
+| Config | Unique States (tick 15) | Distinct Pairs | Mean Hamming | Verdict |
+|--------|:-----------------------:|:--------------:|:------------:|:-------:|
+| Exp 73 (broken) | 6/16 | 105/120 | 0.512 | Uniform attractor |
+| Exp 74 (tuned) | **16/16** | **120/120** | 0.429 | **PASS** |
+
+- Exp 74: ALL 16 input patterns produce distinct persistent hidden states.
+- States are stable across all 30 delay ticks (no decay).
+- Hidden state perfectly mirrors input bit pattern (popcount matches).
+- 120/120 pairwise Hamming distances > 0 (fully discriminable).
+
+**Verdict:** SUCCESS. Bistable independent neurons solve the attractor discrimination
+problem. Each input bit controls one hidden neuron: ON → latches ON (self-sustaining),
+OFF → stays OFF. 16/16 unique states across 15-tick delay window.
+
+**Changes to `create_intelligent_ancestor`:**
+- NEURON_MARKER: rec_id=0, thresh=100, tau=29 (was rec_id=40, thresh=128, tau=128)
+- Self-connections: 2 genes at raw 182 (+54 each) (was 1 gene at raw 200 (+72))
+- Bidirectional pairs: REMOVED (was raw 200 (+72) per direction)
+- Input→hidden: unchanged (raw 255, +127)
+- Hidden→output: unchanged (raw 150, +22)
+
+---
+
+## Experiment 75 — Shortcut-Proof Compositionality Re-evaluation (2026-07-24)
+
+(Latin-Square Probe, Bistable Hidden Layer, 5 Seeds × 200 Units)
+
+**Hypothesis:** With Exp 74's discriminable attractor basins, the combined state
+(Hidden State + CAM read) should achieve >0% accuracy on the Latin-square answer byte.
+
+**Method:**
+- Latin square: answer = (c1 + c2) mod 8. Stream: [c1, noise, noise, c2, noise, noise, answer].
+- Noise = constant 'a' (97). Cues = lowercase a-h (97-104). Answers = uppercase A-H (65-72).
+- Feed sequential byte stream through Exp 74 bistable hidden layer.
+- At answer tick: check if hidden state faithfully encodes c1, and if combined key
+  (hidden_state, c2_input) uniquely identifies the answer.
+- 5 seeds × 200 Latin-square units.
+
+**Results:**
+
+| Metric | Value |
+|--------|:-----:|
+| Hidden state fidelity (encodes c1) | 0.1% |
+| Distinct OR patterns from 64 pairs | 8 |
+| Ambiguous OR patterns (>1 answer) | 7/8 |
+| Theoretical max accuracy with OR keys | 1.6% |
+| Chance baseline | 12.5% |
+| Achieved accuracy | ~0.9% |
+
+**Root Cause — OR Accumulation:**
+Bistable neurons only turn ON, never OFF. The hidden state at the answer tick is the
+cumulative bitwise OR of ALL bytes seen (c1, noise, c2, noise...), not a clean
+representation of c1. 64 distinct (c1,c2) pairs collapse into only 8 OR patterns,
+7 of which map to multiple answers (up to 8 different answers per pattern).
+
+Example: c1=0, c2=1 → OR(97,98) = 99 → answer=1
+         c1=0, c2=2 → OR(97,99) = 99 → answer=2
+         Same OR pattern, different answers → CAM cannot disambiguate.
+
+**Verdict:** FAIL. Exp 74 solved PERSISTENCE (16/16 distinct states) but not
+SELECTIVITY. The bistable hidden layer accumulates all inputs via OR, destroying
+the temporal structure needed for compositionality. The next bottleneck is
+WRITE SELECTIVITY: the hidden layer must accept input only during cue ticks,
+not noise ticks.
+
+**Next Step (Exp 76): Gated Write Hidden Layer**
+- Add a WRITE GATE neuron controlling when hidden neurons accept afferent input.
+- Gate ON during cue ticks → accept input (latch c1 or c2).
+- Gate OFF during noise ticks → hold state (preserve c1 during delay).
+- Enables clean c1 representation at the answer tick.
+- Combined (gated_hidden, c2_input) → unique CAM key → correct answer.
+- Requires engine modification: gated afferent write for ordinary LIF hidden neurons
+  (currently only MEMORY_MARKER latches have gates via Exp 44/45 WMEM).

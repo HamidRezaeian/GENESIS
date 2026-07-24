@@ -413,6 +413,31 @@ during noise ticks. This is the prerequisite for compositional cognition on this
 substrate.
 
 
+**Exp 74 — Bistable attractor discrimination (solved).** Exp 73's uniform attractor
+was caused by bidirectional pairs (+72 each direction) spreading activation across all
+8 hidden neurons. The fix: remove bidirectional pairs entirely, double the
+self-connections (2 genes × +54 = +108 total > threshold 100), and lower the threshold
+from 128 to 100 with faster leak (τ = 30 vs 129). Each hidden neuron becomes an
+independent bistable switch: input bit ON → neuron latches ON (self-sustaining at
+108 × 29/30 = 104.4 > 100), input bit OFF → stays OFF (v_rest = 0 ≪ 100). A
+standalone LIF probe confirmed 16/16 unique persistent states across a 30-tick delay
+window, with 120/120 pairwise Hamming distances > 0.
+
+**Exp 75 — Write selectivity bottleneck (current).** With discriminable attractors
+verified, the Latin-square compositionality probe was re-run. Result: 0% accuracy
+(below chance 12.5%). Root cause: bistable neurons only turn ON, never OFF. The hidden
+state at the answer tick is the cumulative bitwise OR of ALL bytes seen (c1, noise, c2,
+noise…), not a clean c1 representation. Analytically, 64 distinct (c1, c2) pairs
+collapse into only 8 OR patterns, 7 of which map to multiple answers (up to 8). Maximum
+theoretical accuracy with OR-based CAM keys = 1.6%.
+
+The bottleneck progression is now: ~~memory~~ (Exp 70) → ~~topology~~ (Exp 71) →
+~~attractor discrimination~~ (Exp 74, solved) → **write selectivity** (Exp 75, current).
+The hidden layer needs a WRITE GATE: accept input only during cue ticks, hold state
+during noise ticks. This is the prerequisite for compositional cognition on this
+substrate.
+
+
 1. **Grounded Spatial Stigmergy & Theory of Mind (Exp 60):** Demonstrated spatial RAM
    construction (22 authored canvas cells), autotelic peer modelling, and record longevity
    (**34,790 continuous ticks**, ≈3× prior peak) with 100 % sensor retention (14,404 sensors
