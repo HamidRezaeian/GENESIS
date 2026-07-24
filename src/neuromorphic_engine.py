@@ -137,9 +137,9 @@ HOMEOSTATIC_LAMBDA = np.float32(
 # ── Content-Addressable Memory substrate (2026-07-23) ──
 CAM = os.environ.get("GENESIS_CAM", "1") == "1"  # Exp 30: default ON — associative memory substrate
 CAM_SLOTS = int(os.environ.get("GENESIS_CAM_SLOTS", "32"))  # Rule 19: env-gated, default 32 (Arm J proven: stores all 16 cue->answer mappings)
-CAM_MATCH_THRESHOLD = np.int64(max(1, CAM_KEY_BITS * 3 // 4))  # scaled: 75% of key width (6 for 8-bit, 18 for 24-bit)
 CAM_KEY_BITS = int(os.environ.get("GENESIS_CAM_KEY_BITS", "8"))
 CAM_KEY_BYTES = max(1, CAM_KEY_BITS // 8)
+CAM_MATCH_THRESHOLD = np.int64(max(1, CAM_KEY_BITS * 3 // 4))  # scaled: 75% of key width (6 for 8-bit, 18 for 24-bit)
 CAM_WRITE_THRESHOLD = np.int64(3)
 # CAM v2: write on CORRECT PREDICTION instead of hidden spike threshold.
 # Key = cue byte from delay_buffer[curriculum_delay-1], Value = answer byte.
