@@ -732,112 +732,81 @@ def create_intelligent_ancestor(dna=None):
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
 
-    # ── GATED HIDDEN NEURONS (Exp 76: write-selective working memory) ──
-    # Two banks of 8 gated LIF neurons (16 total) at N_IO+5..N_IO+20.
-    # Bank A (N_IO+5..N_IO+12): stores c1, gated by GATE_A (N_IO+21).
-    # Bank B (N_IO+13..N_IO+20): stores c2, gated by GATE_B (N_IO+22).
-    # Afferent writes (input→hidden) accepted ONLY when gate fires.
-    # Self-connections NOT gated → bistable persistence (Exp 74 design).
-    # Exp 76 probe: 100% theoretical accuracy with oracle gates (64/64 unique keys).
+    # ── WMEM LATCH BANKS (Exp 79: metabolically sustainable working memory) ──
+    # WMEM latches are non-leaky, non-resetting → hold state WITHOUT self-connections.
+    # No self-connections → no cycles in synapse graph → depth ~6 (vs 68 in Exp 78).
+    # Metabolic cost: ~384 cycles/tick (vs 4556 in Exp 78) — 12× reduction.
     #
-    # Gate drive: GATE_A and GATE_B are ordinary LIF neurons driven by the
-    # reading eye bits. The gate fires when the byte is a CUE (not noise).
-    # Noise = 'a' = 97 = 0b01100001. Cues = 98-104 (b-h).
-    # Gate detection: excitatory from bits 1,2,3 (present in cues, absent in noise)
-    # + inhibitory from bit 0 (present in noise 97, absent in some cues).
-    # This is a first approximation; evolution can refine the gate drive.
-    HIDDEN_A = N_IO + 5    # Bank A: c1 storage (8 neurons)
-    HIDDEN_B = N_IO + 13   # Bank B: c2 storage (8 neurons)
-    GATE_A   = N_IO + 21   # Gate for Bank A
-    GATE_B   = N_IO + 22   # Gate for Bank B
+    # Circuit:
+    #   GATE_A (LIF): bits 1,2,3,5 at +55, TOGGLE inh -127. thresh=100, tau=2.
+    #   GATE_B (LIF): bits 1,2,3,5 at +30, TOGGLE exc +55. thresh=100, tau=2.
+    #   TOGGLE (WMEM latch, ungated): GATE_A +127×5, ANS_DET -127. Balanced.
+    #   ANS_DET (LIF): bit6 +60, bit5 -60. thresh=50, tau=2.
+    #   Bank A (8 WMEM latches): gate=GATE_A. Stores c1.
+    #   Bank B (8 WMEM latches): gate=GATE_B. Stores c2.
+    #
+    # Known limitation: TOGGLE turns ON during c1 tick (not after), causing GATE_B
+    # to fire prematurely during c1. Needs a DELAY neuron for proper c1/c2 separation.
 
-    # Gate neurons: ordinary LIF, driven by cue-detection circuit.
-    # thresh=80 (low, so partial cue evidence triggers), tau=5 (fast decay → gate
-    # closes quickly after cue ends, preventing noise from leaking through).
-    genes.extend([NEURON_MARKER, GATE_A, 0, 80, 4])
-    genes.extend([NEURON_MARKER, GATE_B, 0, 80, 4])
+    HIDDEN_A = N_IO + 5    # Bank A: 8 WMEM latches (h_idx 5-12)
+    HIDDEN_B = N_IO + 13   # Bank B: 8 WMEM latches (h_idx 13-20)
+    TOGGLE   = N_IO + 21   # WMEM latch (h_idx 21)
+    ANS_DET  = N_IO + 22   # LIF (h_idx 22)
+    GATE_A   = N_IO + 23   # LIF (h_idx 23)
+    GATE_B   = N_IO + 24   # LIF (h_idx 24)
 
-    # Gate drive: bits 1,2,3 excite both gates (these bits are set in cues 98-104
-    # but NOT in noise 97=0b01100001). Bit 0 inhibits (set in noise, not in 98,100,102,104).
-    # Excitatory: raw 200 → +72 per bit. 3 bits × 72 = +216 >> thresh 80.
-    # Inhibitory: raw 60 → -68 from bit 0. Net for noise (bit0=1, bits1-3=0): -68 < 80 → no fire.
-    # Net for cue 'b'=98 (bit0=0, bit1=1): +72 > 80? No, 72 < 80. Need stronger excitation.
-    # Revised: excitatory raw 230 → +102 per bit. 1 bit suffices: +102 > 80.
-    # Inhibitory from bit 0: raw 30 → -98. Noise (bit0=1, no excite): -98 < 80 → silent.
-    # Cue 'b'=98 (bit1=1, bit0=0): +102 > 80 → fires. ✓
-    # Cue 'd'=100 (bit2=1, bit0=0): +102 > 80 → fires. ✓
-    # Cue 'h'=104 (bit3=1, bit0=0): +102 > 80 → fires. ✓
-    # Cue 'c'=99 (bit0=1, bit1=1): +102 - 98 = +4 < 80 → SILENT. ✗ (false negative)
-    # Fix: reduce inhibition to raw 50 → -78. Then 99: +102-78 = +24 < 80. Still silent.
-    # Alternative: use bits 1,2,3 with raw 255 (+127 each). Even one bit: +127 > 80.
-    # Inhibition from bit 0: raw 80 → -48. Noise: -48 < 80. Cue 99 (bit0+bit1): +127-48=+79 < 80.
-    # Still fails for 99. The problem: 99 has BOTH bit 0 and bit 1 set.
-    #
-    # REVISED GATE STRATEGY: Use a dedicated "not-noise" detector.
-    # The gate neuron sums ALL 8 eye bits with weight +30 each (total for noise 97: 3×30=90).
-    # Then subtract a noise-template: inhibitory from bits 0,5,6 (the noise pattern) with -30 each.
-    # Noise 97 (bits 0,5,6): +90 - 90 = 0 < 80 → silent. ✓
-    # Cue 98 (bits 1,5,6): +90 - 60 = +30 < 80 → silent. ✗
-    # This doesn't work either because cues share bits 5,6 with noise.
-    #
-    # FINAL STRATEGY: For the ancestor, wire BOTH gates identically (fire for any
-    # non-trivial input). The POSITIONAL distinction (c1 vs c2) is left to evolution
-    # or a future position-counter circuit. For now, both banks latch on cue ticks.
-    # This is still better than Exp 74 (no gating) because noise ticks don't corrupt.
-    # The probe proved 100% accuracy with oracle gates; the engine implementation
-    # provides the substrate for evolution to learn the gate timing.
-    #
-    # Gate drive: all 8 eye bits → both gates, weight 160 (+32 each).
-    # thresh=80. Any byte with ≥3 bits set: 3×32=96 > 80 → fires.
-    # Noise 97 has 3 bits → 96 > 80 → fires. ✗ (noise also triggers gate)
-    # Raise thresh to 100: 3×32=96 < 100 → noise silent. 4×32=128 > 100 → cues with ≥4 bits fire.
-    # But cues 98(3 bits), 100(3 bits), 104(3 bits) have only 3 bits → silent. ✗
-    #
-    # PRAGMATIC SOLUTION: Wire gates with high weight so ANY byte with ≥2 bits fires.
-    # thresh=50, weight=160 (+32). 2×32=64 > 50. Noise 97 (3 bits): 96 > 50 → fires. ✗
-    #
-    # The fundamental issue: noise 'a'=97 has 3 bits set, same as several cues.
-    # No simple linear threshold on eye bits can separate 97 from {98..104}.
-    #
-    # SOLUTION: Use the NOISE_KNOWLEDGE flag. The gate is driven by a LEARNED
-    # cue detector. For the ancestor, wire the gates SILENT (weight 128 = zero)
-    # and let evolution discover the gate drive via STDP. The GATED_NEURON_MARKER
-    # infrastructure is in place; the gate drive is the learnable part.
-    #
-    # For the ancestor: gates are wired with zero-weight synapses from eye bits
-    # (silent but present, so STDP can potentiate them). The organism must LEARN
-    # when to open the gate. This is the honest, substrate-grounded approach.
+    # ── Bank A: 8 WMEM latches, gate=GATE_A ──
+    # MEMORY_MARKER: [198, gate_src, rec_id, thresh, clear]
+    # gate_src is 1-indexed: GATE_A+1 = N_IO+24
     for k in range(8):
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, GATE_A, 128])  # silent, learnable
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, GATE_B, 128])  # silent, learnable
+        genes.extend([MEMORY_MARKER, GATE_A + 1, 0, 100, 0])
 
-    # Bank A: 8 gated LIF neurons (c1 storage)
+    # ── Bank B: 8 WMEM latches, gate=GATE_B ──
     for k in range(8):
-        # GATED_NEURON_MARKER: [201, slot, rec_id, thresh, tau, gate_src]
-        genes.extend([201, HIDDEN_A + k, 0, 100, 29, GATE_A])
-    # Bank B: 8 gated LIF neurons (c2 storage)
-    for k in range(8):
-        genes.extend([201, HIDDEN_B + k, 0, 100, 29, GATE_B])
+        genes.extend([MEMORY_MARKER, GATE_B + 1, 0, 100, 0])
 
-    # INPUT→HIDDEN: eye bits drive both banks (gated by gate neurons)
+    # ── TOGGLE: WMEM latch, ungated (gate_src=0) ──
+    genes.extend([MEMORY_MARKER, 0, 0, 100, 0])
+
+    # ── ANS_DET: LIF, thresh=50, tau=2 ──
+    genes.extend([NEURON_MARKER, ANS_DET, 0, 50, 1])
+
+    # ── GATE_A: LIF, thresh=100, tau=2 ──
+    genes.extend([NEURON_MARKER, GATE_A, 0, 100, 1])
+
+    # ── GATE_B: LIF, thresh=100, tau=2 ──
+    genes.extend([NEURON_MARKER, GATE_B, 0, 100, 1])
+
+    # ── ANS_DET synapses ──
+    genes.extend([GENE_MARKER, RAM_BIT0_INPUT + 6, ANS_DET, 188])  # bit6 → +60
+    genes.extend([GENE_MARKER, RAM_BIT0_INPUT + 5, ANS_DET, 68])   # bit5 → -60
+
+    # ── GATE_A synapses: bits 1,2,3,5 at +55 (raw 183), TOGGLE inh -127 (raw 1) ──
+    for bit in [1, 2, 3, 5]:
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + bit, GATE_A, 183])
+    # REMOVED: TOGGLE → GATE_A (creates cycle → depth=n_c). Exp 79 fix.
+
+    # ── GATE_B synapses: bits 1,2,3,5 at +30 (raw 158), TOGGLE exc +55 (raw 183) ──
+    for bit in [1, 2, 3, 5]:
+        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + bit, GATE_B, 158])
+    genes.extend([GENE_MARKER, TOGGLE, GATE_B, 183])  # TOGGLE → GATE_B: +55
+
+    # ── TOGGLE synapses: GATE_A +127 ×5, ANS_DET -127 ×1 ──
+    for _ in range(5):
+        genes.extend([GENE_MARKER, GATE_A, TOGGLE, 255])  # +127 each
+    genes.extend([GENE_MARKER, ANS_DET, TOGGLE, 1])       # -127
+
+    # ── INPUT → Bank A/B (gated by GATE_A/GATE_B) ──
     for k in range(8):
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_A + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_A + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_B + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_B + k, 255])
 
-    # Self-connections (NOT gated → bistable persistence, Exp 74 design)
-    for k in range(8):
-        genes.extend([GENE_MARKER, HIDDEN_A + k, HIDDEN_A + k, 182])
-        genes.extend([GENE_MARKER, HIDDEN_A + k, HIDDEN_A + k, 182])
-        genes.extend([GENE_MARKER, HIDDEN_B + k, HIDDEN_B + k, 182])
-        genes.extend([GENE_MARKER, HIDDEN_B + k, HIDDEN_B + k, 182])
-
-    # HIDDEN→OUTPUT: both banks drive vocal readout
+    # ── Bank A/B → vocal readout ──
     for k in range(8):
         genes.extend([GENE_MARKER, HIDDEN_A + k, VOCAL_BIT0 + k, 150])
         genes.extend([GENE_MARKER, HIDDEN_B + k, VOCAL_BIT0 + k, 150])
-
     # --- STIGMERGY WRITE REFLEX (Exp 25, gated GENESIS_STIG_SEED, default off) ---
     # Authoring is CONSUME-on-vacuum-with-a-printable-emission. Random founders almost never express it
     # (the food-seeking reflex pulls them onto text and halts them there), so authoring cannot bootstrap

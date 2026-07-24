@@ -951,6 +951,26 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 
 ### Recommended Next Step
 
+**Exp 80: Neuron Budget Optimization**
+1. The hard constraint is n_neurons × depth ≤ 256 (max reading income).
+2. With depth=5: max 51 neurons. Current: 85. Need to remove 34 neurons.
+3. Options:
+   - Remove WMEM shift register (17 neurons, gated by GENESIS_WMEM)
+   - Reduce banks to 4 per bank (save 8 neurons)
+   - Remove original 5 hidden neurons (save 5)
+   - Total savings: 30 neurons → 55 neurons. Still > 51.
+4. Alternative: modify the metabolic model (reduce per-neuron cost).
+5. Alternative: accept the limitation — the substrate may be fundamentally
+   incapable of compositional cognition within its metabolic budget.
+
+**Exp 79: Metabolically Sustainable Gate Circuit**
+1. The Exp 77 gate circuit (22 neurons, 68 substeps) is metabolically unsustainable.
+2. Options:
+   - (A) Use WMEM latches for banks (non-leaky, no substep cost → depth stays low)
+   - (B) Reduce gate circuit to 2-3 neurons (single-layer cue detector, no toggle)
+   - (C) Phased introduction: start with Exp 74 ancestor (8 neurons), add gate via mutation
+3. Success criterion: colony survives 5000+ ticks AND shows answer-byte prediction.
+
 **Exp 78b: Extended Simulation (50k+ ticks)**
 1. Exp 78 (5000 ticks) confirmed colony viability (pop 1→5, energy growing, active reading).
 2. CAM is empty — colony too young for compositionality measurement.

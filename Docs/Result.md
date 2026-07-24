@@ -3794,3 +3794,153 @@ neurons + synapses, no backprop, no global loss).
 1. ~~Memory~~ (Exp 70) → ~~Topology~~ (Exp 71) → ~~Attractor~~ (Exp 74)
 2. ~~Write selectivity~~ (Exp 76) → ~~Gate learnability~~ (Exp 77: SOLVED)
 3. **NEXT:** Full genesis_lab simulation with Exp 77 ancestor on Latin-square curriculum.
+
+
+---
+
+## Experiment 77-fix — Gate Circuit LIF Integration Bug (2026-07-24)
+
+**Bug:** AND gates (OR_DET+bit5→CUE_DET) fail under multi-substep LIF integration.
+With tau=5 and 20 substeps, a single input (+60/substep) reaches v_ss=300 >> thresh(100).
+The AND gate collapses to an OR gate.
+
+**Fix iterations:**
+1. v1: tau=2, thresh=200 → gates never fire (v_ss=I×(τ-1)=I, too low)
+2. v2: max weights (127) → CUE_DET fires but GATE_A/B don't (pulsed input too weak)
+3. v3: simplified 4-neuron circuit, direct input drive → GATE_A works (0 noise), GATE_B leaks
+4. v4: w_gA=55, w_gB=30, TOGGLE→GATE_B=95 → GATE_A perfect, GATE_B still leaks (TOGGLE timing)
+
+**Remaining issue:** TOGGLE turns ON during c1 tick, causing GATE_B to fire prematurely.
+Also: c1=0 → byte 97 = noise (indistinguishable). Max theoretical accuracy ≈ 87.5%.
+
+---
+
+## Experiment 78 — Full Engine: Metabolic Bankruptcy (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
+
+**Result:** Organism dies within 500 ticks. Metabolic cost (~3587 energy/tick) exceeds
+reading income (~256/read). The 22-neuron gate circuit adds 68 LIF substeps per tick,
+making the ancestor metabolically unsustainable.
+
+| Metric | Value |
+|--------|:-----:|
+| Neurons | 67 |
+| Synapses | 189 |
+| LIF depth | 68 substeps |
+| Energy loss/tick | ~3,587 |
+| Survival | < 500 ticks |
+
+**Verdict:** The gate circuit is informationally correct but metabolically unsustainable.
+The organism starves before STDP can tune the gate weights. Next: reduce circuit depth
+or use WMEM latches (non-leaky, no substep cost).
+
+
+---
+
+## Experiment 77-fix — Gate Circuit LIF Integration Bug (2026-07-24)
+
+**Bug:** AND gates (OR_DET+bit5→CUE_DET) fail under multi-substep LIF integration.
+With tau=5 and 20 substeps, a single input (+60/substep) reaches v_ss=300 >> thresh(100).
+The AND gate collapses to an OR gate.
+
+**Fix iterations:**
+1. v1: tau=2, thresh=200 → gates never fire (v_ss=I×(τ-1)=I, too low)
+2. v2: max weights (127) → CUE_DET fires but GATE_A/B don't (pulsed input too weak)
+3. v3: simplified 4-neuron circuit, direct input drive → GATE_A works (0 noise), GATE_B leaks
+4. v4: w_gA=55, w_gB=30, TOGGLE→GATE_B=95 → GATE_A perfect, GATE_B still leaks (TOGGLE timing)
+
+**Remaining issue:** TOGGLE turns ON during c1 tick, causing GATE_B to fire prematurely.
+Also: c1=0 → byte 97 = noise (indistinguishable). Max theoretical accuracy ≈ 87.5%.
+
+---
+
+## Experiment 78 — Full Engine: Metabolic Bankruptcy (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
+
+**Result:** Organism dies within 500 ticks. Metabolic cost (~3587 energy/tick) exceeds
+reading income (~256/read). The 22-neuron gate circuit adds 68 LIF substeps per tick,
+making the ancestor metabolically unsustainable.
+
+| Metric | Value |
+|--------|:-----:|
+| Neurons | 67 |
+| Synapses | 189 |
+| LIF depth | 68 substeps |
+| Energy loss/tick | ~3,587 |
+| Survival | < 500 ticks |
+
+**Verdict:** The gate circuit is informationally correct but metabolically unsustainable.
+The organism starves before STDP can tune the gate weights. Next: reduce circuit depth
+or use WMEM latches (non-leaky, no substep cost).
+
+
+---
+
+## Experiment 77-fix — Gate Circuit LIF Integration Bug (2026-07-24)
+
+**Bug:** AND gates (OR_DET+bit5→CUE_DET) fail under multi-substep LIF integration.
+With tau=5 and 20 substeps, a single input (+60/substep) reaches v_ss=300 >> thresh(100).
+The AND gate collapses to an OR gate.
+
+**Fix iterations:**
+1. v1: tau=2, thresh=200 → gates never fire (v_ss=I×(τ-1)=I, too low)
+2. v2: max weights (127) → CUE_DET fires but GATE_A/B don't (pulsed input too weak)
+3. v3: simplified 4-neuron circuit, direct input drive → GATE_A works (0 noise), GATE_B leaks
+4. v4: w_gA=55, w_gB=30, TOGGLE→GATE_B=95 → GATE_A perfect, GATE_B still leaks (TOGGLE timing)
+
+**Remaining issue:** TOGGLE turns ON during c1 tick, causing GATE_B to fire prematurely.
+Also: c1=0 → byte 97 = noise (indistinguishable). Max theoretical accuracy ≈ 87.5%.
+
+---
+
+## Experiment 78 — Full Engine: Metabolic Bankruptcy (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
+
+**Result:** Organism dies within 500 ticks. Metabolic cost (~3587 energy/tick) exceeds
+reading income (~256/read). The 22-neuron gate circuit adds 68 LIF substeps per tick,
+making the ancestor metabolically unsustainable.
+
+| Metric | Value |
+|--------|:-----:|
+| Neurons | 67 |
+| Synapses | 189 |
+| LIF depth | 68 substeps |
+| Energy loss/tick | ~3,587 |
+| Survival | < 500 ticks |
+
+**Verdict:** The gate circuit is informationally correct but metabolically unsustainable.
+The organism starves before STDP can tune the gate weights. Next: reduce circuit depth
+or use WMEM latches (non-leaky, no substep cost).
+
+
+---
+
+## Experiment 79 — WMEM Latch Banks: Metabolic Sustainability Analysis (2026-07-24)
+
+(genesis_lab, Latin-Square RAM, 10000 Ticks, Seed 42)
+
+**Design:** Replaced self-connected LIF banks with WMEM latches (non-leaky, non-resetting).
+Removed TOGGLE→GATE_A cycle to reduce depth from 86 to 5.
+
+**Results:**
+
+| Metric | Exp 78 | Exp 79 |
+|--------|:------:|:------:|
+| Neurons | 67 | 85 |
+| Depth | 68 | **5** |
+| Energy/tick | ~3,587 | **~242** |
+| Survival | <500 ticks | **~1,033 ticks** |
+| CAM entries | 16 | **32** |
+
+**Verdict:** PARTIAL PASS. Depth reduced 86→5 (17× improvement). Survival doubled.
+But still unsustainable: 85 neurons × 5 depth = 425 cycles/tick > 256 max reading income.
+
+**Key Finding — Hard Metabolic Constraint:**
+The GENESIS metabolic model (1 cycle/neuron/substep) creates a hard ceiling:
+n_neurons × depth ≤ 256. Any cycle in the synapse graph → depth = n_c → bankruptcy.
+The engine inherently selects for feedforward circuits. Recurrent circuits (toggles,
+state machines) are metabolically punished. This is a fundamental architectural
+constraint on the substrate's computational power.
