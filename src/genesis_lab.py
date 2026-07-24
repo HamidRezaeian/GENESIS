@@ -648,7 +648,8 @@ def create_intelligent_ancestor(dna=None):
         # slow multi-step buildup + noise (unreliable echo). Two synapses (~254 > 128) drive the bit
         # cleanly above threshold in ONE step, giving a crisp deterministic 8-bit copy (Rules 9/10).
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
-        genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
+        if k not in [0, 5, 6]:  # Exp 83: single copy for bits 0,5,6 — constant-a dominates
+            genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, VOCAL_BIT0 + k, 255])
 
     # --- REMAP FABRIC (Exp 34, gated GENESIS_REMAP, default off) ---
     # The within-lifetime remap task (neuromorphic_engine REMAP) SWAPS two target bits (SB0<->SB1) in a
