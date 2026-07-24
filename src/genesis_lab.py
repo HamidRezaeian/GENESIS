@@ -732,26 +732,29 @@ def create_intelligent_ancestor(dna=None):
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
                 genes.extend([GENE_MARKER, rn, VOCAL_BIT0 + b, 128])
 
-    # ── RECURRENT HIDDEN NEURONS (Exp 73: topology fix) ──
-    # 8 hidden neurons at N_IO+5..N_IO+12 with:
-    # - INPUT→HIDDEN: reading eye drives hidden layer (so stim activates them)
-    # - Self-connections: each hidden neuron feeds itself (attractor dynamics)
-    # - Recurrent pairs: bidirectional connections (working memory)
-    # - HIDDEN→OUTPUT: maintained activity drives vocal readout
+    # ── RECURRENT HIDDEN NEURONS (Exp 74: bistable independent attractors) ──
+    # 8 hidden neurons at N_IO+5..N_IO+12, each an independent bistable switch.
+    # Design: doubled self-connections (2 genes × +54 = +108 total) exceed threshold (100),
+    # creating two stable states per neuron: ON (self-sustaining) and OFF (quiescent).
+    # Input bit ON → neuron latches ON. Input bit OFF → neuron stays OFF.
+    # NO bidirectional pairs → no cross-excitation → input-specific attractor basins.
+    # Exp 73 had single self-conn (+72 < thresh 128) + bidir pairs (+72) → uniform all-fire.
+    # Exp 74 probe: 16/16 unique persistent states, 120/120 distinct pairs, stable 30 ticks.
     HIDDEN_REC = N_IO + 5
     for k in range(8):
-        genes.extend([NEURON_MARKER, HIDDEN_REC + k, 40, 128, 128])
-    # INPUT→HIDDEN: each reading eye bit drives one hidden neuron (max weight, like echo)
+        # rec_id=0 (defined receptor), thresh=100, tau=30 (faster leak for OFF neurons)
+        genes.extend([NEURON_MARKER, HIDDEN_REC + k, 0, 100, 29])
+    # INPUT→HIDDEN: each reading eye bit drives one hidden neuron (max weight)
     for k in range(8):
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_REC + k, 255])
         genes.extend([GENE_MARKER, RAM_BIT0_INPUT + k, HIDDEN_REC + k, 255])
-    # Self-connections for attractor dynamics
+    # DOUBLED self-connections for bistability: 2 × (+54) = +108 > thresh(100)
+    # Sustained firing: 108 × (1 - 1/30) = 104.4 > 100 ✓
+    # Input trigger: +127 > 100 ✓   OFF stability: v_rest=0 << 100 ✓
     for k in range(8):
-        genes.extend([GENE_MARKER, HIDDEN_REC + k, HIDDEN_REC + k, 200])
-    # Bidirectional recurrent pairs: 0↔1, 2↔3, 4↔5, 6↔7
-    for k in range(0, 8, 2):
-        genes.extend([GENE_MARKER, HIDDEN_REC + k, HIDDEN_REC + k + 1, 200])
-        genes.extend([GENE_MARKER, HIDDEN_REC + k + 1, HIDDEN_REC + k, 200])
+        genes.extend([GENE_MARKER, HIDDEN_REC + k, HIDDEN_REC + k, 182])
+        genes.extend([GENE_MARKER, HIDDEN_REC + k, HIDDEN_REC + k, 182])
+    # NO bidirectional pairs (Exp 73 had them at 200 → uniform attractor collapse)
     # HIDDEN→OUTPUT: maintained activity drives vocal readout
     for k in range(8):
         genes.extend([GENE_MARKER, HIDDEN_REC + k, VOCAL_BIT0 + k, 150])

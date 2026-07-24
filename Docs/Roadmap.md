@@ -936,39 +936,54 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
    reading income depends on statistical regularity to exploit. The refugium fires ~50% of
    ticks = life support, not equilibrium.
 
-### Current Bottleneck
+### Current Bottleneck (Updated Exp 74–75, 2026-07-24)
 
-**The catch-22:** Removing statistical shortcuts is necessary to test for genuine
-compositionality, but doing so collapses the energy gradient that sustains the colony.
-The substrate demonstrates `no compositionality` under controlled conditions — an honest
-negative — but cannot demonstrate positive compositionality because the test condition is
-non-viable.
+**Exp 74 SOLVED attractor discrimination:** Bistable independent hidden neurons
+(2× self-connection, no bidirectional pairs, thresh=100, tau=30) produce 16/16
+distinct persistent states across a 30-tick delay window. The hidden layer can
+now faithfully hold an input pattern indefinitely.
+
+**Exp 75 revealed the NEXT bottleneck: Write Selectivity.** Bistable neurons only
+turn ON, never OFF. The hidden state at the answer tick is the cumulative OR of
+ALL bytes seen (c1, noise, c2, noise...), not a clean c1 representation. 64
+distinct (c1,c2) pairs collapse into 8 OR patterns → max theoretical accuracy
+1.6% (below chance 12.5%).
+
+**The bottleneck progression:**
+1. ~~Memory storage~~ → Exp 70: CAM pre-population failed (computation, not memory)
+2. ~~Topology~~ → Exp 71: zero recurrent pairs (fixed in Exp 73)
+3. ~~Attractor discrimination~~ → Exp 74: bistable neurons (SOLVED)
+4. **Write selectivity** → Exp 75: OR accumulation destroys temporal structure (CURRENT)
 
 ### Recommended Next Step
 
-**Design a phased curriculum:**
-1. **Survival stream** (80% of text length): exploitable structure (repeated patterns,
-   predictable bigrams, constant noise segments) that provides baseline reading income →
-   keeps the colony healthy (pop ≈ 100–300).
-2. **Compositionality probes** (20%): periodically interleave shortcut-proof test items
-   (Latin-square, uniform marginals) and measure answer-byte-specific accuracy SEPARATELY
-   from the survival stream.
-3. This decouples survival energy from the test signal — the colony can thrive on the
-   survival stream while the probes measure genuine compositionality without shortcut
-   confound.
+**Exp 76: Gated Write Hidden Layer**
+1. Add a WRITE GATE neuron that controls when hidden neurons accept afferent input.
+2. Gate ON during cue ticks (c1, c2) → hidden layer accepts and latches the input.
+3. Gate OFF during noise ticks → hidden layer holds its state (preserves c1 during delay).
+4. This enables a clean c1 representation at the answer tick.
+5. Combined (gated_hidden, c2_input) → unique CAM key → correct answer.
 
-**Alternative:** CAM capacity test — test whether pre-populating CAM with the 64 correct
-mappings enables compositionality, revealing whether the bottleneck is memory or computation.
+**Implementation options:**
+- (A) Extend the existing MEMORY_MARKER gate mechanism (Exp 44/45 WMEM) to ordinary
+  hidden neurons. The gate source neuron fires only during cue ticks.
+- (B) Add a new GATED_NEURON_MARKER that combines LIF dynamics with afferent gating.
+- (C) Use two separate hidden banks (8 for c1, 8 for c2) with alternating gates.
+
+**Prerequisite:** The gate neuron must be driven by a cue-detection signal (e.g.,
+"current byte is NOT noise"). This requires either a dedicated sensor or a learned
+gate driver.
 
 ### Docs/ Files Status
 
 | File | Status | Notes |
 |------|:------:|-------|
-| `Docs/Article_Draft.md` | ✅ Updated 2026-07-24 | Includes Exp 68 null result, §3.5 Limitations, Figure 1, Parameter Appendix A |
-| `Docs/FixedRules.md` | ✅ New 2026-07-24 | 21 rules with footnotes for every change (Rules 2,3,10,16,19,20 new) |
-| `Docs/Article_Draft_Review.md` | ✅ New 2026-07-24 | Full audit with 3 fatal + 5 serious + 2 cosmetic issues |
-| `Docs/Result.md` | ✅ Updated 2026-07-24 | Exp 68 entry added |
-| `Docs/Roadmap.md` | ⬆️ This file | Now updated |
-| `Docs/ARD.md` | ❌ Stale (2026-07-10) | Describes pre-Exp-30 engine without Homeostatic STDP, CAM v2, DEPLETE, STRUCTURAL_PLASTICITY |
+| `Docs/Article_Draft.md` | ✅ Updated 2026-07-24 | Exp 74/75 added to §3.4c (attractor + selectivity bottleneck) |
+| `Docs/FixedRules.md` | ✅ 2026-07-24 | 21 rules with footnotes |
+| `Docs/Article_Draft_Review.md` | ✅ 2026-07-24 | Full audit |
+| `Docs/Result.md` | ✅ Updated 2026-07-24 | Exp 74 + 75 entries added |
+| `Docs/Roadmap.md` | ⬆️ This file | Updated: write-selectivity bottleneck, Exp 76 plan |
+| `Docs/RESUME_NEXT_SESSION.md` | ✅ Updated 2026-07-24 | Exp 74/75 findings, Exp 76 plan |
+| `Docs/ARD.md` | ❌ Stale (2026-07-10) | Needs update for Exp 30+ engine |
 | `Docs/PRD.md` | ❌ Needs review | Not read this session |
 
