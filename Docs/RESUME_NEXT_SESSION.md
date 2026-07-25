@@ -4,6 +4,82 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-25 — session 5: Tier-1 increment 3b-ii IMPLEMENTED — per-organism cam_key_bits)
+
+**Increment 3b-ii (make cam_key_bits per-organism: CAM_KEY_BITS is now an argument to
+cam_read/cam_write, passed from world_tick_numba behind the flag) is built,
+regression-verified, AND wire-verified. Commit on `main`. Read design doc §6.3 / §7.4 bullet 6.**
+
+### What was built (cam_key_bits is now a per-organism kernel constant)
+- **cam_read / cam_write take a trailing `CAM_KEY_BITS` argument.** The Hamming loop
+  `for bit in range(CAM_KEY_BITS)` now reads the parameter (it shadows the module global), so
+  the key width is per-call. cam_write encodes only the first `CAM_KEY_BITS` bits; cam_read
+  compares only `CAM_KEY_BITS` bits.
+- **world_tick_numba passes a per-org `p_cam_key_bits`** at all 3 call sites (cam_read x1,
+  cam_write x2). With EVOLVABLE_CONSTANTS ON: `p_cam_key_bits = round(g_org_params[org,1])`
+  clipped to `[1, CAM_KEY_BITS]` (the backing-store width — g_cam_keys is sized to the global
+  CAM_KEY_BITS=8, so a per-org value can shrink but never exceed it; the gene range is [2,8]).
+  With it OFF: `p_cam_key_bits = CAM_KEY_BITS` (the module global), so the call is value-identical
+  to pre-3b-ii.
+- **physical_cost_model.py needed NO change.** Contrary to the earlier deferral note, it does NOT
+  import the engine's cam_read/cam_write — it times its OWN inline parametrized `_cam` kernel via
+  `engine_primitive_cycles(cam_slots, cam_key_bits)`. The signature change is invisible to it.
+  (cam_write_threshold, gene 3, remains decoded-but-unused: no kernel use-site, nothing to wire.)
+
+### Verification
+- **Dual regression (SEEDED ancestor — see caveat):** seed 20260725, ancestor md5 `4c1f06da5635`
+  (n=65, s=93). Flag OFF vs flag ON (default genome): **lif_steps IDENTICAL (=4)**, decoded
+  `cam_key_bits = 8.000` (exact global). Extinction OFF=197/198/197 vs ON=200/202/202 (this host;
+  the absolute tick is host-dependent — the original host was ~167).
+- **The few-tick extinction offset is NOT cam_key_bits.** It is the pre-existing 3b-i float-gene
+  `float32` precision drift (stdp_div/homeo/sp_growth/sp_rewire read through the float32
+  g_org_params matrix vs the globals' native precision) plus separate-process cost-era noise.
+  Proven: forcing g_org_params[0] to the EXACT module globals still leaves the offset (ON+EXACT
+  extinction=202); and cam_key_bits decodes to the exact integer 8, so `range(8)==range(8)`
+  contributes zero drift. The INTEGER genes (cam_slots/cam_match/cam_key_bits/tau_ref) are exact
+  via +0.5 rounding; only the FLOAT genes drift ~0.02-0.2%.
+- **Wire proven 2 ways:** (a) direct cam_read/cam_write unit test — the CAM_KEY_BITS argument
+  controls the Hamming loop (KEY_BITS=2,thr=6 -> no match since max sim 2<6; KEY_BITS=8,thr=6 ->
+  match; cam_write(KEY_BITS=2) of 0xFF stores only the first 2 bits [1,1,0,0,0,0,0,0]); (b)
+  in-engine, two flag-ON runs differing ONLY in g_org_params[0,1] (8 vs 2) give different 60-tick
+  position/CAM trajectories (hash f88b15.. vs 131aeb..) and different CAM fill (22 vs 21 valid
+  slots). The kernel genuinely reads g_org_params[org,1] when ON.
+
+### CRITICAL OPERATIONAL CAVEATS
+- **Seed the ancestor for any A/B.** `create_intelligent_ancestor()` draws synapse src/dst/weight
+  bytes from Python's UNSEEDED `random` module -> every call is a different genome (same 557 B /
+  65n / 93s, different bytes -> different lif_steps + extinction). An unseeded OFF-vs-ON comparison
+  is INVALID (the two flags get different ancestors). Seed `random.seed(N)` + `np.random.seed(N)`
+  before create_intelligent_ancestor() in BOTH processes. (This invalidated the first 3b-ii A/B;
+  seeding fixed it.)
+- **Clear the numba cache after engine changes:** `rm -rf /tmp/genesis_numba_* src/__pycache__`.
+  EVOLVABLE_CONSTANTS is baked at compile time, so a stale cache serves the wrong kernel.
+
+### Files changed this session
+- `src/neuromorphic_engine.py` — cam_read/cam_write gain a CAM_KEY_BITS parameter; per-org
+  `p_cam_key_bits` local (ON: round+clip; OFF: global) passed at all 3 call sites; 3b-i comment
+  updated. world_tick_numba signature UNCHANGED.
+- `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` — §6.3 (3b-ii wiring + corrected physical_cost_model
+  note + stochastic-ancestor caveat), §7.4 bullet 6 (verification).
+
+### Priority for NEXT session
+1. **Increment 3c:** an in-engine EVOLUTION run with the flag ON — show the PARAM genes (incl.
+   cam_key_bits) DRIFT across generations under selection. The definitive Rule-21.2 evidence for
+   the full engine (vs the exp77e probe). Needs cosmic-radiation/germline mutation to perturb
+   PARAM bytes (already happens) + a multi-organism, multi-generation harness (Exp 78 is
+   single-org, zero-birth — use a longer books-economy run or a dedicated evolution driver).
+   NOTE: seed `random` for reproducibility.
+2. (Refinement) **Restore exact flag-ON == flag-OFF at default:** read the FLOAT genes
+   (stdp_div/homeo/sp_growth/sp_rewire) at full precision so the default genome is bit-identical
+   to the globals (removes the ~0.02-0.2% drift documented above).
+3. (Refinement) **Per-org CAM cost charge:** scale CYCLES_PER_CAM_READ by
+   (p_cam_slots*p_cam_key_bits)/(CAM_SLOTS*CAM_KEY_BITS) so a smaller-key organism pays its real
+   (lower) Hamming cost — full Rule-21.1 fidelity (currently flat, consistent with 3b-i).
+4. (Open) gentler PARAM-aware Gaussian mutation; Tier-2 constants; STDP_TARGET separate-process
+   A/B; RAPL on bare metal; income-unit (256=CELL_STATES) exchange-rate review.
+
+---
+
 ## Latest Session Update (2026-07-25 — session 4: Tier-1 increment 3b-i IMPLEMENTED — kernel wiring)
 
 **Increment 3b-i (wire 7 Tier-1 constants into world_tick_numba behind the flag) is built,

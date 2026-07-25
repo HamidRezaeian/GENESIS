@@ -599,6 +599,7 @@ def cam_read(
     byte2,               # int64 — prev-prev byte (used if CAM_KEY_BITS > 16)
     CAM_SLOTS,           # number of slots per organism
     CAM_MATCH_THRESHOLD, # minimum Hamming distance for a match
+    CAM_KEY_BITS,        # key bits to compare (per-organism; <= backing-store width)
 ):
     """
     Hamming similarity search: compare the current 8-bit sensory byte
@@ -642,6 +643,7 @@ def cam_write(
     val_byte,            # int64 — vocal byte to store as value
     current_tick,        # int64 — current global time (for LRU age)
     CAM_SLOTS,           # number of slots per organism
+    CAM_KEY_BITS,        # key bits to encode (per-organism; <= backing-store width)
 ):
     """
     LRU-evicting CAM write. Overwrites the least-recently-used slot.
@@ -1102,12 +1104,15 @@ def world_tick_numba(
         # Rule 21.2 (3b-i): per-organism evolvable constants. With EVOLVABLE_CONSTANTS OFF, numba bakes
         # the module bool and dead-code-eliminates the per-org branch -> these locals equal the module
         # globals and the compiled kernel is identical to the pre-3b engine. With it ON, each organism
-        # reads its own genome-decoded constants from g_org_params[org]. cam_key_bits (gene 1) and
-        # cam_write_threshold (gene 3) are decoded but NOT yet wired (3b-ii needs a cam_read/cam_write
-        # signature change + physical_cost_model update).
+        # reads its own genome-decoded constants from g_org_params[org]. cam_key_bits (gene 1) IS wired
+        # in 3b-ii (passed as the CAM_KEY_BITS arg to cam_read/cam_write, clipped to the backing-store
+        # width). cam_write_threshold (gene 3) is decoded but unused in the kernel (no wiring needed).
         if EVOLVABLE_CONSTANTS:
             p_cam_slots = np.int64(g_org_params[org, 0] + np.float32(0.5))  # round: 14-bit decode gives 5.9999 not 6
             p_cam_match = np.int64(g_org_params[org, 2] + np.float32(0.5))
+            p_cam_key_bits = np.int64(g_org_params[org, 1] + np.float32(0.5))  # round to int key width
+            if p_cam_key_bits < np.int64(1): p_cam_key_bits = np.int64(1)
+            if p_cam_key_bits > np.int64(CAM_KEY_BITS): p_cam_key_bits = np.int64(CAM_KEY_BITS)  # clip to backing-store width
             p_stdp_div  = np.float32(g_org_params[org, 4])
             p_homeo     = np.float32(g_org_params[org, 5])
             p_tau_ref   = np.int64(g_org_params[org, 6] + np.float32(0.5))
@@ -1116,6 +1121,7 @@ def world_tick_numba(
         else:
             p_cam_slots = np.int64(CAM_SLOTS)
             p_cam_match = CAM_MATCH_THRESHOLD
+            p_cam_key_bits = np.int64(CAM_KEY_BITS)
             p_stdp_div  = STDP_DIV
             p_homeo     = HOMEOSTATIC_LAMBDA
             p_tau_ref   = np.int64(TAU_REF)
@@ -1236,7 +1242,7 @@ def world_tick_numba(
             cam_found, cam_val = cam_read(
                 g_cam_keys, g_cam_vals, g_cam_valid,
                 org, b0, b1, b2,
-                p_cam_slots, p_cam_match,
+                p_cam_slots, p_cam_match, p_cam_key_bits,
             )
             if cam_found:
                 sense_buf[1] = np.float32(cam_val) / np.float32(255.0)
@@ -2010,7 +2016,7 @@ def world_tick_numba(
                     b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                     cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
                               org, b0, b1, b2, np.int64(next_byte),
-                              global_time, p_cam_slots)
+                              global_time, p_cam_slots, p_cam_key_bits)
             elif org_char_val != 0:
                 idx = read_log[0]
                 if idx < 993:
@@ -2093,7 +2099,7 @@ def world_tick_numba(
                                 b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                                 cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
                                           org, b0, b1, b2, np.int64(pval),
-                                          global_time, p_cam_slots)
+                                          global_time, p_cam_slots, p_cam_key_bits)
                     org_grid[pos] = -1
                     positions[org] = npos
                     org_grid[npos] = org

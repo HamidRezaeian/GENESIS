@@ -247,15 +247,30 @@ else:
   `HOMEOSTATIC_LAMBDA` (L1461/1463/1487/1489/1793/1855/1857), and the `cam_read`/`cam_write`
   call sites (which already took `CAM_SLOTS`/`CAM_MATCH_THRESHOLD` as arguments — only the
   passed value changed to `p_cam_slots`/`p_cam_match`).
-- **Not wired in 3b-i:** `cam_key_bits` (gene 1) and `cam_write_threshold` (gene 3, unused in
-  the kernel today). `cam_key_bits` is read as a global inside `cam_read`/`cam_write`; making
-  it per-org needs a `cam_read`/`cam_write` signature change **and** an update to
-  `physical_cost_model.py`, which times those two functions directly — deferred to 3b-ii.
+- **Wired in 3b-ii:** `cam_key_bits` (gene 1). `cam_read`/`cam_write` now take `CAM_KEY_BITS`
+  as a trailing argument (the Hamming loop bound `for bit in range(CAM_KEY_BITS)` reads the
+  parameter, which shadows the module global). `world_tick_numba` passes a per-org
+  `p_cam_key_bits`: with the flag ON it is `round(g_org_params[org,1])` clipped to
+  `[1, CAM_KEY_BITS]` (the backing-store width: `g_cam_keys` is sized to the global
+  `CAM_KEY_BITS`, so a per-org value can shrink but never exceed it; the gene range is [2,8]);
+  with it OFF it is the module global `CAM_KEY_BITS`, so the call is value-identical to
+  pre-3b-ii. **`physical_cost_model.py` needed NO change:** contrary to the earlier note it
+  does NOT import the engine's `cam_read`/`cam_write` — it times its own inline parametrized
+  `_cam` kernel (`engine_primitive_cycles(cam_slots, cam_key_bits)`), so the signature change
+  is invisible to it. `cam_write_threshold` (gene 3) remains decoded-but-unused (no kernel
+  use-site, so nothing to wire).
 
 **Operational caveat (numba cache):** after changing the engine, clear the numba cache
 (`rm -rf /tmp/genesis_numba_*` and `src/__pycache__`). A stale cache served a mismatched
 `world_tick_numba` during 3b bring-up and produced a bogus `lif_steps=66`; a fresh compile
 restored `lif_steps=5` and the verified extinction tick.
+
+**Operational caveat (stochastic ancestor):** `create_intelligent_ancestor()` draws synapse
+`src/dst/weight` bytes from Python's UNSEEDED `random` module, so every call yields a different
+genome (same 557 B length and 65n/93s counts, but different bytes -> different `lif_steps` and
+extinction). A flag-OFF vs flag-ON regression is therefore INVALID unless the ancestor is held
+fixed: seed `random.seed(N)` (and `np.random.seed(N)`) before `create_intelligent_ancestor()` in
+BOTH processes. The 3b-ii A/B used seed 20260725 (ancestor md5 `4c1f06da5635`).
 
 ### 6.4 CAM geometry (the only shape-sensitive case)
 Because `g_cam_keys` is already `(MAX_ORGANISMS, CAM_SLOTS, CAM_KEY_BITS)`, a smaller
@@ -310,6 +325,21 @@ The verified Rule-21.1 baseline (Exp 78: real metabolism ≈1532 cycles/tick, ex
    `g_cam_valid[0].sum() <= 1` every tick; (c) `tau_ref=1` vs `8` gives different extinction
    ticks. So the kernel genuinely reads `g_org_params[org]` when the flag is ON and the
    shared globals when it is OFF.
+6. **Increment 3b-ii (per-org `cam_key_bits`, flag ON) is regression- AND wire-verified.**
+   With a SEEDED ancestor (caveat above), a back-to-back A/B gave flag OFF vs flag ON (default
+   genome) **`lif_steps` identical** and decoded `cam_key_bits = 8.000` (the exact global).
+   Extinction differs by a few ticks (host-dependent; on the 3b-ii host OFF~197-198 vs
+   ON~200-202) — this residual is the pre-existing 3b-i **float-gene `float32` precision
+   drift** (`stdp_div`/`homeo`/`sp_growth`/`sp_rewire` read through the `float32` `g_org_params`
+   matrix vs the globals' native precision) plus separate-process cost-era noise, proven
+   independent of `cam_key_bits` (forcing `g_org_params[0]` to the EXACT globals still leaves the
+   offset; and `cam_key_bits` decodes to the exact integer 8 so `range(8)==range(8)`). **Wire
+   proven two ways:** (a) a direct `cam_read`/`cam_write` unit test — the `CAM_KEY_BITS`
+   argument controls the Hamming loop (`KEY_BITS=2,thr=6`->no match since max sim 2<6;
+   `KEY_BITS=8,thr=6`->match; `cam_write(KEY_BITS=2)` of `0xFF` stores only the first 2 bits);
+   (b) in-engine, two flag-ON runs differing ONLY in `g_org_params[0,1]` (8 vs 2) give different
+   60-tick position/CAM trajectories and different CAM fill (22 vs 21 valid slots). The kernel
+   genuinely reads `g_org_params[org,1]`.
 
 ---
 
