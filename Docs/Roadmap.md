@@ -1101,3 +1101,28 @@ The audit found 27 game-mechanic violations and 0 evolvable parameters. Ordered 
 - **Remaining Rule-21.2 work:** wire `cam_write_threshold` (needs a kernel use-site); the other
   G-variables (Tier-2: `FOOD_SCAN_RADIUS`, ancestor weights, etc.); restore exact flag-ON==flag-OFF
   at default (read float genes at full precision); per-org CAM cost charge.
+
+
+---
+
+## Exp 87 — Metabolic-Ceiling Evolution (2026-07-25): the ceiling nullifies selection
+
+**Result (clean NEGATIVE).** Successor to the Exp 82-86 metabolic-ceiling series. With the income
+mechanism already Rule-21-grounded, a real survival/reproduction evolution run (full-genome mutate_dna,
+A/B STDP_TARGET, 3 seeds x 30 000 ticks, NO kernel change, NO income/cost scaling) showed: idle cost
+INCREASED (brains bloated, anti-Rule-7), comprehension collapsed, the population survived only via the
+refugium (~10-11% of ticks — Rule-14 violation), and PARAM-gene drift was mutational bias, not adaptive
+tuning. Measured economics of the seeded ancestor: pure-idle cost 436 cycles/tick > income quantum 256
+cycles/tick; fraction of net-positive ticks = 0.000 in every condition.
+
+**Why:** the metabolic ceiling (Rule 5 corollary) is DYNAMICAL — when idle cost exceeds the income
+quantum, the income gradient is flat at zero and selection is nullified (no organism earns positive net
+income, so cheaper brains are not favoured; the refugium mutational growth bias dominates). Make
+constants evolvable (Rule 21.2) and let structure evolve are both INSUFFICIENT while the ceiling binds.
+
+**Next frontier (no rigged mechanics — Rule 7/21):** re-ground the INCOME side, not the cost side:
+(1) income proportional to measured Shannon information gain (Free Energy Principle; the engine
+DELAY/DIGESTION machinery already gestures at this); (2) re-derive the income quantum as a measured WORK
+quantity (design doc sec.10 / Rule-21 open question). Any change must pass the Rule 21.4 tuning test.
+A dedicated Rule-21 review of (1)/(2) is the recommended next step before any engine change.
+See Docs/Result.md Experiment 87 and src/exp87_metabolic_ceiling_evolution.py.

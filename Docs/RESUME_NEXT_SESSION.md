@@ -4,7 +4,101 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
-## Latest Session Update (2026-07-25 — session 6: Tier-1 increment 3c — in-engine PARAM-gene evolution)
+## Latest Session Update (2026-07-25 — session 7: Exp 87 — Metabolic-Ceiling Evolution)
+
+**The audit of Rule 21.2 / Exp 78b is done and the proposed "income-gradient" next step was
+re-examined, MEASURED, and refined. Driver: `src/exp87_metabolic_ceiling_evolution.py`;
+results: `exp87_results/exp87_stdp_target_{0,1}.json`; figures: `exp87_metabolic_ceiling.png`,
+`exp87_param_drift.png`. (Numbered Exp 87 to avoid collision with the existing Experiment 79
+"WMEM Latch Banks"; it is the successor to the Exp 82-86 metabolic-ceiling series.)**
+
+### Phase 1 — Ruthless audit (measured, not assumed)
+The income mechanism is ALREADY Rule-21-grounded: `gain = (net_correct_bits/8) x CELL_STATES`
+drawn from finite per-cell fuel (DEPLETE); cost = measured `CYCLES_PER_*` cycles; death at
+`energy <= 0`; reproduction spends energy. It is NOT missing. Direct per-tick measurement of the
+frozen seeded ancestor (create_intelligent_ancestor seed 20260725: 65 neurons / 93 synapses /
+lif_steps ~4-5):
+- income quantum (one full correct prediction) = **256 cycles** (CELL_STATES = 2^8);
+- PURE-IDLE cost (brain merely existing, zero income possible) = **436 cycles/tick**;
+- cost on no-prediction ticks = **724 cycles/tick**; predicting ticks ~880 cycles/tick;
+- **fraction of ticks net-positive = 0.000 in EVERY condition**, including pure-repeat content
+  where the ancestor predicts 250/250 correctly.
+
+Idle cost is dominated by `total_atp += n_count x CYCLES_PER_NEURON_UPDATE` (engine ~L1329) plus
+one `CYCLES_PER_SYNAPSE_READ` per synapse per tick — i.e. STRUCTURE (n_neurons, n_synapses), which
+the 9 PARAM genes do NOT move. **Exp 78b's flat fitness is therefore a STRUCTURAL BANKRUPTCY, not a
+missing income gradient and not a constants problem:** it froze the expensive ancestor and evolved
+only constants, but no constant tuning makes a 436-cycle/tick brain survive on 256 cycles/tick.
+
+### Phase 2 — The proposed "income-gradient" step was mis-framed
+"Establish a real income gradient" has two readings. (A) Add a stronger reward / scale income /
+discount cost = the rigged game mechanic Rule 7 / Rule 21 forbid (the engine's DIGESTION comment
+already bans "a magic multiplier") — REJECTED. (B) Wire the EXISTING grounded loop into a real
+multi-generation survival/reproduction run = Rule-compliant and necessary, but INSUFFICIENT alone,
+because the ancestor is bankrupt, so a correctly-wired loop just produces mass extinction with zero
+variance to select. The more fundamental path = Rule 7 itself: let STRUCTURE evolve under the
+existing pressure (Exp 87), plus A/B the documented recruitment lever STDP_TARGET (Exp 35
+dendritic-error delta rule — autotelic, constant-free — default-OFF).
+
+### Phase 3 — Exp 87 result (a clean, important NEGATIVE)
+Design: real survival (death at energy<=0) + real reproduction (kernel sets child energy = energy/2
+when energy >= copy_cost; driver applies the engine's real `mutate_dna` to the FULL genome —
+structure + PARAM tail); architecture-derived seed energy (SEED_ENERGY = -1 sentinel); contiguous
+00_Graded scroll; continuous fuel regrow; minimal Rule-10/14 refugium (floor 30);
+GENESIS_EVOLVABLE_CONSTANTS=1; A/B STDP_TARGET via compile-time flag; 3 seeds/arm x 30 000 ticks.
+**NO kernel change, NO income/cost scaling.** Pre-registered falsification:
+- **H1 (Rule-7 efficiency — idle cost should fall toward 256): REJECTED.** Idle cost INCREASED in
+  BOTH arms (arm0 414->2387; arm1 385->1619). Brains BLOATED (n_neurons 65->~183 arm0, ->~113 arm1).
+- **H2 (adaptive PARAM drift): NEUTRAL.** Genes drift, but per-seed SD ~ 0 (all 3 seeds drift the
+  same way) = mutational bias from the refugium-dominated regime, NOT adaptive tuning.
+- **H3 (STDP_TARGET raises comprehension): NOT supported.** correct/tick peaked at ~129 (the 200
+  founders echo-predicting) then COLLAPSED to ~3 in BOTH arms. STDP_TARGET=1 only mitigated bloat
+  slightly (lower idle / n_neurons slope); it did not rescue comprehension income.
+- **Rule-14 violation:** refugium fired ~11% (arm0) / ~10% (arm1) of ticks (> 5% threshold) — the
+  population is on life support, sustained entirely by reseeding, not by natural survival.
+
+### The refined diagnosis (the real result)
+The metabolic ceiling is so severe (idle 436 > income quantum 256) that NO organism earns positive
+net income -> the income gradient is FLAT AT ZERO. Therefore selection cannot favour cheaper brains
+(being cheaper does not help when income is 0 — you still die), the refugium dominates reproduction
+and introduces a mutational bias toward genome growth (duplication/crossover -> bloat), and useful
+traits (echo-prediction) are LOST because they confer no survival advantage. **"Letting structure
+evolve" is INSUFFICIENT — the ceiling is upstream of selection.** This sharpens the Exp 82-86
+finding ("max income < cost") into a dynamical statement: the ceiling NULLIFIES selection.
+Catch-22 (= Rule 5 corollary): to earn enough to survive, a brain must be complex enough to hold
+context (compositional prediction earns more via the engine's DELAY/DIGESTION information-scaling),
+but such a brain is too expensive to survive on the income it earns.
+
+### Next frontier (scientifically-honest options — NO rigged mechanics)
+The income quantum 256 = CELL_STATES = 2^8 is H-grounded (one byte's information capacity); cost is
+measured; their ratio is fixed by the current physics. Non-rigged levers to break the ceiling:
+1. **Information-scaling of income (Free Energy Principle made literal):** income proportional to
+   bits of surprise reduced (Shannon information gain) rather than a fixed 256 per single next-cell
+   prediction. A compositional predictor that reduces more uncertainty earns more. The engine's
+   DELAY/DIGESTION machinery already gestures at this. Must be designed as MEASURED information
+   gain, NOT a multiplier.
+2. **Re-examine the income quantum** as a measured WORK quantity (design doc sec.10 / Rule-21 open
+   question), exactly as cost was grounded in Rule 21.1.
+3. **Accept and document the ceiling** as a fundamental thermodynamic result about the substrate.
+
+Recommended: a dedicated Rule-21 review of (1)/(2) before any engine change.
+
+### Operational caveats
+- Clear the numba cache after engine changes: `rm -rf /tmp/genesis_numba_* src/__pycache__`.
+- `CYCLES_PER_*` are re-calibrated natively on EVERY process start -> run-to-run noise (~+/-10%);
+  the idle-cost ESTIMATE (n_neurons x CYCLES_PER_NEURON_UPDATE + n_synapses x CYCLES_PER_SYNAPSE_READ)
+  is a conservative UPPER bound (~1.1-1.2x the measured no-income energy loss). Use RELATIVE trends
+  and n_neurons directly, not the absolute threshold.
+- numba is not preinstalled in a fresh sandbox: `%pip install numba` before importing the engine.
+
+### Files changed this session
+- `src/exp87_metabolic_ceiling_evolution.py` — the evolution driver (NO kernel change).
+- `exp87_results/exp87_stdp_target_{0,1}.json` — per-arm metric series (3 seeds x 150 snapshots).
+- `Docs/Result.md`, `Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/FixedRules.md` — Exp 87 entries.
+
+---
+
+## Session Update (2026-07-25 — session 6: Tier-1 increment 3c — in-engine PARAM-gene evolution)
 
 **Increment 3c (an in-engine EVOLUTION run with the flag ON, testing whether the PARAM genes
 drift under selection in the FULL engine) is built and run. Commit on `main`. Driver:

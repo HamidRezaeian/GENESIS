@@ -462,6 +462,31 @@ reward as the sole teaching signal (`src/exp77b_organic_route_probe.py`):
 ---
 
 <!-- CLUSY_RULE21_PHYSICAL_GROUNDING_2026-07-25 -->
+<!-- CLUSY_EXP87_2026-07-25 -->
+### Empirical Finding — Metabolic Ceiling Nullifies Selection (2026-07-25, Exp 87)
+
+Exp 87 (metabolic-ceiling EVOLUTION, successor to Exp 82-86) tested whether letting STRUCTURE evolve
+under the existing grounded income pressure produces Rule-7 emergent efficiency (brains shrinking
+toward the income budget). **Result: NO.** With the income mechanism already Rule-21-grounded
+(gain = (net/8) x CELL_STATES from finite fuel; cost = measured CYCLES_PER_*; death at energy<=0;
+reproduction spends energy), the measured per-tick economics of the seeded ancestor are: pure-idle
+cost = 436 cycles/tick > income quantum = 256 cycles/tick; fraction of net-positive ticks = 0.000 in
+every condition. Under a real survival/reproduction evolution run (full-genome mutate_dna, A/B
+STDP_TARGET, 3 seeds x 30 000 ticks, NO kernel change, NO income/cost scaling): idle cost INCREASED
+(brains bloated, anti-Rule-7), comprehension collapsed, the population survived only via the refugium
+(~10-11% of ticks — a Rule-14 violation), and PARAM-gene drift was mutational bias (per-seed SD ~ 0),
+not adaptive tuning.
+
+**Corollary (binding):** the metabolic ceiling (Rule 5 corollary, METABOLIC_CEILING ~ 256 cycles/tick)
+is not merely a static max-income-less-than-cost fact — it is DYNAMICAL: when idle cost exceeds the
+income quantum, the income gradient is flat at zero and **selection is nullified** (no organism earns
+positive net income, so cheaper brains are not favoured; the refugium mutational bias toward genome
+growth dominates). Make-the-constants-evolvable (Rule 21.2) and let-structure-evolve are both
+INSUFFICIENT while the ceiling binds. Breaking it without a rigged mechanic (Rule 7/21) requires
+re-grounding the INCOME side — e.g. income proportional to measured Shannon information gain (Free
+Energy Principle), or re-deriving the income quantum as a measured work quantity (design doc sec.10)
+— NOT scaling income or cost by fiat. Any such change must pass the Rule 21.4 tuning test.
+
 ### Rule 21: Physical Grounding — No Game Mechanics [ R ]  (added 2026-07-25)
 
 **Principle:** GENESIS is a PHYSICAL SYSTEM, not a game or a simulation with

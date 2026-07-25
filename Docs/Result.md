@@ -4240,3 +4240,61 @@ averaging; (3) defaults sit at the top of most gene ranges — use uniform init 
 frontier: the income bottleneck — give the substrate a real measured-income gradient, then re-run 78b.
 Deliverables: `src/exp78b_inengine_evolution.py`, `exp78b_evolution_results.json`,
 `exp78b_fitness_curve.png`, `exp78b_selection_advantage.png`, `exp78b_param_drift.png`.
+
+
+---
+
+## Experiment 87 — Metabolic-Ceiling Evolution: Does Structure Evolve Under Grounded Income Pressure? (2026-07-25)
+
+**Status:** DONE — clean NEGATIVE result. Successor to the Exp 82-86 metabolic-ceiling series
+(those confirmed `max income < cost`; this tests whether EVOLUTION can escape the ceiling).
+Driver: `src/exp87_metabolic_ceiling_evolution.py`. Results: `exp87_results/exp87_stdp_target_{0,1}.json`.
+Figures: `exp87_metabolic_ceiling.png`, `exp87_param_drift.png`.
+
+**Motivation (measured in the session-7 audit):** the frozen seeded ancestor (65n/93s/lif~4-5) is
+structurally bankrupt — pure-idle cost = 436 cycles/tick > income quantum = 256 cycles/tick
+(CELL_STATES = 2^8); fraction of ticks net-positive = 0.000 in EVERY condition (even pure-repeat
+content where it predicts 250/250). Idle cost is set by STRUCTURE (n_neurons x CYCLES_PER_NEURON_UPDATE
++ n_synapses x CYCLES_PER_SYNAPSE_READ), which the 9 PARAM genes do not move. Exp 78b's flat fitness
+is thus a structural bankruptcy, not a missing income gradient and not a constants problem.
+
+**Design (NO kernel change, NO income/cost scaling — fully Rule-7/9/17/21-compliant):**
+- Real survival (death at energy<=0) + real reproduction (kernel: child energy = energy/2 when
+  energy >= copy_cost; driver applies the engine's real `mutate_dna` to the FULL genome — structure
+  + PARAM tail). Architecture-derived seed energy (SEED_ENERGY = -1 sentinel). Contiguous 00_Graded
+  scroll. Continuous fuel regrow toward CELL_STATES. Minimal Rule-10/14 refugium (floor 30).
+- GENESIS_EVOLVABLE_CONSTANTS=1; A/B STDP_TARGET (the Exp-35 dendritic-error recruitment lever,
+  default-OFF) via compile-time flag; 3 seeds/arm x 30 000 ticks.
+
+**Pre-registered hypotheses and verdicts:**
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| H1: Rule-7 efficiency — mean idle cost falls toward 256 | **REJECTED** | idle cost ROSE: arm0 414->2387, arm1 385->1619; n_neurons 65->~183 (arm0), ->~113 (arm1). Brains bloated. |
+| H2: adaptive PARAM drift | **NEUTRAL** | genes drift but per-seed SD ~ 0 (all seeds drift together) = mutational bias from the refugium-dominated regime, not adaptive tuning. |
+| H3: STDP_TARGET raises comprehension income | **NOT supported** | correct/tick peaked ~129 (founders) then collapsed to ~3 in BOTH arms; STDP_TARGET=1 only mitigated bloat slightly. |
+| Rule-14 check | **VIOLATION** | refugium fired ~11% (arm0) / ~10% (arm1) of ticks (> 5% threshold): population on life support. |
+
+**Interpretation (the real result):** the metabolic ceiling is so severe that NO organism earns
+positive net income -> the income gradient is FLAT AT ZERO. Selection therefore cannot favour cheaper
+brains (cheaper does not help when income is 0), the refugium dominates reproduction with a mutational
+bias toward genome growth (duplication/crossover -> bloat), and useful traits (echo-prediction) are
+lost because they confer no survival advantage. **"Letting structure evolve" is INSUFFICIENT — the
+ceiling is upstream of selection.** This sharpens Exp 82-86 ("max income < cost") into a dynamical
+statement: the ceiling NULLIFIES selection. Catch-22 (= Rule 5 corollary): earning enough to survive
+requires a brain complex enough to hold context (compositional prediction earns more via the engine's
+DELAY/DIGESTION information-scaling), but such a brain is too expensive to survive on the income it earns.
+
+**Next frontier (no rigged mechanics):** (1) information-scaling of income (income proportional to
+Shannon surprise reduced — the Free Energy Principle made literal; the engine's DELAY/DIGESTION
+machinery already gestures at this; must be MEASURED information gain, not a multiplier); (2) re-examine
+the income quantum as a measured WORK quantity (design doc sec.10 / Rule-21 open question); (3) accept
+and document the ceiling as a fundamental thermodynamic result. Recommended: a dedicated Rule-21 review
+of (1)/(2) before any engine change.
+
+**Operational caveats:** clear the numba cache after engine changes; CYCLES_PER_* re-calibrate per
+process (~+/-10% run-to-run noise); the idle-cost estimate is a conservative upper bound (~1.1-1.2x
+measured) — use relative trends and n_neurons, not the absolute threshold; numba needs `%pip install numba`.
+
+**Deliverables:** `src/exp87_metabolic_ceiling_evolution.py`, `exp87_results/exp87_stdp_target_{0,1}.json`,
+`exp87_metabolic_ceiling.png`, `exp87_param_drift.png`.

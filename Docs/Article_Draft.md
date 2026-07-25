@@ -618,3 +618,40 @@ compositional cognition. The scientifically defensible narrative is that working
 must be *grown* (reward-gated STDP + structural plasticity into a content-addressable
 store), not hand-wired as a flip-flop — the latter violates the proto-cognitive ancestor
 boundary (Rule 5).
+
+
+---
+
+## The Metabolic Ceiling Nullifies Selection (Exp 87, 2026-07-25)
+
+A central negative result of this project is that the metabolic ceiling is not merely a static
+inequality (maximum reading income less than metabolic cost, Exp 82-86) but a DYNAMICAL barrier that
+nullifies natural selection. The reading-income mechanism is physically grounded (Rule 21): an
+organism earns gain = (net_correct_bits/8) x CELL_STATES (CELL_STATES = 256 = 2^8, the information
+capacity of one byte) drawn from a finite per-cell fuel reservoir, and pays a metabolic cost equal to
+the REAL measured hardware work of running its neurons and synapses (CYCLES_PER_*, calibrated
+natively). Death occurs at zero energy; reproduction spends energy.
+
+Direct measurement of the seeded proto-cognitive ancestor (65 neurons, 93 synapses) shows a pure-idle
+metabolic rate of ~436 cycles/tick — already ~1.7x the maximum possible income quantum of 256
+cycles/tick (one full correct prediction per tick). The fraction of ticks with positive net income is
+0.000 in every environment tested, including trivially-predictable content on which the ancestor
+predicts 250/250 cells correctly. The organism is bankrupt even when it behaves perfectly, because the
+idle cost is set by STRUCTURE (neuron and synapse counts), not by the tunable constants.
+
+Exp 87 then asked whether letting structure EVOLVE under this grounded pressure would produce emergent
+efficiency (Rule 7): brains shrinking toward the income budget. It did not. In a real survival and
+reproduction evolution run (full-genome mutation, 3 seeds x 30 000 ticks, with and without the
+STDP_TARGET recruitment lever), brains instead BLOATED (idle cost rose ~414 to ~2400 cycles/tick),
+comprehension collapsed, and the population persisted only through the refugium safety net (~10-11% of
+ticks). The reason is that when no organism can earn positive net income, the income gradient is flat
+at zero: being cheaper confers no survival advantage, so selection cannot favour efficiency. The
+refugium that prevents total extinction simultaneously removes the selective gradient, and its
+mutational bias (genome duplication/crossover) drives bloat.
+
+This is the catch-22 of compositional cognition under a physically-grounded economy: earning enough
+income to survive requires a brain complex enough to hold context and predict compositionally (which
+the engine rewards via its delay/digestion information-scaling), but such a brain is too expensive to
+survive on the income it can earn. The scientifically-honest path forward is to re-ground the INCOME
+side — for example, income proportional to measured Shannon information gain (the Free Energy Principle
+made literal) — rather than to scale income or cost by fiat, which Rule 7 and Rule 21 forbid.
