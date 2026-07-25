@@ -532,6 +532,16 @@ MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
 # Derived: MAX_ORGANISMS // 4 = maximum concurrent births per tick (25% of population).
 BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 
+# Rule 21.2 (3b): per-organism evolvable-constant matrix. world_tick_numba reads g_org_params[org]
+# (decoded from the genome's PARAM records at spawn) instead of the shared module globals when
+# EVOLVABLE_CONSTANTS is ON. Defined HERE (not genesis_lab) so the numba kernel reads it as a module
+# global WITHOUT a signature change (world_tick_numba is called from 8+ sites: genesis_lab warmup +
+# main loop, exp78/79/80 drivers, exp68/69, the STDP_TARGET A/B driver). numba reads global arrays by
+# reference, so the spawn-time fills (genesis_lab.decode_params) are visible inside the kernel.
+N_PARAM_GENES = 9   # Tier-1 evolvable constants; MUST equal len(genesis_lab.PARAM_GENES) (asserted there)
+g_org_params = np.zeros((MAX_ORGANISMS, N_PARAM_GENES), dtype=np.float32)
+EVOLVABLE_CONSTANTS = (os.environ.get("GENESIS_EVOLVABLE_CONSTANTS", "0") == "1")
+
 # UNIVERSE PHYSICAL LIMITS
 # Derived from MAX_ORGANISMS: memory allocation for the entire ecosystem.
 # Each organism can have up to ~833 neurons (N_IO + 800 hidden evolution expansion).
@@ -1088,6 +1098,29 @@ def world_tick_numba(
         total_atp = np.float32(0.0)
         read_gain_tick = np.float32(0.0)   # Exp 32: reading reward earned this tick (the 3rd factor)
         n_count = org_n_count[org]
+
+        # Rule 21.2 (3b-i): per-organism evolvable constants. With EVOLVABLE_CONSTANTS OFF, numba bakes
+        # the module bool and dead-code-eliminates the per-org branch -> these locals equal the module
+        # globals and the compiled kernel is identical to the pre-3b engine. With it ON, each organism
+        # reads its own genome-decoded constants from g_org_params[org]. cam_key_bits (gene 1) and
+        # cam_write_threshold (gene 3) are decoded but NOT yet wired (3b-ii needs a cam_read/cam_write
+        # signature change + physical_cost_model update).
+        if EVOLVABLE_CONSTANTS:
+            p_cam_slots = np.int64(g_org_params[org, 0] + np.float32(0.5))  # round: 14-bit decode gives 5.9999 not 6
+            p_cam_match = np.int64(g_org_params[org, 2] + np.float32(0.5))
+            p_stdp_div  = np.float32(g_org_params[org, 4])
+            p_homeo     = np.float32(g_org_params[org, 5])
+            p_tau_ref   = np.int64(g_org_params[org, 6] + np.float32(0.5))
+            p_sp_growth = np.float32(g_org_params[org, 7])
+            p_sp_rewire = np.float32(g_org_params[org, 8])
+        else:
+            p_cam_slots = np.int64(CAM_SLOTS)
+            p_cam_match = CAM_MATCH_THRESHOLD
+            p_stdp_div  = STDP_DIV
+            p_homeo     = HOMEOSTATIC_LAMBDA
+            p_tau_ref   = np.int64(TAU_REF)
+            p_sp_growth = SP_GROWTH_COST
+            p_sp_rewire = SP_REWIRE_WEIGHT
         
         # Zero the portion of the pre-allocated buffer we need
         for i in range(n_count):
@@ -1178,8 +1211,8 @@ def world_tick_numba(
                         # Rewire to a new pseudo-random target
                         new_dst = N_IO + np.int64((global_time * 7 + n * 13 + sp_growth * 31) % max(np.int64(1), np.int64(n_count - N_IO)))
                         global_conn_dst[s_ptr + weak_c] = new_dst
-                        global_conn_weight[s_ptr + weak_c] = SP_REWIRE_WEIGHT
-                        total_atp += SP_GROWTH_COST
+                        global_conn_weight[s_ptr + weak_c] = p_sp_rewire
+                        total_atp += p_sp_growth
                         sp_growth += np.int64(1)
             
             # PRUNING: remove synapses with very small weights
@@ -1203,7 +1236,7 @@ def world_tick_numba(
             cam_found, cam_val = cam_read(
                 g_cam_keys, g_cam_vals, g_cam_valid,
                 org, b0, b1, b2,
-                CAM_SLOTS, CAM_MATCH_THRESHOLD,
+                p_cam_slots, p_cam_match,
             )
             if cam_found:
                 sense_buf[1] = np.float32(cam_val) / np.float32(255.0)
@@ -1385,7 +1418,7 @@ def world_tick_numba(
                             if v >= thresh:
                                 curr_spk_buf[n] = True
                                 global_v[n_ptr + n] = o_rec_v_reset[org, r_idx]
-                                global_ref[n_ptr + n] = TAU_REF
+                                global_ref[n_ptr + n] = p_tau_ref
                                 global_t_last[n_ptr + n] = t_now
                                 n_spiked += 1
 
@@ -1450,7 +1483,7 @@ def world_tick_numba(
                                     e = e * np.exp(-dt_elig / tau_e)
                                 elif dt_elig > 0:
                                     e = np.float32(0.0)
-                                e += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV
+                                e += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (CELL_STATES / STDP_SCALE) / p_stdp_div
                                 global_conn_elig[s_ptr + c] = e
                                 global_conn_elig_t[s_ptr + c] = t_now
                             # Plasticity is real compute (an exp() + weight write). Charge it when
@@ -1458,9 +1491,9 @@ def world_tick_numba(
                             # a brain thrashing a huge plastic fabric pays for it — activity-gated,
                             # so sparse-firing large brains are not penalised (Rule 7/11/17).
                             # ── Homeostatic anchoring (Exp 30 fix) ──
-                            if HOMEOSTATIC_LAMBDA > np.float32(0.0):
+                            if p_homeo > np.float32(0.0):
                                 w_now = global_conn_weight[s_ptr + c]
-                                w_now -= HOMEOSTATIC_LAMBDA * (w_now - g_conn_w_dna[s_ptr + c])
+                                w_now -= p_homeo * (w_now - g_conn_w_dna[s_ptr + c])
                                 if w_now > W_MAX: w_now = W_MAX
                                 elif w_now < W_MIN: w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
@@ -1480,13 +1513,13 @@ def world_tick_numba(
                                     e = e * np.exp(-dt_elig / tau_e)
                                 elif dt_elig > 0:
                                     e = np.float32(0.0)
-                                e -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / STDP_DIV
+                                e -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / p_stdp_div
                                 global_conn_elig[s_ptr + c] = e
                                 global_conn_elig_t[s_ptr + c] = t_now
                             # ── Homeostatic anchoring (Exp 30 fix) ──
-                            if HOMEOSTATIC_LAMBDA > np.float32(0.0):
+                            if p_homeo > np.float32(0.0):
                                 w_now = global_conn_weight[s_ptr + c]
-                                w_now -= HOMEOSTATIC_LAMBDA * (w_now - g_conn_w_dna[s_ptr + c])
+                                w_now -= p_homeo * (w_now - g_conn_w_dna[s_ptr + c])
                                 if w_now > W_MAX: w_now = W_MAX
                                 elif w_now < W_MIN: w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
@@ -1790,7 +1823,7 @@ def world_tick_numba(
                     w = global_conn_weight[s_idx]
                     w += e * D * learning_rate
                     # Homeostatic anchoring: pull toward DNA birth weight
-                    w -= HOMEOSTATIC_LAMBDA * (w - g_conn_w_dna[s_idx])
+                    w -= p_homeo * (w - g_conn_w_dna[s_idx])
                     if w > W_MAX: w = W_MAX
                     elif w < W_MIN: w = W_MIN
                     global_conn_weight[s_idx] = w
@@ -1847,14 +1880,14 @@ def world_tick_numba(
                                     # graded over ~128*8 events (Rule 11 slow/distributed), never bang-bang.
                                     # Retires the tuned STDP_DIV knob: the step = register quantum / register
                                     # width, both hardware facts, no picked divisor.
-                                    w += err / BITS_PER_BYTE / STDP_DIV
+                                    w += err / BITS_PER_BYTE / p_stdp_div
                                     if w > W_MAX: w = W_MAX
                                     elif w < W_MIN: w = W_MIN
                                     global_conn_weight[ts_ptr + tc] = w
                                     # ── Homeostatic anchoring (Exp 30 fix) ──
-                                    if HOMEOSTATIC_LAMBDA > np.float32(0.0):
+                                    if p_homeo > np.float32(0.0):
                                         w_now = global_conn_weight[s_ptr + c]
-                                        w_now -= HOMEOSTATIC_LAMBDA * (w_now - g_conn_w_dna[s_ptr + c])
+                                        w_now -= p_homeo * (w_now - g_conn_w_dna[s_ptr + c])
                                         if w_now > W_MAX: w_now = W_MAX
                                         elif w_now < W_MIN: w_now = W_MIN
                                         global_conn_weight[s_ptr + c] = w_now
@@ -1977,7 +2010,7 @@ def world_tick_numba(
                     b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                     cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
                               org, b0, b1, b2, np.int64(next_byte),
-                              global_time, CAM_SLOTS)
+                              global_time, p_cam_slots)
             elif org_char_val != 0:
                 idx = read_log[0]
                 if idx < 993:
@@ -2060,7 +2093,7 @@ def world_tick_numba(
                                 b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                                 cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
                                           org, b0, b1, b2, np.int64(pval),
-                                          global_time, CAM_SLOTS)
+                                          global_time, p_cam_slots)
                     org_grid[pos] = -1
                     positions[org] = npos
                     org_grid[npos] = org

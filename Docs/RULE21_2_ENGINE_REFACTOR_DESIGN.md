@@ -204,33 +204,58 @@ the current engine** (§7). `spawn_organism` calls `_decode_params(dna, org_id)`
 these from the genome's PARAM records (falling back to the module default for any gene
 absent from the genome — backward compatibility for old genomes).
 
-### 6.3 Kernel signature + global → array replacement
-Add the new arrays as trailing arguments to `world_tick_numba` (after the existing
-`g_cam_*` args). Inside the per-organism loop, replace each global read with the
-per-organism value. Examples:
+### 6.3 Kernel wiring: g_org_params as a module global (NOT a signature change)
+**Implemented in increment 3b-i.** The original plan was to add the per-org arrays as
+trailing arguments to `world_tick_numba`. That was rejected during implementation because
+`world_tick_numba` is called from 8+ sites (genesis_lab warmup + main loop, the
+exp78/79/80 drivers twice each, exp68/69, and the STDP_TARGET A/B driver) — a signature
+change would have forced edits to every call site. Instead:
+
+- `g_org_params` is defined as a **module-level global in neuromorphic_engine.py** (right
+  after `MAX_ORGANISMS`/`BIRTH_BUF_SZ`), shape `(MAX_ORGANISMS, N_PARAM_GENES)` float32.
+  numba reads module global arrays **by reference**, so the spawn-time fills
+  (`genesis_lab.decode_params`) are visible inside the kernel with **no signature change**
+  and **no call-site edits**. genesis_lab imports `g_org_params` + `N_PARAM_GENES` from the
+  engine (its local definitions were dropped; an `assert len(PARAM_GENES) == N_PARAM_GENES`
+  guards against drift).
+- `EVOLVABLE_CONSTANTS` is a module-level bool in the engine (read from
+  `GENESIS_EVOLVABLE_CONSTANTS`). numba bakes it as a compile-time constant, so the flag-OFF
+  branch is dead-code-eliminated and the compiled kernel is identical to the pre-3b engine.
+- At the top of the per-organism loop (`for org in range(max_org)`, right after
+  `n_count = org_n_count[org]`), the 7 wired constants are read into locals:
 
 ```python
-# before (global, baked):
-for s in range(CAM_SLOTS):
-    ...
-e += ... / STDP_DIV
-global_ref[n_ptr + n] = TAU_REF
-w -= HOMEOSTATIC_LAMBDA * (w - g_conn_w_dna[s_idx])
-
-# after (per-organism):
-cam_slots_org = g_org_cam_slots[org]
-for s in range(cam_slots_org):
-    ...
-e += ... / g_org_stdp_div[org]
-global_ref[n_ptr + n] = g_org_tau_ref[org]
-w -= g_org_homeo_lambda[org] * (w - g_conn_w_dna[s_idx])
+if EVOLVABLE_CONSTANTS:
+    p_cam_slots = np.int64(g_org_params[org, 0] + np.float32(0.5))  # +0.5 rounds the 14-bit decode
+    p_cam_match = np.int64(g_org_params[org, 2] + np.float32(0.5))
+    p_stdp_div  = np.float32(g_org_params[org, 4])
+    p_homeo     = np.float32(g_org_params[org, 5])
+    p_tau_ref   = np.int64(g_org_params[org, 6] + np.float32(0.5))
+    p_sp_growth = np.float32(g_org_params[org, 7])
+    p_sp_rewire = np.float32(g_org_params[org, 8])
+else:
+    p_cam_slots = np.int64(CAM_SLOTS); p_cam_match = CAM_MATCH_THRESHOLD; p_stdp_div = STDP_DIV
+    p_homeo = HOMEOSTATIC_LAMBDA; p_tau_ref = np.int64(TAU_REF)
+    p_sp_growth = SP_GROWTH_COST; p_sp_rewire = SP_REWIRE_WEIGHT
 ```
 
-The CAM match/write thresholds become `g_org_cam_match_thr[org]` /
-`g_org_cam_write_thr[org]`; the key-bit loop bound becomes `g_org_cam_key_bits[org]`.
-Each replacement is local and mechanical; the ~30 use-sites are listed by `grep -n` of
-each constant (e.g. `HOMEOSTATIC_LAMBDA` at L1453/1479/1785/1847/1849; `STDP_DIV` at
-L1445/1475/1842; `TAU_REF` at L1380).
+  The `+0.5` on the integer genes matters: the 14-bit genome decode yields e.g. 5.9999 for a
+  default of 6, and a bare `np.int64()` truncates to 5 — the `+0.5` rounds it back to the
+  exact default so a default genome reproduces the verified baseline bit-for-bit.
+- The use-sites then read the locals instead of the globals: `SP_REWIRE_WEIGHT`/`SP_GROWTH_COST`
+  (structural plasticity, L1181/1182), `TAU_REF` (L1421), `STDP_DIV` (L1453/1483/1850),
+  `HOMEOSTATIC_LAMBDA` (L1461/1463/1487/1489/1793/1855/1857), and the `cam_read`/`cam_write`
+  call sites (which already took `CAM_SLOTS`/`CAM_MATCH_THRESHOLD` as arguments — only the
+  passed value changed to `p_cam_slots`/`p_cam_match`).
+- **Not wired in 3b-i:** `cam_key_bits` (gene 1) and `cam_write_threshold` (gene 3, unused in
+  the kernel today). `cam_key_bits` is read as a global inside `cam_read`/`cam_write`; making
+  it per-org needs a `cam_read`/`cam_write` signature change **and** an update to
+  `physical_cost_model.py`, which times those two functions directly — deferred to 3b-ii.
+
+**Operational caveat (numba cache):** after changing the engine, clear the numba cache
+(`rm -rf /tmp/genesis_numba_*` and `src/__pycache__`). A stale cache served a mismatched
+`world_tick_numba` during 3b bring-up and produced a bogus `lif_steps=66`; a fresh compile
+restored `lif_steps=5` and the verified extinction tick.
 
 ### 6.4 CAM geometry (the only shape-sensitive case)
 Because `g_cam_keys` is already `(MAX_ORGANISMS, CAM_SLOTS, CAM_KEY_BITS)`, a smaller
@@ -275,6 +300,16 @@ The verified Rule-21.1 baseline (Exp 78: real metabolism ≈1532 cycles/tick, ex
    (post-edit runs span 165–172). The PARAM tail is provably layout-neutral and
    behaviour-neutral; the kernel is logically unchanged (only marker constants were added,
    plus a spawn-time decode into a per-org array the kernel does not read yet).
+5. **Increment 3b-i (kernel wiring, flag ON) is regression- AND wire-verified.** After
+   clearing the numba cache, a back-to-back A/B gave flag OFF extinction=169 vs flag ON
+   (default genome) extinction=167 — a 2-tick difference inside the noise band, both
+   `lif_steps=5`. The `+0.5` rounding on the integer genes makes the default genome map
+   exactly to the module globals (cam_match 5.9999->6, etc.). **Wire proven three ways:**
+   (a) a direct `cam_write`/`cam_read` unit test — `CAM_SLOTS=1` fills exactly 1 slot,
+   `CAM_SLOTS=32` fills 15; (b) in-engine, `g_org_params[0,0]=1` (cam_slots) keeps
+   `g_cam_valid[0].sum() <= 1` every tick; (c) `tau_ref=1` vs `8` gives different extinction
+   ticks. So the kernel genuinely reads `g_org_params[org]` when the flag is ON and the
+   shared globals when it is OFF.
 
 ---
 

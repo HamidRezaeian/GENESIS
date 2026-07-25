@@ -200,6 +200,7 @@ from neuromorphic_engine import (
 from neuromorphic_engine import (
     PARAM_MARKER, PARAM_MAGIC, CAM_MATCH_THRESHOLD, CAM_WRITE_THRESHOLD, HOMEOSTATIC_LAMBDA,
     TAU_REF, SP_GROWTH_COST, SP_REWIRE_WEIGHT,
+    g_org_params, N_PARAM_GENES,
 )
 
 from books_of_genesis import (
@@ -287,7 +288,7 @@ PARAM_GENES = [
     ("sp_growth_cost",      0.0,  100.0,               "linear"),  # 7  engine SP_GROWTH_COST (L172)
     ("sp_rewire_weight",    0.5,  50.0,                "linear"),  # 8  engine SP_REWIRE_WEIGHT (L182)
 ]
-N_PARAM_GENES = len(PARAM_GENES)
+assert len(PARAM_GENES) == N_PARAM_GENES, "PARAM_GENES length must match engine N_PARAM_GENES (=9)"
 
 # Designer defaults = the engine's CURRENT resolved module globals (so flag-ON == today's behaviour).
 PARAM_DEFAULTS = np.array([
@@ -296,7 +297,8 @@ PARAM_DEFAULTS = np.array([
 ], dtype=np.float32)
 
 # Per-organism evolvable-constant matrix (rows = organisms, cols = PARAM_GENES).
-g_org_params = np.zeros((MAX_ORGANISMS, N_PARAM_GENES), dtype=np.float32)
+# g_org_params now lives in neuromorphic_engine (imported above) so the numba kernel can read it as a
+# module global without a world_tick_numba signature change (Rule 21.2 3b).
 g_org_params[:] = PARAM_DEFAULTS  # default until a genome's PARAM records override at spawn
 
 _PARAM_VAL_MAX = 16383  # 14-bit value (2 payload bytes x 7 bits each; keeps every payload byte < 128 -> self-skipping)

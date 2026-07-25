@@ -4,6 +4,65 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-25 — session 4: Tier-1 increment 3b-i IMPLEMENTED — kernel wiring)
+
+**Increment 3b-i (wire 7 Tier-1 constants into world_tick_numba behind the flag) is built,
+regression-verified, AND wire-verified. Commit on `main`. Read design doc §6.3 / §7.4 bullet 5.**
+
+### What was built (kernel now reads per-organism constants when the flag is ON)
+- **g_org_params is a module GLOBAL in neuromorphic_engine.py** (after MAX_ORGANISMS/BIRTH_BUF_SZ),
+  shape (MAX_ORGANISMS, 9). NOT a kernel argument: world_tick_numba is called from 8+ sites
+  (genesis_lab x2, exp78/79/80 drivers x2, exp68/69, STDP_TARGET A/B driver), so a signature
+  change was rejected. numba reads global arrays by reference -> spawn-time fills are visible
+  in-kernel with NO call-site edits. genesis_lab imports g_org_params+N_PARAM_GENES from the
+  engine (local defs dropped; `assert len(PARAM_GENES)==N_PARAM_GENES` guards drift).
+- **EVOLVABLE_CONSTANTS** is a module bool in the engine; numba bakes it, so flag-OFF
+  dead-code-eliminates the per-org branch (compiled kernel identical to pre-3b).
+- **Per-org locals** read at the top of the for-org loop (after `n_count = org_n_count[org]`):
+  p_cam_slots, p_cam_match, p_stdp_div, p_homeo, p_tau_ref, p_sp_growth, p_sp_rewire.
+  Integer genes use `+0.5` rounding (14-bit decode gives 5.9999, bare int() truncates to 5;
+  +0.5 rounds back to the exact default so a default genome == the verified baseline).
+- **7 constants wired:** SP_REWIRE_WEIGHT/SP_GROWTH_COST (L1181/1182), TAU_REF (L1421),
+  STDP_DIV (L1453/1483/1850), HOMEOSTATIC_LAMBDA (L1461/1463/1487/1489/1793/1855/1857),
+  and the cam_read/cam_write call sites (p_cam_slots/p_cam_match — those funcs already took
+  CAM_SLOTS/CAM_MATCH_THRESHOLD as args, only the passed value changed).
+- **NOT wired (deferred to 3b-ii):** cam_key_bits (gene 1; read as a global inside
+  cam_read/cam_write — needs a cam_read/cam_write signature change AND a physical_cost_model.py
+  update, which times those two functions) and cam_write_threshold (gene 3; unused in kernel).
+
+### Verification
+- **Dual regression (after clearing numba cache):** flag OFF extinction=169 vs flag ON
+  (default genome) extinction=167 — 2-tick diff in noise band, both lif_steps=5.
+- **Wire proven 3 ways:** (a) direct cam_write/cam_read unit test — CAM_SLOTS=1 fills exactly
+  1 slot, =32 fills 15; (b) in-engine g_org_params[0,0]=1 keeps g_cam_valid[0].sum()<=1/tick;
+  (c) tau_ref=1 vs 8 gives different extinction. The kernel genuinely reads g_org_params[org]
+  when ON and the shared globals when OFF.
+
+### CRITICAL OPERATIONAL CAVEAT
+- **Clear the numba cache after engine changes:** `rm -rf /tmp/genesis_numba_* src/__pycache__`.
+  A stale cache served a mismatched world_tick_numba during 3b bring-up and produced a bogus
+  `lif_steps=66` / extinction@20; a fresh compile restored lif_steps=5 / extinction@~167-169.
+
+### Files changed this session
+- `src/neuromorphic_engine.py` — g_org_params/N_PARAM_GENES/EVOLVABLE_CONSTANTS globals; per-org
+  locals + 7 wired use-sites. Kernel signature UNCHANGED.
+- `src/genesis_lab.py` — imports g_org_params+N_PARAM_GENES from engine; dropped local defs; assert.
+- `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` — §6.3 rewritten (global approach), §7.4 bullet 5.
+
+### Priority for NEXT session
+1. **Increment 3b-ii:** make cam_key_bits per-org — add CAM_KEY_BITS as an argument to
+   cam_read/cam_write, pass p_cam_key_bits from world_tick_numba, and update physical_cost_model.py
+   (its cam_read/cam_write timing calls). Then re-run the dual regression.
+2. **Increment 3c:** an in-engine EVOLUTION run with the flag ON — show the PARAM genes drift
+   across generations under selection (the definitive Rule-21.2 evidence for the full engine).
+   Needs the cosmic-radiation/germline mutation to perturb PARAM bytes (already happens) and a
+   multi-organism, multi-generation harness (Exp 78 is single-org, zero-birth — use a longer
+   books-economy run or a dedicated evolution driver).
+3. (Open) gentler PARAM-aware Gaussian mutation; Tier-2 constants; STDP_TARGET separate-process
+   A/B; RAPL on bare metal; income-unit (256=CELL_STATES) exchange-rate review.
+
+---
+
 ## Latest Session Update (2026-07-25 — session 3: Tier-1 increment 3a IMPLEMENTED)
 
 **Increment 3a (evolvable-constant DATA PATH, flag OFF) is built, unit-tested, and
