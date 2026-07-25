@@ -121,3 +121,41 @@ GENESIS_HEADLESS=1 python3 src/genesis_lab.py
 1. Metabolic ceiling — reduce n_neurons/depth or raise reading reward.
 2. Self-clocking/address — evolve a store-clock; do NOT hardcode a TOGGLE.
 3. Re-label exp74–77 probes as oracle diagnostics, not organism capabilities.
+
+---
+
+<!-- CLUSY_EXP77B_2026-07-25 -->
+## Exp 77b — Organic-Route Probe Ran (2026-07-25)
+
+The Phase-2 pivot was executed: instead of the Exp 77 hand-wired gate, a small LIF
+substrate using ONLY the engine's Rule-5-compliant primitives — CAM write-on-reward
+(L150), reward-gated STDP3C per-bit signed eligibility (L200/L1259), and structural
+plasticity rewire/prune (L164) — was run on the Latin-square compositionality task
+`answer=(c1+c2) mod 8`, stream `[c1,noise,noise,c2,noise,noise,GO]`, with the autotelic
+reading reward as the ONLY teaching signal. Probe: `src/exp77b_organic_route_probe.py`.
+
+| Arm | Associative recall (TRAIN) | Compositional gen. (HELD) |
+|---|---|---|
+| ORG + motor exploration | **96.9%** | 21.9% |
+| ORG, no exploration | 31.2% | 25.0% |
+| REF (NOLEARN control) | 6.2% | 18.8% |
+| chance | 12.5% | 12.5% |
+
+**Findings:**
+1. The organic substrate **DOES learn cue→answer associations** (97% on trained
+   pairs via CAM write-on-reward) — a genuine positive result with NO hardcoded gate.
+2. It **does NOT generalise compositionally** (22% on held-out pairs ≈ chance): the
+   mod-8 addition for NOVEL (c1,c2) pairs can neither be looked up (no CAM entry) nor
+   computed by the STDP-shaped linear readout on the decaying hidden echo.
+3. **Without motor exploration even associative recall collapses** (31%) — confirming
+   the engine's documented L290 recruitment gap (reward-gated STDP cannot break the
+   output bias / recruit a silent-but-correct neuron).
+4. **Metabolic:** the small net costs 1.7 cycles/tick << 256 ceiling — affordable
+   yet compositionally powerless; a net deep enough to compose (break-even 6.1 hops
+   at 42 neurons) crosses the 256 ceiling.
+
+**Updated unfinished business:** compositionality is NOT solved. The two concrete targets
+are now (a) **evolve a store-clock / address** so c1 can be written to CAM at the right
+moment without a hardcoded TOGGLE (the L271 self-clocking blocker), and (b) **close the
+STDP3C recruitment gap** (L290) so silent-but-correct pathways can be reinforced. The
+metabolic ceiling remains the binding constraint on scaling either up.

@@ -1006,3 +1006,20 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
   must be restored before `genesis_lab.py` / the `exp*_driver.py` files can run.
 - **Organic route to pursue:** reward-gated STDP3/3C + structural plasticity → CAM store;
   evolve a self-clock rather than hardcoding a TOGGLE.
+
+---
+
+<!-- CLUSY_EXP77B_2026-07-25 -->
+## Exp 77b — Compositionality Status (2026-07-25)
+
+- **Compositionality: still NOT solved**, now with direct evidence. The organic substrate
+  (CAM + STDP3C + structural plasticity, no gate) memorises trained cue→answer pairs
+  (97%) but does not generalise the (c1+c2) mod 8 rule to held-out pairs (22% ≈ chance).
+- **Two concrete next targets** (replacing the Exp 77 hand-wired gate):
+  1. **Evolve a store-clock / address** so c1 is written to CAM at the right moment
+     without a hardcoded TOGGLE — the L271 "a gated latch cannot SELF-CLOCK" blocker.
+  2. **Close the STDP3C recruitment gap** (L290) so silent-but-correct pathways can be
+     reinforced (currently reward-gated STDP only prunes wrong-firing, cannot recruit).
+- **Metabolic ceiling** (256 cycles/tick) remains the binding constraint on scaling
+  either mechanism up (break-even depth ≈6.1 hops at 42 neurons).
+- Deliverable: `src/exp77b_organic_route_probe.py` (standalone, reproducible).

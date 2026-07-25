@@ -4071,3 +4071,27 @@ or adding movement incentives to the Latin-square curriculum.
 correct path is the organic route already in the engine — reward-gated STDP3/3C (L191) +
 structural plasticity (L164) growing routing into CAM (L150) — gated by the two real
 blockers: self-clocking/address (L271) and the metabolic ceiling (256 cycles/tick).
+
+---
+
+<!-- CLUSY_EXP77B_2026-07-25 -->
+## Exp 77b — Organic-Route Compositionality Probe (2026-07-25)
+
+**Status:** the honest replacement for the Exp 77 oracle paper proof. Substrate = LIF
+(tau=200) + CAM write-on-reward + reward-gated STDP3C + structural plasticity; weights
+random (NOT hand-tuned); NO gate / flip-flop / Python cue-detection. Teaching signal =
+autotelic reading reward only. Probe: `src/exp77b_organic_route_probe.py`.
+
+| Arm | Assoc. recall (TRAIN) | Comp. gen. (HELD) |
+|---|---|---|
+| ORG + exploration | 96.9% | 21.9% |
+| ORG no exploration | 31.2% | 25.0% |
+| REF (NOLEARN) | 6.2% | 18.8% |
+| chance | 12.5% | 12.5% |
+
+**Verdict:** the organic substrate learns ASSOCIATIONS but does NOT COMPOSE. The
+dissociation is the result: memorisation works (CAM), generalisation fails (no evolved
+adder / store-clock). Without exploration, the L290 recruitment gap freezes even
+associative recall. Metabolic cost 1.7 cycles/tick << 256 ceiling (small net
+affordable but powerless; break-even depth 6.1 hops). Next: evolve a store-clock
+(L271) and close the recruitment gap (L290) under the metabolic ceiling.

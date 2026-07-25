@@ -434,3 +434,26 @@ substrate.
 - `METABOLIC_CEILING`: maximum reading income ≈ **256 cycles/tick**. Compositional
   cognition is unaffordable while `n_neurons × depth × spike_cost > 256`. This is the
   binding constraint discovered by the Exp 70–86 series and is the real bottleneck.
+
+---
+
+<!-- CLUSY_EXP77B_2026-07-25 -->
+### Empirical Finding — Organic Substrate Dissociation (2026-07-25, Exp 77b)
+
+A substrate using only Rule-5-compliant primitives (CAM write-on-reward, reward-gated
+STDP3C, structural plasticity) was run on Latin-square compositionality with the reading
+reward as the sole teaching signal (`src/exp77b_organic_route_probe.py`):
+
+- It **memorises** trained cue→answer associations (97%) but **does not compose**
+  held-out (c1+c2) mod 8 pairs (22% ≈ chance). Memorisation ≠ compositionality.
+- **CAM fuzzy-match caveat:** the engine's 75%-Hamming match COLLIDES across all 64
+  compositional pair-keys when the key is sparse (verified: it collapses to the output
+  bias → 12.5%). A separable (one-hot) key with near-exact match was used to make the
+  associative store fair; the engine's native fuzzy CAM is even less able to hold 64
+  distinct compositional keys.
+- **Motor exploration** (ε-greedy output variability) is recorded here as a **permitted
+  general survival primitive** (motor variability), NOT a cognitive module: without it,
+  reward-gated STDP cannot break the output bias (the L290 recruitment gap) and even
+  associative recall fails (31%).
+- **Metabolic ceiling** reconfirmed: small net 1.7 cycles/tick << 256; the
+  depth needed to compose (≈6.1 hops) crosses the ceiling.
