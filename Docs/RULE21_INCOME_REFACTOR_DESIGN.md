@@ -278,3 +278,47 @@ efficiency), not a learning failure. This confirms the need for the footprint-in
 **Status:** consistent with the Phase 0 GO (conditional). The real data confirms efficient
 compression is achievable but is destroyed by evolution without an income gradient, reinforcing the
 case for Phase 2 (income = freed footprint).
+
+## 17. Phase 2 result — footprint income tested on the real engine (2026-07-25)
+
+Phase 2 was implemented and tested on the real engine (numba 0.66.0 installed in the analysis
+kernel; the modified kernel recompiled). The change is feature-flagged (`GENESIS_INCOME_FOOTPRINT`)
+and strictly @njit-compatible:
+
+- Added module constants `INCOME_FOOTPRINT` (env flag) and `FOOTPRINT_QUANTUM` (measured footprint
+  per byte, default 642.0 = the Exp 87 ancestor's measured per-prediction brain cost: idle ~411
+  cyc/tick / ~0.645 correct predictions per organism per tick).
+- The base income line now branches: when `INCOME_FOOTPRINT`, `gain = (net/8) x FOOTPRINT_QUANTUM`
+  instead of `(net/8) x CELL_STATES` (256).
+
+Test (STDP_TARGET=0, 1 seed, 3000 ticks), compared to the Exp 87 baseline (income=256) at the same
+horizon:
+
+| metric (end of 3000 ticks) | baseline (256) | footprint (642) |
+|----------------------------|----------------|-----------------|
+| n_alive                    | 30 (refuge)    | 30 (refuge)     |
+| energy_mean                | 150,254        | 314,904         |
+| correct/tick               | 15.5           | 13.6            |
+| idle cost                  | 679            | 1,426           |
+| n_neurons                  | 78             | 95              |
+
+**Result: the ceiling is NOT broken.** The population still falls to the refuge floor. Worse, the
+higher income FUELED MORE BLOAT (neurons 78 -> 95, idle 679 -> 1426): the larger income let bigger
+brains survive temporarily, raising the idle cost further.
+
+**Interpretation (key negative finding):** raising the income quantum (256 -> 642) does not break
+the metabolic ceiling; it amplifies bloat. A fixed per-byte footprint income gives the ancestor only
+break-even (income ~ idle cost ~ 411), so any bloat turns net income negative -> crash -> refugium
+masks selection. A fixed income quantum creates NO gradient against bloat.
+
+**What the ceiling actually requires (absent in this test):**
+1. **Real RAM freeing** (clearing cells when internalized), so the footprint includes the freed RAM
+   (256) -> 898 -> net-positive income for the ancestor (instead of break-even). Needs the work-unit
+   clearing mechanism (Phase 3/4).
+2. **A gradient AGAINST bloat (efficiency selection):** income structured so a smaller, more efficient
+   brain earns more income per unit cost, so selection favors efficiency rather than the higher income
+   merely feeding bloat.
+
+Figure: `phase2_footprint_test.png`. The engine modification is committed (feature-flagged, default
+OFF). This negative result refines the path: the income unit alone is insufficient; the freeing
+mechanism and an anti-bloat gradient are the load-bearing pieces.

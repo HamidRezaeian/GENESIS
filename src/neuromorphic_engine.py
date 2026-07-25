@@ -1020,6 +1020,12 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
 
 
 
+# ---- Phase 2 (Session 8): income = freed footprint (feature-flagged, Rule 21.4 measured) ----
+# FOOTPRINT_QUANTUM = measured per-prediction brain cost. Exp 87 ancestor: idle ~414 cyc/tick,
+# ~0.645 correct predictions per organism per tick -> ~642 cyc freed per internalized byte.
+INCOME_FOOTPRINT = os.environ.get("GENESIS_INCOME_FOOTPRINT", "0") == "1"
+FOOTPRINT_QUANTUM = np.float32(float(os.environ.get("GENESIS_FOOTPRINT_QUANTUM", "642.0")))
+
 @njit(cache=True)
 def world_tick_numba(
     ram_substrate, org_grid, positions, alive, energy, age,
@@ -1899,7 +1905,10 @@ def world_tick_numba(
                                         global_conn_weight[s_ptr + c] = w_now
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
-                gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
+                if INCOME_FOOTPRINT:
+                    gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                else:
+                    gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
                 if DELAY and curriculum_delay >= 2 and not DIGESTION:
                     # Scale reward to offset the metabolic tax of the SCRATCH addressing fabric
                     # (which costs 32 cycles/tick for 32 recall sensors).
