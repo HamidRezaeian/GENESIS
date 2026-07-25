@@ -408,3 +408,29 @@ a dedicated falsification experiment is built. The burden of proof is on the pos
 | Verdict | **No compositionality detected.** The prior 70 % was a structure + bigram artifact. |
 | Deposited | `src/exp68_shortcut_proof_compositionality_probe.py`, `exp68_shortcut_proof_results_overall.json`, `exp68_verdict.png` |
 | Commit | `93c0ec5` on `main` |
+
+---
+
+<!-- CLUSY_EXP77_AUDIT_2026-07-25 -->
+### Rule 5 — Empirical Corollary: Oracle Probes (2026-07-25, Exp 77 audit)
+
+**Finding:** Diagnostic probes Exp 74–77 (attractor / gated-write / gate-drive) reported
+"100% theoretical accuracy" by hardcoding the cue/answer bit-detection logic **in the
+experimenter's Python** and counting that 64 `(c1,c2)` pairs map to 64 unique 16-bit keys.
+This is a combinatorial tautology, not a measurement of the organism. Such a probe is a
+**forbidden cognitive module in spirit** (the solution is hand-wired by the author), even
+though — because it never modifies `neuromorphic_engine.py` — it does not contaminate the
+substrate.
+
+**Corollary (binding):**
+- Any probe that hardcodes the target computation (logic gates, flip-flops, arithmetic,
+  cue detectors) MUST be labeled an **oracle diagnostic**, never an organism capability.
+- "Theoretical accuracy" from counting input→output keys is NOT evidence of evolvability
+  and MUST NOT be cited as a passed compositionality test.
+- A capability counts as demonstrated only when the **substrate** (STDP / structural
+  plasticity / neurogenesis / CAM) produces it under reward, with no hand-set weights.
+
+**Category-E empirical parameter (Rule 17, documented not tuned):**
+- `METABOLIC_CEILING`: maximum reading income ≈ **256 cycles/tick**. Compositional
+  cognition is unaffordable while `n_neurons × depth × spike_cost > 256`. This is the
+  binding constraint discovered by the Exp 70–86 series and is the real bottleneck.

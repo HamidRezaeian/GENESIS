@@ -4052,3 +4052,22 @@ or adding movement incentives to the Latin-square curriculum.
 
 **Next:** Increase income (constant 'a' prediction) or decrease cost.
 
+---
+
+<!-- CLUSY_EXP77_AUDIT_2026-07-25 -->
+## Exp 77 — Post-hoc Autopsy (2026-07-25)
+
+**Status:** FALSIFIED as a claim about the organism; re-classified as an oracle paper proof.
+
+| Claim | Evidence (this checkout) | Verdict |
+|---|---|---|
+| Gate circuit built in substrate (OR/AND/TOGGLE, w=60/127/−127) | exp77 imports only os/json/numpy; logic is Python bit-ops; engine has no GATED_NEURON_MARKER / sense_type==253 (0 hits) | Paper proof |
+| "100% theoretical accuracy" | Count of 64 (c1,c2)→64 unique 16-bit keys; no simulation/STDP/leak | Tautology |
+| "SOLVED ALL BOTTLENECKS" | RESUME doc reverts Exp 70–86; real bottleneck = metabolic ceiling | False |
+| Rule-5 survival primitive | Hand-wired cue/answer detection = forbidden module (in probe only) | Violation in spirit |
+| Run Exp 78 (genesis_lab.py) | src/genesis_lab.py = 0 bytes; all drivers ImportError | Blocked |
+
+**Resolution:** nothing to rip out of the substrate (the circuit was never there). The
+correct path is the organic route already in the engine — reward-gated STDP3/3C (L191) +
+structural plasticity (L164) growing routing into CAM (L150) — gated by the two real
+blockers: self-clocking/address (L271) and the metabolic ceiling (256 cycles/tick).

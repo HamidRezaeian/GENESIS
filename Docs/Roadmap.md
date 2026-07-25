@@ -992,3 +992,17 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 | `Docs/ARD.md` | ❌ Stale (2026-07-10) | Needs update for Exp 30+ engine |
 | `Docs/PRD.md` | ❌ Needs review | Not read this session |
 
+---
+
+<!-- CLUSY_EXP77_AUDIT_2026-07-25 -->
+## Bottleneck Status Correction (2026-07-25, Exp 77 audit)
+
+- **Compositionality / working memory: NOT solved.** The Exp 77 "gate drive circuit" was
+  an oracle paper proof (Python bit-ops + key counting), never built in the substrate.
+  Remove it from the "solved" column.
+- **Binding constraint = metabolic ceiling** (`n_neurons × depth × spike_cost > 256
+  cycles/tick` reading income). This outranks the gate-routing question.
+- **Blocker before any simulation:** `src/genesis_lab.py` is 0 bytes in this checkout and
+  must be restored before `genesis_lab.py` / the `exp*_driver.py` files can run.
+- **Organic route to pursue:** reward-gated STDP3/3C + structural plasticity → CAM store;
+  evolve a self-clock rather than hardcoding a TOGGLE.

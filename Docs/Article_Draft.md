@@ -602,3 +602,19 @@ root cause of compositionality failure; (2) §3.5 Known Limitations — added
 feedforward topology limitation; (3) §4 Criterion‑A updated with Exp 71;
 (4) §4 closed bottleneck updated to reflect architectural diagnosis;
 (5) §5 conclusion updated with recurrent/hidden-neuron next steps.
+
+---
+
+<!-- CLUSY_EXP77_AUDIT_2026-07-25 -->
+## Author Note — Oracle Probes vs. Evolved Cognition (2026-07-25)
+
+A methodological caution for the article: the Exp 74–77 "100% theoretical accuracy"
+results are **oracle diagnostics** — the cue/answer logic is hand-wired in Python and the
+score is a count of input→output keys. They demonstrate that the *task* is information-
+theoretically separable, NOT that the neuromorphic substrate can evolve the solution.
+The honest empirical claim is the **metabolic ceiling**: at `n_neurons × depth ×
+spike_cost > 256 cycles/tick` reading income, the substrate cannot yet afford
+compositional cognition. The scientifically defensible narrative is that working memory
+must be *grown* (reward-gated STDP + structural plasticity into a content-addressable
+store), not hand-wired as a flip-flop — the latter violates the proto-cognitive ancestor
+boundary (Rule 5).
