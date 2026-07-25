@@ -245,3 +245,36 @@ sensitivity — they are not tuned to force a pass.)
 **Next:** Phase 1 — minimal clearable work-unit environment with measured footprints (diagnostic,
 Rule 9/10), with the explicit task of measuring `C_scratch`, `r`, `t_learn`. If those measurements
 yield α ≤ β, the honest null (scenario 3, prediction P4) is recorded and the refactor stops.
+
+## 16. Phase 1 result — learning dynamics on the real engine (analyzed 2026-07-25)
+
+Phase 1 analyzed the validated Exp 87 engine data directly (30000 ticks, STDP_TARGET=0, 3 seeds).
+The engine itself requires numba (absent in the analysis kernel; present in the terminal env, but
+the platform reserves main work for visible cells), so the existing Exp 87 measurement was used
+rather than a fresh run. Notebook: *Session 8 — Rule-21 Review*, "Phase 1" cells; figure
+`phase1_learning_audit.png`.
+
+**Measured (real, Exp 87 arm 0):**
+- The seeded ancestor **COMPRESSES the scroll effectively**: a 65-neuron brain (idle ≈ 384–414
+  cycles/tick) achieves **≈ 129 correct predictions/tick**. A small internal model masters the
+  extended scroll — this is compression.
+- **WITHOUT an income gradient, evolution BLOATS brains and comprehension COLLAPSES**: neurons
+  65 → 171, synapses 93 → 776, idle cost 414 → 2387; correct/tick falls ≈ 129 → 2.6
+  (collapse onset ≈ tick 600).
+
+**Interpretation:** learning/compression WORKS in the engine (small brain, high comprehension); the
+Exp 87 collapse is an EVOLUTIONARY dynamic (mutational bloat with no income gradient to select for
+efficiency), not a learning failure. This confirms the need for the footprint-income gradient
+(Phase 2) to select for efficient compression and prevent bloat.
+
+**Honest limitations of this measurement:**
+- `t_learn` FROM SCRATCH was NOT measured — the ancestor is seeded competent
+  (`create_intelligent_ancestor`), so it peaks at the first sample (tick 200), not via a
+  from-scratch learning curve.
+- The compression ratio `r` (CAM utilization) was NOT measured — Exp 87 does not sample CAM.
+- Measuring `t_learn` (naive organism) and `r` (CAM sampling) precisely requires a dedicated
+  experiment with numba in the analysis kernel — a separate follow-up step.
+
+**Status:** consistent with the Phase 0 GO (conditional). The real data confirms efficient
+compression is achievable but is destroyed by evolution without an income gradient, reinforcing the
+case for Phase 2 (income = freed footprint).
