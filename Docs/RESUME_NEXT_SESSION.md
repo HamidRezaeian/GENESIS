@@ -7,9 +7,9 @@ Read this file FIRST. It tells you exactly where the project stands.
 ## Latest Session Update (2026-07-25 — session 7: Exp 87 — Metabolic-Ceiling Evolution)
 
 **The audit of Rule 21.2 / Exp 78b is done and the proposed "income-gradient" next step was
-re-examined, MEASURED, and refined. Driver: `src/exp87_metabolic_ceiling_evolution.py`;
-results: `exp87_results/exp87_stdp_target_{0,1}.json`; figures: `exp87_metabolic_ceiling.png`,
-`exp87_param_drift.png`. (Numbered Exp 87 to avoid collision with the existing Experiment 79
+re-examined, MEASURED, and refined. Driver: `tests/clusy/qwen/exp87_metabolic_ceiling/run_evolution.py`;
+results: `tests/clusy/qwen/exp87_metabolic_ceiling/results/stdp_target_{0,1}.json`; figures: `tests/clusy/qwen/exp87_metabolic_ceiling/figures/metabolic_ceiling.png`,
+`tests/clusy/qwen/exp87_metabolic_ceiling/figures/param_drift.png`. (Numbered Exp 87 to avoid collision with the existing Experiment 79
 "WMEM Latch Banks"; it is the successor to the Exp 82-86 metabolic-ceiling series.)**
 
 ### Phase 1 — Ruthless audit (measured, not assumed)
@@ -92,8 +92,8 @@ Recommended: a dedicated Rule-21 review of (1)/(2) before any engine change.
 - numba is not preinstalled in a fresh sandbox: `%pip install numba` before importing the engine.
 
 ### Files changed this session
-- `src/exp87_metabolic_ceiling_evolution.py` — the evolution driver (NO kernel change).
-- `exp87_results/exp87_stdp_target_{0,1}.json` — per-arm metric series (3 seeds x 150 snapshots).
+- `tests/clusy/qwen/exp87_metabolic_ceiling/run_evolution.py` — the evolution driver (NO kernel change).
+- `tests/clusy/qwen/exp87_metabolic_ceiling/results/stdp_target_{0,1}.json` — per-arm metric series (3 seeds x 150 snapshots).
 - `Docs/Result.md`, `Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/FixedRules.md` — Exp 87 entries.
 
 ---

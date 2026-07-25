@@ -78,6 +78,21 @@ USAGE:
 """
 import os, sys, json, time, random
 
+
+def _find_repo_root():
+    """Walk up from this script to the GENESIS repo root (the dir holding src/ and Books/).
+    Makes the driver location-independent (it lives under tests/clusy/qwen/exp87_metabolic_ceiling/)."""
+    d = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(8):
+        if os.path.isdir(os.path.join(d, "src")) and os.path.isdir(os.path.join(d, "Books")):
+            return d
+        d = os.path.dirname(d)
+    return "/home/user/repos/GENESIS"  # fallback (matches the exp30_ablation convention)
+
+
+_REPO_ROOT = _find_repo_root()
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ---- compile-time flags MUST be set before importing the engine ----
 _STDP_TARGET = sys.argv[1] if len(sys.argv) > 1 else "0"
 assert _STDP_TARGET in ("0", "1"), "arg1 must be STDP_TARGET 0|1"
@@ -94,8 +109,7 @@ os.environ["GENESIS_STDP_TARGET"] = _STDP_TARGET   # the A/B recruitment lever (
 
 N_SEEDS = int(sys.argv[2]) if len(sys.argv) > 2 else 3
 N_TICKS = int(sys.argv[3]) if len(sys.argv) > 3 else 20000
-OUT_DIR = sys.argv[4] if len(sys.argv) > 4 else os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "exp87_results")
+OUT_DIR = sys.argv[4] if len(sys.argv) > 4 else os.path.join(_SCRIPT_DIR, "results")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ---- experiment constants (documented, Rule-17 disclosed in the header) ----
@@ -106,11 +120,10 @@ REFUGE_FLOOR  = 30      # genesis_lab Phase-1 (learning) floor: a COLD-START run
                         # for MATURE colonies after 1.5M ticks of evolution. Germs still must earn
                         # (SEED_ENERGY), so death stays a gradient, not abolished (Rule 10/14).
 SEED          = 20260725
-SCROLL_PATH   = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                             "Books", "English", "00_Graded.txt")
+SCROLL_PATH   = os.path.join(_REPO_ROOT, "Books", "English", "00_Graded.txt")
 
 import numpy as np
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_REPO_ROOT, "src"))
 import genesis_lab as gl
 from genesis_lab import (g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
     g_global_v, g_global_ref, g_global_t_last, g_global_thresh, g_global_tau, g_global_rec_id,
@@ -242,6 +255,7 @@ def validate_idle_estimate():
     """Run the seeded ancestor on a no-income scroll (byte=1, excluded by the reading gate)
     and confirm the idle-cost estimate matches the measured per-tick energy loss."""
     global _gt
+    random.seed(SEED); np.random.seed(SEED)   # validate the SAME ancestor run_seed(SEED) uses
     reset_world()
     g_ram[:] = 1                      # byte=1 < 32 -> excluded from reading income
     g_read_fuel[:] = np.float32(CELL_STATES)

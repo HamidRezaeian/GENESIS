@@ -4248,8 +4248,8 @@ Deliverables: `src/exp78b_inengine_evolution.py`, `exp78b_evolution_results.json
 
 **Status:** DONE — clean NEGATIVE result. Successor to the Exp 82-86 metabolic-ceiling series
 (those confirmed `max income < cost`; this tests whether EVOLUTION can escape the ceiling).
-Driver: `src/exp87_metabolic_ceiling_evolution.py`. Results: `exp87_results/exp87_stdp_target_{0,1}.json`.
-Figures: `exp87_metabolic_ceiling.png`, `exp87_param_drift.png`.
+Driver: `tests/clusy/qwen/exp87_metabolic_ceiling/run_evolution.py`. Results: `tests/clusy/qwen/exp87_metabolic_ceiling/results/stdp_target_{0,1}.json`.
+Figures: `tests/clusy/qwen/exp87_metabolic_ceiling/figures/metabolic_ceiling.png`, `tests/clusy/qwen/exp87_metabolic_ceiling/figures/param_drift.png`.
 
 **Motivation (measured in the session-7 audit):** the frozen seeded ancestor (65n/93s/lif~4-5) is
 structurally bankrupt — pure-idle cost = 436 cycles/tick > income quantum = 256 cycles/tick
@@ -4296,5 +4296,5 @@ of (1)/(2) before any engine change.
 process (~+/-10% run-to-run noise); the idle-cost estimate is a conservative upper bound (~1.1-1.2x
 measured) — use relative trends and n_neurons, not the absolute threshold; numba needs `%pip install numba`.
 
-**Deliverables:** `src/exp87_metabolic_ceiling_evolution.py`, `exp87_results/exp87_stdp_target_{0,1}.json`,
-`exp87_metabolic_ceiling.png`, `exp87_param_drift.png`.
+**Deliverables:** `tests/clusy/qwen/exp87_metabolic_ceiling/run_evolution.py`, `tests/clusy/qwen/exp87_metabolic_ceiling/results/stdp_target_{0,1}.json`,
+`tests/clusy/qwen/exp87_metabolic_ceiling/figures/metabolic_ceiling.png`, `tests/clusy/qwen/exp87_metabolic_ceiling/figures/param_drift.png`.

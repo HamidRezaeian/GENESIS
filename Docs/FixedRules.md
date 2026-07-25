@@ -117,6 +117,29 @@ historical value has been evaluated. Any artifact needed to reproduce a numbered
 cited by `Docs/Result.md`, `Docs/Article_Draft.md`, or another authoritative research document must
 be preserved or archived.
 
+**Clusy-agent work-product location (binding, added 2026-07-25 session 7):** ALL experiments,
+analyses, patches, and notebooks produced by the Clusy AI agent MUST be stored under
+`tests/clusy/qwen/<experiment_name>/` — never loose in `src/` or the repository root. (The project
+core engine and its first-party experiment drivers remain in `src/`; this clause governs AGENT work
+products only.) Each experiment directory MUST follow the canonical layout documented in
+`tests/clusy/qwen/README.md`:
+
+```
+tests/clusy/qwen/<experiment_name>/
+├── run_*.py            ← experiment driver(s)
+├── plot_*.py           ← plotting / analysis script(s)
+├── results/            ← raw metric JSONs
+└── figures/            ← generated PNGs
+```
+
+with a verdict note in `tests/clusy/qwen/notes/<experiment_name>_verdict.md` and a corresponding
+entry added to `tests/clusy/qwen/README.md` (structure tree + key-findings table). Drivers MUST locate
+the repository root by walking up from `__file__` (so they are location-independent) and MUST add
+`<repo_root>/src` to `sys.path` rather than assuming they live in `src/`. Rationale: agent work
+products stay separable from the core engine, are discoverable in one place, and remain reproducible
+from a clean checkout. (Exp 30 ablation already followed this layout; Exp 87 was migrated to it in
+session 7.)
+
 ---
 
 ### Rule 9: The Autotelic Imperative [ U ]
