@@ -72,6 +72,45 @@ another economy lever. This is the escape hatch the loop never had.
 
 ---
 
+### 2.D — Rule 21.2 per-organism constants: pre-registered falsification criteria (increments 3a / 3b-i / 3b-ii / 3c)
+
+*(Pre-registered 2026-07-25, session 6 — added retroactively for 3a/3b-i/3b-ii which already ran, and
+PROSPECTIVELY for the 3c multi-seed validation below, which had NOT been run when this was written.)*
+
+The Rule 21.2 refactor makes the engine's tunable constants per-organism and evolvable (design doc
+`Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md`). Each increment carries a binding falsification criterion;
+if it fails, the increment is reverted or revised, never silently kept.
+
+- **3a (data path, flag OFF):** the PARAM genome tail must be layout- and behaviour-neutral.
+  *Criterion:* ORIGINAL vs EDITED genome give identical `n_count`, `s_count`, `lif_steps` and
+  byte-identical decoded synapse `src/dst/weight`; extinction within the run-to-run cost band.
+  *Result:* PASSED (session 3; `lif_steps` identical, extinction 167 vs 168).
+- **3b-i (kernel wiring, flag ON):** with the default genome, flag ON must reproduce flag OFF.
+  *Criterion:* `lif_steps` identical OFF vs ON; extinction within the host's cost-era noise band;
+  integer genes decode to the exact module globals. *Result:* PASSED (session 4; `lif_steps`=5 both).
+- **3b-ii (per-org `cam_key_bits`, flag ON):** neutrality at default + a wire proof.
+  *Criterion:* (a) `lif_steps` identical OFF vs ON and `cam_key_bits` decodes to the exact global 8;
+  (b) WIRE: varying the `CAM_KEY_BITS` argument changes CAM behaviour (unit test) and two flag-ON runs
+  differing ONLY in `g_org_params[org,1]` give different trajectories (in-engine). *Result:* PASSED
+  (session 5; `lif_steps`=4 both, wire proven 2 ways).
+- **3c (in-engine PARAM-gene evolution under selection):** the definitive Rule-21.2 test (design doc
+  §9.3) — do the PARAM genes drift OFF DEFAULT **under selection** in the full engine?
+  *Pre-registered criterion (binding):* the SELECTED line's mean comprehension fitness must rise above
+  its gen-0 value by more than the NEUTRAL control's rise — the **selection advantage**
+  `(max_selected - selected_gen0) - (max_neutral - neutral_gen0)` must be **> 0** — AND this must hold
+  as a **>=5-seed mean exceeding 0 by at least 1 standard deviation** (Rule 3 multi-seed), under BOTH
+  mutation operators (an EA Gaussian on decoded values AND the faithful `mutate_dna` genome-byte
+  cosmic radiation). If the multi-seed mean selection advantage is <= 0, the claim 'selection drives
+  adaptive PARAM drift in the full engine' is ABANDONED and reported as a null result (the constants
+  are evolvable but not adaptively selectable in the current zero-income full engine).
+  *Result (binding verdict, Rule-3 multi-seed):* NULL. Over 5 independent seeds x 2 mutation
+  operators, selection advantage = EA -0.011 +/- 0.632 and genome (faithful `mutate_dna`) -0.058 +/-
+  0.324 — both means <= 0 and within 1 std of 0, so the criterion (mean > 0 by >= 1 std) FAILS
+  under BOTH operators. The claim is ABANDONED: the constants are evolvable (drift under mutation)
+  but NOT adaptively selectable in the current zero-income full engine. Full record: Result.md Exp 78b.
+
+---
+
 ## 3. Adversarial review of the strategy so far
 
 Steel-manning the critique that "this whole approach cannot reach AGI":

@@ -4107,6 +4107,15 @@ Every numeric variable in the project was classified against the new Rule 21
 violations). The absence of any evolvable parameter is the headline: the substrate is
 currently fully designer-fiat.
 
+**Update (2026-07-25, Rule 21.2 increments 3a—3c):** the `0 E` headline above is the
+PRE-21.2 state. Eight of those designer constants are now **(E) evolvable genes WIRED into the
+engine** behind `GENESIS_EVOLVABLE_CONSTANTS`: `cam_slots`, `cam_key_bits`, `cam_match_threshold`,
+`stdp_div`, `homeostatic_lambda`, `tau_ref`, `sp_growth_cost`, `sp_rewire_weight` (3b-i wired 7;
+3b-ii wired `cam_key_bits` as a `cam_read`/`cam_write` argument). `cam_write_threshold` is
+genome-decoded but has no kernel use-site yet. Proven evolvable in exp77e; the in-engine evolution
+test (Exp 78b, Rule-3 multi-seed) confirmed they are mutable + heritable but found NO adaptive
+drift under selection (null).
+
 **Cost-model violations (Rule 21.1):** `SPIKE_COST=1`, `INCOME_PER_TICK=256`,
 `SP_GROWTH_COST=10` are invented points, not measured work. Real measured cost on the
 host: spike ≈ 654 cycles (218 ns);
@@ -4153,3 +4162,81 @@ maintaining comparable reading reward (fitness ≈ 25%, flat due to architectura
 compositionality blockers). This demonstrates the EVOLVABLE PARAMETER MECHANISM:
 Rule 21.2 is satisfiable. The same pattern can be applied to the engine's 21 remaining
 G-variables. Probe: `src/exp77c_evolvable_genome_probe.py`.
+
+
+---
+
+<!-- CLUSY_RULE21_2_3abc_2026-07-25 -->
+## Rule 21.2 Engine Refactor — Increments 3a / 3b-i / 3b-ii (2026-07-25)
+
+**Status:** the engine's tunable constants are now per-organism and evolvable behind
+`GENESIS_EVOLVABLE_CONSTANTS` (design doc `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md`; pre-registered
+criteria in `Docs/Ascent.md` §2.D). Full session detail in `Docs/RESUME_NEXT_SESSION.md`.
+
+- **3a (data path, flag OFF):** a PARAM genome tail (9 genes, 5-byte `[200,201,gid,lo,hi]` records,
+  14-bit fraction) is decoded at spawn into `g_org_params[org]`. Regression-verified layout- and
+  behaviour-neutral (`lif_steps` identical, extinction 167 vs 168).
+- **3b-i (kernel wiring, flag ON):** `g_org_params` is a module global the numba kernel reads by
+  reference (no `world_tick_numba` signature change); 7 constants wired (cam_slots, cam_match,
+  stdp_div, homeo, tau_ref, sp_growth, sp_rewire). Flag OFF dead-code-eliminates to the pre-3b
+  kernel. Regression-verified (`lif_steps`=5 both).
+- **3b-ii (per-org `cam_key_bits`):** `cam_read`/`cam_write` take `CAM_KEY_BITS` as a trailing
+  argument; `world_tick_numba` passes `round(g_org_params[org,1])` clipped to `[1,CAM_KEY_BITS]`
+  (backing-store width). `physical_cost_model.py` needs no change (own parametrized timing kernel).
+  Regression-verified (`lif_steps`=4 both, `cam_key_bits` decodes to exact 8) AND wire-verified
+  (unit test on the new signature + in-engine ON8-vs-ON2 trajectory divergence).
+
+Deliverables: `src/neuromorphic_engine.py`, `src/genesis_lab.py`, design doc §6.3/§7.4.
+
+---
+
+<!-- CLUSY_EXP78B_2026-07-25 -->
+## Exp 78b — In-Engine PARAM-Gene Evolution Under Selection (Rule 21.2 increment 3c) (2026-07-25)
+
+(full engine `world_tick_numba`, flag ON; Latin-square RAM; fixed long-lived ancestor seed 20260725,
+`lif_steps`=4; P=24, truncation top-25%, 40 generations, 180-tick evaluation; **Rule-3 compliant:
+5 independent seeds x 2 mutation operators**, fitness = correct next-symbol predictions averaged
+over 3 replicates). Driver: `src/exp78b_inengine_evolution.py`. Pre-registered criterion: `Docs/Ascent.md` §2.D.
+
+**Question (design doc §9.3):** do the per-organism PARAM constants drift OFF DEFAULT **under
+selection** in the full engine — the definitive Rule-21.2 test (vs the exp77e simplified probe)?
+
+**Design:** each organism's lifetime behaviour is simulated by the real kernel reading its own
+`g_org_params[org]`; selection acts on the engine's OWN comprehension signal (correct predictions,
+read_log type 1+3). Two mutation operators so the verdict is operator-robust: **EA** (Gaussian on
+decoded fractions, exp77e-style) and **genome** (faithful `mutate_dna` cosmic radiation on the PARAM
+tail bytes, structural bytes held fixed to isolate the constants). SELECTED line (truncation) vs
+NEUTRAL control (random parents), same init per seed.
+
+**Result — ROBUST NULL (pre-registered criterion FAILS):**
+
+| Mutation operator | Selection advantage over 5 seeds | Mean ± std | Criterion (mean>0 by ≥1 std) |
+|---|---|---|---|
+| EA Gaussian | -0.40, -0.90, +0.19, +0.42, +0.64 | **-0.011 ± 0.632** | FAILS |
+| genome (`mutate_dna`) | +0.35, -0.14, -0.53, -0.08, +0.11 | **-0.058 ± 0.324** | FAILS |
+
+Both means are <= 0 and within 1 std of 0, so the adaptive-drift claim is **ABANDONED under both
+operators**. The PARAM genes DO drift substantially under mutation (e.g. EA selected-line gen0—final:
+stdp_div, sp_rewire, cam_key_bits, cam_slots all move), confirming the constants are **evolvable
+(mutable + heritable)** — but this drift is NOT fitness-aligned: mean comprehension fitness stayed
+flat (~52-55) for BOTH lines across all seeds, and selection drove directional gene changes that did
+not raise fitness (i.e. it acted on noise, not a real gradient).
+
+**Interpretation:** the full engine's comprehension-fitness landscape is FLAT/noisy w.r.t. the PARAM
+constants when varied together — organism behaviour is dominated by the FIXED structure (the
+hand-designed ancestor's reflexes), not the tunable constants. This CONTRASTS with exp77e (simplified
+model — clear adaptive drift, 13/20 genes) and points at the project's core finding: capabilities are
+limited by structure and the **zero-income bottleneck**, not the constants. Rule 21.2's MECHANISM
+(evolvable per-org constants) is achieved; ADAPTIVE tuning of them in the full engine is gated by the
+absence of a real income/fitness gradient.
+
+**Operational lessons (documented for reproducibility):** (1) ancestor burn rate is
+structure-dependent — use a long-lived seeded ancestor (seed 1 died at tick 20; seed 20260725 lives
+~197 ticks); (2) fitness is noisy (~2.3 std) and not fully seedable in numba — use replicate
+averaging; (3) defaults sit at the top of most gene ranges — use uniform init for selection gradients;
+(4) `create_intelligent_ancestor` uses unseeded `random` — any A/B must seed it.
+
+**Verdict:** evolvability CONFIRMED; adaptive drift NOT observed (null, Rule-3 validated). Next
+frontier: the income bottleneck — give the substrate a real measured-income gradient, then re-run 78b.
+Deliverables: `src/exp78b_inengine_evolution.py`, `exp78b_evolution_results.json`,
+`exp78b_fitness_curve.png`, `exp78b_selection_advantage.png`, `exp78b_param_drift.png`.

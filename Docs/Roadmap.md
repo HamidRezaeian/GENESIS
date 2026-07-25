@@ -1079,3 +1079,25 @@ The audit found 27 game-mechanic violations and 0 evolvable parameters. Ordered 
 - **Next priority:** close the RAPL/joule gap (Rule 21.1), then refactor the engine
   to read all G-variables from genomes rather than module-level code.
 - **Hard blocker:** `src/genesis_lab.py` is still 0 bytes — restore it.
+
+
+---
+
+## Rule 21.2 — Increments 3a—3c Complete; 3c is a Robust Null (2026-07-25)
+
+- **3a (data path), 3b-i (kernel wiring of 7 constants), 3b-ii (per-org `cam_key_bits`) DONE** and
+  regression- + wire-verified. The engine's tunable constants are now per-organism and evolvable
+  behind `GENESIS_EVOLVABLE_CONSTANTS` (8 of the 9 PARAM genes wired; `cam_write_threshold` decoded
+  but unused). See `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` §6.3/§7.4 and `Docs/Ascent.md` §2.D.
+- **3c (Exp 78b) — in-engine PARAM evolution under selection — ROBUST NULL.** Over 5 seeds x 2
+  mutation operators (EA Gaussian + faithful `mutate_dna`), the selection advantage was
+  EA -0.011±0.632 and genome -0.058±0.324 (both <=0, within 1 std). The constants are evolvable
+  (drift under mutation) but NOT adaptively selectable in the full engine: comprehension fitness is
+  flat w.r.t. them because behaviour is structure-dominated. The pre-registered claim is abandoned.
+- **Bottleneck confirmed = income, not constants.** The decisive next step is the zero-income
+  bottleneck (Exp 78/79/80/81): give the substrate a REAL measured-income gradient (better behaviour
+  —> more income —> survival/reproduction), then re-run Exp 78b. Without it, adaptive evolution of the
+  constants — and of anything else — cannot start in the full engine.
+- **Remaining Rule-21.2 work:** wire `cam_write_threshold` (needs a kernel use-site); the other
+  G-variables (Tier-2: `FOOD_SCAN_RADIUS`, ancestor weights, etc.); restore exact flag-ON==flag-OFF
+  at default (read float genes at full precision); per-org CAM cost charge.

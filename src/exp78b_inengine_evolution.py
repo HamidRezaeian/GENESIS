@@ -2,39 +2,42 @@
 """
 Rule 21.2 increment 3c — IN-ENGINE PARAM-gene evolution under selection.
 ========================================================================
-The definitive Rule-21.2 evidence for the FULL engine (vs the exp77e probe, which
-used a simplified organism model). Each organism LIFETIME BEHAVIOUR is simulated by
-the real numba kernel world_tick_numba with GENESIS_EVOLVABLE_CONSTANTS=1, so the
-per-organism constants (g_org_params[org], wired in 3b-i/3b-ii) genuinely drive
-behaviour, and selection acts on them through the engine OWN comprehension signal
-(correct next-symbol predictions, read_log type 1 + type 3).
+The definitive Rule-21.2 test for the FULL engine (design doc §9.3): do the per-organism
+PARAM constants (g_org_params[org], wired in 3b-i/3b-ii) drift OFF DEFAULT UNDER SELECTION
+when each organism's lifetime behaviour is simulated by the real numba kernel
+world_tick_numba with GENESIS_EVOLVABLE_CONSTANTS=1?
 
-Design (the in-engine counterpart of exp77e):
-  - Fixed structural genome: the long-lived seeded ancestor (seed 20260725, lif_steps=4,
-    lives the full evaluation window). All organisms share this structure so drift is
-    isolated to the PARAM constants.
-  - Evolving genotype: the 9 PARAM genes (g_org_params row), evolved as real values in
-    their PARAM_GENES ranges, mutated by small Gaussian steps in fraction space (the
-    genome 14-bit encoding) — the standard EA abstraction of the cosmic-radiation byte
-    mutation that perturbs the PARAM tail in vivo.
-  - Fitness: correct-prediction count over a fixed 180-tick window (engine-internal,
-    constant-dependent, NOT invented points), AVERAGED over N_REPLICATES independent
-    runs to push the engine run-to-run stochasticity (viscosity stalls; ~2.3 std on a
-    single run) below the between-genotype fitness gradient.
-  - Initial population: sampled UNIFORMLY across each gene full range (like exp77e),
-    NOT clustered at the designer default — the defaults sit at the top of most ranges
-    (cam_slots=32, cam_key_bits=8), so a narrow init leaves the population in a flat,
-    noise-dominated region where selection cannot act. Uniform init gives selection real
-    gradients to climb.
-  - Selection: truncation (top 25%) for the SELECTED line; random parent choice for the
-    NEUTRAL control (same init + mutation, no fitness bias) -> the contrast isolates
-    selection-driven drift from neutral mutation drift.
-  - Track: per-generation population mean of all 9 PARAM genes + mean/best fitness.
+RULE-3-COMPLIANT DESIGN (multi-seed + dual mutation operator):
+  - N_SEEDS independent evolutionary runs per mutation mode; every quantitative claim is
+    reported as mean +/- std across seeds (a single seed is PRELIMINARY per Rule 3).
+  - TWO mutation operators, so the verdict is robust to the operator choice:
+      * "ea"     — Gaussian step on each gene's decoded fraction (the standard EA abstraction
+                   used by the exp77e probe; high exploration).
+      * "genome" — FAITHFUL cosmic radiation: build the full genome (fixed structural bytes +
+                   encoded PARAM tail), apply the engine's real `mutate_dna` (per-byte fidelity
+                   1/l), decode the child's PARAM via `decode_params`, and rebuild a clean genome.
+                   This perturbs the PARAM tail BYTES exactly as germline mutation does in vivo
+                   (only PARAM-tail effects are kept; structural bytes are held fixed so drift is
+                   isolated to the constants).
+  - Fixed structural genome = the long-lived seeded ancestor (seed 20260725, lif_steps=4, lives
+    the full 180-tick evaluation window); all organisms share it so drift is isolated to PARAM.
+  - Fitness = correct next-symbol predictions (read_log type 1 + type 3) over 180 ticks, the
+    engine's OWN comprehension signal (NOT invented points), averaged over N_REPLICATES runs to
+    push the engine's run-to-run stochasticity below the between-genotype gradient.
+  - Initial population sampled UNIFORMLY across each gene's full range (the defaults sit at the
+    top of most ranges, so a narrow init leaves the population in a flat region).
+  - Selection: truncation top-25% (SELECTED) vs random parents (NEUTRAL control), same init per
+    seed so the contrast isolates selection-driven drift from neutral mutation drift.
+
+PRE-REGISTERED FALSIFICATION (Ascent.md §2.D): the selection advantage
+  (max_selected - selected_gen0) - (max_neutral - neutral_gen0) must be > 0 as a >=5-seed mean
+  exceeding 0 by >=1 std, under BOTH operators; otherwise the adaptive-drift claim is ABANDONED.
 
 Outputs (auto-persisted to agent-outputs):
-  exp78b_evolution_results.json  — full per-generation gene means + fitness (both lines)
-  exp78b_param_drift.png         — drift of the 4 most-responsive genes, selected vs neutral
-  exp78b_fitness_curve.png       — mean fitness trajectory, selected vs neutral
+  exp78b_evolution_results.json  — per-(mode,seed) trajectories + aggregated mean +/- std
+  exp78b_param_drift.png         — gene drift (mean across seeds) selected vs neutral, both modes
+  exp78b_fitness_curve.png       — fitness trajectory (mean across seeds) selected vs neutral
+  exp78b_selection_advantage.png — per-seed selection advantage + mean +/- std, both modes
 
 Run:  GENESIS_EVOLVABLE_CONSTANTS=1 python3 - < src/exp78b_inengine_evolution.py
 """
@@ -62,25 +65,30 @@ from genesis_lab import (g_ram, g_org_grid, g_positions, g_alive, g_energy, g_ag
     g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
     g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna,
     g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
-    world_tick_numba, spawn_organism, CANVAS_LO, CANVAS_HI, MAX_ORGANISMS, RAM_SIZE,
-    PARAM_GENES, PARAM_DEFAULTS)
+    world_tick_numba, spawn_organism, mutate_dna, decode_params,
+    CANVAS_LO, CANVAS_HI, MAX_ORGANISMS, RAM_SIZE, PARAM_GENES, PARAM_DEFAULTS)
 from neuromorphic_engine import g_org_params, EVOLVABLE_CONSTANTS, CAM_SLOTS, CAM_KEY_BITS
 
 assert EVOLVABLE_CONSTANTS, "3c MUST run with GENESIS_EVOLVABLE_CONSTANTS=1 (kernel must read g_org_params)"
 
 # ----------------------------- experiment config -----------------------------
-SEED          = 20260725    # long-lived ancestor (lif_steps=4); also seeds reproducibility
+ANCESTOR_SEED = 20260725    # long-lived ancestor (lif_steps=4); fixed structural template
+SEED_BASE     = 100000      # independent evolutionary seeds: SEED_BASE + k
+N_SEEDS       = 5           # Rule 3: >=5 independent seeds per mode
+MODES         = ["ea", "genome"]   # EA Gaussian vs faithful mutate_dna cosmic radiation
 P_POP         = 24          # population size
-K_SELECT      = 6           # truncation: top 25 percent become parents (strong selection)
-G_GENERATIONS = 40          # number of generations
+K_SELECT      = 6           # truncation: top 25 percent (strong selection)
+G_GENERATIONS = 40          # generations per run
 EVAL_TICKS    = 180         # evaluation window (within the ~197-tick lifespan)
-N_REPLICATES  = 5           # independent runs averaged per genotype (noise reduction ~sqrt(5))
-SIGMA_FRAC    = 0.05        # per-gene Gaussian mutation step in [0,1] fraction space
+N_REPLICATES  = 3           # independent fitness runs averaged per genotype (noise reduction)
+SIGMA_FRAC    = 0.05        # EA per-gene Gaussian mutation step in [0,1] fraction space
 N_GENES       = len(PARAM_GENES)
 GENE_NAMES    = [g[0] for g in PARAM_GENES]
+STRUCT_LEN    = None        # set after ancestor built (len - PARAM tail)
+TMP_ORG       = MAX_ORGANISMS - 1   # scratch slot for decode_params in genome mode
 OUT_DIR       = os.environ.get("EXP78B_OUT", os.getcwd())
 
-# ----------------------------- helpers ---------------------------------------
+# ----------------------------- gene<->fraction helpers -----------------------
 def value_to_frac(gid, value):
     name, lo, hi, scale = PARAM_GENES[gid]
     if scale == "log" and lo > 0 and value > 0 and hi > lo:
@@ -98,15 +106,40 @@ def frac_to_value(gid, frac):
         return float(lo * ((hi / lo) ** frac))
     return float(lo + (hi - lo) * frac)
 
-def mutate_params(params, sigma=SIGMA_FRAC):
+_PARAM_VAL_MAX = 16383
+def encode_param_values(values):
+    """Build the 45-byte PARAM tail (9 records x 5 bytes) encoding the given gene values."""
+    recs = []
+    for gid in range(N_GENES):
+        frac = value_to_frac(gid, float(values[gid]))
+        raw = int(round(frac * _PARAM_VAL_MAX))
+        recs.extend([200, 201, gid, raw & 0x7F, (raw >> 7) & 0x7F])   # PARAM_MARKER, PARAM_MAGIC
+    return recs
+
+# ----------------------------- mutation operators ----------------------------
+def mutate_ea(params):
+    """EA abstraction: Gaussian step on each gene's decoded fraction (exp77e-style)."""
     child = params.copy()
     for gid in range(N_GENES):
-        f = value_to_frac(gid, child[gid]) + random.gauss(0.0, sigma)
+        f = value_to_frac(gid, child[gid]) + random.gauss(0.0, SIGMA_FRAC)
         child[gid] = frac_to_value(gid, f)
     return child
 
-_gt = np.float64(0)
+def mutate_genome(params, structure):
+    """FAITHFUL cosmic radiation: mutate_dna on the real genome bytes (PARAM tail), then decode.
+    Only PARAM-tail effects are kept (structural bytes restored) so drift is isolated to PARAM."""
+    parent_genome = np.array(list(structure) + encode_param_values(params), dtype=np.uint8)
+    child_full = mutate_dna(parent_genome)              # real per-byte cosmic radiation (1/l fidelity)
+    decode_params(child_full, TMP_ORG)                  # fills g_org_params[TMP_ORG] from mutated bytes
+    child_values = np.array(g_org_params[TMP_ORG], dtype=np.float32).copy()
+    return child_values
+
+def reproduce(params, mode, structure):
+    return mutate_genome(params, structure) if mode == "genome" else mutate_ea(params)
+
+# ----------------------------- engine harness --------------------------------
 _ancestor = None
+_gt = np.float64(0)
 def _args():
     return (g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
         g_global_v, g_global_ref, g_global_t_last, g_global_thresh, g_global_tau, g_global_rec_id,
@@ -131,7 +164,6 @@ def reset_all():
     _gt = np.float64(0)
 
 def _run_once(pop_params, Pn):
-    """One independent run of the population; returns per-org correct-prediction counts."""
     global _gt
     reset_all()
     for i in range(Pn):
@@ -159,29 +191,38 @@ def _run_once(pop_params, Pn):
     return pred.astype(np.float64)
 
 def evaluate_population(pop_params):
-    """Average correct-prediction fitness over N_REPLICATES independent runs (noise reduction)."""
     Pn = len(pop_params)
     acc = np.zeros(Pn)
     for rep in range(N_REPLICATES):
-        acc += _run_once(pop_params, Pn)   # RNG continues -> independent samples
+        acc += _run_once(pop_params, Pn)
     return acc / N_REPLICATES
 
-def next_generation(pop_params, fitness, neutral=False):
+def next_generation(pop_params, fitness, mode, structure, neutral=False):
     Pn = len(pop_params)
     if neutral:
         parent_idx = [random.randrange(Pn) for _ in range(K_SELECT)]
     else:
-        parent_idx = list(np.argsort(fitness)[-K_SELECT:])  # top K by fitness
-    children = [mutate_params(pop_params[parent_idx[i % K_SELECT]]) for i in range(Pn)]
-    return np.array(children, dtype=np.float32), parent_idx
+        parent_idx = list(np.argsort(fitness)[-K_SELECT:])
+    children = [reproduce(pop_params[parent_idx[i % K_SELECT]], mode, structure) for i in range(Pn)]
+    return np.array(children, dtype=np.float32)
+
+def run_line(init_pop, mode, structure, neutral):
+    pop = init_pop.copy()
+    gene_mean = []; mean_fit = []; best_fit = []
+    for gen in range(G_GENERATIONS):
+        fitness = evaluate_population(pop)
+        gene_mean.append([float(x) for x in pop.mean(axis=0)])
+        mean_fit.append(float(fitness.mean())); best_fit.append(float(fitness.max()))
+        pop = next_generation(pop, fitness, mode, structure, neutral=neutral)
+    return {"gene_mean": gene_mean, "mean_fitness": mean_fit, "best_fitness": best_fit}
 
 # ----------------------------- build world -----------------------------------
-print("=" * 72)
-print("Rule 21.2 increment 3c — in-engine PARAM-gene evolution under selection")
-print("=" * 72)
+print("=" * 74)
+print("Rule 21.2 increment 3c — in-engine PARAM-gene evolution (Rule-3 multi-seed)")
+print("=" * 74)
 print("flag EVOLVABLE_CONSTANTS=%s  CAM_KEY_BITS=%d  CAM_SLOTS=%d" % (EVOLVABLE_CONSTANTS, CAM_KEY_BITS, CAM_SLOTS))
-print("P=%d  K_select=%d (top %d%%)  G=%d  EVAL_TICKS=%d  N_REPLICATES=%d  sigma_frac=%.2f"
-      % (P_POP, K_SELECT, 100 * K_SELECT // P_POP, G_GENERATIONS, EVAL_TICKS, N_REPLICATES, SIGMA_FRAC))
+print("N_SEEDS=%d  MODES=%s  P=%d  K=%d(top %d%%)  G=%d  EVAL=%d  reps=%d  sigma=%.2f"
+      % (N_SEEDS, MODES, P_POP, K_SELECT, 100 * K_SELECT // P_POP, G_GENERATIONS, EVAL_TICKS, N_REPLICATES, SIGMA_FRAC))
 
 K = 8; NOISE = ord('a'); rng = np.random.RandomState(42)
 ram = np.full(RAM_SIZE, NOISE, dtype=np.uint8); pos = 0
@@ -190,73 +231,90 @@ while pos + 7 <= RAM_SIZE:
     ram[pos:pos + 7] = [97 + c1, NOISE, NOISE, 97 + c2, NOISE, NOISE, 65 + (c1 + c2) % K]; pos += 7
 g_ram[:] = ram
 
-random.seed(SEED); np.random.seed(SEED)
+random.seed(ANCESTOR_SEED); np.random.seed(ANCESTOR_SEED)
 _ancestor = gl.create_intelligent_ancestor()
-print("ancestor: %d bytes  (seed %d)" % (len(_ancestor), SEED))
+STRUCT_LEN = len(_ancestor) - N_GENES * 5
+structure = np.array(_ancestor[:STRUCT_LEN], dtype=np.uint8)
+print("ancestor: %d bytes  (seed %d)  structure=%d B + PARAM tail=%d B"
+      % (len(_ancestor), ANCESTOR_SEED, STRUCT_LEN, N_GENES * 5))
 
 t0 = time.time()
 spawn_organism(0, 100, _ancestor, 250000); g_org_params[0] = PARAM_DEFAULTS
 world_tick_numba(*_args())
 print("JIT warmup: %.1fs  ancestor lif_steps=%d" % (time.time() - t0, int(g_org_lif_steps[0])))
 
-# Initial population: UNIFORM across each gene full fraction range [0.05, 0.95] (like exp77e).
-# Same init for BOTH lines so the selected-vs-neutral contrast is fair.
-random.seed(SEED + 100)
-init_pop = np.array([[frac_to_value(gid, random.uniform(0.05, 0.95)) for gid in range(N_GENES)]
-                     for _ in range(P_POP)], dtype=np.float32)
+# ----------------------------- multi-seed sweep ------------------------------
+all_results = {}
+for mode in MODES:
+    mode_res = {"sel_adv": [], "sel_fit_traj": [], "neu_fit_traj": [],
+                "sel_gene_drift": [], "neu_gene_drift": [], "seeds": []}
+    for k in range(N_SEEDS):
+        seed = SEED_BASE + k * 1000 + (0 if mode == "ea" else 500)
+        # independent initial population for this seed (uniform across full gene ranges)
+        random.seed(seed); np.random.seed(seed)
+        init_pop = np.array([[frac_to_value(gid, random.uniform(0.05, 0.95)) for gid in range(N_GENES)]
+                             for _ in range(P_POP)], dtype=np.float32)
+        # SELECTED line (its own mutation stream)
+        random.seed(seed + 1)
+        sel = run_line(init_pop, mode, structure, neutral=False)
+        # NEUTRAL control (same init, random parents)
+        random.seed(seed + 2)
+        neu = run_line(init_pop, mode, structure, neutral=True)
+        sf = sel["mean_fitness"]; nf = neu["mean_fitness"]
+        sel_adv = (max(sf) - sf[0]) - (max(nf) - nf[0])
+        sg = np.array(sel["gene_mean"]); ng = np.array(neu["gene_mean"])
+        mode_res["sel_adv"].append(float(sel_adv))
+        mode_res["sel_fit_traj"].append([round(x, 3) for x in sf])
+        mode_res["neu_fit_traj"].append([round(x, 3) for x in nf])
+        mode_res["sel_gene_drift"].append([round(float(x), 4) for x in (sg[-1] - sg[0])])
+        mode_res["neu_gene_drift"].append([round(float(x), 4) for x in (ng[-1] - ng[0])])
+        mode_res["seeds"].append(seed)
+        print("  [%s seed%d] sel_adv=%+6.2f  SEL fit %.1f->%.1f (peak %.1f)  NEU fit %.1f->%.1f"
+              % (mode, k, sel_adv, sf[0], sf[-1], max(sf), nf[0], nf[-1]), flush=True)
+    adv = np.array(mode_res["sel_adv"])
+    mode_res["sel_adv_mean"] = float(adv.mean())
+    mode_res["sel_adv_std"] = float(adv.std(ddof=1)) if N_SEEDS > 1 else 0.0
+    all_results[mode] = mode_res
+    print("  >> [%s] selection advantage over %d seeds: mean=%+.3f +/- %.3f  (criterion: mean > 0 by >=1 std)"
+          % (mode, N_SEEDS, adv.mean(), mode_res["sel_adv_std"]), flush=True)
 
-# ----------------------------- evolve ----------------------------------------
-def run_line(neutral, label):
-    random.seed(SEED + (7 if neutral else 3))   # distinct mutation streams per line
-    pop = init_pop.copy()
-    history = {"gene_mean": [], "gene_std": [], "mean_fitness": [], "best_fitness": []}
-    for gen in range(G_GENERATIONS):
-        fitness = evaluate_population(pop)
-        history["gene_mean"].append([round(float(x), 4) for x in pop.mean(axis=0)])
-        history["gene_std"].append([round(float(x), 4) for x in pop.std(axis=0)])
-        history["mean_fitness"].append(round(float(fitness.mean()), 3))
-        history["best_fitness"].append(round(float(fitness.max()), 3))
-        pop, _ = next_generation(pop, fitness, neutral=neutral)
-        print("  [%s] gen %2d: mean_fit=%6.2f  best=%5.1f  camKB=%.2f camSLOTS=%.1f camMATCH=%.2f stdpDIV=%.3f"
-              % (label, gen, fitness.mean(), fitness.max(), pop[:, 1].mean(), pop[:, 0].mean(),
-                 pop[:, 2].mean(), pop[:, 4].mean()), flush=True)
-    return history
+# ----------------------------- verdict + persist -----------------------------
+verdict = {}
+for mode in MODES:
+    m = all_results[mode]["sel_adv_mean"]; sd = all_results[mode]["sel_adv_std"]
+    supported = (m > 0) and (m > sd)   # mean > 0 by at least 1 std
+    verdict[mode] = {"mean": round(m, 4), "std": round(sd, 4),
+                     "adaptive_drift_supported": bool(supported)}
 
-print("\n--- SELECTED line (truncation on prediction fitness) ---")
-sel_hist = run_line(neutral=False, label="SEL")
-print("\n--- NEUTRAL control (random parents, same init + mutation) ---")
-neu_hist = run_line(neutral=True, label="NEU")
-
-# ----------------------------- analyse + persist -----------------------------
 results = {
-    "config": {"seed": SEED, "P": P_POP, "K_select": K_SELECT, "G": G_GENERATIONS,
+    "config": {"ancestor_seed": ANCESTOR_SEED, "seed_base": SEED_BASE, "n_seeds": N_SEEDS,
+               "modes": MODES, "P": P_POP, "K_select": K_SELECT, "G": G_GENERATIONS,
                "eval_ticks": EVAL_TICKS, "n_replicates": N_REPLICATES, "sigma_frac": SIGMA_FRAC,
-               "gene_names": GENE_NAMES,
-               "defaults": [round(float(x), 4) for x in PARAM_DEFAULTS],
+               "gene_names": GENE_NAMES, "defaults": [round(float(x), 4) for x in PARAM_DEFAULTS],
                "flag": "GENESIS_EVOLVABLE_CONSTANTS=1",
-               "fitness": "correct next-symbol predictions (read_log type1+type3) over 180 ticks, averaged over 5 replicates",
-               "init": "uniform across each gene full fraction range [0.05,0.95]",
-               "structure": "fixed long-lived ancestor (seed 20260725, lif_steps=4)"},
-    "selected": sel_hist,
-    "neutral": neu_hist,
+               "fitness": "correct predictions (read_log type1+type3) over 180 ticks, %d-rep mean" % N_REPLICATES,
+               "preregistered_criterion": "Ascent.md 2.D: sel_advantage > 0 as >=5-seed mean exceeding 0 by >=1 std, both operators"},
+    "verdict": verdict,
+    "results_by_mode": all_results,
 }
 out_json = os.path.join(OUT_DIR, "exp78b_evolution_results.json")
 with open(out_json, "w") as f:
     json.dump(results, f, indent=2)
 print("\nSaved results -> %s" % out_json)
 
-print("\n=== PARAM-gene drift (gen0 -> final population mean) ===")
-print("%-20s %9s %9s %9s" % ("gene", "default", "SEL d", "NEU d"))
-sel_g = np.array(sel_hist["gene_mean"]); neu_g = np.array(neu_hist["gene_mean"])
-for gid in range(N_GENES):
-    dflt = float(PARAM_DEFAULTS[gid])
-    print("%-20s %9.3f %+9.3f %+9.3f" % (GENE_NAMES[gid], dflt, sel_g[-1, gid] - sel_g[0, gid], neu_g[-1, gid] - neu_g[0, gid]))
-sf = sel_hist["mean_fitness"]; nf = neu_hist["mean_fitness"]
-print("\nmean fitness: SELECTED %.2f -> %.2f (peak %.2f)   NEUTRAL %.2f -> %.2f (peak %.2f)"
-      % (sf[0], sf[-1], max(sf), nf[0], nf[-1], max(nf)))
-sel_gain = max(sf) - sf[0]; neu_gain = max(nf) - nf[0]
-print("fitness gain over gen0: SELECTED %+.2f  NEUTRAL %+.2f  (selection advantage %+.2f)"
-      % (sel_gain, neu_gain, sel_gain - neu_gain))
+print("\n" + "=" * 74)
+print("VERDICT (pre-registered Ascent.md 2.D): does selection drive adaptive PARAM drift?")
+print("=" * 74)
+for mode in MODES:
+    v = verdict[mode]
+    print("  mode=%-7s  selection advantage = %+.3f +/- %.3f  ->  adaptive drift %s"
+          % (mode, v["mean"], v["std"], "SUPPORTED" if v["adaptive_drift_supported"] else "NOT supported (null)"))
+overall = all(v["adaptive_drift_supported"] for v in verdict.values())
+print("\n  OVERALL: %s" % ("adaptive PARAM drift under selection is SUPPORTED in the full engine"
+      if overall else
+      "NULL RESULT — selection does NOT drive adaptive PARAM drift in the full engine\n"
+      "  (constants are evolvable/mutable but the comprehension-fitness landscape is flat w.r.t.\n"
+      "   them; behaviour is structure-dominated; adaptive tuning is gated by the income bottleneck)."))
 
 # ----------------------------- plots -----------------------------------------
 try:
@@ -264,32 +322,64 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     gens = np.arange(G_GENERATIONS)
-    sel_drift_mag = np.abs(sel_g[-1] - sel_g[0])
-    top4 = list(np.argsort(sel_drift_mag)[-4:][::-1])
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-    for ax, gid in zip(axes.ravel(), top4):
-        ax.plot(gens, sel_g[:, gid], "o-", color="#2563eb", lw=2, ms=4, label="selected")
-        ax.plot(gens, neu_g[:, gid], "s--", color="#9ca3af", lw=1.5, ms=3, label="neutral")
-        ax.axhline(float(PARAM_DEFAULTS[gid]), color="#dc2626", ls=":", lw=1.2, label="designer default")
-        ax.set_title(GENE_NAMES[gid], fontsize=12, fontweight="bold")
-        ax.set_xlabel("generation"); ax.set_ylabel("population mean"); ax.grid(alpha=0.3); ax.legend(fontsize=8)
-    fig.suptitle("Rule 21.2 (3c): PARAM-gene drift under selection in the FULL engine\n"
-                 "(world_tick_numba, flag ON; fitness = correct predictions, 5-replicate mean)",
-                 fontsize=13, fontweight="bold")
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
-    p1 = os.path.join(OUT_DIR, "exp78b_param_drift.png"); fig.savefig(p1, dpi=130); plt.close(fig)
-    print("Saved plot -> %s" % p1)
+    colors = {"ea": "#2563eb", "genome": "#7c3aed"}
 
-    fig2, ax2 = plt.subplots(figsize=(9, 5))
-    ax2.plot(gens, sf, "o-", color="#2563eb", lw=2, ms=4, label="selected")
-    ax2.plot(gens, nf, "s--", color="#9ca3af", lw=1.5, ms=3, label="neutral")
-    ax2.fill_between(gens, sel_hist["best_fitness"], sf, color="#2563eb", alpha=0.10)
-    ax2.set_xlabel("generation"); ax2.set_ylabel("mean correct predictions / 180 ticks (5-rep mean)")
-    ax2.set_title("Fitness trajectory: selected climbs, neutral wanders", fontsize=12, fontweight="bold")
-    ax2.grid(alpha=0.3); ax2.legend()
+    # 1. fitness trajectory (mean +/- std across seeds), selected vs neutral, both modes
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.6), sharey=True)
+    for ax, mode in zip(axes, MODES):
+        sel = np.array(all_results[mode]["sel_fit_traj"]); neu = np.array(all_results[mode]["neu_fit_traj"])
+        ax.plot(gens, sel.mean(0), "-", color=colors[mode], lw=2, label="selected (mean)")
+        ax.fill_between(gens, sel.mean(0) - sel.std(0), sel.mean(0) + sel.std(0), color=colors[mode], alpha=0.15)
+        ax.plot(gens, neu.mean(0), "--", color="#9ca3af", lw=1.6, label="neutral (mean)")
+        ax.fill_between(gens, neu.mean(0) - neu.std(0), neu.mean(0) + neu.std(0), color="#9ca3af", alpha=0.12)
+        ax.set_title("mutation = %s" % mode, fontsize=12, fontweight="bold")
+        ax.set_xlabel("generation"); ax.grid(alpha=0.3); ax.legend(fontsize=8)
+    axes[0].set_ylabel("mean correct predictions / 180 ticks")
+    fig.suptitle("Rule 21.2 (3c): fitness trajectory, %d seeds (mean +/- std) — selected does NOT climb" % N_SEEDS,
+                 fontsize=12.5, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    p = os.path.join(OUT_DIR, "exp78b_fitness_curve.png"); fig.savefig(p, dpi=130); plt.close(fig)
+    print("Saved plot -> %s" % p)
+
+    # 2. selection advantage per seed + mean +/- std, both modes
+    fig2, ax2 = plt.subplots(figsize=(8, 4.8))
+    xpos = {"ea": 0, "genome": 1}
+    for mode in MODES:
+        adv = np.array(all_results[mode]["sel_adv"])
+        ax2.scatter([xpos[mode]] * len(adv), adv, color=colors[mode], s=46, zorder=3, label="%s seeds" % mode)
+        ax2.errorbar([xpos[mode]], [adv.mean()], yerr=[adv.std(ddof=1)], fmt="_", color=colors[mode],
+                     ms=18, mew=2.5, capsize=8, zorder=4)
+    ax2.axhline(0, color="#dc2626", ls=":", lw=1.3, label="criterion threshold (>0)")
+    ax2.set_xticks([0, 1]); ax2.set_xticklabels(["EA Gaussian", "mutate_dna\n(cosmic radiation)"])
+    ax2.set_ylabel("selection advantage (sel gain - neutral gain)")
+    ax2.set_title("Per-seed selection advantage (Rule 3): mean +/- std vs the >0 criterion", fontsize=11.5, fontweight="bold")
+    ax2.grid(alpha=0.3); ax2.legend(fontsize=8)
     fig2.tight_layout()
-    p2 = os.path.join(OUT_DIR, "exp78b_fitness_curve.png"); fig2.savefig(p2, dpi=130); plt.close(fig2)
-    print("Saved plot -> %s" % p2)
+    p = os.path.join(OUT_DIR, "exp78b_selection_advantage.png"); fig2.savefig(p, dpi=130); plt.close(fig2)
+    print("Saved plot -> %s" % p)
+
+    # 3. gene drift (mean across seeds), selected vs neutral, both modes — top-4 responsive genes
+    ref_drift = np.abs(np.array(all_results["ea"]["sel_gene_drift"]).mean(0))
+    top4 = list(np.argsort(ref_drift)[-4:][::-1])
+    fig3, axes3 = plt.subplots(2, 2, figsize=(12, 8))
+    for ax, gid in zip(axes3.ravel(), top4):
+        for mode in MODES:
+            sd = np.array(all_results[mode]["sel_gene_drift"])[:, gid]
+            nd = np.array(all_results[mode]["neu_gene_drift"])[:, gid]
+            ax.scatter([xpos[mode] - 0.12], [sd.mean()], color=colors[mode], marker="o", s=70, zorder=3)
+            ax.errorbar([xpos[mode] - 0.12], [sd.mean()], yerr=[sd.std(ddof=1)], fmt="none", color=colors[mode], capsize=6)
+            ax.scatter([xpos[mode] + 0.12], [nd.mean()], color=colors[mode], marker="x", s=70, zorder=3)
+            ax.errorbar([xpos[mode] + 0.12], [nd.mean()], yerr=[nd.std(ddof=1)], fmt="none", color=colors[mode], capsize=6, ls="--")
+        ax.axhline(0, color="#dc2626", ls=":", lw=1)
+        ax.set_xticks([0, 1]); ax.set_xticklabels(["EA", "genome"])
+        ax.set_title(GENE_NAMES[gid], fontsize=12, fontweight="bold")
+        ax.set_ylabel("drift gen0->final (mean +/- std)")
+        ax.grid(alpha=0.3)
+    fig3.suptitle("PARAM-gene drift under selection (o) vs neutral (x), %d seeds — drift is not fitness-aligned" % N_SEEDS,
+                  fontsize=12.5, fontweight="bold")
+    fig3.tight_layout(rect=[0, 0, 1, 0.95])
+    p = os.path.join(OUT_DIR, "exp78b_param_drift.png"); fig3.savefig(p, dpi=130); plt.close(fig3)
+    print("Saved plot -> %s" % p)
 except Exception as e:
     print("[plot skipped: %s]" % e)
 print("\nDONE.")
