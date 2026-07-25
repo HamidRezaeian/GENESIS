@@ -214,3 +214,34 @@ All changes to `world_tick_numba` and any physics kernel must be **@njit-compati
 - The new income rule is feature-flagged (`GENESIS_INCOME_FOOTPRINT=1`), default OFF, until Phase 2
   passes its tuning test.
 - All constants introduced are classed H/E/O/G per Rule 21.6; f(W) is **H** (measured host work).
+
+## 15. Phase 0 result — measurement audit (executed 2026-07-25, Session 8)
+
+Phase 0 was executed as a measurement audit (zero Rule-21.4 risk; no engine change).
+Notebook: *Session 8 — Rule-21 Review*, cells "PHASE 0"; figure `phase0_measurement_audit.png`.
+
+**Measured (real):**
+- **β = 12.7 cycles / neuron / tick** — slope of `idle_cost` vs `n_neurons` in Exp 87 (both arms,
+  all seeds). (The linear-fit intercept ≈ −236 cycles/tick is a fit artifact; the slope β is the
+  meaningful quantity.)
+- **e_update = 2.876, e_read = 2.444 cycles** — host-measured per-operation costs (Rule 21.1, H-class).
+- Each neuron performs ≈ β/e_update ≈ **4.4** update+read operations per tick.
+- **From-scratch complex compute ≈ 2,759× more expensive than cached retrieval** — measured directly
+  on the host (9,334 µs vs 3.4 µs per call). This is the physical basis for a large α: internalizing
+  a complex work-unit frees compute far exceeding the cost of maintaining the internal model.
+
+**The gate (derived from the measurements):** a work-unit of complexity K is profitable iff
+`N × (C_scratch − C_cached) × e_update > β × (K/r) × t_learn`, where r = the internal model's
+compression ratio (bytes captured per internal unit) and N = re-use count. For K=100, t_learn=20:
+**N\* ≈ 29/r** — i.e. with modest compression (r=3) and modest re-use (N>10), or even no compression
+(r=1) with N>29, a complex work-unit is profitable.
+
+**Decision: GO (conditional).** The measured constants (β, e) do **not** rule out α > β; the gate is
+passable with modest compression and modest re-use. Three quantities remain UNVERIFIED and must be
+measured on the engine in Phase 1/2: the actual `C_scratch(K)`, the compression ratio `r` the
+CAM/synapses achieve, and `t_learn`. (The figure treats these as illustrative and sweeps them for
+sensitivity — they are not tuned to force a pass.)
+
+**Next:** Phase 1 — minimal clearable work-unit environment with measured footprints (diagnostic,
+Rule 9/10), with the explicit task of measuring `C_scratch`, `r`, `t_learn`. If those measurements
+yield α ≤ β, the honest null (scenario 3, prediction P4) is recorded and the refactor stops.
