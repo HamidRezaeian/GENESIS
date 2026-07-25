@@ -457,3 +457,58 @@ reward as the sole teaching signal (`src/exp77b_organic_route_probe.py`):
   associative recall fails (31%).
 - **Metabolic ceiling** reconfirmed: small net 1.7 cycles/tick << 256; the
   depth needed to compose (≈6.1 hops) crosses the ceiling.
+
+---
+
+<!-- CLUSY_RULE21_PHYSICAL_GROUNDING_2026-07-25 -->
+### Rule 21: Physical Grounding — No Game Mechanics [ R ]  (added 2026-07-25)
+
+**Principle:** GENESIS is a PHYSICAL SYSTEM, not a game or a simulation with
+arbitrary mechanics. Nothing in the substrate may carry a value that exists only
+because a designer chose it "because it works." Every quantity must be grounded in
+physical reality by one of the three routes below.
+
+**21.1 — Costs are REAL hardware work.** Every cost the organism pays (energy,
+metabolism, "spike cost", time) MUST be the real, measured work performed on the
+host hardware: actual CPU/GPU cycles, RAM/memory traffic, joules dissipated, and
+wall-clock time. Each computation loads the hardware once and its cost IS that load.
+Invented "cost points" (e.g. `SPIKE_COST = 1`, a fixed "income = 256") are FORBIDDEN
+— they are game mechanics. The organism's energy budget is the real hardware energy
+budget; "metabolic cost" is the measured cost of running the substrate, not an
+abstraction.
+
+**21.2 — Parameters are hardware-derived OR evolvable.** Every tunable parameter
+(thresholds, time constants, learning rates, synaptic weights, radii, gains) MUST be
+either:
+  - **(H) Hardware-derived** — computed from a measurable property of the physical
+    substrate (e.g. `CELL_STATES = 2^BITS_PER_BYTE`, signed-byte weight range, a
+    membrane time constant measured from the real device being modeled), with the
+    derivation documented inline; OR
+  - **(E) Evolvable** — encoded in the genome as a gene that natural selection
+    shapes, never a literal the designer fixes.
+
+A constant that is neither is a violation and must be converted to (H) or (E).
+
+**21.3 — Opcodes/markers are a documented ISA.** Gene/opcode markers (e.g.
+`GENE_MARKER`, `NEURON_MARKER`, output opcodes) are arbitrary identifiers of a
+documented instruction set. They carry NO tunable physics and are permitted as-is,
+but must be listed in the ISA documentation.
+
+**21.4 — The Tuning Test.** If changing a number makes the system "work better"
+because it was tuned, that number is an illegal game mechanic. A legitimate value is
+either derived (changing it would be physically wrong) or evolved (selection, not the
+designer, set it).
+
+**21.5 — Two levels of grounding.**
+  - *Simulated-substrate physics* (LIF tau, threshold, STDP rule): parameters must be
+    grounded in the real measured properties of the physical substrate being modeled,
+    or be evolvable. A hand-set `tau = 200` with no derivation is a violation.
+  - *Host-hardware cost*: the metabolic/energy accounting must be the measured cost of
+    executing the substrate on the host (cycles, memory traffic, joules), so the
+    organism's survival budget maps onto real hardware limits.
+
+**21.6 — Remedy protocol.** Every existing violation must be (a) derived from hardware
+with the derivation documented, (b) moved into the genome as an evolvable gene, or
+(c) deleted. The magic-number audit (Result.md + audit notebook) tracks each
+constant's class: **H** (hardware-derived) / **E** (evolvable gene) / **O** (opcode/
+marker ISA) / **G** (game-mechanic violation needing remedy).

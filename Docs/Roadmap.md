@@ -1023,3 +1023,24 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 - **Metabolic ceiling** (256 cycles/tick) remains the binding constraint on scaling
   either mechanism up (break-even depth ≈6.1 hops at 42 neurons).
 - Deliverable: `src/exp77b_organic_route_probe.py` (standalone, reproducible).
+
+---
+
+<!-- CLUSY_RULE21_AUDIT_2026-07-25 -->
+## Rule 21 Remediation Roadmap (2026-07-25)
+
+The audit found 27 game-mechanic violations and 0 evolvable parameters. Ordered plan:
+1. **Replace the invented cost model FIRST** (Rule 21.1): `SPIKE_COST`/`income`/
+   `SP_GROWTH_COST` must become the REAL measured hardware work (CPU cycles / memory
+   traffic / joules / wall-time). Measured baseline saved in `measured_cost.json`
+   (spike ≈ 654 cycles; tick ≈ 39,937
+   cycles ≈ 9.4 nJ). The metabolic ceiling then becomes the
+   host's real cycle/energy budget — falsifiable.
+2. **Make tunables evolvable genes (E):** `TAU`, `THRESH`, `STDP_LR`, `SP_*`,
+   `EPS_EXPLORE`, `FOOD_SCAN_RADIUS`, `LONG_JUMP_STRIDE`, synapse weights — encode in
+   the genome so selection, not the designer, sets them.
+3. **Derive the rest from hardware (H) with documented derivations:** `MAX_ORGANISMS`
+   (from host RAM), `CAM_SLOTS` (from memory), `REMAP_PERIOD` (from generation time).
+4. **Restore `src/genesis_lab.py`** to audit the 15 ancestor weights (currently
+   unauditable; they are class E by rule).
+5. Keep the ISA markers (O) and hardware-derived constants (H) — document them.

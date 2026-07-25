@@ -4095,3 +4095,27 @@ adder / store-clock). Without exploration, the L290 recruitment gap freezes even
 associative recall. Metabolic cost 1.7 cycles/tick << 256 ceiling (small net
 affordable but powerless; break-even depth 6.1 hops). Next: evolve a store-clock
 (L271) and close the recruitment gap (L290) under the metabolic ceiling.
+
+---
+
+<!-- CLUSY_RULE21_AUDIT_2026-07-25 -->
+## Rule 21 Physical-Grounding Audit (2026-07-25)
+
+Every numeric variable in the project was classified against the new Rule 21
+(Physical Grounding). Of 43 classified: **6 H** (hardware-derived, legit), **10 O**
+(opcode/marker ISA, legit), **0 E** (evolvable genes), **27 G** (game-mechanic
+violations). The absence of any evolvable parameter is the headline: the substrate is
+currently fully designer-fiat.
+
+**Cost-model violations (Rule 21.1):** `SPIKE_COST=1`, `INCOME_PER_TICK=256`,
+`SP_GROWTH_COST=10` are invented points, not measured work. Real measured cost on the
+host: spike ≈ 654 cycles (218 ns);
+full tick ≈ 39,937 cycles ≈ 9.4 nJ.
+The invented income (256) < the real cost of one spike (654) — the "256 ceiling" is
+fiction.
+
+**Other notable G's:** `TAU=200`, `THRESH=1.0`, `STDP_LR=0.05`, `SP_*` thresholds,
+`EPS_EXPLORE=0.6`, `N_HID=24`, `FOOD_SCAN_RADIUS=16`, `MAX_ORGANISMS=600`,
+`w_self/w_bidir/w_hidden_output=72/54/22`, and the 15 ancestor weights (in the empty
+`genesis_lab.py`). Each must be derived from hardware (H) or made evolvable (E).
+Deliverables: `rule21_classification.csv`, `measured_cost.json`, audit notebook.

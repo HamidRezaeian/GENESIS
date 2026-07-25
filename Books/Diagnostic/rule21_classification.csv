@@ -1,0 +1,44 @@
+variable,value,location,class,reason,remedy
+N_INPUT,25,engine L18,G,Sensory-input count fixed by designer,E: derive from evolved sensor-gene count
+N_OUTPUT,14,engine L21,G,Vocal/output channel count fixed by designer,E: derive from actuator genome
+RAM_BIT0_INPUT,15,engine L24,O,Wiring index (which line carries RAM bit0),Document in ISA/wiring map
+DELAY_BUF,256,engine L287,H,= 2^BITS_PER_BYTE (one slot per byte value),OK — document the 2^8 derivation
+TAU_REF,1,engine L456,G,"Refractory time constant, hand-set","H: measure real refractory period, or E"
+N_AFFORDANCE,6,engine L412,G,"Count of affordance channels, fixed",O if fixed ISA (document) else E
+OUT_JMP_FWD..OUT_REPRODUCE,0..5,engine L371-376,O,Output opcode indices (ISA),OK — list in ISA doc
+GENE/NEURON/RECEPTOR/SENSOR/,"161,162,",engine L385-447,O,Gene & component markers (ISA),OK — list in ISA doc
+ ACTUATOR/MEMORY/SCRATCH,195-199,,O,,
+CAM_WRITE_ON_REWARD,True,engine L162,O,Compile-time feature flag,OK
+RAM_SIZE,65536,engine L7,H,= 2^16 address space,OK — document 2^16
+CAM_KEY_BITS,8,engine L153,H,= BITS_PER_BYTE (1-byte key),OK
+FOOD_SCAN_RADIUS,16,engine L33,G,Sensing radius — RESUME 'design choice',E: sensory range is an evolvable trait
+CAM_SLOTS,32,engine L152,G,"Memory capacity, fixed","H: derive from host memory, or E"
+SP_MAX_GROWTH,3,engine L178,G,"Max synapse growth/tick, fixed",E or derive from real growth cost
+SP_MAX_PRUNE,5,engine L180,G,"Max prune/tick, fixed",E or derive from real prune cost
+REMAP_PERIOD,4000,engine L247,G,"Red-Queen remap timescale, fixed",E or derive from generation time
+REMAP_STATES / SB0 / SB1,2/0/1,engine L248-250,O,Remap state indices,OK (document)
+DELAY_N,1,engine L266,G,"Curriculum delay, fixed",E (curriculum is evolvable)
+LONG_JUMP_STRIDE,10,engine L383,G,Jump stride — RESUME 'design choice',E or derive from memory layout
+MAX_ORGANISMS,600,engine L513,G,"Population cap, fixed",H: derive from host RAM (carrying capacity)
+SPIKE_COST,1.0,exp77b L56,G,INVENTED cost point — Rule 21.1 FORBIDS,REAL measured CPU/RAM work per spike
+INCOME_PER_TICK,256.0,exp77b L57,G,INVENTED income — Rule 21.1 FORBIDS,REAL host energy/time budget per tick
+SP_GROWTH_COST,10.0,exp77b L67,G,INVENTED rewire cost — Rule 21.1,REAL measured cost of a rewire op
+TAU,200.0,exp77b L52,G,"Membrane time constant, hand-set","H: measured membrane physics, or E"
+THRESH,1.0,exp77b L54,G,"Firing threshold, hand-set",H or E
+V_RESET,0.0,exp77b L55,G,"Reset potential, arbitrary convention",H: tie to a reference potential
+STDP_LR,0.05,exp77b L63,G,"Learning rate, hand-set",E (plasticity rate is evolvable) or H
+SP_PRUNE_THRESHOLD,0.5,exp77b L65,G,"Prune threshold, hand-set",E or H
+SP_REWIRE_WEIGHT,5.0,exp77b L66,G,"Rewire weight, hand-set",E or H
+EPS_EXPLORE,0.6,exp77b L69,G,"Exploration rate, hand-set",E (exploration is an evolvable trait)
+N_HID,24,exp77b L50,G,"Hidden-neuron count, fixed",E: neurogenesis grows this
+CAM_KEY_BITS,16,exp77b L60,H,= 2 bytes for the 2-symbol key,OK
+N_OUT / NOISE_SYM / N_TICKS,8/8/7,exp77b,O,Task-specific alphabet/indices,OK (task definition)
+DT,1.0,exp74-76,G,"Integration timestep, convention",H: derive from numerical stability
+TAU_REF,1,exp74-76,G,"Refractory constant, hand-set",H or E
+K / PERIOD,8/7,exp68/69,O,Task alphabet / stream period,OK (task definition)
+SEED / N_TICKS / SAMPLE,42/..,exp68,O,RNG seed & diagnostic budget,OK (diagnostic)
+ANS_LO / ANS_HI,65/72,exp68,H,ASCII 'A'-'H' byte range (encoding),OK — derived from encoding
+SURVIVAL_RUN_LEN / N_PROBES,43/120,exp69,O,Diagnostic budget,OK (diagnostic)
+w_input_hidden,127.0,exp74-76,H,= W_MAX (saturated signed-byte max),OK — but document it is saturated
+w_self / w_bidir / w_hidden_output,72/54/22,exp74-76,G,Hand-set synapse weights,E: MUST be evolvable genes (Rule 21.2)
+15 unique ancestor weights,?,genesis_lab.py,G,In EMPTY file — cannot audit; RESUME='design choice',E: encode in genome (Rule 21.2); restore file

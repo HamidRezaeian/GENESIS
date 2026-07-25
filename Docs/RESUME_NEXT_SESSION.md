@@ -159,3 +159,41 @@ are now (a) **evolve a store-clock / address** so c1 can be written to CAM at th
 moment without a hardcoded TOGGLE (the L271 self-clocking blocker), and (b) **close the
 STDP3C recruitment gap** (L290) so silent-but-correct pathways can be reinforced. The
 metabolic ceiling remains the binding constraint on scaling either up.
+
+---
+
+<!-- CLUSY_RULE21_AUDIT_2026-07-25 -->
+## Rule 21 — Physical-Grounding Audit (2026-07-25)
+
+**New binding rule added:** `FixedRules.md` Rule 21 (Physical Grounding — No Game
+Mechanics). GENESIS is a PHYSICAL system: costs = real measured hardware work
+(CPU/GPU/RAM cycles, memory traffic, joules, wall-time); parameters = hardware-derived
+(H) or evolvable genes (E) only; opcodes/markers = documented ISA (O). The Tuning
+Test: if tuning a number makes it "work better," it is an illegal game mechanic.
+
+**Audit of every numeric variable (43 classified):**
+| Class | Meaning | Count |
+|---|---|---|
+| H | hardware-derived (LEGIT) | 6 |
+| E | evolvable gene (LEGIT) | **0** |
+| O | opcode/marker ISA (LEGIT) | 10 |
+| G | game-mechanic VIOLATION | **27** |
+
+**Core finding:** 27 of 43 numeric variables are game-mechanic violations, and **zero**
+parameters are currently evolvable genes — everything that should be evolvable is
+hard-coded designer-fiat. The 15 ancestor synapse weights live in the EMPTY
+`src/genesis_lab.py` and cannot be audited until it is restored (they are class E by
+rule — must become evolvable genes).
+
+**Cost model is invented, not measured (Rule 21.1):** `SPIKE_COST=1` and `income=256`
+are dimensionless points, NOT hardware work. Measured on this host: one LIF spike
+≈ 654 CPU cycles (218 ns); one full
+substrate tick ≈ 39,937 cycles ≈ 9.4 nJ.
+The invented "income=256" is LESS than the real cost of a single spike — so the
+"metabolic ceiling = cost > 256" finding is about ARBITRARY numbers and is not
+falsifiable. The grounded replacement: the organism's budget = the host's real
+measured cycle/time/energy budget.
+
+**Remediation (Rule 21.6):** every G must be (a) derived from hardware with the
+derivation documented, (b) made an evolvable gene, or (c) deleted. Priority: replace
+the invented cost model with real measured hardware cost FIRST.

@@ -1,0 +1,9 @@
+{
+ "dt_per_update_ns": 217.8617449999365,
+ "cycles_per_update": 653.5852349998095,
+ "dt_per_tick_us": 13.312188029999561,
+ "cycles_per_tick": 39936.56408999868,
+ "flops_per_tick": 936,
+ "joules_per_tick": 9.359999999999999e-09,
+ "affordable_neurons_per_1ms": 1802
+}
