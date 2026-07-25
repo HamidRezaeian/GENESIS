@@ -4,6 +4,80 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-25 — session 6: Tier-1 increment 3c — in-engine PARAM-gene evolution)
+
+**Increment 3c (an in-engine EVOLUTION run with the flag ON, testing whether the PARAM genes
+drift under selection in the FULL engine) is built and run. Commit on `main`. Driver:
+`src/exp78b_inengine_evolution.py`; results: `exp78b_evolution_results.json`. Read design doc §7.4 bullet 7.**
+
+### What was built (the in-engine counterpart of exp77e)
+- `src/exp78b_inengine_evolution.py` — a multi-generation evolution driver in which each
+  organism LIFETIME BEHAVIOUR is simulated by the real numba kernel `world_tick_numba` with
+  GENESIS_EVOLVABLE_CONSTANTS=1 (so the per-org constants wired in 3b-i/3b-ii genuinely drive
+  behaviour), and selection acts on the engine OWN comprehension signal.
+- Design: fixed structural genome = the long-lived seeded ancestor (seed 20260725, lif_steps=4,
+  lives the full 180-tick evaluation window); the 9 PARAM genes are the evolving genotype
+  (g_org_params row), initialized UNIFORMLY across each gene full range (like exp77e), mutated
+  by small Gaussian steps in the genome 14-bit fraction space. Fitness = correct next-symbol
+  predictions (read_log type 1 + type 3) over 180 ticks, AVERAGED over 5 independent runs (the
+  engine is stochastic; a single run has ~2.3 std noise). Selection = truncation top-25%
+  (SELECTED line) vs random parents (NEUTRAL control), 40 generations, P=24. The
+  selected-vs-neutral contrast isolates selection-driven drift from neutral drift.
+
+### Result (honest — evolvability confirmed, adaptive drift NOT observed)
+- **Evolvability CONFIRMED:** the PARAM genes drift substantially across generations under
+  mutation in the full engine. Selected-line drift gen0->final: stdp_div +74.5, sp_rewire +10.4,
+  tau_ref +3.5, cam_key_bits +2.1, cam_match +1.6, cam_write -2.3, cam_slots -7.6, sp_growth
+  -9.3. The per-organism constants are genuinely mutable + heritable (Rule 21.2 mechanism
+  achieved). cam_key_bits (wired in 3b-ii) drifts too (+2.1).
+- **Adaptive drift NOT observed:** mean fitness stayed FLAT (~52-54) for BOTH lines over 40
+  generations. SELECTED peaked at gen 0 (54.0) and ended at 52.9; NEUTRAL 53.1->52.3. Selection
+  advantage vs neutral = -0.28 (zero/negative). Selection drove directional gene changes (e.g.,
+  stdp_div up to ~75-90) but these did NOT raise fitness -> selection was acting on NOISE, not a
+  real fitness gradient.
+- **Interpretation:** the full engine comprehension-fitness landscape is FLAT/noisy w.r.t. the
+  PARAM constants when varied together — organism behaviour is dominated by the FIXED structure
+  (the hand-designed ancestor reflexes), not the tunable constants. This CONTRASTS with exp77e
+  (simplified organism model -> clear adaptive drift, 13/20 genes) and points at the project
+  core finding: the substrate capabilities are limited by its structure and the zero-income
+  bottleneck, NOT by the tunable constants. Making constants evolvable (Rule 21.2) is necessary
+  but not sufficient; without a real income/fitness gradient, selection cannot adaptively tune
+  them in the full engine.
+
+### Why the first 3c attempt failed (operational fixes)
+- **Ancestor burn rate is STRUCTURE-DEPENDENT.** A random ancestor (seed 1) had a deep synapse
+  graph and burned ~12000 cycles/tick (died at tick 20); the seed-20260725 ancestor has
+  lif_steps=4 and burns ~1270/tick (lives ~197 ticks). ALWAYS use a long-lived seeded ancestor
+  as the fixed structural template, or organisms die before fitness can be measured.
+- **Fitness is NOISY (~2.3 std) and NOT fully seedable.** The engine viscosity stalls are
+  stochastic; seeding np.random/random does NOT fully determinize the numba kernel (cam_key_bits
+  4/6/8 still varied across seeded replicates). Mitigated with 5-replicate averaging.
+- **Defaults sit at the TOP of most gene ranges** (cam_slots=32=max, cam_key_bits=8=max). A
+  narrow init around defaults leaves the population in a flat, noise-dominated region; UNIFORM
+  init across the full range is needed to give selection gradients to climb.
+- Even with all three fixes (long-lived ancestor + replicate averaging + uniform init + strong
+  top-25% selection), fitness did NOT climb -> a ROBUST negative result for adaptive drift, not
+  an artifact of weak experimental design.
+
+### Files changed this session
+- `src/exp78b_inengine_evolution.py` — the in-engine evolution driver (new).
+- `exp78b_evolution_results.json` — per-generation gene means + fitness, both lines (new).
+- `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` — §7.4 bullet 7 (3c result).
+
+### Priority for NEXT session
+1. **(Open, the real frontier) The fitness gradient is the bottleneck.** 3c shows the constants
+   are evolvable but selection cannot tune them because full-engine comprehension fitness is
+   flat w.r.t. the constants (structure-dominated, zero income). The decisive next step is the
+   income bottleneck: give the substrate a REAL measured-income gradient so better behaviour ->
+   more income -> survival/reproduction, then re-run 3c. Without it, adaptive evolution of the
+   constants (and of anything else) cannot start in the full engine.
+2. (Refinement) Restore exact flag-ON == flag-OFF at default (read FLOAT genes at full precision).
+3. (Refinement) Per-org CAM cost charge (scale CYCLES_PER_CAM_READ by p_cam_slots*p_cam_key_bits).
+4. (Open) gentler PARAM-aware Gaussian mutation; Tier-2 constants; STDP_TARGET separate-process
+   A/B; RAPL on bare metal; income-unit (256=CELL_STATES) exchange-rate review.
+
+---
+
 ## Latest Session Update (2026-07-25 — session 5: Tier-1 increment 3b-ii IMPLEMENTED — per-organism cam_key_bits)
 
 **Increment 3b-ii (make cam_key_bits per-organism: CAM_KEY_BITS is now an argument to

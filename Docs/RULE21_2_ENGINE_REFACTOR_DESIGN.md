@@ -340,6 +340,19 @@ The verified Rule-21.1 baseline (Exp 78: real metabolism ≈1532 cycles/tick, ex
    (b) in-engine, two flag-ON runs differing ONLY in `g_org_params[0,1]` (8 vs 2) give different
    60-tick position/CAM trajectories and different CAM fill (22 vs 21 valid slots). The kernel
    genuinely reads `g_org_params[org,1]`.
+7. **Increment 3c (in-engine PARAM-gene evolution, flag ON) is built and run — evolvability
+   confirmed, adaptive drift NOT observed.** `src/exp78b_inengine_evolution.py` simulates each
+   organism lifetime in the real `world_tick_numba` (flag ON) over 40 generations, selecting on
+   the engine correct-prediction signal (5-replicate mean) with a neutral control. The PARAM
+   genes DRIFT substantially under mutation (selected-line stdp_div +74.5, sp_rewire +10.4,
+   cam_key_bits +2.1, cam_slots -7.6), confirming the per-org constants are evolvable. But mean
+   fitness stayed FLAT (~52-54) for BOTH lines (selected peaked at gen 0; selection advantage vs
+   neutral = -0.28): selection drove directional gene changes that did NOT improve fitness, i.e.
+   it acted on noise, not a real gradient. The full engine comprehension-fitness landscape is
+   flat/noisy w.r.t. the constants (behaviour is structure-dominated) — in contrast to exp77e
+   simplified model (clear adaptive drift). Rule 21.2 mechanism (evolvable per-org constants) is
+   achieved; adaptive tuning of them in the full engine is gated by the income bottleneck (no real
+   fitness gradient until the substrate earns measured income).
 
 ---
 
