@@ -4119,3 +4119,23 @@ fiction.
 `w_self/w_bidir/w_hidden_output=72/54/22`, and the 15 ancestor weights (in the empty
 `genesis_lab.py`). Each must be derived from hardware (H) or made evolvable (E).
 Deliverables: `rule21_classification.csv`, `measured_cost.json`, audit notebook.
+
+---
+
+<!-- CLUSY_REAL_COST_MODEL_2026-07-25 -->
+## Real Cost Model (2026-07-25) — Rule 21.1 satisfied
+
+`src/physical_cost_model.py` measures the real hardware work of each substrate
+primitive (wall-time/cycles/FLOPs/joules), replacing the invented `SPIKE_COST=1` /
+`income=256`. Measured on this host: `cam_read` = 108.5 us (91% of
+cost), `lif_update` = 374 ns. Full tick = 55 us =
+166,234 cycles. The associative-memory lookup (Python loop), not the neurons,
+dominates the cost.
+
+Invented vs real: OLD = 12.1 "points" vs income 256
+(dimensionless); NEW = 388 us/trial = 1,163,640
+cycles. The invented "256" is ~649x below the real per-tick cost.
+
+Grounded metabolic ceiling = ~2,374 hidden neurons at a real 1 ms/tick budget
+(falsifiable). Deliverables: `src/physical_cost_model.py`, `real_cost_accounting.json`,
+audit notebook (Part 4), `rule21_cost_breakdown.png`, `rule21_metabolic_ceiling.png`.

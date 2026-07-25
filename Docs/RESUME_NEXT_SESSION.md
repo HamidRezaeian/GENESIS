@@ -197,3 +197,45 @@ measured cycle/time/energy budget.
 **Remediation (Rule 21.6):** every G must be (a) derived from hardware with the
 derivation documented, (b) made an evolvable gene, or (c) deleted. Priority: replace
 the invented cost model with real measured hardware cost FIRST.
+
+---
+
+<!-- CLUSY_REAL_COST_MODEL_2026-07-25 -->
+## Cost Model Rebuilt on REAL Measurement (2026-07-25, Rule 21.1)
+
+The invented cost model (`SPIKE_COST=1`, `income=256`) is replaced by a model that
+MEASURES the real work the host performs: `src/physical_cost_model.py` (new reusable
+module). Each substrate primitive is timed on the host and expressed in wall-time /
+CPU cycles / FLOPs / joules.
+
+**Real measured cost per primitive (this host):**
+| primitive | wall-time | share |
+|---|---|---|
+| `cam_read` (associative lookup, Python loop) | 108.5 us | **91%** |
+| `stdp_update` | 4.2 us | 3.5% |
+| `sp_rewire` | 2.0 us | 1.7% |
+| synapse currents | ~1.2 us each | ~1% each |
+| `lif_update` | 374 ns | 0.3% |
+
+**Key finding:** the associative-memory lookup (a Python loop), NOT the neural
+dynamics, is 91% of the cost — in this implementation the memory, not the neurons,
+is the metabolic load.
+
+**Invented vs REAL accounting (same organism):**
+- OLD: cost = 12.1 spikes x 1 = 12.1 dimensionless "points"; income = 256 (NOT hardware work).
+- NEW: cost/trial = 388 us = 1,163,640 CPU cycles; cost/tick = 55 us = 166,234 cycles.
+- The invented "256" is ~649x smaller than the REAL cost of one tick — it describes no hardware work.
+
+**Grounded metabolic ceiling:** with a REAL budget of 1 ms host compute/tick, the host
+can afford ~2,374 hidden neurons — a falsifiable, physical limit (the old "ceiling =
+cost>256" moved whenever 1 or 256 changed). The 24-neuron substrate spends 55
+us/tick, well within budget.
+
+**Honesty flags:** wall-time/cycles are direct measurements; joules use
+`joules_per_flop ~ 10 pJ` (order-of-magnitude) — a true energy budget needs RAPL power
+monitoring (flagged gap). For Python-loop ops the FLOP count understates true work, so
+wall-time/cycles are the reliable measure.
+
+**Status of Rule 21 remediation:** cost model (21.1) is now grounded. The 27
+game-mechanic parameters (TAU, THRESH, STDP_LR, weights, ...) still need to be made
+evolvable genes (21.2) — that is the next step.

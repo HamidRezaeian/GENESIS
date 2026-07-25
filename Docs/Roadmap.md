@@ -1044,3 +1044,21 @@ The audit found 27 game-mechanic violations and 0 evolvable parameters. Ordered 
 4. **Restore `src/genesis_lab.py`** to audit the 15 ancestor weights (currently
    unauditable; they are class E by rule).
 5. Keep the ISA markers (O) and hardware-derived constants (H) — document them.
+
+---
+
+<!-- CLUSY_REAL_COST_MODEL_2026-07-25 -->
+## Cost Model — Done; Next: Evolvable Parameters (2026-07-25)
+
+- **Rule 21.1 (cost = real hardware work): DONE.** `src/physical_cost_model.py` measures
+  real wall-time/cycles per primitive; the invented SPIKE_COST/income are retired; the
+  metabolic ceiling is now a real, falsifiable host-budget limit (~2,374 neurons @ 1 ms/tick).
+- **Known cost finding:** the CAM associative lookup (Python loop) is 91% of cost — if
+  the substrate scales, vectorising/native-compiling CAM is the first real optimisation.
+- **Remaining Rule 21 gaps (priority order):**
+  1. **Energy grounding:** measure real joules via RAPL/power monitoring (closes the
+     `joules_per_flop` order-of-magnitude gap).
+  2. **Make the 27 tunables evolvable genes (21.2):** TAU, THRESH, STDP_LR, SP_*,
+     EPS_EXPLORE, FOOD_SCAN_RADIUS, synapse weights — encode in the genome.
+  3. **Derive the rest from hardware (H):** MAX_ORGANISMS (host RAM), CAM_SLOTS (memory).
+  4. **Restore `src/genesis_lab.py`** to run the full engine and audit the 15 ancestor weights.
