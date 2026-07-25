@@ -4,6 +4,82 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-25 — session 2: Rule 21.2 G-constant migration)
+
+**Read `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` for the full engineering design.**
+
+### Re-verified on THIS host (Rule 21.1 still holds)
+- Repo confirmed at `d1bbc72` (Rule 21.1 DONE). numba 0.61.2 installed.
+- `physical_cost_model.engine_primitive_cycles(32,8)` measured real native costs on this
+  host: synapse_read=4.14, neuron_update=3.70, stdp_update=7.90, move=0.97, byte_copy=1.07,
+  **cam_read=764.95 cycles/op** (cam_read still dominates; absolute numbers differ from the
+  original host's 857 — methodology portable, values host-dependent as documented).
+- Engine imports cleanly; all `CYCLES_PER_*` populated from measurement at import.
+- **Exp 78 smoke test (300 ticks): PASSED.** Ancestor spawns (512 B, 65 neurons, 93 synapses),
+  JIT warmup 10.2 s, **EXTINCTION @ tick 147** (this host; original was 163 — net burn slightly
+  faster here because synapse/neuron costs are a bit higher even though cam_read is cheaper),
+  CAM full (32) at death, ZERO income. Confirms the compositional-reading bottleneck and the
+  Rule 21.1 wiring end-to-end.
+
+### NEW: Exp 77e — 5 MORE engine constants proven evolvable (Rule 21.2)
+- `src/exp77e_engine_genes_probe.py` extends exp77d's 15 genes to **20**, adding 5 new
+  engine-constant genes that faithfully mirror the engine semantics:
+  - `cam_slots` -> CAM_SLOTS (L152); `cam_key_bits` -> CAM_KEY_BITS (L153)
+  - `stdp_div` -> STDP_DIV (L141, divides the STDP step)
+  - `tau_ref` -> TAU_REF (L456, refractory counter)
+  - `homeostatic_lambda` -> HOMEOSTATIC_LAMBDA (L146, `w -= lam*(w - w_dna)`)
+- **Result (`exp77e_engine_genes_results.json`, pop 24x15, best fitness 6/32):**
+  **13/20 genes drifted** off designer default. **All 5 new genes moved under selection:**
+  - cam_slots 32 -> **2.95** (norm drift -0.937, strong — selection shrinks an unused CAM)
+  - cam_key_bits 16 -> **7.77** (-0.588, strong — narrows toward the engine's 8-bit default)
+  - tau_ref 1 -> **3.23** (+0.371, longer refractory selected)
+  - stdp_div 1.0 -> **12.27** (+0.088; 12x smaller STDP steps — under the 0.10 *normalized*
+    threshold only because the range is 0.1-128 log; clearly moved)
+  - homeostatic_lambda 0.01 -> **0.0** (-0.050; selection turns anchoring OFF in this task)
+- Combined with exp77c (11) + exp77d (4), **20 substrate parameters are now shown to be
+  evolvable genes** rather than designer fiat. Fitness staying at 6/32 is expected (the
+  bottleneck is compositional reading, not a tunable constant).
+
+### NEW: Full engine refactor design documented
+- `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` — the engineering plan to thread per-organism
+  evolvable constants through `world_tick_numba`:
+  - **18 tunable G-constants classified:** 14 -> E (evolvable), RAM_SIZE -> H, DT -> O,
+    four CAM thresholds -> E-or-H. (CYCLES_PER_* and CELL_STATES already H.)
+  - **Why not per-org today:** the constants are numba module globals, baked into the
+    compiled kernel as compile-time constants -> shared by all organisms.
+  - **Design:** new `PARAM_MARKER` genome record `[PARAM_MARKER, gene_id, value(2B)]` +
+    per-organism param arrays (`g_org_cam_slots[org]`, `g_org_stdp_div[org]`, ...) +
+    decode-at-spawn + kernel global->`array[org]` replacement at ~30 use-sites.
+  - **Key fact:** CAM is ALREADY per-organism (`g_cam_keys[MAX_ORGANISMS, CAM_SLOTS,
+    CAM_KEY_BITS]`), so cam_slots/cam_key_bits migration is just per-org loop bounds —
+    exactly the max-size-backing-store design exp77e validated.
+  - **Backward compat:** default genome reproduces the verified Exp 78 path bit-for-bit;
+    gated behind `GENESIS_EVOLVABLE_CONSTANTS` (default OFF) until re-validated.
+
+### Priority for NEXT session
+1. **Tier 1 kernel threading** (the main effort): implement the PARAM_MARKER record +
+   decode + the 8 Tier-1 per-org arrays (cam_slots, cam_key_bits, stdp_div, tau_ref,
+   homeostatic_lambda, cam_match_thr, sp_growth_cost, sp_rewire_w) + replace the global
+   reads in `world_tick_numba` + re-run Exp 78 with the flag ON to confirm the verified
+   baseline (extinction @~163, ~1532 cycles/tick). See design doc sections 6-7.
+2. **Tier 2 probe coverage:** extend exp77e -> exp77f for the remaining constants
+   (sp_max_growth, sp_max_prune, cam_write_threshold, food_scan_radius, long_jump_stride,
+   delay_n, remap_period/states), then thread them through the kernel.
+3. **In-engine evolution validation:** run a multi-organism evolution in the FULL engine
+   with the flag ON and show PARAM genes drift across generations (the in-engine counterpart
+   of the exp77e probe result — the definitive Rule-21.2 evidence for the engine).
+4. **Tier 3 re-labelling:** document RAM_SIZE as H (power-of-2 / 16-bit addressing) and
+   DT as O (config timestep). Trivial.
+5. (Still open) STDP_TARGET separate-process A/B (after G-constants grounded); RAPL on
+   bare-metal Intel for real joules; income-unit (256=CELL_STATES) exchange-rate review.
+
+### Key files added this session
+- `src/exp77e_engine_genes_probe.py` — 20-gene evolvable probe (5 new engine constants).
+- `exp77e_engine_genes_results.json` — drift evidence (13/20 drifted, all 5 new moved).
+- `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` — full per-organism-constant refactor design.
+
+---
+
 ## Current State (2026-07-25)
 
 ### Code Status
