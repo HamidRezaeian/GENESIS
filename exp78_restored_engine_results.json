@@ -1,0 +1,35 @@
+{
+  "experiment": "Exp 78 \u2014 seeded ancestor on the book economy (restored genesis_lab.py)",
+  "date": "2026-07-25",
+  "commit": "5f1ffc0 (genesis_lab.py restored)",
+  "task": "Latin-square compositionality: answer=(c1+c2) mod 8, stream [c1,n,n,c2,n,n,GO]",
+  "ancestor": {
+    "genome_bytes": 512,
+    "neurons": 65,
+    "synapses": 93,
+    "spawn_energy": 250000
+  },
+  "substrate": {
+    "RAM_SIZE": 65536,
+    "MAX_ORGANISMS": 600,
+    "cam_slots_per_org": 32
+  },
+  "outcome": {
+    "extinction_tick_this_run": 1563,
+    "extinction_range_across_runs": "1563-2161 (stochastic activity)",
+    "births": 0,
+    "final_population": 0,
+    "income_ticks": 0,
+    "alive_ticks_measured": 1561,
+    "income_tick_fraction": 0.0,
+    "total_energy_income": 0.0,
+    "metabolic_burn_median_per_tick": 161.0,
+    "metabolic_burn_range_per_tick": [
+      28.0,
+      310.0
+    ],
+    "cam_entries_final": 32,
+    "cam_full": true
+  },
+  "finding": "The restored engine runs end-to-end (blocker resolved). The hand-designed ancestor earns EXACTLY ZERO energy on the book economy: 0/1561 alive ticks had a positive energy delta. It pays a real, continuous metabolic cost (median 161 energy/tick) and starves at ~tick 1563-2161. It fills all 32 CAM working-memory slots, so the reward-gated write/STDP learning signal fires \u2014 but that signal is DECOUPLED from metabolic income: the organism can memorise associations yet cannot convert reading into energy. This is a direct, measured confirmation of the Rule 21.1 metabolic-ceiling claim (real cost > real income)."
+}

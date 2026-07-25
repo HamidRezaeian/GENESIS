@@ -263,3 +263,83 @@ L271/L290 are architectural, not parametric — an honest finding).
   `FOOD_SCAN_RADIUS`, `MAX_ORGANISMS`, etc.) — the POC pattern generalises.
 - 21.1: measure real energy via RAPL (closes the `joules_per_flop` order-of-magnitude gap).
 - Restore `src/genesis_lab.py` for the full 15 ancestor weights.
+
+
+---
+
+<!-- CLUSY_SESSION_2026-07-25_verify_rule21 -->
+## Session 2026-07-25 (Clusy) — engine verified, Rule 21 advanced (priorities 1-5)
+
+The sandbox was cold (recycled), so the repo was re-cloned fresh from GitHub before any work.
+All findings below are from verified runs on commit `5f1ffc0` (genesis_lab.py restored).
+
+### Priority 1 — Exp 78 runs on the restored engine (BLOCKER RESOLVED, verified)
+- `src/genesis_lab.py` (1959 lines) imports headless and exposes **all 78 symbols** the drivers need
+  (0 missing); `world_tick_numba` JIT-compiles (~11 s, then cached) and ticks end-to-end.
+- **Exp 78 result** (`exp78_restored_engine_results.json`): the seeded ancestor (512 B -> 65 neurons /
+  93 synapses, E=250000) earns **EXACTLY ZERO income** on the book economy — **0/1561 alive ticks** had a
+  positive energy delta. It pays a real metabolic burn (median **161 energy/tick**, range 28-310) and starves
+  at **tick ~1563-2161** (stochastic). It fills **all 32 CAM slots**, so the reward-gated write/STDP learning
+  signal fires — but that signal is **decoupled from metabolic income**: it can memorise, not earn.
+- This is a direct, measured confirmation of the Rule 21.1 metabolic ceiling (real cost >> real income=0).
+- Figure: `exp78_energy_trajectory.png`.
+
+### Priority 2 — Rule 21 audit of create_intelligent_ancestor (the ancestor weights)
+- Parsed L615-852: 38 synapse genes, **11 unique weight bytes**, 2 neuron genes, 6 sensor genes.
+- Weight encoding `eff = (byte-128)/BITS_PER_BYTE` is hardware-derived (H). Class tally: **H=4, E=0, O=2, G=12**.
+- The **10 non-zero weights** {8,88,120,148,168,176,200,220,224,255} are hand-tuned **G** (comments document
+  intent; "retuned 2026-07-11"); only neutral zero (byte 128) is legit. Neuron tau/thresh (0,40,8) and sensor
+  offsets (LONG_JUMP_STRIDE) are also G. **E=0** — no evolvable genes. (`rule21_ancestor_audit.csv`,
+  `rule21_ancestor_weight_audit.png`.)
+
+### Priority 3 — engine G-constant audit + evolvable-gene generalisation (exp77d)
+- `neuromorphic_engine.py` audit (86 constants): O/config=25, **G=18**, O=18, H=10, ?=9, **G-21.1=6**.
+- **NEW 21.1 finding:** the six `CYCLES_PER_*` constants are invented dimensionless cost points (forbidden by
+  21.1) **still inside the engine's accounting** — `physical_cost_model.py` is a separate module NOT wired into
+  `world_tick`. Closing 21.1 means replacing these with measured per-primitive costs.
+- 18 tunable G migration targets: FOOD_SCAN_RADIUS, STDP_DIV, HOMEOSTATIC_LAMBDA, CAM_SLOTS/KEY_BITS,
+  CAM_MATCH/WRITE_THRESHOLD, SP_GROWTH_COST/MAX_GROWTH/MAX_PRUNE/REWIRE_WEIGHT, LONG_JUMP_STRIDE, REMAP_*,
+  DELAY_N, TAU_REF, DT, RAM_SIZE. (`rule21_engine_constant_audit.csv`.)
+- **exp77d** (`src/exp77d_engine_genes_probe.py`): extends the genome 11 -> **15 genes**, adding 4 engine
+  constants (input_gain, output_gain, cam_match_frac, v_reset). Evolving 24x15: **12/15 genes drifted** off
+  default; **3/4 new engine constants moved** (output_gain 0.5->1.57, cam_match_frac 0.9375->0.643 = fuzzier
+  matching, v_reset 0->-0.145). Fitness 6/32 (blockers are architectural, not parametric). Standalone probe;
+  engine untouched. (`exp77d_engine_genes_results.json`, `exp77d_engine_gene_drift.png`.)
+
+### Priority 4 — RAPL energy gap: assessed, monitor built, blocked by hypervisor
+- This host is a **KVM VM** (Intel Xeon): no `/sys/class/powercap`, no `perf`, and `/dev/cpu/0/msr` exists but
+  `MSR_RAPL_POWER_UNIT(0x606)` & `MSR_PKG_ENERGY_STATUS(0x611)` **read 0** (hypervisor stub). **Real joules
+  cannot be measured here**, and 21.1 forbids substituting the estimate.
+- Built `src/rapl_energy_monitor.py`: tries powercap -> perf -> MSR (validates the power-unit MSR so a zero-stub
+  is REJECTED), returns real joules via `measure_joules()`, else raises `RaplUnavailable` with the bare-metal
+  command. **Never estimates** (integrity check passes). Ready to close the gap on bare-metal Intel.
+
+### Priority 5 — architectural compositionality: reframed + testability finding
+- **Reframe:** both "unsolved blockers" already have engine mechanisms — **SCRATCH** (store-clock, default-ON;
+  needs the organism to evolve STORE-neuron firing) and **STDP_TARGET** (recruitment delta-rule, default-OFF;
+  unvalidated). The honest question is empirical: does enabling STDP_TARGET close recruitment?
+- **Testability finding:** compile-time-gated flags **cannot be A/B tested in a long-lived process** — numba
+  caches the kernel in-memory at process level; `importlib.reload` reuses the first-compiled kernel regardless
+  of the flag (verified: reload 0.02 s, no cache regeneration, identical output for flag 0/1). Each config needs
+  its own fresh OS process.
+- Delivered `src/exp_stdp_target_ab_driver.py` for a VALID separate-process A/B (run with GENESIS_STDP_TARGET=0
+  and =1 in two processes, compare JSON). Context: Exp 78 earns 0 income regardless, so recruitment alone likely
+  won't close the gap (multi-factor: store-clock + recruitment + reading->income mapping).
+
+### Next-session quick-start (updated)
+```bash
+cd /home/user/GENESIS_GIT   # clone fresh if sandbox recycled
+pip install "numba==0.61.2"  # for numpy 2.1.2
+# Valid STDP_TARGET A/B (two SEPARATE processes — see Priority 5 testability finding):
+GENESIS_STDP_TARGET=0 python3 src/exp_stdp_target_ab_driver.py
+GENESIS_STDP_TARGET=1 python3 src/exp_stdp_target_ab_driver.py
+# RAPL real-joule measurement requires bare-metal Intel (src/rapl_energy_monitor.py).
+```
+
+### Updated unfinished business
+1. **Wire physical_cost_model.py into world_tick** and delete the 6 `CYCLES_PER_*` invented cost points (21.1).
+2. **Run the STDP_TARGET separate-process A/B** (driver ready) to validate/close the L290 recruitment gap.
+3. **Migrate the 18 tunable G-constants** to evolvable genes (pattern proven for 15); the engine refactor that
+   threads per-organism genes through the numba kernel is the large remaining effort.
+4. **RAPL on bare metal** to replace joules_per_flop with measured energy.
+5. Test whether an organism can **evolve to drive the SCRATCH STORE neuron** (the L271 store-clock half).

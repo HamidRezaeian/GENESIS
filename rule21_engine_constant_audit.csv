@@ -1,0 +1,87 @@
+line,name,default,class,reason
+7,RAM_SIZE,65536,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+13,BITS_PER_BYTE,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+14,CELL_STATES,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+18,N_INPUT,25,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+21,N_OUTPUT,14,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+22,N_IO,,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+24,RAM_BIT0_INPUT,15,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+33,FOOD_SCAN_RADIUS,16,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+42,SEEK_TEXT,,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+50,PEER_PREDICT,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+64,RED_QUEEN,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+74,ACT_PROBE,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+92,NICHE_ECON,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+96,TRUE_CONTENTION,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+107,DEPLETE,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+118,NOLEARN,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+140,STDP_COSTONLY,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+141,STDP_DIV,1,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+146,HOMEOSTATIC_LAMBDA,,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+151,CAM,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+152,CAM_SLOTS,32,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+153,CAM_KEY_BITS,8,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+154,CAM_KEY_BYTES,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+155,CAM_MATCH_THRESHOLD,,G,derived from key width but uses a hand-chosen 0.75/0.25 factor (Tuning Test); make evolvable or derive
+158,CAM_WRITE_THRESHOLD,,G,derived from key width but uses a hand-chosen 0.75/0.25 factor (Tuning Test); make evolvable or derive
+162,CAM_WRITE_ON_REWARD,,?,needs manual review
+170,STRUCTURAL_PLASTICITY,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+172,SP_GROWTH_COST,10.0,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+176,SP_PRUNE_THRESHOLD,,H,documented as half the minimum quantized weight step (1.0) -> hardware-derived
+178,SP_MAX_GROWTH,3,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+180,SP_MAX_PRUNE,5,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+182,SP_REWIRE_WEIGHT,5.0,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+198,STDP3,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+219,STDP3C,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+246,REMAP,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+247,REMAP_PERIOD,4000,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+248,REMAP_STATES,2,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+249,REMAP_SB0,0,?,needs manual review
+250,REMAP_SB1,1,?,needs manual review
+265,DELAY,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+266,DELAY_N,1,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+267,DIGESTION,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+282,SCRATCH,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+283,SCRATCH_MARKER,199,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+287,DELAY_BUF,256,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+307,STDP_TARGET,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+323,STIGMERGY,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+334,STIG_PERSIST,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+348,STIG_LEASE,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+369,CANVAS,0,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+371,OUT_JMP_FWD,0,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+372,OUT_JMP_BCK,1,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+373,OUT_JMP_FWD_10,2,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+374,OUT_JMP_BCK_10,3,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+375,OUT_CONSUME,4,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+376,OUT_REPRODUCE,5,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+383,LONG_JUMP_STRIDE,10,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+385,GENE_MARKER,161,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+386,NEURON_MARKER,162,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+387,RECEPTOR_MARKER,195,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+390,MAX_RECEPTORS_PER_ORG,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+409,SENSOR_MARKER,196,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+412,N_AFFORDANCE,6,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+413,EVOSENSE,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+429,ACTUATOR_MARKER,197,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+430,EVOACT,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+447,MEMORY_MARKER,198,O,"opcode / marker / neuron-index ISA identifier (no tunable physics, 21.3)"
+448,WMEM,1,O/config,env-gated feature flag (ISA/config switch); not tunable physics
+453,DT,,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+456,TAU_REF,1,G,hand-set / env-defaulted tunable with no hardware derivation; candidate evolvable gene (21.2)
+457,W_MIN,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+458,W_MAX,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+461,CYCLES_PER_SPIKE_CHECK,,G⚠21.1,INVENTED dimensionless cost point — exactly what Rule 21.1 forbids; must be replaced by physical_cost_model.py real measurement
+462,CYCLES_PER_SYNAPSE_READ,,G⚠21.1,INVENTED dimensionless cost point — exactly what Rule 21.1 forbids; must be replaced by physical_cost_model.py real measurement
+465,CYCLES_PER_MOVE,,G⚠21.1,INVENTED dimensionless cost point — exactly what Rule 21.1 forbids; must be replaced by physical_cost_model.py real measurement
+478,CYCLES_PER_BYTE_COPY,,G⚠21.1,INVENTED dimensionless cost point — exactly what Rule 21.1 forbids; must be replaced by physical_cost_model.py real measurement
+486,CYCLES_PER_NEURON_UPDATE,,G⚠21.1,INVENTED dimensionless cost point — exactly what Rule 21.1 forbids; must be replaced by physical_cost_model.py real measurement
+487,CYCLES_PER_STDP_UPDATE,,G⚠21.1,INVENTED dimensionless cost point — exactly what Rule 21.1 forbids; must be replaced by physical_cost_model.py real measurement
+495,ATP_MAX,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+505,STDP_SCALE,,H,derived from 8-bit byte architecture (BITS_PER_BYTE / CELL_STATES / signed-byte range)
+513,MAX_ORGANISMS,600,?,needs manual review
+515,BIRTH_BUF_SZ,,?,needs manual review
+523,UNIVERSE_MAX_NEURONS,,?,needs manual review
+524,UNIVERSE_MAX_SYNAPSES,,?,needs manual review
+525,UNIVERSE_MAX_DNA,,?,needs manual review
+528,MAX_DNA_PER_ORG,,?,needs manual review

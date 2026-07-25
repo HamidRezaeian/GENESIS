@@ -1,0 +1,175 @@
+{
+  "experiment": "Exp 77d \u2014 engine-constant genes probe (Rule 21.2 generalisation)",
+  "date": "2026-07-25",
+  "pop_size": 24,
+  "generations": 15,
+  "n_genes": 15,
+  "new_engine_genes": [
+    "input_gain",
+    "output_gain",
+    "cam_match_frac",
+    "v_reset"
+  ],
+  "best_fitness": 6.0,
+  "train_pairs": 32,
+  "genes_drifted": 12,
+  "new_genes_drifted": [
+    "output_gain",
+    "cam_match_frac",
+    "v_reset"
+  ],
+  "drift_table": [
+    {
+      "gene": "tau",
+      "default": 275.0,
+      "evolved_best": 173.03674,
+      "range": "[50.0, 500.0]",
+      "norm_drift": -0.227,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "thresh",
+      "default": 2.55,
+      "evolved_best": 2.21639,
+      "range": "[0.1, 5.0]",
+      "norm_drift": -0.068,
+      "drifted": false,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "stdp_lr",
+      "default": 0.001,
+      "evolved_best": 0.0,
+      "range": "[1e-06, 1.0]",
+      "norm_drift": -0.001,
+      "drifted": false,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "sp_prune_threshold",
+      "default": 5.0,
+      "evolved_best": 7.23849,
+      "range": "[0.05, 10.0]",
+      "norm_drift": 0.225,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "sp_rewire_weight",
+      "default": 25.0,
+      "evolved_best": 42.92097,
+      "range": "[0.5, 50.0]",
+      "norm_drift": 0.362,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "sp_growth_cost",
+      "default": 25.0,
+      "evolved_best": 17.50053,
+      "range": "[0.0, 50.0]",
+      "norm_drift": -0.15,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "eps_explore",
+      "default": 0.5,
+      "evolved_best": 0.8257,
+      "range": "[0.0, 1.0]",
+      "norm_drift": 0.326,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "w_ih_scale",
+      "default": 1.55,
+      "evolved_best": 3.0,
+      "range": "[0.1, 3.0]",
+      "norm_drift": 0.5,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "w_hh_scale",
+      "default": 1.01,
+      "evolved_best": 1.32813,
+      "range": "[0.02, 2.0]",
+      "norm_drift": 0.161,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "w_ho_scale",
+      "default": 1.55,
+      "evolved_best": 2.46135,
+      "range": "[0.1, 3.0]",
+      "norm_drift": 0.314,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "w_io_scale",
+      "default": 1.01,
+      "evolved_best": 1.78047,
+      "range": "[0.02, 2.0]",
+      "norm_drift": 0.389,
+      "drifted": true,
+      "new_engine_gene": false
+    },
+    {
+      "gene": "input_gain",
+      "default": 0.5,
+      "evolved_best": 0.35277,
+      "range": "[0.05, 2.0]",
+      "norm_drift": -0.076,
+      "drifted": false,
+      "new_engine_gene": true
+    },
+    {
+      "gene": "output_gain",
+      "default": 0.5,
+      "evolved_best": 1.57259,
+      "range": "[0.05, 2.0]",
+      "norm_drift": 0.55,
+      "drifted": true,
+      "new_engine_gene": true
+    },
+    {
+      "gene": "cam_match_frac",
+      "default": 0.9375,
+      "evolved_best": 0.64326,
+      "range": "[0.4, 1.0]",
+      "norm_drift": -0.49,
+      "drifted": true,
+      "new_engine_gene": true
+    },
+    {
+      "gene": "v_reset",
+      "default": 0.0,
+      "evolved_best": -0.14521,
+      "range": "[-1.0, 0.4]",
+      "norm_drift": -0.104,
+      "drifted": true,
+      "new_engine_gene": true
+    }
+  ],
+  "best_fitness_trajectory": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+  ]
+}
