@@ -195,6 +195,13 @@ from neuromorphic_engine import (
     DELAY, DELAY_N,
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
+
+# Rule 21.2 (Tier-1 evolvable constants): per-organism param genes decoded from PARAM_MARKER records.
+from neuromorphic_engine import (
+    PARAM_MARKER, PARAM_MAGIC, CAM_MATCH_THRESHOLD, CAM_WRITE_THRESHOLD, HOMEOSTATIC_LAMBDA,
+    TAU_REF, SP_GROWTH_COST, SP_REWIRE_WEIGHT,
+)
+
 from books_of_genesis import (
     inject_custom_book, inject_curriculum_file, inject_passage, regrow_passage,
     inject_contiguous_library, get_library_books, contiguous_library_start,
@@ -258,6 +265,88 @@ g_cam_keys  = np.zeros((MAX_ORGANISMS, CAM_SLOTS, CAM_KEY_BITS), dtype=np.float3
 g_cam_vals  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
 g_cam_valid = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
 g_cam_tick  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
+
+
+# ── Rule 21.2 (Tier-1): per-organism EVOLVABLE constants ──────────────────────────────────────────
+# Each tunable engine constant below is encoded in the genome as a PARAM_MARKER record and decoded at
+# spawn into a per-organism row of g_org_params. In step 3b the kernel reads g_org_params[org] (behind
+# GENESIS_EVOLVABLE_CONSTANTS) instead of the shared module global, so natural selection — not the
+# designer — sets each value (Rule 21.2 class E). Defaults equal the engine's CURRENT module globals,
+# so a default genome reproduces the verified Exp-78 behaviour exactly (and flag-OFF is untouched).
+EVOLVABLE_CONSTANTS = (os.environ.get("GENESIS_EVOLVABLE_CONSTANTS", "0") == "1")
+
+# gene_id -> (name, lo, hi, scale). Integer-valued genes are rounded+clipped at kernel use (step 3b).
+PARAM_GENES = [
+    ("cam_slots",           1.0,  float(CAM_SLOTS),    "linear"),  # 0  engine CAM_SLOTS (L152)
+    ("cam_key_bits",        2.0,  float(CAM_KEY_BITS), "linear"),  # 1  engine CAM_KEY_BITS (L153)
+    ("cam_match_threshold", 1.0,  float(CAM_KEY_BITS), "linear"),  # 2  engine CAM_MATCH_THRESHOLD (L155)
+    ("cam_write_threshold", 1.0,  float(CAM_KEY_BITS), "linear"),  # 3  engine CAM_WRITE_THRESHOLD (L158)
+    ("stdp_div",            0.1,  128.0,               "log"),     # 4  engine STDP_DIV (L141)
+    ("homeostatic_lambda",  0.0,  0.2,                 "linear"),  # 5  engine HOMEOSTATIC_LAMBDA (L146)
+    ("tau_ref",             0.0,  8.0,                 "linear"),  # 6  engine TAU_REF (L456)
+    ("sp_growth_cost",      0.0,  100.0,               "linear"),  # 7  engine SP_GROWTH_COST (L172)
+    ("sp_rewire_weight",    0.5,  50.0,                "linear"),  # 8  engine SP_REWIRE_WEIGHT (L182)
+]
+N_PARAM_GENES = len(PARAM_GENES)
+
+# Designer defaults = the engine's CURRENT resolved module globals (so flag-ON == today's behaviour).
+PARAM_DEFAULTS = np.array([
+    float(CAM_SLOTS), float(CAM_KEY_BITS), float(CAM_MATCH_THRESHOLD), float(CAM_WRITE_THRESHOLD),
+    float(STDP_DIV), float(HOMEOSTATIC_LAMBDA), float(TAU_REF), float(SP_GROWTH_COST), float(SP_REWIRE_WEIGHT),
+], dtype=np.float32)
+
+# Per-organism evolvable-constant matrix (rows = organisms, cols = PARAM_GENES).
+g_org_params = np.zeros((MAX_ORGANISMS, N_PARAM_GENES), dtype=np.float32)
+g_org_params[:] = PARAM_DEFAULTS  # default until a genome's PARAM records override at spawn
+
+_PARAM_VAL_MAX = 16383  # 14-bit value (2 payload bytes x 7 bits each; keeps every payload byte < 128 -> self-skipping)
+
+def _param_frac_to_value(gid, frac):
+    """Map a [0,1] fraction to the gene's float range (linear or log)."""
+    name, lo, hi, scale = PARAM_GENES[gid]
+    frac = 0.0 if frac < 0.0 else (1.0 if frac > 1.0 else frac)
+    if scale == "log" and lo > 0:
+        return float(lo * ((hi / lo) ** frac))
+    return float(lo + (hi - lo) * frac)
+
+def _param_value_to_frac(gid, value):
+    """Map a float value back to a [0,1] fraction in the gene's range (inverse of the above)."""
+    name, lo, hi, scale = PARAM_GENES[gid]
+    if scale == "log" and lo > 0 and value > 0 and hi > lo:
+        frac = (float(np.log(value)) - float(np.log(lo))) / (float(np.log(hi)) - float(np.log(lo)))
+    elif hi > lo:
+        frac = (value - lo) / (hi - lo)
+    else:
+        frac = 0.0
+    return 0.0 if frac < 0.0 else (1.0 if frac > 1.0 else frac)
+
+def encode_param_records():
+    """Build the ancestor's PARAM_MARKER records, one per gene, encoding the designer default.
+    Record layout: [PARAM_MARKER, PARAM_MAGIC, gene_id, val_lo, val_hi] (5 bytes); the [200,201] sentinel
+    never occurs elsewhere in the genome (collision-proof) and payload bytes are < 128 (self-skipping)."""
+    recs = []
+    for gid in range(N_PARAM_GENES):
+        frac = _param_value_to_frac(gid, float(PARAM_DEFAULTS[gid]))
+        raw = int(round(frac * _PARAM_VAL_MAX))
+        recs.extend([PARAM_MARKER, PARAM_MAGIC, gid, raw & 0x7F, (raw >> 7) & 0x7F])
+    return recs
+
+def decode_params(dna, org_id):
+    """Separate pass over the genome: read PARAM_MARKER records into g_org_params[org_id]. Starts from
+    PARAM_DEFAULTS so a genome lacking a given record keeps the designer default. Pure Python (spawn is
+    infrequent, not in the hot tick loop); does NOT touch the numba kernel or the existing genome walkers."""
+    g_org_params[org_id] = PARAM_DEFAULTS
+    n = len(dna)
+    i = 0
+    while i < n - 4:
+        if int(dna[i]) == PARAM_MARKER and int(dna[i + 1]) == PARAM_MAGIC:
+            gid = int(dna[i + 2])
+            if 0 <= gid < N_PARAM_GENES:
+                raw = (int(dna[i + 4]) << 7) | (int(dna[i + 3]) & 0x7F)
+                g_org_params[org_id, gid] = np.float32(_param_frac_to_value(gid, raw / float(_PARAM_VAL_MAX)))
+            i += 5
+        else:
+            i += 1
 g_global_conn_elig = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_global_conn_elig_t = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 
@@ -848,6 +937,11 @@ def create_intelligent_ancestor(dna=None):
         w = random.randint(0, 255)
         genes.extend([GENE_MARKER, src, dst, w])
 
+    # Rule 21.2 (Tier-1): append evolvable-constant PARAM records (one per gene, designer defaults).
+    # Self-skipping payload (< 128) so every existing genome walker passes them harmlessly; the
+    # neuron/synapse layout is unchanged, so the verified Exp-78 path is bit-for-bit preserved.
+    genes.extend(encode_param_records())
+
     return np.array(genes, dtype=np.uint8)
 
 def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
@@ -904,6 +998,11 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
         g_global_sense_type, g_global_sense_meta, g_global_act_drive,
         g_conn_w_dna,
     )
+
+    # Rule 21.2 (Tier-1): decode per-organism evolvable constants from the genome's PARAM records.
+    # Behaviour-neutral until the kernel reads g_org_params (behind GENESIS_EVOLVABLE_CONSTANTS, step 3b);
+    # here we just populate the per-organism matrix so the data path is live and unit-testable.
+    decode_params(dna, org_id)
 
     # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
     # fire) = the substeps a spike needs to traverse THIS organism's wired graph. Stored per-organism

@@ -4,6 +4,72 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-25 — session 3: Tier-1 increment 3a IMPLEMENTED)
+
+**Increment 3a (evolvable-constant DATA PATH, flag OFF) is built, unit-tested, and
+regression-verified. Commit on `main`. Read `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` §6.1/§7.4.**
+
+### What was built (the genome -> per-organism constant data path)
+- **Two new ISA marker bytes:** `PARAM_MARKER = 200`, `PARAM_MAGIC = 201` (neuromorphic_engine.py).
+  A PARAM record is 5 bytes: `[200, 201, gene_id, val_lo(7-bit), val_hi(7-bit)]`.
+- **9 Tier-1 evolvable constants** now live as PARAM genes decoded into a per-organism matrix
+  `g_org_params[MAX_ORGANISMS, 9]` (genesis_lab.py): cam_slots, cam_key_bits, cam_match_threshold,
+  cam_write_threshold, stdp_div, homeostatic_lambda, tau_ref, sp_growth_cost, sp_rewire_weight.
+  Defaults = the engine's CURRENT resolved module globals (so flag-ON == today's behaviour).
+- **create_intelligent_ancestor** appends one PARAM record per gene (encoding the defaults);
+  **spawn_organism** calls `decode_params(dna, org_id)` to fill `g_org_params[org]`.
+- **`GENESIS_EVOLVABLE_CONSTANTS` flag** added (default OFF). The kernel does NOT read
+  `g_org_params` yet — that is increment 3b. So this increment is behaviour-neutral by construction.
+
+### Key design property: self-skipping + collision-proof (NO walker edits needed)
+- Payload bytes are kept `< 128` (7 bits each), so all four existing genome walkers
+  (parse_receptors, count_genes, decode_genome, and the Lamarckian walk inside world_tick_numba)
+  advance past a PARAM record via their `else: i += 1` fallback WITHOUT desync — no payload byte
+  can be mistaken for a marker (markers are 161-199). **Zero existing walker modified.**
+- The `[200, 201]` sentinel is collision-proof: the ancestor has an accidental lone `200` byte at
+  offset 487 (a weight value, followed by 161=GENE_MARKER) which decode_params correctly IGNORES
+  (not followed by 201). The pair `[200,201]` never occurs elsewhere; byte 201 never appears.
+- This matters because the Lamarckian walk is NOT exercised by Exp 78 (zero births) — the
+  self-skipping property makes the data path safe there anyway.
+
+### Verification
+- **Unit tests PASSED:** ancestor = 557 bytes with exactly 9 valid `[200,201]` records; the lone-200
+  @487 ignored; `count_genes` identical with/without the PARAM tail (s=93, h=26 -> layout-neutral);
+  spawn decodes `g_org_params[0]` to `[32, 8, 6, 2, 1.0, 0.01, 1, 10, 5]` (the engine constants,
+  14-bit round-trip); 300 mutated genomes all decode finite & in-bounds.
+- **Regression PASSED (definitive back-to-back A/B, same cost era):** ORIGINAL (512 B) vs EDITED
+  (557 B) both give `n_count=65, s_count=93, lif_steps=5`; `decode_genome` produces byte-identical
+  synapse `src/dst/weight` (full vs PARAM-stripped); extinction tick **167 vs 168** (1-tick diff,
+  inside the run-to-run cost-measurement noise band — post-edit runs span 165-172). The earlier
+  "lif_steps 6 / extinction 147" was separate-process cost noise, NOT a code effect (proven: the
+  A/B in the same era is identical).
+
+### Files changed this session
+- `src/neuromorphic_engine.py` — `PARAM_MARKER = 200`, `PARAM_MAGIC = 201` (+ comments). Kernel logic UNCHANGED.
+- `src/genesis_lab.py` — import of the 7 engine constants + markers; `PARAM_GENES`/`PARAM_DEFAULTS`/
+  `g_org_params`; `encode_param_records()`/`decode_params()`; ancestor PARAM records; spawn decode call;
+  `EVOLVABLE_CONSTANTS` flag.
+- `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` — §6.1 updated to the implemented 5-byte sentinel design;
+  §7.4 records the regression proof.
+
+### Priority for NEXT session (increment 3b: wire the kernel)
+1. **Thread `g_org_params[org]` into `world_tick_numba`** behind `GENESIS_EVOLVABLE_CONSTANTS`:
+   add the per-org param arrays as kernel args; at each Tier-1 use-site replace the module global
+   with `g_org_params[org, gid]` (int-rounded+clipped for cam_slots/cam_key_bits/cam_match/cam_write/
+   tau_ref). Use-sites: STDP_DIV (L1445/1475/1842), HOMEOSTATIC_LAMBDA (L1453/1479/1785/1847/1849),
+   TAU_REF (L1380), SP_GROWTH_COST/SP_REWIRE_WEIGHT (L1173/1174), CAM_SLOTS/CAM_MATCH_THRESHOLD
+   (cam_read/cam_write at L575-642, L1198, L1972, L2055). Pass `EVOLVABLE_CONSTANTS` as a kernel arg
+   so flag-OFF dead-code-eliminates the per-org reads (compiled kernel identical to today).
+2. **Re-run Exp 78 with `GENESIS_EVOLVABLE_CONSTANTS=1` + default genome** -> must reproduce the
+   verified baseline (extinction ~167 on this host, ~1532 cycles/tick) since defaults == globals.
+3. **Then 3c:** an in-engine evolution run showing the PARAM genes drift across generations under
+   selection (the definitive Rule-21.2 evidence for the full engine, vs the probe).
+4. (Open) PARAM-aware Gaussian mutation (gentler than byte substitution); Tier-2 constants
+   (food_scan_radius, long_jump_stride, delay_n, remap_period/states, sp_max_growth/prune);
+   STDP_TARGET separate-process A/B; RAPL on bare metal; income-unit (256=CELL_STATES) review.
+
+---
+
 ## Latest Session Update (2026-07-25 — session 2: Rule 21.2 G-constant migration)
 
 **Read `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` for the full engineering design.**

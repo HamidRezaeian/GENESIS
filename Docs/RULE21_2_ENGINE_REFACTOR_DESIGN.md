@@ -143,25 +143,37 @@ pattern: **per-organism arrays passed into the kernel, indexed by `org`**.
 ## 6. Refactor design
 
 ### 6.1 Genome: a PARAM record type
-Add one new marker, `PARAM_MARKER`, to the ISA (Rule 21.3 — documented opcode, carries
-no physics itself). A PARAM record encodes one evolvable constant:
+Add two new marker bytes, `PARAM_MARKER = 200` and `PARAM_MAGIC = 201`, to the ISA
+(Rule 21.3 — documented opcodes, carry no physics themselves). A PARAM record encodes one
+evolvable constant as a 5-byte record:
 
 ```
-[PARAM_MARKER, gene_id (1 B), value (2 B, little-endian uint16)]   # 4 bytes
+[PARAM_MARKER=200, PARAM_MAGIC=201, gene_id (1 B), val_lo (7-bit), val_hi (7-bit)]   # 5 bytes
 ```
 
-`value` maps to a float in the gene's bounds by a fixed decode table
-`PARAM_BOUNDS[gene_id] = (lo, hi, scale)` (scale ∈ {linear, log}), exactly the bounds
-the probes used (`GENOME_BOUNDS` in exp77e). A 16-bit value gives 65536 steps across the
-range — far finer than selection can resolve, so quantisation is not a concern. The
-ancestor (`create_intelligent_ancestor`) emits one PARAM record per evolvable constant,
-**initialised to the current designer default** (so the default genome reproduces today's
-behaviour exactly — see §7).
+The 2-byte sentinel `[200, 201]` makes the record **collision-proof**: that pair never
+occurs elsewhere in the genome (verified for the ancestor; an accidental lone `200` byte
+— e.g. a synapse-weight value at ancestor offset 487 — is ignored because it is not
+followed by `201`). The two value bytes carry 7 bits each (`& 0x7F`), so every payload byte
+is `< 128`. This makes the record **self-skipping**: all four existing genome walkers
+(`parse_receptors`, `count_genes`, `decode_genome`, and the Lamarckian-consolidation walk
+inside `world_tick_numba`) advance past it via their `else: i += 1` fallback without desync,
+because no payload byte can be mistaken for a marker (markers are 161–199). **No existing
+walker needs to be modified** — this is the key safety property, and it holds even for the
+Lamarckian walk that Exp 78 never exercises (Exp 78 has zero births). A separate
+`decode_params()` pass (pure Python, run once at spawn, not in the hot tick loop) reads the
+records into the per-organism param arrays (§6.2).
 
-`decode_genome` is extended to scan for `PARAM_MARKER` records and write each decoded
-value into the per-organism param arrays (§6.2). `mutate_dna` perturbs the 2-byte value
-of a randomly chosen PARAM record (small Gaussian step in the encoded space, clipped to
-bounds) — this is how the constants **evolve**.
+`val_lo | (val_hi << 7)` is a 14-bit integer (0–16383) mapped to a float in the gene's bounds
+by a fixed decode table `PARAM_GENES[gene_id] = (name, lo, hi, scale)` (scale ∈ {linear, log}),
+mirroring the bounds the probes used (`GENOME_BOUNDS` in exp77e). 16384 steps across the range
+is far finer than selection can resolve, so quantisation is not a concern. The ancestor
+(`create_intelligent_ancestor`) emits one PARAM record per evolvable constant, **initialised
+to the engine's current resolved module globals** (so the default genome reproduces today's
+behaviour exactly — see §7). `mutate_dna` perturbs the PARAM value bytes via the engine's
+existing byte-level point substitution (the same per-byte fidelity model every other gene
+uses), so the constants **evolve** under selection; a gentler PARAM-aware Gaussian step is an
+optional follow-up. (Implemented and regression-verified in increment 3a — see §7.4.)
 
 ### 6.2 Per-organism parameter arrays
 Add one array per evolvable constant, sized `MAX_ORGANISMS`:
@@ -255,6 +267,14 @@ The verified Rule-21.1 baseline (Exp 78: real metabolism ≈1532 cycles/tick, ex
    `GENESIS_EVOLVABLE_CONSTANTS=1` + default genome and confirm extinction @ 163 ± a few
    ticks and ≈1532 cycles/tick median. (Exact tick may shift by 1–2 from integer
    rounding of the decoded defaults; that is acceptable and documented.)
+   **Increment 3a (data path, flag OFF) is regression-verified:** a back-to-back A/B in the
+   same cost-measurement era gave ORIGINAL (512 B genome) vs EDITED (557 B with PARAM tail)
+   both `n_count=65, s_count=93, lif_steps=5`, with `decode_genome` producing byte-identical
+   synapse `src/dst/weight` (full genome vs PARAM-stripped genome), and extinction tick
+   167 vs 168 — a 1-tick difference inside the run-to-run cost-measurement noise band
+   (post-edit runs span 165–172). The PARAM tail is provably layout-neutral and
+   behaviour-neutral; the kernel is logically unchanged (only marker constants were added,
+   plus a spawn-time decode into a per-org array the kernel does not read yet).
 
 ---
 

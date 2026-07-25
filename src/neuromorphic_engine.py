@@ -385,6 +385,14 @@ LONG_JUMP_STRIDE = int(os.environ.get("GENESIS_LONG_JUMP_STRIDE", "10"))
 GENE_MARKER  = 161
 NEURON_MARKER = 162
 RECEPTOR_MARKER = 195
+PARAM_MARKER = 200   # Rule 21.2: evolvable-constant gene record, sentinel byte 1 (paired with PARAM_MAGIC).
+PARAM_MAGIC  = 201   # Rule 21.2: sentinel byte 2. Record = [PARAM_MARKER, PARAM_MAGIC, gene_id, val_lo, val_hi]
+# (5 bytes). The [200,201] pair never occurs elsewhere in the genome, so decode_params is collision-proof;
+# payload bytes (gene_id<128, val_lo/val_hi<128) keep every existing walker self-skipping via `else: i+=1`.
+# Payload bytes are kept < 128 (val_lo/val_hi = 7 bits each, gene_id < 128) so EVERY existing genome
+# walker self-skips the record via its `else: i += 1` fallback — no walker desync, no neuron/synapse
+# layout change, byte-identical Exp-78 behaviour. A separate decode_params() pass (genesis_lab) reads
+# these records into per-organism constants at spawn; the kernel reads them behind GENESIS_EVOLVABLE_CONSTANTS.
 # Derived: BITS_PER_BYTE (8) × 2 = 16 receptor types per organism.
 # Each receptor is a 8-bit register encoding one weight/voltage scaling factor.
 MAX_RECEPTORS_PER_ORG = int(BITS_PER_BYTE * 2)
