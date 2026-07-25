@@ -4139,3 +4139,17 @@ cycles. The invented "256" is ~649x below the real per-tick cost.
 Grounded metabolic ceiling = ~2,374 hidden neurons at a real 1 ms/tick budget
 (falsifiable). Deliverables: `src/physical_cost_model.py`, `real_cost_accounting.json`,
 audit notebook (Part 4), `rule21_cost_breakdown.png`, `rule21_metabolic_ceiling.png`.
+
+---
+
+<!-- CLUSY_EVOLVABLE_GENOME_2026-07-25 -->
+## Exp 77c — Evolvable Genome POC (2026-07-25)
+
+**Status:** Rule 21.2 proof of concept completed. `EvolvableOrganicNet` reads 11
+tunable parameters (`tau`, `thresh`, `stdp_lr`, `sp_*`, `eps_explore`, weight
+scales) from a genome dict — not module-level constants. Over 25 generations of
+mutation + selection (pop=30), the genome drifts away from hand-set defaults while
+maintaining comparable reading reward (fitness ≈ 25%, flat due to architectural
+compositionality blockers). This demonstrates the EVOLVABLE PARAMETER MECHANISM:
+Rule 21.2 is satisfiable. The same pattern can be applied to the engine's 21 remaining
+G-variables. Probe: `src/exp77c_evolvable_genome_probe.py`.

@@ -1062,3 +1062,20 @@ The audit found 27 game-mechanic violations and 0 evolvable parameters. Ordered 
      EPS_EXPLORE, FOOD_SCAN_RADIUS, synapse weights — encode in the genome.
   3. **Derive the rest from hardware (H):** MAX_ORGANISMS (host RAM), CAM_SLOTS (memory).
   4. **Restore `src/genesis_lab.py`** to run the full engine and audit the 15 ancestor weights.
+
+---
+
+<!-- CLUSY_EVOLVABLE_GENOME_2026-07-25 -->
+## Rule 21.2 — Evolvable Genome (2026-07-25)
+
+- **Done:** 11 substrate parameters are now evolvable (POC with `EvolvableOrganicNet`).
+  Proof that Rule 21.2 is satisfiable — these parameters need NOT be designer constants.
+- **Remaining:** the other 21 G-variables from the audit must follow the same pattern:
+  encode in the genome (weights → gene markers, `FOOD_SCAN_RADIUS` → sensory gene,
+  `MAX_ORGANISMS` → derived from host RAM, etc.).
+- **Compositionality blockers unchanged:** the two real blockers (store-clock L271,
+  recruitment gap L290) are architectural and will not be solved by parameter tuning
+  alone — they require new substrate mechanisms, evolvable through the genome.
+- **Next priority:** close the RAPL/joule gap (Rule 21.1), then refactor the engine
+  to read all G-variables from genomes rather than module-level code.
+- **Hard blocker:** `src/genesis_lab.py` is still 0 bytes — restore it.

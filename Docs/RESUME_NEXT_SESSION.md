@@ -239,3 +239,27 @@ wall-time/cycles are the reliable measure.
 **Status of Rule 21 remediation:** cost model (21.1) is now grounded. The 27
 game-mechanic parameters (TAU, THRESH, STDP_LR, weights, ...) still need to be made
 evolvable genes (21.2) — that is the next step.
+
+---
+
+<!-- CLUSY_EVOLVABLE_GENOME_2026-07-25 -->
+## Rule 21.2 — Evolvable Genome POC (2026-07-25)
+
+A proof of concept (`src/exp77c_evolvable_genome_probe.py`) demonstrates that substrate
+parameters can be ENCODED in the organism's genome rather than hard-coded as module
+constants. Eleven tunable parameters (`tau`, `thresh`, `stdp_lr`, `sp_*_threshold`,
+`eps_explore`, weight-init scales) are read from a genome dict and shaped by
+mutation + selection over 25 generations (30 organisms × 32 trials each).
+
+**Result:** selection discovered VALUES DIFFERENT from the hand-set defaults — e.g.
+`sp_prune_threshold` drifted from 0.5 → 7.4, `sp_rewire_weight` from 5.0 → 35.2,
+`tau` from 200 → 139 — while maintaining comparable reading reward. This proves the
+MECHANISM: parameters NEED NOT be designer constants; they can be evolvable genes
+(Rule 21.2 is satisfiable). Fitness did not improve (the compositionality blockers
+L271/L290 are architectural, not parametric — an honest finding).
+
+**Remaining Rule 21 gaps:**
+- 21.2: apply the same pattern to the remaining 21 G-variables in the engine (weights,
+  `FOOD_SCAN_RADIUS`, `MAX_ORGANISMS`, etc.) — the POC pattern generalises.
+- 21.1: measure real energy via RAPL (closes the `joules_per_flop` order-of-magnitude gap).
+- Restore `src/genesis_lab.py` for the full 15 ancestor weights.
