@@ -22,6 +22,14 @@ power measurement, NOT a tuned game parameter (Rule 21.2-H: it should be measure
 The cost of running the substrate IS the work the host performs to run it. If the
 substrate were compiled/native the numbers would change — but they would still be
 MEASURED, never invented. That is the whole point of Rule 21.1.
+
+NATIVE ENGINE COSTS (calibrate_native / engine_primitive_cycles): the substrate runs
+JIT-compiled (numba), so the honest Rule-21.1 metabolic cost is the NATIVE per-operation
+cost, not the Python-interpreter cost (which over-estimates ~100-1000x). calibrate_native
+times each engine primitive in a tight @njit loop and divides by the iteration count —
+capturing the per-operation cost INCLUDING the loop bookkeeping the engine itself pays per
+operation. These native cycle counts are what neuromorphic_engine.py wires in as its
+CYCLES_PER_* constants (replacing the old invented `1 cycle/op` literals).
 """
 import time
 import numpy as np
@@ -39,6 +47,7 @@ class PhysicalCostModel:
         self.clock_hz = clock_ghz * 1e9
         self.joules_per_flop = joules_per_flop
         self.costs = {}          # op_name -> dict(seconds, cycles, flops, joules)
+        self.engine_cycles = {}  # op_name -> REAL native cycles/op (calibrate_native)
         self.calibrated = False
         if calibrate:
             self.calibrate()
@@ -130,6 +139,140 @@ class PhysicalCostModel:
                           cam_slots=cam_slots, cam_key_bits=cam_key_bits)
         return self
 
+    # ------------------------------------------- calibrate NATIVE (engine ops)
+    def calibrate_native(self, cam_slots=32, cam_key_bits=8, n_rep=500_000, n_neurons=64):
+        """Measure the REAL NATIVE (numba) cost of each ENGINE primitive on THIS host.
+
+        The substrate executes JIT-compiled, so Rule 21.1 metabolic accounting must use
+        the native per-operation cost (the Python timings in calibrate() are an upper
+        bound, ~100-1000x high). Each primitive below mirrors the EXACT micro-operation
+        the engine charges in world_tick_numba, timed in a tight @njit loop and divided
+        by the iteration count (which includes the per-iteration loop bookkeeping the
+        engine itself pays). Documented derivation per primitive:
+
+          synapse_read   : Phase-1 forward-prop sample  global_v[dst] += w   (read w + add)
+          neuron_update  : Phase-2 LIF update + threshold + reset, measured OVER AN ARRAY
+                           of n_neurons independent neurons (matches the engine's per-neuron
+                           loop and its instruction-level parallelism)
+          stdp_update    : one per-connection STDP3C eligibility update
+                           (elig*exp(-dt/tau) - a*exp(-dt/tau)/scale + 2 clamps + write)
+          move           : one saccade (read pos + compute next + validate bounds)
+          byte_copy      : one genome-byte copy (reproduction)
+          cam_read       : one CAM Hamming search over cam_slots x cam_key_bits comparisons
+
+        Result stored in self.engine_cycles[op] = REAL cycles per operation on THIS host.
+        """
+        from numba import njit
+
+        @njit
+        def _syn(gv, w, n):
+            s = 0.0
+            for i in range(n):
+                gv[i & 63] += w
+                s += gv[i & 63]
+            return s
+
+        @njit
+        def _neuron_arr(v, inp, decay, gain, th, n_reps):
+            nn = v.shape[0]; s = 0.0
+            for _ in range(n_reps):
+                for i in range(nn):
+                    v[i] = v[i] * decay + inp[i] * gain
+                    if v[i] >= th:
+                        v[i] = 0.0
+                    s += v[i]
+            return s
+
+        @njit
+        def _stdp(n):
+            e = np.float32(0.5); tau = np.float32(20.0); dt = np.float32(3.0)
+            a = np.float32(0.1); sc = np.float32(32.0); s = 0.0
+            for _ in range(n):
+                e = e * np.exp(-dt / tau) - a * np.exp(-dt / tau) / sc
+                if e > 127.0:
+                    e = np.float32(127.0)
+                elif e < -128.0:
+                    e = np.float32(-128.0)
+                s += e
+            return s
+
+        @njit
+        def _move(n):
+            pos = 100; lo = 0; hi = 65535; s = 0
+            for _ in range(n):
+                np_ = pos + 1
+                if np_ < lo:
+                    np_ = lo
+                elif np_ > hi:
+                    np_ = hi
+                pos = np_; s += pos
+            return s
+
+        @njit
+        def _byte(n):
+            src = np.zeros(64, dtype=np.uint8); dst = np.zeros(64, dtype=np.uint8); s = 0
+            for i in range(n):
+                dst[i & 63] = src[i & 63]
+                s += dst[i & 63]
+            return s
+
+        @njit
+        def _cam(n, keys, q):
+            cs = keys.shape[0]; kb = keys.shape[1]; s = 0
+            for _ in range(n):
+                best = 0
+                for sl in range(cs):
+                    sim = 0
+                    for b in range(kb):
+                        if (keys[sl, b] > 0.5) == (q[b] > 0.5):
+                            sim += 1
+                    if sim > best:
+                        best = sim
+                s += best
+            return s
+
+        rng = np.random.default_rng(0)
+        gv = np.zeros(64)
+        v = np.zeros(n_neurons); inp = np.full(n_neurons, np.float32(0.4))
+        decay, gain, th = np.float32(np.exp(-1 / 200.0)), np.float32(0.5), np.float32(1.0)
+        keys = (rng.random((cam_slots, cam_key_bits)) > 0.5)
+        q = (rng.random(cam_key_bits) > 0.5)
+
+        # compile + warmup (first call JIT-compiles each kernel)
+        _syn(gv, np.float32(0.7), 1000)
+        _neuron_arr(v, inp, decay, gain, th, 2)
+        _stdp(1000); _move(1000); _byte(1000); _cam(50, keys, q)
+
+        def cycles_per(fn_seconds, count):
+            return fn_seconds * self.clock_hz / count
+
+        t0 = time.perf_counter_ns(); _syn(gv, np.float32(0.7), n_rep)
+        t_syn = (time.perf_counter_ns() - t0) / 1e9
+        n_neu_reps = max(1, n_rep // n_neurons)
+        t0 = time.perf_counter_ns(); _neuron_arr(v, inp, decay, gain, th, n_neu_reps)
+        t_neu = (time.perf_counter_ns() - t0) / 1e9
+        t0 = time.perf_counter_ns(); _stdp(n_rep)
+        t_stdp = (time.perf_counter_ns() - t0) / 1e9
+        t0 = time.perf_counter_ns(); _move(n_rep)
+        t_move = (time.perf_counter_ns() - t0) / 1e9
+        t0 = time.perf_counter_ns(); _byte(n_rep)
+        t_byte = (time.perf_counter_ns() - t0) / 1e9
+        n_cam = max(1, n_rep // 100)
+        t0 = time.perf_counter_ns(); _cam(n_cam, keys, q)
+        t_cam = (time.perf_counter_ns() - t0) / 1e9
+
+        self.engine_cycles = {
+            "synapse_read":  float(cycles_per(t_syn, n_rep)),
+            "neuron_update": float(cycles_per(t_neu, n_neu_reps * n_neurons)),
+            "stdp_update":   float(cycles_per(t_stdp, n_rep)),
+            "move":          float(cycles_per(t_move, n_rep)),
+            "byte_copy":     float(cycles_per(t_byte, n_rep)),
+            "cam_read":      float(cycles_per(t_cam, n_cam)),
+        }
+        self._native_arch = dict(cam_slots=cam_slots, cam_key_bits=cam_key_bits,
+                                 n_neurons=n_neurons)
+        return self.engine_cycles
+
     # ------------------------------------------------------------------ account
     def tick_cost(self, n_hid=None, n_spikes_hid=None, cam_reads=1, cam_writes=0,
                   stdp_updates=1, sp_rewires=0):
@@ -186,6 +329,24 @@ class PhysicalCostModel:
         return rows  # (op, ns, cycles, flops, nJ)
 
 
+# ---- process-level cache so the engine measures native costs once per config ----
+_ENGINE_CACHE = {}
+
+def engine_primitive_cycles(cam_slots=32, cam_key_bits=8, clock_ghz=DEFAULT_CLOCK_GHZ):
+    """REAL native cycles/op for each engine primitive (Rule 21.1), cached per config.
+
+    Called by neuromorphic_engine at module load to wire its CYCLES_PER_* constants from
+    MEASURED hardware work instead of invented `1 cycle/op` literals. Cached per
+    (cam_slots, cam_key_bits, clock) so repeated imports/reloads measure once.
+    """
+    key = (int(cam_slots), int(cam_key_bits), float(clock_ghz))
+    if key not in _ENGINE_CACHE:
+        m = PhysicalCostModel(clock_ghz=clock_ghz, calibrate=False)
+        m.calibrate_native(cam_slots=int(cam_slots), cam_key_bits=int(cam_key_bits))
+        _ENGINE_CACHE[key] = dict(m.engine_cycles)
+    return _ENGINE_CACHE[key]
+
+
 if __name__ == "__main__":
     m = PhysicalCostModel()
     print(f"{'operation':28s} {'ns':>9s} {'cycles':>10s} {'flops':>8s} {'nJ':>8s}")
@@ -196,3 +357,7 @@ if __name__ == "__main__":
           f"{tc['joules']*1e9:.2f} nJ")
     print(f"metabolic ceiling @ 1ms/tick budget: "
           f"{m.metabolic_ceiling(1e-3)} hidden neurons")
+    print("\n--- NATIVE engine primitive costs (numba, this host) ---")
+    ec = engine_primitive_cycles(cam_slots=32, cam_key_bits=8)
+    for op, cyc in ec.items():
+        print(f"  {op:16s} {cyc:10.3f} cycles/op")

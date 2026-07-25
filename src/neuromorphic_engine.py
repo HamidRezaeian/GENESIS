@@ -457,12 +457,21 @@ TAU_REF      = 1
 W_MIN   = np.float32(-128.0)
 W_MAX   = np.float32(127.0)
 
+# --- Rule 21.1: metabolic costs are REAL MEASURED native hardware work, not invented points ---
+# Wired from physical_cost_model.engine_primitive_cycles(), which times each engine primitive in
+# numba (the substrate runs JIT-compiled) on THIS host and returns REAL cycles/op. This replaces
+# the old invented `1 cycle per canonical operation` literals -- Rule 21.1 forbids invented cost
+# points (e.g. SPIKE_COST=1). Every CYCLES_PER_* below is now hardware-derived (H) by direct
+# measurement; see physical_cost_model.calibrate_native() for the documented derivation of each.
+from physical_cost_model import engine_primitive_cycles as _engine_primitive_cycles
+_MEASURED_COST = _engine_primitive_cycles(cam_slots=CAM_SLOTS, cam_key_bits=CAM_KEY_BITS)
+
 # THERMODYNAMICS = RAW EXECUTION CYCLES
-CYCLES_PER_SPIKE_CHECK = np.float32(1.0)
-CYCLES_PER_SYNAPSE_READ = np.float32(1.0)
+# CYCLES_PER_SPIKE_CHECK removed (Rule 21.6c): unused dead code + invented cost point.
+CYCLES_PER_SYNAPSE_READ = np.float32(_MEASURED_COST["synapse_read"])   # Rule 21.1: measured native cycles per forward-prop sample
 # Physical derivation: minimum 3 operations to move — (1) read old position, (2) compute new,
-# (3) validate bounds. Each operation costs 1 cycle (Rule 17: honest accounting).
-CYCLES_PER_MOVE = np.float32(3.0)
+# (3) validate bounds. Rule 21.1: cost = REAL measured native cycles for those ops (physical_cost_model), not an invented '1 cycle each'.
+CYCLES_PER_MOVE = np.float32(_MEASURED_COST["move"])   # Rule 21.1: measured native cycles per saccade (read+compute+validate)
 # MATTER<->ENERGY EXCHANGE, DERIVED FROM THE BYTE (no reward constants — 2026-07-11 "remove all
 # game constants"). A RAM cell is an 8-bit register: it holds one of 2**8 microstates. FULLY
 # resolving a cell — eating a food byte, or SOLVING all 8 bits of a symbol, either way collapsing
@@ -475,16 +484,17 @@ CYCLES_PER_MOVE = np.float32(3.0)
 # lives where text is dense, while a grazer reclaims one isolated food cell at a time.
 # BITS_PER_BYTE and CELL_STATES now defined at top of file (before MAX_RECEPTORS).
 # (Kept here for import compatibility — references will be resolved at module load.)   # 2 ** 8 — microstates in one 8-bit RAM cell = its energy content
-CYCLES_PER_BYTE_COPY = np.float32(1.0)
-# Honest raw-cycle accounting (Rule 15/17): one canonical executed operation costs 1 cycle,
-# the same unit already used for a synapse read (1) and a move (3). A neuron membrane update
-# is real work done for every neuron every step, so it costs 1 cycle/neuron — replacing the
+CYCLES_PER_BYTE_COPY = np.float32(_MEASURED_COST["byte_copy"])   # Rule 21.1: measured native cycles per genome-byte copy
+# Honest raw-cycle accounting (Rule 15/17): each operation costs its REAL measured native cycle count (Rule 21.1),
+# measured per-primitive by physical_cost_model on this host. A neuron membrane update
+# is real work done for every neuron every step, so it costs the measured neuron-update cycles per neuron — replacing the
 # old arbitrary 0.1 discount that made neuron footprint effectively non-selective. An STDP
 # weight update (read + exp + scale + clamp + write) is likewise real work, charged only when
 # it actually fires (activity-gated), so a large but sparsely-firing brain stays cheap — the
 # 20W massive-sparse-parallelism paradigm (Rule 11), not a penalty on merely HAVING synapses.
-CYCLES_PER_NEURON_UPDATE = np.float32(1.0)
-CYCLES_PER_STDP_UPDATE   = np.float32(1.0)
+CYCLES_PER_NEURON_UPDATE = np.float32(_MEASURED_COST["neuron_update"])   # Rule 21.1: measured native cycles per LIF update + spike
+CYCLES_PER_STDP_UPDATE   = np.float32(_MEASURED_COST["stdp_update"])   # Rule 21.1: measured native cycles per STDP3C eligibility update
+CYCLES_PER_CAM_READ      = np.float32(_MEASURED_COST["cam_read"])   # Rule 21.1: measured native cycles per CAM Hamming read (CAM_SLOTS x CAM_KEY_BITS)
 # Per-organism energy ceiling (Rule 17 HARDWARE-DERIVED, 2026-07-18). Was an arbitrary 1e6 "game"
 # number. The honest physical ceiling on the cycles a single organism can hold is the TOTAL
 # matter-energy the universe contains: every one of RAM_SIZE cells, each an 8-bit register worth
@@ -1191,7 +1201,7 @@ def world_tick_numba(
                 sense_buf[1] = np.float32(cam_val) / np.float32(255.0)
             else:
                 sense_buf[1] = np.float32(0.0)
-            total_atp += np.float32(CAM_SLOTS)
+            total_atp += CYCLES_PER_CAM_READ   # Rule 21.1: real measured CAM-read cost (was invented += CAM_SLOTS)
 
         # EVOLVABLE SENSORS (Exp 37): transduce each DNA-declared sensor neuron ONCE per tick from its
         # physical affordance (tick-invariant, exactly like sense() above). A sensor neuron lives in the
@@ -1269,7 +1279,7 @@ def world_tick_numba(
 
         for step in range(n_steps):
             if random.random() < viscosity[org]:
-                total_atp += np.float32(n_count)
+                total_atp += np.float32(n_count) * CYCLES_PER_NEURON_UPDATE   # Rule 21.1: viscous step maintains all neurons at measured cost
                 continue
 
             # Zero current spike buffer

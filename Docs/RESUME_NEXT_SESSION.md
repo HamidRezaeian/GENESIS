@@ -343,3 +343,59 @@ GENESIS_STDP_TARGET=1 python3 src/exp_stdp_target_ab_driver.py
    threads per-organism genes through the numba kernel is the large remaining effort.
 4. **RAPL on bare metal** to replace joules_per_flop with measured energy.
 5. Test whether an organism can **evolve to drive the SCRATCH STORE neuron** (the L271 store-clock half).
+
+
+---
+
+<!-- CLUSY_SESSION_2026-07-25_rule21_1_wiring -->
+## Session 2026-07-25 (Clusy) — Rule 21.1 DONE: metabolic cost is now real measured hardware work
+
+The user re-emphasised the core principle: **real AGI, not a game/simulation with magic numbers.**
+The single most on-principle next step was closing the Rule 21.1 gap in the engine's energy accounting.
+
+### What was wrong
+The engine charged metabolism via six INVENTED `CYCLES_PER_*` "cost points" (`1 cycle per operation`,
+`3 cycles per move`) — exactly the game mechanics Rule 21.1 forbids ("Invented cost points ... are
+FORBIDDEN"). `physical_cost_model.py` existed (Rule 21.1 cost model) but was NOT wired into `world_tick`.
+
+### What was done
+1. **Extended `src/physical_cost_model.py`** with `calibrate_native()` — times each engine primitive in
+   **numba (native code)** on this host (the substrate runs JIT-compiled, so native timing is the honest
+   cost; Python-interpreter timing over-estimates ~100-1000x). Added `engine_primitive_cycles()` (cached
+   per config) returning real cycles/op: synapse_read=2.75, neuron_update=2.84 (array-based, matches the
+   Phase-2 ILP), stdp_update=7.76, move=1.05, byte_copy=1.04, cam_read=857.5 (32x8 Hamming).
+2. **Wired `src/neuromorphic_engine.py`**: the six `CYCLES_PER_*` now read from `engine_primitive_cycles()`
+   (each documented inline as hardware-derived H via measurement). **Deleted `CYCLES_PER_SPIKE_CHECK`**
+   (unused dead code, Rule 21.6c). Grounded the two bare-count charges: `+= CAM_SLOTS` -> `+= CYCLES_PER_CAM_READ`,
+   viscous `+= n_count` -> `+= n_count * CYCLES_PER_NEURON_UPDATE`. Updated stale "1 cycle/op" comments.
+   (Backup: `src/neuromorphic_engine.py.bak_rule21`, deleted after commit.)
+3. The **income side was already H-grounded** (`CELL_STATES = 2^BITS_PER_BYTE = 256` cycles/resolved cell =
+   the cell's information capacity), so it was left unchanged.
+
+### The honest result (Exp 78, real costs) — `exp78_rule21_real_cost_results.json`
+- Real metabolism = **1532 cycles/tick** median (range 1341-1883), **~10x** the invented 161 — dominated by
+  the **857-cycle CAM Hamming read** (consistent with the earlier "cam_read = 91% of cost" finding).
+- Seeded ancestor still earns **ZERO income** (0/162 ticks; fills 32 CAM slots but cannot read correctly),
+  so it now starves at **tick 163** (vs ~1563 with invented costs). Break-even needs **~6 cells/tick**.
+- **Conclusion:** the metabolic-ceiling finding now rests on REAL measurement, not invented points. The
+  bottleneck is the substrate's compositional reading ABILITY (L271/L290 architectural blockers), NOT a
+  tunable cost constant. No magic numbers remain in the cost accounting.
+
+### Updated unfinished business (priority order)
+1. **Run the STDP_TARGET separate-process A/B** (`src/exp_stdp_target_ab_driver.py`, ready) to validate the
+   L290 recruitment delta-rule — the most informative open experiment on the reading-ability bottleneck.
+2. **Migrate the 18 tunable G-constants** to evolvable genes (pattern proven for 15 in exp77d); the engine
+   refactor threading per-organism genes through the numba kernel is the large remaining effort.
+3. **RAPL on bare metal** (`src/rapl_energy_monitor.py`, ready) to replace `joules_per_flop` with measured joules.
+4. Test whether an organism can **evolve to drive the SCRATCH STORE neuron** (L271 store-clock half).
+5. (Open question surfaced by real costs) The income magnitude `256 = CELL_STATES` is H-derived but its
+   *exchange rate* against real execution cycles deserves scrutiny — is information-capacity the right
+   income unit, or should income also be a measured work quantity? Worth a Rule-21 review.
+
+### Quick-start (this work)
+```bash
+cd /home/user/GENESIS_GIT   # clone fresh if sandbox recycled
+pip install "numba==0.61.2"  # for numpy 2.1.2
+python3 -c "import sys; sys.path.insert(0,'src'); import physical_cost_model as p; print(p.engine_primitive_cycles(32,8))"
+# -> real native cycles/op on THIS host (measured at engine import, cached)
+```

@@ -1,0 +1,36 @@
+{
+  "experiment": "Exp 78 with Rule 21.1 REAL measured metabolic costs",
+  "date": "2026-07-25",
+  "change": "Replaced the 6 invented CYCLES_PER_* 'cost points' (1 cycle/op, 3 cycles/move) with REAL native (numba) cycles/op measured on this host by physical_cost_model.calibrate_native(); deleted unused CYCLES_PER_SPIKE_CHECK; grounded the +=CAM_SLOTS and +=n_count charges.",
+  "wired_constants_cycles_per_op": {
+    "CYCLES_PER_SYNAPSE_READ": 2.749,
+    "CYCLES_PER_NEURON_UPDATE": 2.839,
+    "CYCLES_PER_STDP_UPDATE": 7.758,
+    "CYCLES_PER_MOVE": 1.045,
+    "CYCLES_PER_BYTE_COPY": 1.041,
+    "CYCLES_PER_CAM_READ": 857.482,
+    "CYCLES_PER_SPIKE_CHECK": "DELETED (unused dead code, Rule 21.6c)"
+  },
+  "outcome": {
+    "extinction_tick": 163,
+    "per_tick_burn_median_cycles": 1531.6,
+    "per_tick_burn_range_cycles": [
+      1341.4,
+      1883.2
+    ],
+    "income_ticks": 0,
+    "alive_ticks": 162,
+    "total_energy_income": 0.0,
+    "cam_entries_at_death": 32,
+    "births": 0,
+    "break_even_cells_per_tick": 6.0
+  },
+  "comparison": {
+    "invented_cost_burn_median": "~161 cycles/tick",
+    "invented_cost_survival": "~1563 ticks",
+    "real_cost_burn_median": "1532 cycles/tick",
+    "real_cost_survival": "163 ticks",
+    "ratio": "real metabolism is ~9.5x the invented figure (CAM read = 857 cycles dominates)"
+  },
+  "finding": "With Rule-21.1-grounded costs, the substrate's REAL metabolism is ~1532 measured native cycles/tick (dominated by the 857-cycle CAM Hamming read), ~10x the old invented figure. Income is 256 cycles per fully-resolved cell (CELL_STATES=2^8, hardware-derived). The seeded ancestor still earns ZERO income (it cannot read correctly), so it starves at tick 163. Break-even requires resolving ~6 cells/tick. This confirms the metabolic-ceiling finding with real measurement: the current architecture cannot sustain itself on honest metabolism \u2014 the bottleneck is compositional reading ability, not a tunable cost constant."
+}
