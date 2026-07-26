@@ -1,4 +1,40 @@
-## Latest Session Update (2026-07-26 — session 10: STDP_TARGET=1 Recruitment Lever)
+## Latest Session Update (2026-07-26 — session 10b: ROOT CAUSE of the max_run=7 cap)
+
+**ANSWERED the #1 open question from session 10 ("why does max_run cap at EXACTLY 7?"). Root cause:
+a dynamical OUTPUT-STABILITY limit of the spiking substrate — NOT scroll structure, NOT reward
+granularity, NOT teaching, NOT survival. The lever to break the ceiling is output-register stability.**
+
+- **Reward (grounded, engine L1820-2050):** organism reads ram[pos], predicts ram[pos+1] via 8 vocal bits;
+  per bit correct_bits (out=1&tgt=1) vs wrong_bits (out=1&tgt=0), silence free; net=correct-wrong; net>0
+  extends g_org_run, net<=0 resets it. Footprint pays (net/8)*898/byte; lump-sum pays K*898 on the K-th
+  consecutive net>0 (K=8). Reading gate: byte in [32,126] & !=0x55.
+- **Scroll is NOT the cap:** 00_Graded.txt = 231 bytes repeated; identical-letter runs {10,5,3,2,1}x...;
+  optimal strategy = echo (next=current); **structural echo ceiling = 9** (10-letter blocks). 7 < 9, so the
+  cap is not structural.
+- **Diagnostic (decisive):** ran the seeded ancestor ALONE, teaching ON (STDP_TARGET=1), DEPLETE=0, energy
+  bank 1e9 (survival removed), 6000 ticks, recording g_org_run[0] + every read_log event. Max run = 7.
+  Streak histogram {7:476, 3:167, 5:72, 4:60, 2:37, 1:35, 6:32} -> **54% of 879 streaks peak EXACTLY at 7,
+  none reach 8-9**. Of 854 streak-ends, **47% are MID-BLOCK (target byte UNCHANGED)** vs 53% at boundaries
+  (e.g. tick 6 streak=7 target stayed 'A'; tick 15 'B'; ... tick 76 'H') -> runs break on a CONSTANT target.
+  Misses: 1954 total, 0 guess==target, but **99% same letter family** (high-nibble 0x40) -> a learned
+  NEAR-ECHO whose low-bit precision drifts; on ~the 8th tick of a constant block the output flips to net<=0.
+- **Root cause:** the substrate learns an approximate echo (net>0 for ~7 ticks) but its spiking/membrane
+  dynamics + homeostatic anchoring cannot HOLD a precise output register for an 8th tick. "~7" is the
+  substrate's characteristic output-stability timescale -> why it recurs cleanly across seeds & both arms.
+- **Reframe:** K=8 lump sum is reachable in principle (ceiling 9); the substrate just drifts before tick 8.
+  Notebook: "Session 10 — STDP_TARGET recruitment lever A/B". Write-up:
+  `tests/clusy/qwen/notes/session10b_max_run_7_root_cause.md`. Figure: `max_run_7_root_cause.png`.
+
+**#1 LOAD-BEARING NEXT STEP (session 11): test an OUTPUT-STABILITY lever.** Candidates: (1) a vocal
+LATCH / held-output that keeps the last emission stable across ticks; (2) longer membrane tau / stronger
+homeostatic anchoring to slow output drift; (3) use org_delay_buf / org_scratch to hold the emitted byte
+across the work-unit. Re-run the session-10 A/B with the lever ON: if streaks reach 8, the K=8 lump sum
+fires and the ceiling can finally be tested under finite fuel (DEPLETE=1). The reward machinery (sessions
+9-10) is correct and ready; the missing piece is a stable output register.
+
+---
+
+## Prior Session Update (2026-07-26 — session 10: STDP_TARGET=1 Recruitment Lever)
 
 **TESTED the untested recruitment lever (income-design §15 / Exp-87 H3): does `STDP_TARGET=1`
 (the per-byte delta-rule teaching signal) break the metabolic ceiling? Verdict: honest null on the
