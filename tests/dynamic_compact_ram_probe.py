@@ -28,6 +28,10 @@ Exit: 0 iff every check passes.
 """
 import sys, os, time, traceback
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+# Session 14: pin a small population so this probe stays fast and machine-independent.
+# (The engine otherwise auto-sizes MAX_ORGANISMS to the hardware; see auto_capacity.py.
+#  setdefault respects an explicit GENESIS_MAX_ORGANISMS if the user sets one.)
+os.environ.setdefault("GENESIS_MAX_ORGANISMS", "600")
 import numpy as np
 
 results = []

@@ -528,7 +528,21 @@ STDP_SCALE = BITS_PER_BYTE
 
 # User-configurable: maximum number of organisms that can coexist.
 # Default 600 = ~1% of RAM_SIZE for 64K RAM. Affects memory allocation.
-MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
+# User-configurable: maximum number of organisms that can coexist.
+# Session 14: HARDWARE-AWARE AUTO CAP (auto_capacity.py). Precedence:
+#   1. GENESIS_MAX_ORGANISMS env var (explicit override) wins.
+#   2. otherwise sized to the machine available memory:
+#      budget = available*0.60 - 1GB reserve, divided by the MEASURED per-organism
+#      pool cost (~143 KB, hardware-derived), clamped to [100, 1_000_000].
+#      A stronger machine -> a larger population, automatically; no fixed magic cap.
+#   3. if memory cannot be detected -> fixed fallback 600 (~1% of 64K RAM).
+# Affects memory allocation: BIRTH_BUF_SZ and the UNIVERSE_MAX_* pools below all
+# derive from this value.
+try:
+    from auto_capacity import resolve_max_organisms as _resolve_max_orgs
+    MAX_ORGANISMS = _resolve_max_orgs(fallback=600)
+except Exception:
+    MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
 # Derived: MAX_ORGANISMS // 4 = maximum concurrent births per tick (25% of population).
 BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 

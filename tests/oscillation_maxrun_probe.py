@@ -48,6 +48,10 @@ Exit: 0 iff the grounded root-cause signature is reproduced.
 """
 import sys, os, json, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+# Session 14: pin a small population so this probe stays fast and machine-independent.
+# (The engine otherwise auto-sizes MAX_ORGANISMS to the hardware; see auto_capacity.py.
+#  setdefault respects an explicit GENESIS_MAX_ORGANISMS if the user sets one.)
+os.environ.setdefault("GENESIS_MAX_ORGANISMS", "600")
 import numpy as np
 
 # Import with DEFAULT env (the condition the symptom was observed under).

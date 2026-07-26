@@ -4,6 +4,50 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-26 — session 14b: Hardware-Aware Population Cap)
+
+**The population ceiling is now sized to the machine, not a magic number.** Design:
+`Docs/HARDWARE_AWARE_CAPACITY_DESIGN.md`. Module: `src/auto_capacity.py`. Probe:
+`tests/auto_capacity_probe.py` (7/7 PASS).
+
+### What changed
+- The user did not want a fixed `MAX_ORGANISMS=600`; they wanted the cap derived from
+  the hardware at run time (bigger machine -> bigger population, automatically).
+- A cap still EXISTS (memory is finite; the neuron/synapse/genome pools are
+  pre-reserved per POTENTIAL organism), but it now comes from measured RAM, not a
+  hand-picked constant.
+- **Memory model (measured):** each potential organism reserves 122,081 B (~119.2 KB)
+  across the pools (formula cross-check matches exactly); +20% margin -> ~143 KB.
+- **`src/auto_capacity.py` (new):** `budget = available*0.60 - 1GB reserve`;
+  `cap = clamp(budget // 143KB, 100, 1_000_000)`. Detects memory via psutil (fallback
+  /proc/meminfo), honours cgroup limits. Precedence: env override > auto > fallback 600.
+- **Engine integration:** `neuromorphic_engine.py` MAX_ORGANISMS now resolved via
+  `auto_capacity.resolve_max_organisms(fallback=600)` (try/except -> old behaviour if
+  the module is unavailable). BIRTH_BUF_SZ and UNIVERSE_MAX_* derive from it automatically.
+
+### Proof
+- `tests/auto_capacity_probe.py` 7/7: AUTO (this 8GB host -> ~23,600 orgs, ~2.8GB
+  reserved), OVERRIDE wins, UNSET->auto, SCALING (8GB->25,435; 128GB->516,913),
+  CLAMPS (min 100 / max 1M / undetectable->600).
+- End-to-end: cap=2000 -> genesis_lab neuron pool exactly 1,678,000; synapse 6,712,000.
+- Pre-existing probes pinned to cap=600 (setdefault) for speed/portability; still pass
+  (dynamic_compact_ram 9/9 + oscillation signature reproduced).
+
+### Files changed
+- `src/auto_capacity.py` (new), `src/neuromorphic_engine.py` (MAX_ORGANISMS),
+  `tests/auto_capacity_probe.py` (new), `tests/dynamic_compact_ram_probe.py` +
+  `tests/oscillation_maxrun_probe.py` (cap pin), `Docs/HARDWARE_AWARE_CAPACITY_DESIGN.md` (new).
+
+### Quick-start (this work)
+```bash
+cd /home/user/repos/GENESIS
+python3 src/auto_capacity.py            # self-report: BYTES_PER_ORGANISM + auto cap
+python3 tests/auto_capacity_probe.py    # -> 7/7 PASS, exit 0
+GENESIS_MAX_ORGANISMS=5000 python3 ...  # explicit override still wins
+```
+
+---
+
 ## Latest Session Update (2026-07-26 — session 14: Dynamic Compact RAM + Oscillation Root-Cause)
 
 **Two deliverables, both proven by execution (not assertion).** Full design:
