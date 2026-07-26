@@ -154,6 +154,10 @@ from neuromorphic_engine import (g_org_params, EVOLVABLE_CONSTANTS, STDP_TARGET,
     INCOME_FOOTPRINT, INCOME_LUMP_SUM, LUMPSUM_K, FOOTPRINT_QUANTUM, CLEAR_THRESHOLD)
 assert EVOLVABLE_CONSTANTS, "Exp 87 requires GENESIS_EVOLVABLE_CONSTANTS=1"
 PARAM_NAMES = [pg[0] for pg in PARAM_GENES]
+# Session 10 fix: MAX_ORGANISMS is now SUBSTRATE-DERIVED (Session 9: <=1/4 RAM / 12.1 MB-per-org).
+# On an 8 GiB host that is 164, which is below the Exp-87-era literal POP_SIZE=200 -> spawning founder
+# #164 indexed out of bounds. Clamp the founding population to the derived capacity (Rule-17 disclosed).
+POP_SIZE = min(POP_SIZE, MAX_ORGANISMS)
 
 print("=" * 78)
 print("Exp 87 — Metabolic-Ceiling Evolution")

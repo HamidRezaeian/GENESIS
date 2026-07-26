@@ -1,4 +1,44 @@
-## Latest Session Update (2026-07-26 — session 9: Lump-Sum Multi-Byte Reward)
+## Latest Session Update (2026-07-26 — session 10: STDP_TARGET=1 Recruitment Lever)
+
+**TESTED the untested recruitment lever (income-design §15 / Exp-87 H3): does `STDP_TARGET=1`
+(the per-byte delta-rule teaching signal) break the metabolic ceiling? Verdict: honest null on the
+load-bearing question, with a genuine but high-variance partial positive. Ceiling NOT broken.**
+
+- **Method:** ran the committed `session9_lumpsum_reward/run_evolution.py` as TWO fresh OS processes
+  (STDP_TARGET is compile-time + numba caches the kernel per process — separate processes are the ONLY
+  way; see `exp_stdp_target_ab_driver.py`). Matched flags `DEPLETE=0` (fuel cap lifted), `INCOME_FOOTPRINT=1`,
+  `INCOME_LUMP_SUM=1`, `LUMPSUM_K=8`; STDP_TARGET ∈ {0,1}; N_SEEDS=3, N_TICKS=8000. Notebook:
+  "Session 10 — STDP_TARGET recruitment lever A/B". Full write-up:
+  `tests/clusy/qwen/notes/session10_stdp_target_verdict.md`. Figure: `stdp_target_ab_trajectory.png`.
+- **Result (ROCK-SOLID):** `max_run` caps at **exactly 7 in ALL 6 runs, both arms** → the K=8 lump sum
+  NEVER fires under STDP_TARGET=1 any more than =0. The substrate still cannot sustain 8 consecutive
+  correct byte predictions. The lump-sum mechanism (session 9) stays starved.
+- **Result (SUGGESTIVE, n=3, high variance):** whole-run net-positive tick fraction DOUBLES with teaching
+  (0.159 → 0.319, 2.0×) and the trajectory diverges cleanly after tick ~2000 (STDP=1 → ~0.45+, STDP=0 flat
+  ~0.16; not a refugium artifact — both arms pinned at n_alive=30). BUT 2/3 STDP=1 seeds gain strongly
+  (late frac_net_pos 0.48, 0.59) while seed 0 (0.10) is BELOW every STDP=0 seed. `correct_per_tick`
+  whole-run mean is ~UNCHANGED (12.5 → 12.8): teaching lifts the energy fraction, not raw accuracy.
+- **Insight — mechanism mismatch:** the reward targets run LENGTH; the teaching lever moves run RATE.
+  A per-byte local delta rule raises the rate of correct bytes but not the longest streak the lump sum needs.
+- **H1 efficiency (modest):** brains shrink 65 → ~50 neurons, idle cost 586 → ~260–370, approaching but
+  mostly staying ABOVE the 256 income quantum (one STDP=0 seed hit 231 < 256).
+- **Bug fix (disclosed, Rule 17):** driver hardcoded `POP_SIZE=200` but session 9 made `MAX_ORGANISMS`
+  substrate-derived (=164 on 8 GiB) → IndexError spawning founder #164. Added `POP_SIZE=min(POP_SIZE,
+  MAX_ORGANISMS)` (driver L157–160). Engine behaviour unchanged; STDP_TARGET defaults OFF (byte-identical).
+
+**#1 LOAD-BEARING NEXT STEP (session 11): why does `max_run` cap at EXACTLY 7 in every run, both arms?**
+A cap this clean across independent seeds AND both treatments smells STRUCTURAL, not statistical. Rule out:
+(a) an 8-byte periodicity in `Books/English/00_Graded.txt` or the reading gate (every 8th byte excluded/reset);
+(b) the `org_delay_buf` / scratch-ring depth (a 7-deep memory caps predictable context at 7); (c) the 8-bit
+byte frame (off-by-one in run counting). **If structural, K=8 is impossible BY CONSTRUCTION and no learning
+lever can fire the lump sum** — that redirects the whole income-granularity programme. Diagnose by dumping
+one ancestor run's per-tick correct/miss sequence and inspecting the miss period, + reading the delay-buf /
+reading-gate depth constants. Secondary: raise N_SEEDS ≥ 6 on STDP=1 to settle the frac_net_pos variance;
+try a longer-horizon (eligibility-trace) teaching signal that targets sustained runs, not per-byte accuracy.
+
+---
+
+## Prior Session Update (2026-07-26 — session 9: Lump-Sum Multi-Byte Reward)
 
 **The income-granularity change (income-design §19) is IMPLEMENTED, feature-flagged, and TESTED.
 Result: honest null — the mechanism fires but does not break the metabolic ceiling.**
