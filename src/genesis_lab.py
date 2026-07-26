@@ -287,6 +287,7 @@ PARAM_GENES = [
     ("tau_ref",             0.0,  8.0,                 "linear"),  # 6  engine TAU_REF (L456)
     ("sp_growth_cost",      0.0,  100.0,               "linear"),  # 7  engine SP_GROWTH_COST (L172)
     ("sp_rewire_weight",    0.5,  50.0,                "linear"),  # 8  engine SP_REWIRE_WEIGHT (L182)
+    ("food_scan_radius",    1.0,  float(FOOD_SCAN_RADIUS), "linear"),  # 9  engine FOOD_SCAN_RADIUS (L33) — Session 9
 ]
 assert len(PARAM_GENES) == N_PARAM_GENES, "PARAM_GENES length must match engine N_PARAM_GENES (=9)"
 
@@ -294,6 +295,7 @@ assert len(PARAM_GENES) == N_PARAM_GENES, "PARAM_GENES length must match engine 
 PARAM_DEFAULTS = np.array([
     float(CAM_SLOTS), float(CAM_KEY_BITS), float(CAM_MATCH_THRESHOLD), float(CAM_WRITE_THRESHOLD),
     float(STDP_DIV), float(HOMEOSTATIC_LAMBDA), float(TAU_REF), float(SP_GROWTH_COST), float(SP_REWIRE_WEIGHT),
+    float(FOOD_SCAN_RADIUS),   # Session 9: food_scan_radius default == engine global
 ], dtype=np.float32)
 
 # Per-organism evolvable-constant matrix (rows = organisms, cols = PARAM_GENES).
