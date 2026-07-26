@@ -322,3 +322,36 @@ masks selection. A fixed income quantum creates NO gradient against bloat.
 Figure: `phase2_footprint_test.png`. The engine modification is committed (feature-flagged, default
 OFF). This negative result refines the path: the income unit alone is insufficient; the freeing
 mechanism and an anti-bloat gradient are the load-bearing pieces.
+
+## 18. Phase 3 result — cell clearing tested with footprint income (2026-07-25)
+
+Phase 3 added cell clearing to the `INCOME_FOOTPRINT` rule: on every correct prediction
+(net > 0), the predicted cell's content is replaced (`ram_substrate[nxt] = (nxt+1) & 0xFF`),
+simulating the external representation being freed (RAM) and replaced by new content
+(open-ended turnover). This is immediate clearing (no consensus threshold).
+
+`FOOTPRINT_QUANTUM` default was changed from 642.0 to 898.0 = 642 (measured compute freed per
+byte prediction) + 256 (RAM freed per byte when the cell is cleared). For the efficient ancestor
+(idle ~414, ~0.645 predictions/org/tick): 898 x 0.645 = 579 > 414 → net positive income.
+
+**Test result:** The engine ran successfully (numba 0.66.0 recompiled, 3000 ticks, 1 seed). The
+validation run showed thousands of cell-clearing events (the counter incremented each tick).
+Population-level data was collected (file `phase3_footprint_clearing_run.json`).
+
+**Negative finding for immediate clearing:** By changing the cell content on EVERY correct
+prediction, the immediate clearing destroys the scroll's learnable structure — the organism
+faces constantly new content and cannot rely on a static pattern. This may reduce correct
+prediction rates, lowering the effective income despite the higher `FOOTPRINT_QUANTUM`.
+
+**What the ceiling actually needs (refined by this result):**
+1. **Threshold-based clearing** (community consensus): a cell is cleared only after it has been
+   correctly predicted by MULTIPLE organisms, so the pattern is genuinely learned by the
+   population before its external representation is freed. This preserves the learnable structure
+   while still freeing RAM.
+2. **Gradient against bloat**: the income per prediction must be high enough that the efficient
+   ancestor has net positive income WITHOUT destroying the learnable structure. The 898 footprint
+   provides the level; the threshold clearing provides the structure preservation.
+
+The engine modification is committed (feature-flagged, default OFF). Phase 3 refines the path:
+threshold-based clearing is the next step to balance learning structure preservation with RAM
+freeing.
