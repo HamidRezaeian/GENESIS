@@ -456,6 +456,7 @@ g_cell_owner = np.full(RAM_SIZE, -1, dtype=np.int32)
 # was authored; the authorship royalty fraction grows with it (a popular cell pays its author more),
 # reset to 0 on each (re)authoring. Unused when STIGMERGY off.
 g_read_hits = np.zeros(RAM_SIZE, dtype=np.int32)
+g_clear_count = np.zeros(RAM_SIZE, dtype=np.int32)   # Phase 4: per-cell correct-prediction counter
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
@@ -1359,6 +1360,7 @@ def sim_loop():
             g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
         g_conn_w_dna,
         g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+        g_clear_count,
     )
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
@@ -1611,6 +1613,7 @@ def sim_loop():
             g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
             g_conn_w_dna,
             g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+            g_clear_count,
         )
         
         for i in range(n_births):

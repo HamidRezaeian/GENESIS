@@ -355,3 +355,42 @@ prediction rates, lowering the effective income despite the higher `FOOTPRINT_QU
 The engine modification is committed (feature-flagged, default OFF). Phase 3 refines the path:
 threshold-based clearing is the next step to balance learning structure preservation with RAM
 freeing.
+
+## 19. Phase 4 result — threshold-based cell clearing (2026-07-25)
+
+Phase 4 replaced immediate clearing with threshold-based clearing: a cell is cleared (content
+replaced, RAM freed) only after `CLEAR_THRESHOLD` organisms have correctly predicted it (community
+consensus). `g_clear_count` is a per-cell int32 counter passed as a kernel PARAMETER (numba treats
+module-global arrays as readonly, so mutable per-cell state must be a parameter — added to the
+world_tick_numba signature and all call sites in genesis_lab.py and the driver).
+
+Test (STDP_TARGET=0, 1 seed, 3000 ticks, CLEAR_THRESHOLD=10, FOOTPRINT_QUANTUM=898):
+
+| metric | Phase 3 (immediate) | Phase 4 (threshold=10) | Baseline (256) |
+|--------|--------------------|-----------------------|----------------|
+| n_alive | 30 | 30 | 30 |
+| correct/tick | 3.13 | **14.74** | 15.5 |
+| idle | 1049.6 | 1145.6 | 679 |
+| neurons | 82 | 82.8 | 78 |
+
+**Partial success — the clearing mechanism works:** threshold clearing PRESERVED the learnable
+scroll structure (correct/tick 14.74, close to baseline 15.5), unlike immediate clearing (3.13,
+which destroyed the structure). The community-consensus mechanism is sound: cells are cleared only
+after the population has genuinely learned them, so prediction stays high while RAM is still freed.
+
+**Ceiling still not broken (n_alive=30). Two reasons:**
+1. **Calibration drift:** FOOTPRINT_QUANTUM=898 was calibrated for CYCLES_PER_NEURON_UPDATE≈2.876
+   (the Exp 87 host measurement), but this run measured 4.343 (host performance varies run-to-run),
+   raising the ancestor idle cost to 604.9 (vs 411). The fixed footprint (898 x ~0.49 correct/org/tick
+   ≈ 440) no longer covers the higher idle cost.
+2. **Fundamental — one byte per tick:** the engine predicts ONE byte per tick, so income per tick ≈
+   footprint x predictions/tick. With the footprint calibrated to the per-prediction compute cost,
+   income ≈ idle cost (break-even) for ANY brain size — the compute component cancels out. The RAM
+   component (256) adds only ~165/tick, insufficient to overcome the idle cost. **Breaking the ceiling
+   requires rewarding MULTI-byte work-units** (a lump-sum reward on completion of a complex problem),
+   so the income per work-unit can exceed the per-tick idle cost. This is the load-bearing change still
+   needed.
+
+The threshold-clearing mechanism is sound and committed (feature-flagged, GENESIS_INCOME_FOOTPRINT +
+GENESIS_CELL_CLEAR_THRESHOLD). The remaining gap is the income granularity: multi-byte work-unit
+rewards are needed to break the metabolic ceiling.

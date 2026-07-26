@@ -1020,11 +1020,13 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
 
 
 
-# ---- Phase 3 (Session 8): footprint income + cell clearing (feature-flagged, Rule 21.4) ----
-# FOOTPRINT_QUANTUM = measured compute freed (642 cyc/byte) + RAM freed (256) = 898.
-# Ancestor: idle ~414, ~0.645 pred/org/tick -> 898 x 0.645 = 579 > 414 -> net positive.
+# ---- Phase 4 (Session 8): footprint income + threshold-based cell clearing (feature-flagged) ----
+# FOOTPRINT_QUANTUM = measured compute freed (642) + RAM freed (256) = 898 per byte.
+# Cell cleared (RAM freed, content replaced) only after CLEAR_THRESHOLD organisms
+# correctly predict it (community consensus) -> preserves learnable structure.
 INCOME_FOOTPRINT = os.environ.get("GENESIS_INCOME_FOOTPRINT", "0") == "1"
 FOOTPRINT_QUANTUM = np.float32(float(os.environ.get("GENESIS_FOOTPRINT_QUANTUM", "898.0")))
+CLEAR_THRESHOLD = int(os.environ.get("GENESIS_CELL_CLEAR_THRESHOLD", "10"))
 
 @njit(cache=True)
 def world_tick_numba(
@@ -1046,6 +1048,7 @@ def world_tick_numba(
     g_cam_vals,              # (MAX_ORG, CAM_SLOTS) int64: CAM values
     g_cam_valid,             # (MAX_ORG, CAM_SLOTS) int64: CAM slot occupancy
     g_cam_tick,              # (MAX_ORG, CAM_SLOTS) int64: CAM write timestamps
+    g_clear_count,           # (RAM_SIZE,) int32: per-cell correct-prediction counter (Phase 4)
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -1908,7 +1911,10 @@ def world_tick_numba(
                 if INCOME_FOOTPRINT:
                     gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                     if net > 0:
-                        ram_substrate[nxt] = np.uint8((ram_substrate[nxt] + 1) & 0xFF)  # Phase 3: clear cell
+                        g_clear_count[nxt] += 1
+                        if g_clear_count[nxt] >= CLEAR_THRESHOLD:
+                            ram_substrate[nxt] = np.uint8((ram_substrate[nxt] + 1) & 0xFF)  # Phase 4: clear cell
+                            g_clear_count[nxt] = 0
                 else:
                     gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
                 if DELAY and curriculum_delay >= 2 and not DIGESTION:
