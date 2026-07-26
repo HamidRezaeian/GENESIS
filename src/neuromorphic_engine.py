@@ -936,7 +936,7 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
             sense_buf[RAM_BIT0_INPUT + bit] = 1.0
     
     left_pos = pos - 1 if pos > 0 else 0
-    right_pos = pos + 1 if pos < RAM_SIZE - 1 else pos
+    right_pos = pos + 1 if pos < len(ram_substrate) - 1 else pos
     
     voice_acc = 0
     # Neighbour-voice sense (inputs 4-6): live vocal_cords. NOTE (Exp 15 isolation): this is the
@@ -961,7 +961,7 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     food_ahead = np.float32(0.0)
     food_behind = np.float32(0.0)
     for k in range(1, FOOD_SCAN_RADIUS + 1):
-        ba = ram_substrate[addr + k] if addr + k < RAM_SIZE else 0
+        ba = ram_substrate[addr + k] if addr + k < len(ram_substrate) else 0
         bb = ram_substrate[addr - k] if addr - k >= 0 else 0
         if SEEK_TEXT:
             # Books economy: climb toward readable symbols (printable, non-food, non-empty).
@@ -988,7 +988,7 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
     caller. NOTE: a sampled neighbour affordance (energy/voice) at an EMPTY cell reads 0 — absence is
     information too. own_energy is the calling organism's own reserve (for interoception)."""
     target = pos + offset
-    if target < 0 or target >= RAM_SIZE:
+    if target < 0 or target >= len(ram_substrate):
         return 0.0
     addr = target
     if aff_type == 0:
@@ -1150,7 +1150,7 @@ def world_tick_numba(
         crowd_count = np.float32(0.0)
         for offset in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
             target = pos + offset
-            if 0 <= target < RAM_SIZE and org_grid[target] != -1:
+            if 0 <= target < len(ram_substrate) and org_grid[target] != -1:
                 crowd_count += 1.0
         crowding = crowd_count / np.float32(2 * FOOD_SCAN_RADIUS + 1)
 
@@ -1591,7 +1591,7 @@ def world_tick_numba(
                     if noff == 0:
                         continue
                     target = pos + noff
-                    nb2 = org_grid[target] if 0 <= target < RAM_SIZE else -1
+                    nb2 = org_grid[target] if 0 <= target < len(ram_substrate) else -1
                     if nb2 != -1 and nb2 != org and alive[nb2] and action_now[nb2] == best_a:
                         niche_same += 1
                 
@@ -1659,7 +1659,7 @@ def world_tick_numba(
                     s_bits += 1
             for side in range(2):
                 npos = pos - 1 if side == 0 else pos + 1
-                if npos < 0 or npos >= RAM_SIZE:
+                if npos < 0 or npos >= len(ram_substrate):
                     continue
                 nb = org_grid[npos]
                 if nb != -1 and nb != org and alive[nb]:
@@ -1759,7 +1759,7 @@ def world_tick_numba(
         # (a solved prediction); a nonzero wrong guess logs type 2 (miss).
         grazed = False
         nxt = pos + 1
-        if nxt < RAM_SIZE:
+        if nxt < len(ram_substrate):
             next_byte = ram_substrate[nxt]
         else:
             next_byte = 0
@@ -2046,9 +2046,9 @@ def world_tick_numba(
         if best_n > 0 and best_a >= 0:
             if (not grazed) and best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
                 npos = pos
-                if best_a == OUT_JMP_FWD: npos = min(pos + 1, RAM_SIZE - 1)
+                if best_a == OUT_JMP_FWD: npos = min(pos + 1, len(ram_substrate) - 1)
                 elif best_a == OUT_JMP_BCK: npos = max(pos - 1, 0)
-                elif best_a == OUT_JMP_FWD_10: npos = min(pos + LONG_JUMP_STRIDE, RAM_SIZE - 1)
+                elif best_a == OUT_JMP_FWD_10: npos = min(pos + LONG_JUMP_STRIDE, len(ram_substrate) - 1)
                 elif best_a == OUT_JMP_BCK_10: npos = max(pos - LONG_JUMP_STRIDE, 0)
                 
                 energy[org] -= CYCLES_PER_MOVE

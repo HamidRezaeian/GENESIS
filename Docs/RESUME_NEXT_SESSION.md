@@ -4,6 +4,74 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-26 — session 14: Dynamic Compact RAM + Oscillation Root-Cause)
+
+**Two deliverables, both proven by execution (not assertion).** Full design:
+`Docs/DYNAMIC_COMPACT_RAM_DESIGN.md`. Probes: `tests/dynamic_compact_ram_probe.py`
+(9/9 PASS) and `tests/oscillation_maxrun_probe.py` (root-cause signature reproduced);
+diagnosis evidence: `tests/oscillation_diagnosis.json`.
+
+### (1) Dynamic Compact RAM — implemented + proven
+The user's law `RAM_SIZE = book_size + organism_count`, zero empty space, resize on
+book-switch and on solve, with position remapping.
+- **Engine made size-agnostic** (the prerequisite): the 9 in-kernel `RAM_SIZE`
+  bounds-checks in `sense` / `sense_affordance` / `world_tick_numba` are now
+  `len(ram_substrate)` — a runtime value, so ONE compilation is correct for any
+  universe size (no per-size recompile). Module-level `RAM_SIZE`/`ATP_MAX` untouched
+  (they remain the hardware-capacity ceiling). Behaviour-preserving at the default size.
+- **`src/dynamic_compact_ram.py` (new):** host-side compact engine. Layout
+  `[0,book_bytes)` = book (non-blank), `[book_bytes,U)` = one home cell per organism
+  (`ORG_HOME_MARKER=0x01`, class-O marker). Invariants split into allocation-time
+  (size law + zero-empty + valid-pos + fresh layout) and durable/runtime (zero-empty
+  + valid-pos). API: `build_compact_universe`, `reallocate_compact` (resize+remap),
+  `shrink_on_solve` (shrink book region), `reallocate_lab_state` (genesis_lab seam that
+  resizes ALL RAM-sized globals together + remaps `g_positions` + recomputes
+  `LIB_START`/`CANVAS_*`).
+- **Proof:** probe tests A/B are DISCRIMINATING (they crash on the old baked-65536
+  kernel); C1-C6 cover build/size-law/book-switch(50->80)/death-shrink(5->3)/solve-shrink
+  (80->77)/negative-test; **D runs the real `world_tick_numba` for 3 ticks on a compact
+  U=121 universe** with no bounds crash and invariants intact.
+- **Integration seam located, not yet wired into the tuned main loop** (deliberate —
+  Result.md's carrying-capacity balance must be re-validated first). Wire points:
+  `ws_handler` book-switch (~L515/543/547) and main-loop restock (~L1562-1572).
+
+### (2) Oscillation / max_run=1 — MEASURED root cause (was "unknown")
+- **M1 membrane depth:** integrating the LIF with the real default params
+  (`tau_m=2, v_rest=0, v_reset=0, thresh=128`), an EPSP decays x0.5/tick
+  (64->32->16->8->...) and is wiped to `v_reset` on fire with `prev_spk_buf` zeroed each
+  tick -> **~1 step of usable discrete context** (confirms Exp 43, engine L438-457).
+- **M2 recruitment:** the WMEM latch (`MEMORY_MARKER=198`) and SCRATCH register
+  (`SCRATCH_MARKER=199`) are **kernel-enabled by default** (engine `GENESIS_WMEM`/
+  `GENESIS_SCRATCH` default `"1"`) but the **ancestor seed** injects those genes only
+  when the same vars are `"1"` with a **default `"0"`** (`genesis_lab.py` L803/L838).
+  Measured: default ancestor = 0 MEMORY + 0 SCRATCH genes; flags set = 16 + 32;
+  default cohort = 0/1 carriers.
+- **Diagnosis:** `max_run=1` because the leaky membrane holds ~1 step AND the default
+  population is seeded with no memory primitives to recruit; the ~92% solve-rate IS the
+  run-length=1 echo reflex. Concrete defect: a default-value asymmetry on the same env
+  var (engine `"1"` vs seed `"0"`).
+- **Falsifiable next step (pre-registered, NOT yet run):** curriculum with
+  `GENESIS_WMEM=1`/`GENESIS_SCRATCH=1` (+`STDP_TARGET=1` to potentiate the seeded silent
+  read-out wires). If `max_run`>1 -> recruitment was the bottleneck (harmonise the seed
+  default). If still 1 with fabric+learner on -> bottleneck is credit assignment.
+
+### Files changed this session
+- `src/neuromorphic_engine.py` — 9 in-kernel bounds -> `len(ram_substrate)`.
+- `src/dynamic_compact_ram.py` (new), `tests/dynamic_compact_ram_probe.py` (new),
+  `tests/oscillation_maxrun_probe.py` (new), `tests/oscillation_diagnosis.json` (new),
+  `Docs/DYNAMIC_COMPACT_RAM_DESIGN.md` (new).
+
+### Quick-start (this work)
+```bash
+cd /home/user/repos/GENESIS
+pip install "numba==0.61.2"          # for numpy 2.1.2
+rm -rf /tmp/genesis_numba_* src/__pycache__   # clear cache after engine edits
+python3 tests/dynamic_compact_ram_probe.py     # -> 9/9 PASS, exit 0
+python3 tests/oscillation_maxrun_probe.py      # -> root-cause signature reproduced, exit 0
+```
+
+---
+
 ## Latest Session Update (2026-07-25 — session 7: Exp 87 — Metabolic-Ceiling Evolution)
 
 **The audit of Rule 21.2 / Exp 78b is done and the proposed "income-gradient" next step was
