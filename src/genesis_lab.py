@@ -457,6 +457,8 @@ g_cell_owner = np.full(RAM_SIZE, -1, dtype=np.int32)
 # reset to 0 on each (re)authoring. Unused when STIGMERGY off.
 g_read_hits = np.zeros(RAM_SIZE, dtype=np.int32)
 g_clear_count = np.zeros(RAM_SIZE, dtype=np.int32)   # Phase 4: per-cell correct-prediction counter
+g_org_run = np.zeros(MAX_ORGANISMS, dtype=np.int32)     # Session 9: per-organism correct-prediction run length
+g_lump_acc = np.zeros(MAX_ORGANISMS, dtype=np.float32)  # Session 9: deferred lump-sum income accumulator
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
@@ -1361,6 +1363,7 @@ def sim_loop():
         g_conn_w_dna,
         g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
         g_clear_count,
+        g_org_run, g_lump_acc,
     )
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
@@ -1614,6 +1617,7 @@ def sim_loop():
             g_conn_w_dna,
             g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
             g_clear_count,
+            g_org_run, g_lump_acc,
         )
         
         for i in range(n_births):

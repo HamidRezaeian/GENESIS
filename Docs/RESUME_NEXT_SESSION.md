@@ -1,3 +1,37 @@
+## Latest Session Update (2026-07-26 — session 9: Lump-Sum Multi-Byte Reward)
+
+**The income-granularity change (income-design §19) is IMPLEMENTED, feature-flagged, and TESTED.
+Result: honest null — the mechanism fires but does not break the metabolic ceiling.**
+
+- **Implemented (branch `session9-lumpsum`, default OFF):** `GENESIS_INCOME_LUMP_SUM` +
+  `GENESIS_LUMPSUM_K` (gated behind `GENESIS_INCOME_FOOTPRINT`). A correct byte (`net > 0`) extends a
+  per-organism run (`g_org_run`, new int32 kernel PARAMETER — numba makes module-global arrays
+  read-only, same pattern as Phase-4 `g_clear_count`); a wrong byte resets it. On the K-th consecutive
+  correct byte the organism is paid ONE lump sum `K × FOOTPRINT_QUANTUM` (898); in-progress ticks pay
+  nothing. This REPLACES the per-byte footprint path (not additive → no rigged multiplier, Rule 21.4).
+  `world_tick_numba` signature 75 → 77 args; both `genesis_lab.py` call sites + the Exp-87-derived
+  session9 driver updated (AST-verified 77 == 77). Death resets the run.
+- **Driver / verdict:** `tests/clusy/qwen/session9_lumpsum_reward/` (`run_evolution.py`, `probe_lump.py`,
+  `results/`); verdict `tests/clusy/qwen/notes/session9_lumpsum_reward_verdict.md`.
+- **Measured (seed 20260725, 2000 ticks, refugium-floored):**
+  - DEPLETE=1 (Exp-87 condition): `earning_frac = 0.0`, `max_run = 0`, **0 lump sums** — the finite
+    per-cell fuel reservoir caps income at the regrow rate (256/tick) < idle cost, so no runs form.
+  - DEPLETE=0: `earning_frac = 0.067`, `max_run = 7`; lump sums fire ~1500× for K=2 and K=4, but
+    **K=8 never fires** (longest sustained correct run = 7 bytes; run distribution falls off steeply).
+- **Conclusion:** the ceiling is NOT broken. The binding constraints are (a) finite fuel under DEPLETE
+  and (b) the substrate's inability to sustain long correct-prediction runs (max 7) — NOT reward
+  granularity. This is income-design scenario 3 / prediction P4 (the explicitly-permitted honest null).
+- **Next step (priority order):** (1) raise learning capacity so runs reach K — enable `STDP_TARGET=1`
+  and/or a richer curriculum, then re-test; this is the real bottleneck the result exposes. (2) Generalize
+  the DEPLETE cap to work-units (income-design Phase 2) so a lump sum can be paid under finite fuel
+  without minting (Rule 15). (3) Re-measure α vs β for a *learnable* work-unit (Phase 0).
+- **Regression:** with `GENESIS_INCOME_LUMP_SUM=0` (default) the new branch is compile-time skipped and
+  the reward core is byte-identical to the committed Exp-87 path; `g_org_run`/`g_lump_acc` are allocated
+  but never touched. (Historical root drivers exp78/79/80 still call the 75-arg signature and are left as
+  frozen artifacts — update them only if re-running those specific experiments.)
+
+---
+
 # Resume Next Session — Start Here
 
 Read this file FIRST. It tells you exactly where the project stands.

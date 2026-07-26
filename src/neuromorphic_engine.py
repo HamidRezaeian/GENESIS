@@ -1028,6 +1028,20 @@ INCOME_FOOTPRINT = os.environ.get("GENESIS_INCOME_FOOTPRINT", "0") == "1"
 FOOTPRINT_QUANTUM = np.float32(float(os.environ.get("GENESIS_FOOTPRINT_QUANTUM", "898.0")))
 CLEAR_THRESHOLD = int(os.environ.get("GENESIS_CELL_CLEAR_THRESHOLD", "10"))
 
+# ---- Session 9: lump-sum multi-byte work-unit reward (feature-flagged, default OFF) ----
+# Income granularity change. The per-byte footprint path pays <= FOOTPRINT_QUANTUM per correct
+# byte, so with the engine predicting ONE byte/tick the income per tick ~= per-prediction idle
+# cost (break-even; Session 8 / Exp 87 metabolic ceiling, fraction net-positive ticks = 0.000).
+# LUMP_SUM defers payment onto completion of a multi-byte WORK-UNIT: an organism that correctly
+# predicts LUMPSUM_K consecutive bytes (net > 0 each) earns ONE lump sum of
+# LUMPSUM_K * FOOTPRINT_QUANTUM on the completing tick and nothing on the in-progress ticks.
+# Expected income/tick is unchanged (no rigged multiplier, Rule 21.4); what changes is the
+# TEMPORAL structure -- a sustained-cognition credit-assignment test. K is env-gated + disclosed
+# (Rule 17) and is SWEPT in the Session-9 tuning test; if no K breaks the ceiling we report the
+# honest null (income-design scenario 3). Requires INCOME_FOOTPRINT (the quantum it multiplies).
+INCOME_LUMP_SUM = os.environ.get("GENESIS_INCOME_LUMP_SUM", "0") == "1"
+LUMPSUM_K = int(os.environ.get("GENESIS_LUMPSUM_K", "8"))
+
 @njit(cache=True)
 def world_tick_numba(
     ram_substrate, org_grid, positions, alive, energy, age,
@@ -1049,6 +1063,8 @@ def world_tick_numba(
     g_cam_valid,             # (MAX_ORG, CAM_SLOTS) int64: CAM slot occupancy
     g_cam_tick,              # (MAX_ORG, CAM_SLOTS) int64: CAM write timestamps
     g_clear_count,           # (RAM_SIZE,) int32: per-cell correct-prediction counter (Phase 4)
+    g_org_run,               # (MAX_ORG,) int32: consecutive correct-prediction run length (Session 9 lump-sum)
+    g_lump_acc,              # (MAX_ORG,) float32: deferred income paid on work-unit completion (Session 9)
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -1909,12 +1925,29 @@ def world_tick_numba(
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 if INCOME_FOOTPRINT:
-                    gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                     if net > 0:
                         g_clear_count[nxt] += 1
                         if g_clear_count[nxt] >= CLEAR_THRESHOLD:
                             ram_substrate[nxt] = np.uint8((ram_substrate[nxt] + 1) & 0xFF)  # Phase 4: clear cell
                             g_clear_count[nxt] = 0
+                    if INCOME_LUMP_SUM:
+                        # Session 9: a correct byte (net > 0) extends this organism's work-unit run;
+                        # a wrong byte (net < 0) breaks it. On the K-th consecutive correct byte the
+                        # deferred lump sum (K * FOOTPRINT_QUANTUM) is paid at once; the in-progress
+                        # ticks pay nothing (per-byte gain suppressed -> a pure timing change, no
+                        # rigged multiplier, Rule 21.4). Clearing above still runs on net > 0.
+                        if net > 0:
+                            g_org_run[org] += 1
+                            if g_org_run[org] >= LUMPSUM_K:
+                                gain = np.float32(LUMPSUM_K) * FOOTPRINT_QUANTUM
+                                g_org_run[org] = 0
+                            else:
+                                gain = np.float32(0.0)
+                        else:
+                            g_org_run[org] = 0
+                            gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                    else:
+                        gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                 else:
                     gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
                 if DELAY and curriculum_delay >= 2 and not DIGESTION:
@@ -2271,6 +2304,7 @@ def world_tick_numba(
         if energy[org] <= np.float32(0.0):
             alive[org] = False
             org_grid[positions[org]] = -1
+            g_org_run[org] = 0   # Session 9: death clears the in-progress work-unit run
             free_block(org_n_ptr[org], org_n_count[org], neuron_map)
             free_block(org_s_ptr[org], org_s_count[org], synapse_map)
             free_block(org_g_ptr[org], org_g_count[org], genome_map)
