@@ -1,4 +1,41 @@
-## Latest Session Update (2026-07-26 — session 10b: ROOT CAUSE of the max_run=7 cap)
+## Latest Session Update (2026-07-26 — session 11: Corrected Story — Cache-Key Bug, K Sweep, Ceiling Breakable)
+
+**MAJOR CORRECTION to sessions 9/10/10b. The "max_run caps at 7 / lump sum never fires" was a
+measurement artifact (g_org_run resets to 0 within the firing tick → observable max = K−1).
+The lump sum DOES fire. A proper K sweep (each K isolated via explicit NUMBA_CACHE_DIR) shows
+K=2 and K=3 break the metabolic ceiling. Session-9's K=8 is near-worst.**
+
+- **Bug A (not a code bug, measurement):** engine L1986-1992 increments g_org_run, and when it
+  reaches LUMPSUM_K it pays K*898 and RESETS g_org_run=0 in the same tick → post-tick sampling of
+  g_org_run can never show "8" (observable max = K−1 = 7 for K=8). The lump sum fires 267×/4000
+  ticks at K=8 (energy jump ~6340 = 7184 − idle). Verified with energy trace.
+- **Bug B (FIXED, genesis_lab L146-160):** the numba cache-key (cache-dir name) encoded ~20+ flags
+  but NOT INCOME_FOOTPRINT/INCOME_LUMP_SUM/LUMPSUM_K/FOOTPRINT_QUANTUM/DEPLETE/CELL_CLEAR_THRESHOLD.
+  So @njit(cache=True) baked the FIRST-compiled income-flag values and silently ignored later env
+  changes → every Session-9/10 "sweep" was invalid (all K reused the first kernel). Fixed: added
+  the six flags to the cache-dir f-string. Each unique combination now gets its own cache dir.
+- **Validated K sweep** (explicit NUMBA_CACHE_DIR per K, N=4000 ticks, STDP=0, single immortal reader):
+  income falls monotonically 770→476 with K.
+  | K | income/tick (exact) | net drift/tick | net-positive? |
+  |---|---|---|---|
+  | 1 | 770 | −15 | ~break-even |
+  | 2 | 711 | +28 | YES |
+  | 3 | 692 | +7 | YES |
+  | 4 | 614 | −69 | no |
+  | 8 | 476 | −357 | strongly no |
+  Idle threshold ~685 (measured, varies ±100 per compile) → K≥4 fails, K≤3 works. The metabolic
+  ceiling IS breakable by the lump-sum mechanism at the right K.
+- **Output IS a clean echo** (confirmed: near-perfect, walking the scroll, 99% same-letter-family
+  on misses). STDP_TARGET makes ~zero difference on the single reader.
+- **Q1 answer (is 898 hardware-dependent?):** YES — cost side (CYCLES_PER_*) IS re-measured per host;
+  income quantum 898 is a fixed snapshot (642 host-measured compute from the ORIGINAL dev host + 256
+  RAM = CELL_STATES, hardware-independent). On a faster host the same mechanism at K=8 would be
+  net-positive; on a slower host even K=2 fails. Full portability requires re-deriving the 642
+  component per host.
+- **Next step:** switch K=2-3 in the evolutionary driver and re-run the population-wide A/B.
+  Also fix the driver to record fire-count instead of post-tick max_run.
+
+## Prior Session Update (2026-07-26 — session 10b: ROOT CAUSE of the max_run=7 cap)
 
 **ANSWERED the #1 open question from session 10 ("why does max_run cap at EXACTLY 7?"). Root cause:
 a dynamical OUTPUT-STABILITY limit of the spiking substrate — NOT scroll structure, NOT reward
