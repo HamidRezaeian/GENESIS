@@ -187,7 +187,7 @@ os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if D
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX, CAM_SLOTS, CAM_KEY_BITS, CAM_KEY_BYTES,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
-    global_neuron_sign,
+    global_neuron_sign, DALE, INHIBIT_BYTE_THRESH,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     SENSOR_MARKER, EVOSENSE, N_AFFORDANCE, ACTUATOR_MARKER, EVOACT,
     MEMORY_MARKER, WMEM,
@@ -721,9 +721,32 @@ def create_intelligent_ancestor(dna=None):
     
     genes = get_base_physics_header()
     
-    # 5 Hidden neurons for evolution buffer (NEURON_MARKER takes 5 bytes)
-    for i in range(5):
-        genes.extend([NEURON_MARKER, N_IO + i, 128, 128, 128])
+    # 5 Hidden neurons for evolution buffer (NEURON_MARKER takes 5 bytes).
+    # Dale's law (Session 15): when GENESIS_DALE=1, NEURON_MARKER gene byte i+1 is the neuron's
+    # E/I SIGN byte -- decode_genome maps (byte < INHIBIT_BYTE_THRESH) -> excitatory (+1) else
+    # inhibitory (-1). The ancestor seeds the cortical ~80/20 E/I ratio in a Rule-21-grounded way:
+    # the inhibitory FRACTION is derived from the SAME H-constant the engine uses, inh_frac =
+    # (256 - INHIBIT_BYTE_THRESH)/256 = 52/256 ~= 0.203 (the fraction of the byte range that decodes
+    # inhibitory), so round(inh_frac * n_hidden) of the buffer neurons start inhibitory (sign byte =
+    # INHIBIT_BYTE_THRESH, the minimal inhibitory byte) and the rest stay excitatory (sign byte kept
+    # sub-threshold). The sign byte remains an EVOLVABLE gene: mutation moves it across the threshold,
+    # so selection -- not the designer -- sets the final ratio (Rule 21.2 class E). Specialized fabric
+    # neurons added below (WMEM write-gate, SCRATCH recall) deliberately keep a sub-threshold sign byte:
+    # an inhibitory write-gate would invert latch clocking, and 80/20 is a population-level statistic
+    # that does not apply to a single control neuron. DALE off -> byte-identical ancestor (the sign byte
+    # is ignored by decode and left at the legacy N_IO+i value).
+    n_hidden_buf = 5
+    if DALE:
+        inh_frac = (256 - int(INHIBIT_BYTE_THRESH)) / 256.0   # H-derived inhibitory fraction (engine threshold semantics)
+        n_inhib = int(round(inh_frac * n_hidden_buf))         # cortical ~20% -> 1 of 5
+    else:
+        n_inhib = 0
+    for i in range(n_hidden_buf):
+        if DALE and i >= n_hidden_buf - n_inhib:
+            sign_byte = int(INHIBIT_BYTE_THRESH)              # inhibitory: byte >= threshold
+        else:
+            sign_byte = N_IO + i                              # excitatory: sub-threshold (legacy value)
+        genes.extend([NEURON_MARKER, sign_byte, 128, 128, 128])
         
     # --- Feeding + food-seeking reflex, retuned 2026-07-11 (Result.md Exp 4 follow-up) ---
     # The original reflex could not net-gain energy by foraging (Exp 4). This version keeps the
