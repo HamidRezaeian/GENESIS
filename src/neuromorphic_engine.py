@@ -554,21 +554,21 @@ STDP_SCALE = BITS_PER_BYTE
 
 # User-configurable: maximum number of organisms that can coexist.
 # Default 600 = ~1% of RAM_SIZE for 64K RAM. Affects memory allocation.
-# Carrying capacity (ecology): organisms get 1/4 of physical RAM at the measured ~12.1 MB/organism
-# (own arrays + its (N_IO+800) neurons + 4x synapses of universe backing). On an 8 GiB host ~170
-# organisms. Floor 64 (minimum viable colony), cap 5000 (OOM safety). GENESIS_MAX_ORGANISMS overrides.
-_ORG_BYTES = 12.1 * 1024 * 1024   # measured (Session 9)
-def _derive_max_org():
-    _ov = os.environ.get("GENESIS_MAX_ORGANISMS")
-    if _ov:
-        return int(_ov)
-    try:
-        _phys = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
-    except (ValueError, OSError):
-        _phys = 8 * (1 << 30)
-    _cap = int((_phys / 4) // _ORG_BYTES)
-    return int(max(64, min(_cap, 5000)))
-MAX_ORGANISMS = _derive_max_org()
+# User-configurable: maximum number of organisms that can coexist.
+# Session 14: HARDWARE-AWARE AUTO CAP (auto_capacity.py). Precedence:
+#   1. GENESIS_MAX_ORGANISMS env var (explicit override) wins.
+#   2. otherwise sized to the machine available memory:
+#      budget = available*0.60 - 1GB reserve, divided by the MEASURED per-organism
+#      pool cost (~143 KB, hardware-derived), clamped to [100, 1_000_000].
+#      A stronger machine -> a larger population, automatically; no fixed magic cap.
+#   3. if memory cannot be detected -> fixed fallback 600 (~1% of 64K RAM).
+# Affects memory allocation: BIRTH_BUF_SZ and the UNIVERSE_MAX_* pools below all
+# derive from this value.
+try:
+    from auto_capacity import resolve_max_organisms as _resolve_max_orgs
+    MAX_ORGANISMS = _resolve_max_orgs(fallback=600)
+except Exception:
+    MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
 # Derived: MAX_ORGANISMS // 4 = maximum concurrent births per tick (25% of population).
 BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 
@@ -591,6 +591,19 @@ EVOLVABLE_CONSTANTS = (os.environ.get("GENESIS_EVOLVABLE_CONSTANTS", "0") == "1"
 UNIVERSE_MAX_NEURONS = int(MAX_ORGANISMS * (N_IO + 800))
 UNIVERSE_MAX_SYNAPSES = int(UNIVERSE_MAX_NEURONS * 4)
 UNIVERSE_MAX_DNA = int(UNIVERSE_MAX_SYNAPSES * 5 // 2)
+
+# Session 14: DALE'S LAW - excitatory/inhibitory neuron diversity (E/I balance).
+# Mammalian cortex is ~80% excitatory / ~20% inhibitory (biologically derived; a hardware/
+# biology fact, Rule-21 class H - not a game mechanic). Each neuron carries a fixed SIGN:
+# +1 (excitatory) or -1 (inhibitory). The sign multiplies the MAGNITUDE of every synapse the
+# neuron emits, so an inhibitory neuron inhibits ALL its targets (Dale's law) instead of the
+# prior behaviour where each synapse's sign was independent. The sign is read from an
+# otherwise-unused genome byte (NEURON_MARKER gene byte i+1), so the E/I ratio is EVOLVABLE -
+# the threshold below only sets the STARTING bias near the biological 80/20.
+# Compile-time gated (GENESIS_DALE, default OFF) -> byte-identical to the prior kernel when off.
+DALE = os.environ.get("GENESIS_DALE", "0") == "1"
+INHIBIT_BYTE_THRESH = np.int64(int(256 * 0.80))  # 204: genome byte < 204 -> excitatory (+1)
+global_neuron_sign = np.ones(UNIVERSE_MAX_NEURONS, dtype=np.int8)  # default excitatory (+1)
 # MAX_DNA_PER_ORG: maximum genome size per organism. 8192 = 2^13 = allows ~2048 GENE_MARKER.
 # Environmental override via GENESIS_MAX_DNA_PER_ORG.
 MAX_DNA_PER_ORG = int(os.environ.get("GENESIS_MAX_DNA_PER_ORG", str(UNIVERSE_MAX_DNA // MAX_ORGANISMS)))
@@ -808,9 +821,13 @@ def decode_genome(
     o_rec_v_rest, o_rec_tau_def, org_id,
     global_sense_type, global_sense_meta, global_act_drive,
     g_conn_w_dna,  # (N_SYN,) float32: DNA birth weight
+    global_neuron_sign,  # (N_NEU,) int8: Dale's-law E/I sign per neuron (+1 exc / -1 inh)
 ):
     s_idx = 0
     h_idx = 0
+    if DALE:
+        for _n in range(n_c):
+            global_neuron_sign[n_ptr + _n] = 1   # default excitatory; inhibitory hidden set below
 
     for i in range(N_IO):
         global_rec_id[n_ptr + i] = 0
@@ -851,6 +868,13 @@ def decode_genome(
                     global_sense_type[n_ptr + N_IO + h_idx] = 0   # ordinary LIF hidden neuron
                 if EVOACT:
                     global_act_drive[n_ptr + N_IO + h_idx] = 0    # ordinary neuron, drives no action
+                if DALE:
+                    # Dale's law: the otherwise-unused gene byte i+1 sets excitatory (+1) vs
+                    # inhibitory (-1); ~80/20 starting bias, evolvable by mutation.
+                    if global_genome[g_ptr + i + 1] < INHIBIT_BYTE_THRESH:
+                        global_neuron_sign[n_ptr + N_IO + h_idx] = 1
+                    else:
+                        global_neuron_sign[n_ptr + N_IO + h_idx] = -1
                 h_idx += 1
             i += 5
         elif EVOSENSE and marker == SENSOR_MARKER and i + 4 < g_count:
@@ -976,7 +1000,7 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
             sense_buf[RAM_BIT0_INPUT + bit] = 1.0
     
     left_pos = pos - 1 if pos > 0 else 0
-    right_pos = pos + 1 if pos < RAM_SIZE - 1 else pos
+    right_pos = pos + 1 if pos < len(ram_substrate) - 1 else pos
     
     voice_acc = 0
     # Neighbour-voice sense (inputs 4-6): live vocal_cords. NOTE (Exp 15 isolation): this is the
@@ -1000,8 +1024,8 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     # instead of blundering. Sampling cost is charged in world_tick_numba (2*FOOD_SCAN_RADIUS).
     food_ahead = np.float32(0.0)
     food_behind = np.float32(0.0)
-    for k in range(1, p_food_scan_radius + 1):   # Session 9: per-organism evolvable radius
-        ba = ram_substrate[addr + k] if addr + k < RAM_SIZE else 0
+    for k in range(1, FOOD_SCAN_RADIUS + 1):
+        ba = ram_substrate[addr + k] if addr + k < len(ram_substrate) else 0
         bb = ram_substrate[addr - k] if addr - k >= 0 else 0
         if SEEK_TEXT:
             # Books economy: climb toward readable symbols (printable, non-food, non-empty).
@@ -1028,7 +1052,7 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
     caller. NOTE: a sampled neighbour affordance (energy/voice) at an EMPTY cell reads 0 — absence is
     information too. own_energy is the calling organism's own reserve (for interoception)."""
     target = pos + offset
-    if target < 0 or target >= RAM_SIZE:
+    if target < 0 or target >= len(ram_substrate):
         return 0.0
     addr = target
     if aff_type == 0:
@@ -1226,7 +1250,7 @@ def world_tick_numba(
         crowd_count = np.float32(0.0)
         for offset in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
             target = pos + offset
-            if 0 <= target < RAM_SIZE and org_grid[target] != -1:
+            if 0 <= target < len(ram_substrate) and org_grid[target] != -1:
                 crowd_count += 1.0
         crowding = crowd_count / np.float32(2 * FOOD_SCAN_RADIUS + 1)
 
@@ -1448,7 +1472,15 @@ def world_tick_numba(
                             total_atp += CYCLES_PER_SYNAPSE_READ
                             continue
                     w = global_conn_weight[s_ptr + c]
-                    global_v[n_ptr + dst] += w
+                    if DALE:
+                        # Dale's law: sign comes from the PRESYNAPTIC neuron; |w| is the synapse
+                        # strength, so an inhibitory neuron inhibits ALL its targets.
+                        if global_neuron_sign[n_ptr + src] > 0:
+                            global_v[n_ptr + dst] += (w if w >= np.float32(0.0) else -w)
+                        else:
+                            global_v[n_ptr + dst] -= (w if w >= np.float32(0.0) else -w)
+                    else:
+                        global_v[n_ptr + dst] += w
                     total_atp += CYCLES_PER_SYNAPSE_READ
             
             # Phase 2: Input and Hidden/Output LIF logic
@@ -1667,7 +1699,7 @@ def world_tick_numba(
                     if noff == 0:
                         continue
                     target = pos + noff
-                    nb2 = org_grid[target] if 0 <= target < RAM_SIZE else -1
+                    nb2 = org_grid[target] if 0 <= target < len(ram_substrate) else -1
                     if nb2 != -1 and nb2 != org and alive[nb2] and action_now[nb2] == best_a:
                         niche_same += 1
                 
@@ -1735,7 +1767,7 @@ def world_tick_numba(
                     s_bits += 1
             for side in range(2):
                 npos = pos - 1 if side == 0 else pos + 1
-                if npos < 0 or npos >= RAM_SIZE:
+                if npos < 0 or npos >= len(ram_substrate):
                     continue
                 nb = org_grid[npos]
                 if nb != -1 and nb != org and alive[nb]:
@@ -1835,7 +1867,7 @@ def world_tick_numba(
         # (a solved prediction); a nonzero wrong guess logs type 2 (miss).
         grazed = False
         nxt = pos + 1
-        if nxt < RAM_SIZE:
+        if nxt < len(ram_substrate):
             next_byte = ram_substrate[nxt]
         else:
             next_byte = 0
@@ -2169,9 +2201,9 @@ def world_tick_numba(
         if best_n > 0 and best_a >= 0:
             if (not grazed) and best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
                 npos = pos
-                if best_a == OUT_JMP_FWD: npos = min(pos + 1, RAM_SIZE - 1)
+                if best_a == OUT_JMP_FWD: npos = min(pos + 1, len(ram_substrate) - 1)
                 elif best_a == OUT_JMP_BCK: npos = max(pos - 1, 0)
-                elif best_a == OUT_JMP_FWD_10: npos = min(pos + LONG_JUMP_STRIDE, RAM_SIZE - 1)
+                elif best_a == OUT_JMP_FWD_10: npos = min(pos + LONG_JUMP_STRIDE, len(ram_substrate) - 1)
                 elif best_a == OUT_JMP_BCK_10: npos = max(pos - LONG_JUMP_STRIDE, 0)
                 
                 energy[org] -= CYCLES_PER_MOVE

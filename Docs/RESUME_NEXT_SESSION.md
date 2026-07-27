@@ -151,6 +151,165 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-26 — session 14c: Dale's-law E/I neuron diversity)
+
+**Added excitatory/inhibitory neuron diversity (Dale's law) to the engine, and
+demonstrated that inhibition stabilises network activity.** Probe:
+`tests/dale_ei_probe.py` (PASS, exit 0); plot: `tests/dale_ei_balance.png`.
+
+### What changed
+- The user asked to make the network more brain-like by adding two neuron types:
+  excitatory (~80%) and inhibitory (~20%), the mammalian cortical ratio. Previously
+  each synapse's sign was independent; real cortex obeys Dale's law - each neuron is
+  EITHER excitatory OR inhibitory.
+- **Engine (`neuromorphic_engine.py`):**
+  - `DALE` compile-time gate (`GENESIS_DALE`, default OFF -> byte-identical kernel).
+  - `global_neuron_sign` int8 array (+1 excitatory / -1 inhibitory), a module global
+    the kernel reads by reference (no world_tick signature change).
+  - `decode_genome` sets each hidden neuron's sign from an otherwise-unused genome byte
+    (NEURON_MARKER byte i+1), so the E/I ratio is EVOLVABLE; starting bias ~80/20 via
+    `INHIBIT_BYTE_THRESH=204` (biologically derived, Rule-21 class H).
+  - Phase-1 synaptic effect is now `|w| * sign[src]` (Dale's law): an inhibitory neuron
+    inhibits ALL its targets.
+  - `global_neuron_sign` is passed as a WRITABLE arg to decode_genome (module globals
+    are read-only inside @njit; args are writable).
+- **genesis_lab.py:** imports `global_neuron_sign` and passes it to `decode_genome`.
+
+### Proof
+- DALE=1 JIT-compiles and runs (decode + world_tick). Default ancestor decodes to
+  all-excitatory (evolvable starting point).
+- `tests/dale_ei_probe.py`: a dense recurrent LIF network (SAME update as the engine,
+  heterogeneous neurons, inhibitory synapses 4x stronger = cortical balance) responds to
+  a stimulus. ALL-EXCITATORY (no brakes): mean firing 0.334, std 0.278 (overactive +
+  bursty/epileptiform). 80/20 E/I (with brakes): mean 0.092, std 0.036 (controlled +
+  stable). Inhibition cuts activity 3.6x and makes it 7.8x steadier.
+
+### Files changed
+- `src/neuromorphic_engine.py` (DALE gate + global_neuron_sign + decode sign + Phase-1),
+  `src/genesis_lab.py` (import + decode arg), `tests/dale_ei_probe.py` (new),
+  `tests/dale_ei_balance.png` (new).
+
+### Quick-start (this work)
+```bash
+cd /home/user/repos/GENESIS
+GENESIS_DALE=1 python3 -c "import sys; sys.path.insert(0,'src'); import genesis_lab"
+python3 tests/dale_ei_probe.py    # -> PASS, exit 0; saves dale_ei_balance.png
+```
+
+---
+
+## Latest Session Update (2026-07-26 — session 14b: Hardware-Aware Population Cap)
+
+**The population ceiling is now sized to the machine, not a magic number.** Design:
+`Docs/HARDWARE_AWARE_CAPACITY_DESIGN.md`. Module: `src/auto_capacity.py`. Probe:
+`tests/auto_capacity_probe.py` (7/7 PASS).
+
+### What changed
+- The user did not want a fixed `MAX_ORGANISMS=600`; they wanted the cap derived from
+  the hardware at run time (bigger machine -> bigger population, automatically).
+- A cap still EXISTS (memory is finite; the neuron/synapse/genome pools are
+  pre-reserved per POTENTIAL organism), but it now comes from measured RAM, not a
+  hand-picked constant.
+- **Memory model (measured):** each potential organism reserves 122,081 B (~119.2 KB)
+  across the pools (formula cross-check matches exactly); +20% margin -> ~143 KB.
+- **`src/auto_capacity.py` (new):** `budget = available*0.60 - 1GB reserve`;
+  `cap = clamp(budget // 143KB, 100, 1_000_000)`. Detects memory via psutil (fallback
+  /proc/meminfo), honours cgroup limits. Precedence: env override > auto > fallback 600.
+- **Engine integration:** `neuromorphic_engine.py` MAX_ORGANISMS now resolved via
+  `auto_capacity.resolve_max_organisms(fallback=600)` (try/except -> old behaviour if
+  the module is unavailable). BIRTH_BUF_SZ and UNIVERSE_MAX_* derive from it automatically.
+
+### Proof
+- `tests/auto_capacity_probe.py` 7/7: AUTO (this 8GB host -> ~23,600 orgs, ~2.8GB
+  reserved), OVERRIDE wins, UNSET->auto, SCALING (8GB->25,435; 128GB->516,913),
+  CLAMPS (min 100 / max 1M / undetectable->600).
+- End-to-end: cap=2000 -> genesis_lab neuron pool exactly 1,678,000; synapse 6,712,000.
+- Pre-existing probes pinned to cap=600 (setdefault) for speed/portability; still pass
+  (dynamic_compact_ram 9/9 + oscillation signature reproduced).
+
+### Files changed
+- `src/auto_capacity.py` (new), `src/neuromorphic_engine.py` (MAX_ORGANISMS),
+  `tests/auto_capacity_probe.py` (new), `tests/dynamic_compact_ram_probe.py` +
+  `tests/oscillation_maxrun_probe.py` (cap pin), `Docs/HARDWARE_AWARE_CAPACITY_DESIGN.md` (new).
+
+### Quick-start (this work)
+```bash
+cd /home/user/repos/GENESIS
+python3 src/auto_capacity.py            # self-report: BYTES_PER_ORGANISM + auto cap
+python3 tests/auto_capacity_probe.py    # -> 7/7 PASS, exit 0
+GENESIS_MAX_ORGANISMS=5000 python3 ...  # explicit override still wins
+```
+
+---
+
+## Latest Session Update (2026-07-26 — session 14: Dynamic Compact RAM + Oscillation Root-Cause)
+
+**Two deliverables, both proven by execution (not assertion).** Full design:
+`Docs/DYNAMIC_COMPACT_RAM_DESIGN.md`. Probes: `tests/dynamic_compact_ram_probe.py`
+(9/9 PASS) and `tests/oscillation_maxrun_probe.py` (root-cause signature reproduced);
+diagnosis evidence: `tests/oscillation_diagnosis.json`.
+
+### (1) Dynamic Compact RAM — implemented + proven
+The user's law `RAM_SIZE = book_size + organism_count`, zero empty space, resize on
+book-switch and on solve, with position remapping.
+- **Engine made size-agnostic** (the prerequisite): the 9 in-kernel `RAM_SIZE`
+  bounds-checks in `sense` / `sense_affordance` / `world_tick_numba` are now
+  `len(ram_substrate)` — a runtime value, so ONE compilation is correct for any
+  universe size (no per-size recompile). Module-level `RAM_SIZE`/`ATP_MAX` untouched
+  (they remain the hardware-capacity ceiling). Behaviour-preserving at the default size.
+- **`src/dynamic_compact_ram.py` (new):** host-side compact engine. Layout
+  `[0,book_bytes)` = book (non-blank), `[book_bytes,U)` = one home cell per organism
+  (`ORG_HOME_MARKER=0x01`, class-O marker). Invariants split into allocation-time
+  (size law + zero-empty + valid-pos + fresh layout) and durable/runtime (zero-empty
+  + valid-pos). API: `build_compact_universe`, `reallocate_compact` (resize+remap),
+  `shrink_on_solve` (shrink book region), `reallocate_lab_state` (genesis_lab seam that
+  resizes ALL RAM-sized globals together + remaps `g_positions` + recomputes
+  `LIB_START`/`CANVAS_*`).
+- **Proof:** probe tests A/B are DISCRIMINATING (they crash on the old baked-65536
+  kernel); C1-C6 cover build/size-law/book-switch(50->80)/death-shrink(5->3)/solve-shrink
+  (80->77)/negative-test; **D runs the real `world_tick_numba` for 3 ticks on a compact
+  U=121 universe** with no bounds crash and invariants intact.
+- **Integration seam located, not yet wired into the tuned main loop** (deliberate —
+  Result.md's carrying-capacity balance must be re-validated first). Wire points:
+  `ws_handler` book-switch (~L515/543/547) and main-loop restock (~L1562-1572).
+
+### (2) Oscillation / max_run=1 — MEASURED root cause (was "unknown")
+- **M1 membrane depth:** integrating the LIF with the real default params
+  (`tau_m=2, v_rest=0, v_reset=0, thresh=128`), an EPSP decays x0.5/tick
+  (64->32->16->8->...) and is wiped to `v_reset` on fire with `prev_spk_buf` zeroed each
+  tick -> **~1 step of usable discrete context** (confirms Exp 43, engine L438-457).
+- **M2 recruitment:** the WMEM latch (`MEMORY_MARKER=198`) and SCRATCH register
+  (`SCRATCH_MARKER=199`) are **kernel-enabled by default** (engine `GENESIS_WMEM`/
+  `GENESIS_SCRATCH` default `"1"`) but the **ancestor seed** injects those genes only
+  when the same vars are `"1"` with a **default `"0"`** (`genesis_lab.py` L803/L838).
+  Measured: default ancestor = 0 MEMORY + 0 SCRATCH genes; flags set = 16 + 32;
+  default cohort = 0/1 carriers.
+- **Diagnosis:** `max_run=1` because the leaky membrane holds ~1 step AND the default
+  population is seeded with no memory primitives to recruit; the ~92% solve-rate IS the
+  run-length=1 echo reflex. Concrete defect: a default-value asymmetry on the same env
+  var (engine `"1"` vs seed `"0"`).
+- **Falsifiable next step (pre-registered, NOT yet run):** curriculum with
+  `GENESIS_WMEM=1`/`GENESIS_SCRATCH=1` (+`STDP_TARGET=1` to potentiate the seeded silent
+  read-out wires). If `max_run`>1 -> recruitment was the bottleneck (harmonise the seed
+  default). If still 1 with fabric+learner on -> bottleneck is credit assignment.
+
+### Files changed this session
+- `src/neuromorphic_engine.py` — 9 in-kernel bounds -> `len(ram_substrate)`.
+- `src/dynamic_compact_ram.py` (new), `tests/dynamic_compact_ram_probe.py` (new),
+  `tests/oscillation_maxrun_probe.py` (new), `tests/oscillation_diagnosis.json` (new),
+  `Docs/DYNAMIC_COMPACT_RAM_DESIGN.md` (new).
+
+### Quick-start (this work)
+```bash
+cd /home/user/repos/GENESIS
+pip install "numba==0.61.2"          # for numpy 2.1.2
+rm -rf /tmp/genesis_numba_* src/__pycache__   # clear cache after engine edits
+python3 tests/dynamic_compact_ram_probe.py     # -> 9/9 PASS, exit 0
+python3 tests/oscillation_maxrun_probe.py      # -> root-cause signature reproduced, exit 0
+```
+
+---
+
 ## Latest Session Update (2026-07-25 — session 7: Exp 87 — Metabolic-Ceiling Evolution)
 
 **The audit of Rule 21.2 / Exp 78b is done and the proposed "income-gradient" next step was

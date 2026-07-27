@@ -187,6 +187,7 @@ os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if D
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX, CAM_SLOTS, CAM_KEY_BITS, CAM_KEY_BYTES,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
+    global_neuron_sign,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,
     SENSOR_MARKER, EVOSENSE, N_AFFORDANCE, ACTUATOR_MARKER, EVOACT,
     MEMORY_MARKER, WMEM,
@@ -1010,6 +1011,7 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
         o_rec_v_rest, o_rec_tau_def, org_id,
         g_global_sense_type, g_global_sense_meta, g_global_act_drive,
         g_conn_w_dna,
+        global_neuron_sign,
     )
 
     # Rule 21.2 (Tier-1): decode per-organism evolvable constants from the genome's PARAM records.

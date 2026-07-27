@@ -1,0 +1,60 @@
+{
+  "session": 14,
+  "symptom": "max_run=1 despite ~92% solve-rate; population oscillates on the run-length ramp",
+  "measurements": {
+    "M1_membrane": {
+      "tau_m": 2.0,
+      "v_rest": 0.0,
+      "v_reset": 0.0,
+      "thresh": 128.0,
+      "epsp_decay_ratio_per_tick": 0.5,
+      "decay_tail_ticks_5pct_band": 4,
+      "usable_discrete_depth_steps": 1,
+      "leaky": true,
+      "voltage_trace_first12": [
+        64.0,
+        32.0,
+        16.0,
+        8.0,
+        4.0,
+        2.0,
+        1.0,
+        0.5,
+        0.25,
+        0.125,
+        0.062,
+        0.031
+      ]
+    },
+    "M2_recruitment": {
+      "ancestor_markers_default": {
+        "MEMORY_MARKER": 0,
+        "SCRATCH_MARKER": 0,
+        "genome_bytes": 248
+      },
+      "ancestor_markers_seeded": {
+        "MEMORY_MARKER": 16,
+        "SCRATCH_MARKER": 32,
+        "genome_bytes": 973
+      },
+      "cohort_carriers": {
+        "carriers": 0,
+        "alive": 1
+      },
+      "kernel_ready_seed_empty_asymmetry": true
+    },
+    "engine_gates": {
+      "WMEM": true,
+      "SCRATCH": true,
+      "STDP_TARGET": false,
+      "DELAY": false
+    }
+  },
+  "root_cause": "Two compounding facts. (1) The leaky LIF membrane holds ~1 step of USABLE context (measured M1: tau_m=2.0, EPSP decays x0.5/tick and is wiped to v_reset on fire; prev_spk_buf is zeroed each tick \u2014 documented Exp 43), so no topology can hold a discrete symbol value across an intervening cell. (2) The memory-latch (WMEM) and scratch-register (SCRATCH) primitives that fix this are KERNEL-ENABLED by default (engine GENESIS_WMEM/GENESIS_SCRATCH default '1') but the ANCESTOR SEED only injects those genes when the same vars are '1' with a DEFAULT OF '0' (genesis_lab) \u2014 so a default run starts with 0+0 memory genes (measured M2) and 0/1 cohort carriers. With only the ~1-step membrane available, run-length>1 (which must hold the prior symbol across an intervening cell) collapses to the run-length=1 echo reflex; the ~92% solve-rate IS that reflex.",
+  "falsifiable_next_step": "Run the curriculum with GENESIS_WMEM=1 and/or GENESIS_SCRATCH=1 (and STDP_TARGET=1 so the learner can potentiate the seeded silent read-out wires). If max_run rises above 1, recruitment was the bottleneck and the seed-default should be harmonised with the kernel-default. If it stays 1 with the fabric seeded + learner on, the bottleneck is credit assignment, precisely localised.",
+  "evidence_files": [
+    "src/neuromorphic_engine.py L438-457 (WMEM latch, Exp 43/44 diagnosis)",
+    "src/neuromorphic_engine.py L268-283 (SCRATCH register, Exp 46)",
+    "src/genesis_lab.py L803-848 (ancestor seeds MEMORY/SCRATCH only under flag, default '0')"
+  ]
+}
