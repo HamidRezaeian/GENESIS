@@ -4,6 +4,53 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-26 — session 14c: Dale's-law E/I neuron diversity)
+
+**Added excitatory/inhibitory neuron diversity (Dale's law) to the engine, and
+demonstrated that inhibition stabilises network activity.** Probe:
+`tests/dale_ei_probe.py` (PASS, exit 0); plot: `tests/dale_ei_balance.png`.
+
+### What changed
+- The user asked to make the network more brain-like by adding two neuron types:
+  excitatory (~80%) and inhibitory (~20%), the mammalian cortical ratio. Previously
+  each synapse's sign was independent; real cortex obeys Dale's law - each neuron is
+  EITHER excitatory OR inhibitory.
+- **Engine (`neuromorphic_engine.py`):**
+  - `DALE` compile-time gate (`GENESIS_DALE`, default OFF -> byte-identical kernel).
+  - `global_neuron_sign` int8 array (+1 excitatory / -1 inhibitory), a module global
+    the kernel reads by reference (no world_tick signature change).
+  - `decode_genome` sets each hidden neuron's sign from an otherwise-unused genome byte
+    (NEURON_MARKER byte i+1), so the E/I ratio is EVOLVABLE; starting bias ~80/20 via
+    `INHIBIT_BYTE_THRESH=204` (biologically derived, Rule-21 class H).
+  - Phase-1 synaptic effect is now `|w| * sign[src]` (Dale's law): an inhibitory neuron
+    inhibits ALL its targets.
+  - `global_neuron_sign` is passed as a WRITABLE arg to decode_genome (module globals
+    are read-only inside @njit; args are writable).
+- **genesis_lab.py:** imports `global_neuron_sign` and passes it to `decode_genome`.
+
+### Proof
+- DALE=1 JIT-compiles and runs (decode + world_tick). Default ancestor decodes to
+  all-excitatory (evolvable starting point).
+- `tests/dale_ei_probe.py`: a dense recurrent LIF network (SAME update as the engine,
+  heterogeneous neurons, inhibitory synapses 4x stronger = cortical balance) responds to
+  a stimulus. ALL-EXCITATORY (no brakes): mean firing 0.334, std 0.278 (overactive +
+  bursty/epileptiform). 80/20 E/I (with brakes): mean 0.092, std 0.036 (controlled +
+  stable). Inhibition cuts activity 3.6x and makes it 7.8x steadier.
+
+### Files changed
+- `src/neuromorphic_engine.py` (DALE gate + global_neuron_sign + decode sign + Phase-1),
+  `src/genesis_lab.py` (import + decode arg), `tests/dale_ei_probe.py` (new),
+  `tests/dale_ei_balance.png` (new).
+
+### Quick-start (this work)
+```bash
+cd /home/user/repos/GENESIS
+GENESIS_DALE=1 python3 -c "import sys; sys.path.insert(0,'src'); import genesis_lab"
+python3 tests/dale_ei_probe.py    # -> PASS, exit 0; saves dale_ei_balance.png
+```
+
+---
+
 ## Latest Session Update (2026-07-26 — session 14b: Hardware-Aware Population Cap)
 
 **The population ceiling is now sized to the machine, not a magic number.** Design:
