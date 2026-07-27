@@ -61,9 +61,9 @@ vc = np.zeros(MAX_ORG, dtype=np.int32)
 vp = np.zeros(MAX_ORG, dtype=np.int32)
 sb = np.zeros(N_INPUT, dtype=np.float32)
 try:
-    E.sense(U - 1, ram, grid, np.float32(1000.0), 0, vc, vp, sb)   # last cell
+    E.sense(U - 1, ram, grid, np.float32(1000.0), 0, vc, vp, sb, E.FOOD_SCAN_RADIUS)   # last cell
     last3 = float(sb[3])
-    E.sense(0, ram, grid, np.float32(1000.0), 0, vc, vp, sb)       # first cell
+    E.sense(0, ram, grid, np.float32(1000.0), 0, vc, vp, sb, E.FOOD_SCAN_RADIUS)       # first cell
     record("A: sense() boundary-safe on tiny substrate (len=%d)" % U, True,
            "no IndexError at pos=0 and pos=%d; sense_buf[3]=%.3f (byte/255)" % (U - 1, last3))
 except Exception as e:
@@ -189,6 +189,7 @@ try:
                 lab.g_conn_w_dna,
                 lab.g_cam_keys, lab.g_cam_vals, lab.g_cam_valid, lab.g_cam_tick,
                 lab.g_clear_count,
+                lab.g_org_run, lab.g_lump_acc, lab.g_race_state, lab.g_race_attempt_q,  # Session 15: sync probe to current 79-arg engine signature
             )
             lab.global_time += 1
             alive_per_tick.append(sum(1 for i in range(MAX_ORG) if lab.g_alive[i]))

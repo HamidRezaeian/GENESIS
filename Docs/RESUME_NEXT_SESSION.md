@@ -151,6 +151,104 @@ Read this file FIRST. It tells you exactly where the project stands.
 
 ---
 
+## Latest Session Update (2026-07-27 — session 15: Dale + working-memory + learning A/B on max_run)
+
+**Goal:** test whether the COMBINED treatment (Dale's-law E/I + seeded working-memory
+fabric + targeted STDP) makes in-lifetime learning load-bearing — i.e. lifts `max_run`
+beyond the run-length-1 echo reflex on `Books/English/00_Graded.txt` (the Ascent.md
+criterion-B question Exp 30 failed). **Honest result: NULL.** The treatment does NOT
+beat baseline; the bottleneck localises to credit assignment / the learning rule, not
+memory recruitment.
+
+### (1) Ancestor now seeds REAL E/I when GENESIS_DALE=1 (grounded, Rule-21-savvy)
+Session 14c added Dale's law to the engine but the ancestor decoded ALL hidden neurons
+excitatory (sign byte = N_IO+i < 204), so DALE=1 alone made no inhibitory neuron.
+- **`src/genesis_lab.py`:** `create_intelligent_ancestor` now sets the NEURON_MARKER
+  sign byte (gene byte i+1; decode: `< INHIBIT_BYTE_THRESH` -> +1 else -1) so the
+  cortical ~80/20 ratio is seeded. The inhibitory FRACTION is H-derived from the SAME
+  engine constant: `inh_frac = (256 - INHIBIT_BYTE_THRESH)/256 = 52/256 ~= 0.203`, so
+  `round(inh_frac * 5) = 1` of the 5 buffer hidden neurons starts inhibitory (sign byte
+  = INHIBIT_BYTE_THRESH = 204). The byte stays an EVOLVABLE gene (Rule 21.2 class E):
+  mutation moves it across the threshold, selection sets the final ratio. Specialized
+  fabric neurons (WMEM write-gate, SCRATCH recall) deliberately stay excitatory (an
+  inhibitory write-gate would invert latch clocking). DALE off -> byte-identical ancestor.
+- **Proven:** DALE=0 -> genome 253 B, buffer sign bytes `[39,40,41,42,43]` (legacy).
+  DALE=1 -> `[39,40,41,42,204]`; decoded `global_neuron_sign` hidden = `[1,1,1,1,-1]`
+  = exactly 1 inhibitory of 5.
+
+### (2) A/B experiment — `tests/ab_run_one.py` (new headless runner)
+- **Baseline:** DALE=0, WMEM=0, SCRATCH=0, STDP_TARGET=0. **Treatment:** all four =1.
+  Both NOLEARN=0 (learning ON), book `English/00_Graded`, 6000 ticks, pop=120, 3 seeds.
+- **Scoring:** INCOME_FOOTPRINT=1 + INCOME_LUMP_SUM=1 (shared) so `g_org_run` populates.
+- **Two encounter fixes were REQUIRED to get any reads at all** (the default 2^21-cell
+  RAM with a 6000-B library left organisms starving before finding text; reads=0):
+  (a) Session-14 **compact RAM** (`dynamic_compact_ram.reallocate_lab_state`) shrinks the
+  universe to `U = book_bytes + n_alive`, placing every organism adjacent to the scroll;
+  (b) an **energy floor** survival scaffold (identical across arms) keeps organisms alive
+  to read/learn, decoupling survival from reading income.
+- **Two book modes:** `full` (whole ramp 10->5->3->2->1) and `run1` (only the
+  run-length-1 tail = the `ABCDEFGHIJ` cycle, where echo is ALWAYS wrong -> the
+  discriminating memory test).
+- **max_run measured two ways:** engine `g_org_run` (caps at LUMPSUM_K-1 = 7 — the known
+  Session-11 measurement artifact, g_org_run resets within the firing tick) AND an
+  UNCAPPED per-organism consecutive-correct streak reconstructed from the read_log.
+
+### (3) Result (mean +/- std over 3 seeds) — `ab_results.json`, `ab_summary.csv`
+| book | arm | max_run(g_org_run) | max_streak(uncapped) | solve_rate | total_reads |
+|---|---|---|---|---|---|
+| full | baseline  | 7 | 29.0 +/- 9.2  | 0.103 +/- 0.014 | 6884 +/- 1245 |
+| full | treatment | 7 | 34.3 +/- 18.6 | 0.100 +/- 0.018 | 4221 +/- 1223 |
+| run1 | baseline  | 7 | 36.7 +/- 12.7 | 0.056 +/- 0.007 | 3472 +/- 611  |
+| run1 | treatment | 7 | 30.3 +/- 10.6 | 0.058 +/- 0.009 | 2267 +/- 239  |
+
+Plots: `tests/ab_bars.png`, `tests/ab_timeline.png`.
+
+### (4) Verdict + bottleneck localisation
+- `max_run` (g_org_run) = 7 in BOTH arms (echo on the repeated sections + baseline STDP
+  already hit the LUMPSUM_K-1 ceiling) -> the literal "max_run>1" bar is met by baseline
+  too, so it does NOT discriminate and does NOT falsify Exp 30.
+- `max_streak_uncapped` OVERLAPS completely (run1: baseline even slightly higher, 36.7 vs
+  30.3). `solve_rate` is identical (full ~0.10, run1 ~0.057). `total_reads` is LOWER under
+  treatment (slower reading; likely the memory-fabric + Dale compute overhead).
+- **Conclusion:** seeding WMEM/SCRATCH + E/I + STDP_TARGET does NOT make learning
+  load-bearing beyond baseline STDP+echo. Per the user's decision tree (max_run stayed at
+  the echo/learning ceiling with fabric+learner on), the bottleneck is CREDIT ASSIGNMENT /
+  the learning rule itself — consistent with Exp 30 (STDP net-negative, weights drift to
+  noise) and the L271 store-clock / L290 STDP3C recruitment blockers: organisms cannot
+  LEARN TO ADDRESS the seeded memory (credit never reaches the silent read-out wires).
+- Connection to Session 11: K=8 (used here) is "near-worst"; K=2/K=3 break the metabolic
+  ceiling. A K-sweep x treatment interaction is a natural follow-up, but is a different
+  lever (metabolic ceiling) from the learning-load-bearing question tested here.
+
+### Caveats (be honest)
+- The energy floor removed the selection pressure that could amplify a treatment benefit
+  over generations; compact-RAM cold-start is a simplified regime vs the full evolved system.
+- 00_Graded may be too easy (echo+baseline-STDP solve it), leaving no headroom for treatment.
+- 6000 ticks / 3 seeds; this is a NULL result (Rule 3's >=5 seeds applies to positive claims).
+
+### Files changed
+- `src/genesis_lab.py` (import DALE/INHIBIT_BYTE_THRESH; E/I-aware hidden-buffer seeding),
+  `tests/ab_run_one.py` (new headless A/B runner: compact RAM + energy floor + LUMP_SUM
+  scoring + uncapped streak + full/run1 book modes), `tests/dynamic_compact_ram_probe.py`
+  (synced to the current 79-arg engine signature: +g_org_run/g_lump_acc/g_race_state/
+  g_race_attempt_q in test D, +p_food_scan_radius in test A -> 9/9 again),
+  `tests/ab_bars.png`, `tests/ab_timeline.png`, `Docs/RESUME_NEXT_SESSION.md`.
+
+### Quick-start (this work)
+```bash
+cd /home/user/GENESIS
+pip install "numba==0.61.2"
+rm -rf /tmp/genesis_numba_* src/__pycache__
+python3 tests/dynamic_compact_ram_probe.py        # -> 9/9 PASS
+# one A/B arm (fresh interpreter per arm; gates are compile-time):
+GENESIS_ECONOMY=books GENESIS_NOLEARN=0 GENESIS_INCOME_FOOTPRINT=1 GENESIS_INCOME_LUMP_SUM=1 \
+GENESIS_DALE=1 GENESIS_WMEM=1 GENESIS_SCRATCH=1 GENESIS_STDP_TARGET=1 \
+AB_ARM=treatment AB_BOOK_MODE=run1 AB_N_TICKS=6000 AB_POP=120 AB_ENERGY_FLOOR=100000 \
+python3 tests/ab_run_one.py                        # -> RESULT_JSON:{...} on stdout
+```
+
+---
+
 ## Latest Session Update (2026-07-26 — session 14c: Dale's-law E/I neuron diversity)
 
 **Added excitatory/inhibitory neuron diversity (Dale's law) to the engine, and

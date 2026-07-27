@@ -30,12 +30,12 @@
       "ancestor_markers_default": {
         "MEMORY_MARKER": 0,
         "SCRATCH_MARKER": 0,
-        "genome_bytes": 248
+        "genome_bytes": 253
       },
       "ancestor_markers_seeded": {
         "MEMORY_MARKER": 16,
         "SCRATCH_MARKER": 32,
-        "genome_bytes": 973
+        "genome_bytes": 978
       },
       "cohort_carriers": {
         "carriers": 0,
