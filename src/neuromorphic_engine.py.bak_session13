@@ -1082,16 +1082,6 @@ CLEAR_THRESHOLD = int(os.environ.get("GENESIS_CELL_CLEAR_THRESHOLD", "10"))
 INCOME_LUMP_SUM = os.environ.get("GENESIS_INCOME_LUMP_SUM", "0") == "1"
 LUMPSUM_K = int(os.environ.get("GENESIS_LUMPSUM_K", "8"))
 
-# ---- Session 13: competitive racing reward (feature-flagged, default OFF) ----
-INCOME_RACE = os.environ.get("GENESIS_INCOME_RACE", "0") == "1"
-RACE_N_QUESTIONS = max(1, int(os.environ.get("GENESIS_RACE_N_QUESTIONS", "8")))
-RACE_STRIDE = max(1, int(os.environ.get("GENESIS_RACE_STRIDE", "256")))
-RACE_K = max(1, int(os.environ.get("GENESIS_RACE_K", str(LUMPSUM_K))))
-
-# Module-level race state arrays (passed to @njit as args)
-g_race_state = np.full((RACE_N_QUESTIONS, 3), np.nan, dtype=np.float32)
-g_race_attempt_q = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
-
 @njit(cache=True)
 def world_tick_numba(
     ram_substrate, org_grid, positions, alive, energy, age,
@@ -1115,8 +1105,6 @@ def world_tick_numba(
     g_clear_count,           # (RAM_SIZE,) int32: per-cell correct-prediction counter (Phase 4)
     g_org_run,               # (MAX_ORG,) int32: consecutive correct-prediction run length (Session 9 lump-sum)
     g_lump_acc,              # (MAX_ORG,) float32: deferred income paid on work-unit completion (Session 9)
-    g_race_state,            # (RACE_N_QUESTIONS, 3) float32: [best_cost, solved_flag, start_pos] per question
-    g_race_attempt_q,        # (MAX_ORGANISMS,) int32: which question each organism is attempting (-1 if none)
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -1990,42 +1978,12 @@ def world_tick_numba(
                         if g_clear_count[nxt] >= CLEAR_THRESHOLD:
                             ram_substrate[nxt] = np.uint8((ram_substrate[nxt] + 1) & 0xFF)  # Phase 4: clear cell
                             g_clear_count[nxt] = 0
-                    if INCOME_RACE:
-                        # Session 13: competitive racing reward (ratcheting best_cost).
-                        if net > 0:
-                            g_org_run[org] += 1
-                            if g_org_run[org] == 1:
-                                g_lump_acc[org] = energy[org]
-                                _rq = np.int32(-1)
-                                for _rqi in range(RACE_N_QUESTIONS):
-                                    _pos = np.int32(g_race_state[_rqi, 2])
-                                    if pos >= _pos and pos < _pos + RACE_K:
-                                        _rq = np.int32(_rqi); break
-                                g_race_attempt_q[org] = _rq
-                            if g_org_run[org] >= RACE_K:
-                                _rq = g_race_attempt_q[org]
-                                if _rq >= 0:
-                                    _ac = g_lump_acc[org] - energy[org]
-                                    if _ac <= 0.0:
-                                        _ac = np.float32(RACE_K) * CYCLES_PER_NEURON_UPDATE
-                                    _solved = np.int32(g_race_state[_rq, 1])
-                                    if _solved == 0:
-                                        gain = _ac; g_race_state[_rq, 0] = _ac
-                                        g_race_state[_rq, 1] = np.float32(1.0)
-                                    elif _ac < g_race_state[_rq, 0]:
-                                        gain = g_race_state[_rq, 0]
-                                        g_race_state[_rq, 0] = _ac
-                                    else:
-                                        gain = g_race_state[_rq, 0]
-                                else:
-                                    gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
-                                g_org_run[org] = 0; g_race_attempt_q[org] = -1
-                            else:
-                                gain = np.float32(0.0)
-                        else:
-                            g_org_run[org] = 0; g_race_attempt_q[org] = -1
-                            gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
-                    elif INCOME_LUMP_SUM:
+                    if INCOME_LUMP_SUM:
+                        # Session 9: a correct byte (net > 0) extends this organism's work-unit run;
+                        # a wrong byte (net < 0) breaks it. On the K-th consecutive correct byte the
+                        # deferred lump sum (K * FOOTPRINT_QUANTUM) is paid at once; the in-progress
+                        # ticks pay nothing (per-byte gain suppressed -> a pure timing change, no
+                        # rigged multiplier, Rule 21.4). Clearing above still runs on net > 0.
                         if net > 0:
                             g_org_run[org] += 1
                             if g_org_run[org] >= LUMPSUM_K:
