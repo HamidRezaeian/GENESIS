@@ -32,6 +32,12 @@ tests/clusy/qwen/
 │   └── figures/
 │       ├── metabolic_ceiling.png             ← idle cost vs income quantum, brain bloat, comprehension, refugium
 │       └── param_drift.png                   ← PARAM-gene total-drift heatmap (mutational bias)
+├── session9_lumpsum_reward/
+│   ├── run_evolution.py                      ← Driver (Exp-87-based): lump-sum ceiling test, K sweep, frac_net_pos
+│   ├── probe_lump.py                         ← Clean diagnostic: per-tick run-length distribution + lump payments
+│   └── results/
+│       ├── session9_sweep_summary.json       ← K∈{2,4,8} × DEPLETE{0,1} sweep summary
+│       └── exp87_stdp_target_0.json          ← Per-condition metric series
 ├── patches/
 │   ├── homeostatic_stdp.py                   ← @njit Homeostatic STDP code
 │   ├── cam.py                                ← @njit CAM read/write code
@@ -42,7 +48,8 @@ tests/clusy/qwen/
 │   └── hard_wm_design.md                     ← Hardened Working Memory curriculum design
 └── notes/
     ├── exp30_three_way_verdict.md            ← Final three-way verdict
-    └── exp87_metabolic_ceiling_verdict.md    ← Exp 87 verdict: the ceiling nullifies selection
+    ├── exp87_metabolic_ceiling_verdict.md    ← Exp 87 verdict: the ceiling nullifies selection
+    └── session9_lumpsum_reward_verdict.md    ← Session 9 verdict: lump-sum implemented, ceiling holds (honest null)
 ```
 
 ## Key Findings

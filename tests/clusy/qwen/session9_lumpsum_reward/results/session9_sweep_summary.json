@@ -1,0 +1,62 @@
+[
+  {
+    "name": "A_baseline_DEPLETE1",
+    "k": "-",
+    "deplete": "1",
+    "footprint": "0",
+    "lumpsum": "0",
+    "frac_net_pos": "0.188\u00b10.016",
+    "max_run": "0 (max 0)",
+    "n_alive_end": "30",
+    "correct_per_tick": "22.02",
+    "secs": "18"
+  },
+  {
+    "name": "B_footprint_perbyte_DEPLETE1",
+    "k": "-",
+    "deplete": "1",
+    "footprint": "1",
+    "lumpsum": "0",
+    "frac_net_pos": "0.196\u00b10.010",
+    "max_run": "0 (max 0)",
+    "n_alive_end": "30",
+    "correct_per_tick": "21.51",
+    "secs": "5"
+  },
+  {
+    "name": "C_lump_K2_DEPLETE1",
+    "k": "2",
+    "deplete": "1",
+    "footprint": "1",
+    "lumpsum": "1",
+    "frac_net_pos": "0.202\u00b10.012",
+    "max_run": "0 (max 0)",
+    "n_alive_end": "30",
+    "correct_per_tick": "22.01",
+    "secs": "6"
+  },
+  {
+    "name": "D_lump_K4_DEPLETE1",
+    "k": "4",
+    "deplete": "1",
+    "footprint": "1",
+    "lumpsum": "1",
+    "frac_net_pos": "0.194\u00b10.010",
+    "max_run": "0 (max 0)",
+    "n_alive_end": "30",
+    "correct_per_tick": "22.70",
+    "secs": "5"
+  },
+  {
+    "name": "E_lump_K8_DEPLETE1",
+    "k": "8",
+    "deplete": "1",
+    "footprint": "1",
+    "lumpsum": "1",
+    "frac_net_pos": "0.207\u00b10.013",
+    "max_run": "0 (max 0)",
+    "n_alive_end": "30",
+    "correct_per_tick": "22.79",
+    "secs": "7"
+  }
+]

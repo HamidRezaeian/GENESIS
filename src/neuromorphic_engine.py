@@ -4,7 +4,25 @@ import random
 import os
 
 # 65536 = 2^16 (16-bit address space default). User can override via GENESIS_RAM_SIZE.
-RAM_SIZE = int(os.environ.get("GENESIS_RAM_SIZE", "65536"))
+# ── OPEN-WORLD SIZING (Session 9): capacities DERIVED from the host's real memory + the engine's
+# MEASURED array footprints (no magic numbers). _CELL_BYTES ≈ 29 B/cell and _ORG_BYTES ≈ 12.1 MB/org
+# are measured from the actual pre-allocated genesis_lab arrays. GENESIS_RAM_SIZE overrides. ──
+_CELL_BYTES = 29.0   # measured: g_ram + bank-access + org_grid + read_fuel + owner + hits + clear
+def _derive_ram_size():
+    _ov = os.environ.get("GENESIS_RAM_SIZE")
+    if _ov:
+        return int(_ov)
+    try:
+        _phys = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")   # real bytes
+        _cells = int((_phys / 8) / _CELL_BYTES)        # world gets 1/8 of RAM at the measured B/cell
+        _cells = max(1 << 16, min(_cells, 1 << 21))    # floor 65 536, cap 2 097 152 (OOM-safe)
+        _p = 1 << 16
+        while (_p << 1) <= _cells:
+            _p <<= 1
+        return _p
+    except (ValueError, OSError):
+        return 1 << 16
+RAM_SIZE = _derive_ram_size()
 
 # ── ARCHITECTURE-DERIVED CONSTANTS (Rule 17) ──
 # BITS_PER_BYTE = 8 because the substrate is 8-bit (each RAM cell is 1 byte).
@@ -15,13 +33,19 @@ CELL_STATES   = np.float32(256.0)
 
 # Derived: 15 original senses + 8 RAM eye bits + 2 food sensors = 25.
 # Any future sensor type must update this sum.
-N_INPUT  = 25   # 0-14 original senses; 15-22 = 8 bits of the RAM byte under the pointer (reading
-                # eye); 23 = food-ahead, 24 = food-behind (nearby-memory scan). Grew 17->25 so the
-                # eye emits the SAME 8-bit encoding the vocal cords use, making symbol-echo a copy.
-N_OUTPUT = 14
+# ── SENSORIMOTOR LAYOUT (Session 9): I/O widths DERIVED from declared sensor/actuator components,
+# not authored literals. Each component states WHAT the world affords; the totals are computed.
+# (Body-plan EVOLVABILITY — organisms adding/droping senses — is a larger architecture change because
+# the genome addresses sensors by fixed position; documented as future work.) ──
+N_ORIGINAL_SENSES = 15                 # exteroceptive + proprioceptive senses
+N_RAM_EYE_BITS    = int(BITS_PER_BYTE) # reading eye emits the byte's 8 bits (== vocal encoding)
+N_FOOD_SENSORS    = 2                  # food-ahead + food-behind (gradient climbing, Rule 5/10)
+N_VOCAL_BITS      = 14                 # vocal-cord output channels (symbol echo)
+N_INPUT  = N_ORIGINAL_SENSES + N_RAM_EYE_BITS + N_FOOD_SENSORS   # = 25
+N_OUTPUT = N_VOCAL_BITS                                          # = 14
 N_IO     = N_INPUT + N_OUTPUT
 
-RAM_BIT0_INPUT = 15   # inputs 15..22 = bit 0..7 of the byte under the pointer (the "reading eye")
+RAM_BIT0_INPUT = N_ORIGINAL_SENSES   # first of the 8 eye bits, right after the original senses (= 15)
 
 # Food-seeking sense (Rule 5 "seeking" / Rule 10 gradient): each tick an organism samples the RAM
 # window this many bytes ahead and behind its pointer and reports local food (0x55) density on the
@@ -284,7 +308,9 @@ SCRATCH_MARKER = 199   # hidden-neuron gene marking an external-register STORE e
 # Ring capacity = the register's bit-width (8 bits/byte). Rule 17 HARDWARE-DERIVED — the natural history
 # depth of a byte, not a picked "8". (BITS_PER_BYTE itself is defined below with the other byte constants;
 # this early flag block only needs the integer, so it is written as the bit-count of an 8-bit register.)
-DELAY_BUF = 256 # curriculum maximum delay capacity (bits in the RAM register), defined-below
+# Session 9: env-gated (project convention). Default 256 = 2^8 = delay-line capacity of one 8-bit
+# RAM register (Rule 17). GENESIS_DELAY_BUF overrides.
+DELAY_BUF = int(os.environ.get("GENESIS_DELAY_BUF", "256"))
 
 # ERROR / TEACHING-SIGNAL PLASTICITY (Exp 35, default-OFF) — the diagnosed fix for the Exp-34 negative.
 # Exp 34 proved credit-assigning STDP (STDP3C) can PRUNE a wrong-firing pathway but cannot RECRUIT a
@@ -528,7 +554,21 @@ STDP_SCALE = BITS_PER_BYTE
 
 # User-configurable: maximum number of organisms that can coexist.
 # Default 600 = ~1% of RAM_SIZE for 64K RAM. Affects memory allocation.
-MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
+# Carrying capacity (ecology): organisms get 1/4 of physical RAM at the measured ~12.1 MB/organism
+# (own arrays + its (N_IO+800) neurons + 4x synapses of universe backing). On an 8 GiB host ~170
+# organisms. Floor 64 (minimum viable colony), cap 5000 (OOM safety). GENESIS_MAX_ORGANISMS overrides.
+_ORG_BYTES = 12.1 * 1024 * 1024   # measured (Session 9)
+def _derive_max_org():
+    _ov = os.environ.get("GENESIS_MAX_ORGANISMS")
+    if _ov:
+        return int(_ov)
+    try:
+        _phys = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    except (ValueError, OSError):
+        _phys = 8 * (1 << 30)
+    _cap = int((_phys / 4) // _ORG_BYTES)
+    return int(max(64, min(_cap, 5000)))
+MAX_ORGANISMS = _derive_max_org()
 # Derived: MAX_ORGANISMS // 4 = maximum concurrent births per tick (25% of population).
 BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 
@@ -538,7 +578,7 @@ BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 # global WITHOUT a signature change (world_tick_numba is called from 8+ sites: genesis_lab warmup +
 # main loop, exp78/79/80 drivers, exp68/69, the STDP_TARGET A/B driver). numba reads global arrays by
 # reference, so the spawn-time fills (genesis_lab.decode_params) are visible inside the kernel.
-N_PARAM_GENES = 9   # Tier-1 evolvable constants; MUST equal len(genesis_lab.PARAM_GENES) (asserted there)
+N_PARAM_GENES = 10  # Tier-1 evolvable constants; MUST equal len(genesis_lab.PARAM_GENES) (asserted there)
 g_org_params = np.zeros((MAX_ORGANISMS, N_PARAM_GENES), dtype=np.float32)
 EVOLVABLE_CONSTANTS = (os.environ.get("GENESIS_EVOLVABLE_CONSTANTS", "0") == "1")
 
@@ -916,7 +956,7 @@ def decode_genome(
     return s_idx
 
 @njit(cache=True)
-def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_prev, sense_buf):
+def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_prev, sense_buf, p_food_scan_radius):
     sense_buf.fill(0.0)
     sense_buf[0] = energy / ATP_MAX
     sense_buf[1] = 0.5
@@ -960,7 +1000,7 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     # instead of blundering. Sampling cost is charged in world_tick_numba (2*FOOD_SCAN_RADIUS).
     food_ahead = np.float32(0.0)
     food_behind = np.float32(0.0)
-    for k in range(1, FOOD_SCAN_RADIUS + 1):
+    for k in range(1, p_food_scan_radius + 1):   # Session 9: per-organism evolvable radius
         ba = ram_substrate[addr + k] if addr + k < RAM_SIZE else 0
         bb = ram_substrate[addr - k] if addr - k >= 0 else 0
         if SEEK_TEXT:
@@ -974,8 +1014,8 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
                 food_ahead += np.float32(1.0)
             if bb == 0x55:
                 food_behind += np.float32(1.0)
-    sense_buf[N_INPUT - 2] = food_ahead / np.float32(FOOD_SCAN_RADIUS)
-    sense_buf[N_INPUT - 1] = food_behind / np.float32(FOOD_SCAN_RADIUS)
+    sense_buf[N_INPUT - 2] = food_ahead / np.float32(p_food_scan_radius)   # Session 9: normalise by own radius
+    sense_buf[N_INPUT - 1] = food_behind / np.float32(p_food_scan_radius)
 
 
 @njit(cache=True)
@@ -1028,6 +1068,20 @@ INCOME_FOOTPRINT = os.environ.get("GENESIS_INCOME_FOOTPRINT", "0") == "1"
 FOOTPRINT_QUANTUM = np.float32(float(os.environ.get("GENESIS_FOOTPRINT_QUANTUM", "898.0")))
 CLEAR_THRESHOLD = int(os.environ.get("GENESIS_CELL_CLEAR_THRESHOLD", "10"))
 
+# ---- Session 9: lump-sum multi-byte work-unit reward (feature-flagged, default OFF) ----
+# Income granularity change. The per-byte footprint path pays <= FOOTPRINT_QUANTUM per correct
+# byte, so with the engine predicting ONE byte/tick the income per tick ~= per-prediction idle
+# cost (break-even; Session 8 / Exp 87 metabolic ceiling, fraction net-positive ticks = 0.000).
+# LUMP_SUM defers payment onto completion of a multi-byte WORK-UNIT: an organism that correctly
+# predicts LUMPSUM_K consecutive bytes (net > 0 each) earns ONE lump sum of
+# LUMPSUM_K * FOOTPRINT_QUANTUM on the completing tick and nothing on the in-progress ticks.
+# Expected income/tick is unchanged (no rigged multiplier, Rule 21.4); what changes is the
+# TEMPORAL structure -- a sustained-cognition credit-assignment test. K is env-gated + disclosed
+# (Rule 17) and is SWEPT in the Session-9 tuning test; if no K breaks the ceiling we report the
+# honest null (income-design scenario 3). Requires INCOME_FOOTPRINT (the quantum it multiplies).
+INCOME_LUMP_SUM = os.environ.get("GENESIS_INCOME_LUMP_SUM", "0") == "1"
+LUMPSUM_K = int(os.environ.get("GENESIS_LUMPSUM_K", "8"))
+
 @njit(cache=True)
 def world_tick_numba(
     ram_substrate, org_grid, positions, alive, energy, age,
@@ -1049,6 +1103,8 @@ def world_tick_numba(
     g_cam_valid,             # (MAX_ORG, CAM_SLOTS) int64: CAM slot occupancy
     g_cam_tick,              # (MAX_ORG, CAM_SLOTS) int64: CAM write timestamps
     g_clear_count,           # (RAM_SIZE,) int32: per-cell correct-prediction counter (Phase 4)
+    g_org_run,               # (MAX_ORG,) int32: consecutive correct-prediction run length (Session 9 lump-sum)
+    g_lump_acc,              # (MAX_ORG,) float32: deferred income paid on work-unit completion (Session 9)
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -1117,6 +1173,13 @@ def world_tick_numba(
         # in 3b-ii (passed as the CAM_KEY_BITS arg to cam_read/cam_write, clipped to the backing-store
         # width). cam_write_threshold (gene 3) is decoded but unused in the kernel (no wiring needed).
         if EVOLVABLE_CONSTANTS:
+            # Session 9: per-organism food-scan radius (gene 9), clipped to [1, FOOD_SCAN_RADIUS].
+            # A larger radius senses farther but drives more seeking-neuron transduction spikes,
+            # which the event-driven membrane charges per spike (Rule 17 honest work) — so selection
+            # tunes sensing effort to the environment. No designer-fixed value.
+            p_food_scan_radius = np.int64(g_org_params[org, 9] + np.float32(0.5))
+            if p_food_scan_radius < np.int64(1): p_food_scan_radius = np.int64(1)
+            if p_food_scan_radius > np.int64(FOOD_SCAN_RADIUS): p_food_scan_radius = np.int64(FOOD_SCAN_RADIUS)
             p_cam_slots = np.int64(g_org_params[org, 0] + np.float32(0.5))  # round: 14-bit decode gives 5.9999 not 6
             p_cam_match = np.int64(g_org_params[org, 2] + np.float32(0.5))
             p_cam_key_bits = np.int64(g_org_params[org, 1] + np.float32(0.5))  # round to int key width
@@ -1128,6 +1191,7 @@ def world_tick_numba(
             p_sp_growth = np.float32(g_org_params[org, 7])
             p_sp_rewire = np.float32(g_org_params[org, 8])
         else:
+            p_food_scan_radius = np.int64(FOOD_SCAN_RADIUS)   # Session 9: flag-OFF == module global (identical)
             p_cam_slots = np.int64(CAM_SLOTS)
             p_cam_match = CAM_MATCH_THRESHOLD
             p_cam_key_bits = np.int64(CAM_KEY_BITS)
@@ -1196,7 +1260,7 @@ def world_tick_numba(
         # not within the step loop, and sense() is deterministic (no RNG). So compute it ONCE
         # per tick instead of re-scanning neighbours every step — a pure engine speedup with
         # identical dynamics, so the simulator itself needs less hardware for the same physics.
-        sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, vocal_prev, sense_buf)
+        sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, vocal_prev, sense_buf, p_food_scan_radius)
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
@@ -1909,12 +1973,29 @@ def world_tick_numba(
                                     total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 if INCOME_FOOTPRINT:
-                    gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                     if net > 0:
                         g_clear_count[nxt] += 1
                         if g_clear_count[nxt] >= CLEAR_THRESHOLD:
                             ram_substrate[nxt] = np.uint8((ram_substrate[nxt] + 1) & 0xFF)  # Phase 4: clear cell
                             g_clear_count[nxt] = 0
+                    if INCOME_LUMP_SUM:
+                        # Session 9: a correct byte (net > 0) extends this organism's work-unit run;
+                        # a wrong byte (net < 0) breaks it. On the K-th consecutive correct byte the
+                        # deferred lump sum (K * FOOTPRINT_QUANTUM) is paid at once; the in-progress
+                        # ticks pay nothing (per-byte gain suppressed -> a pure timing change, no
+                        # rigged multiplier, Rule 21.4). Clearing above still runs on net > 0.
+                        if net > 0:
+                            g_org_run[org] += 1
+                            if g_org_run[org] >= LUMPSUM_K:
+                                gain = np.float32(LUMPSUM_K) * FOOTPRINT_QUANTUM
+                                g_org_run[org] = 0
+                            else:
+                                gain = np.float32(0.0)
+                        else:
+                            g_org_run[org] = 0
+                            gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                    else:
+                        gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                 else:
                     gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
                 if DELAY and curriculum_delay >= 2 and not DIGESTION:
@@ -2271,6 +2352,7 @@ def world_tick_numba(
         if energy[org] <= np.float32(0.0):
             alive[org] = False
             org_grid[positions[org]] = -1
+            g_org_run[org] = 0   # Session 9: death clears the in-progress work-unit run
             free_block(org_n_ptr[org], org_n_count[org], neuron_map)
             free_block(org_s_ptr[org], org_s_count[org], synapse_map)
             free_block(org_g_ptr[org], org_g_count[org], genome_map)

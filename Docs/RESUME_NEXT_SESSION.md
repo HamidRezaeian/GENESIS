@@ -1,3 +1,150 @@
+## Latest Session Update (2026-07-26 — session 11: Corrected Story — Cache-Key Bug, K Sweep, Ceiling Breakable)
+
+**MAJOR CORRECTION to sessions 9/10/10b. The "max_run caps at 7 / lump sum never fires" was a
+measurement artifact (g_org_run resets to 0 within the firing tick → observable max = K−1).
+The lump sum DOES fire. A proper K sweep (each K isolated via explicit NUMBA_CACHE_DIR) shows
+K=2 and K=3 break the metabolic ceiling. Session-9's K=8 is near-worst.**
+
+- **Bug A (not a code bug, measurement):** engine L1986-1992 increments g_org_run, and when it
+  reaches LUMPSUM_K it pays K*898 and RESETS g_org_run=0 in the same tick → post-tick sampling of
+  g_org_run can never show "8" (observable max = K−1 = 7 for K=8). The lump sum fires 267×/4000
+  ticks at K=8 (energy jump ~6340 = 7184 − idle). Verified with energy trace.
+- **Bug B (FIXED, genesis_lab L146-160):** the numba cache-key (cache-dir name) encoded ~20+ flags
+  but NOT INCOME_FOOTPRINT/INCOME_LUMP_SUM/LUMPSUM_K/FOOTPRINT_QUANTUM/DEPLETE/CELL_CLEAR_THRESHOLD.
+  So @njit(cache=True) baked the FIRST-compiled income-flag values and silently ignored later env
+  changes → every Session-9/10 "sweep" was invalid (all K reused the first kernel). Fixed: added
+  the six flags to the cache-dir f-string. Each unique combination now gets its own cache dir.
+- **Validated K sweep** (explicit NUMBA_CACHE_DIR per K, N=4000 ticks, STDP=0, single immortal reader):
+  income falls monotonically 770→476 with K.
+  | K | income/tick (exact) | net drift/tick | net-positive? |
+  |---|---|---|---|
+  | 1 | 770 | −15 | ~break-even |
+  | 2 | 711 | +28 | YES |
+  | 3 | 692 | +7 | YES |
+  | 4 | 614 | −69 | no |
+  | 8 | 476 | −357 | strongly no |
+  Idle threshold ~685 (measured, varies ±100 per compile) → K≥4 fails, K≤3 works. The metabolic
+  ceiling IS breakable by the lump-sum mechanism at the right K.
+- **Output IS a clean echo** (confirmed: near-perfect, walking the scroll, 99% same-letter-family
+  on misses). STDP_TARGET makes ~zero difference on the single reader.
+- **Q1 answer (is 898 hardware-dependent?):** YES — cost side (CYCLES_PER_*) IS re-measured per host;
+  income quantum 898 is a fixed snapshot (642 host-measured compute from the ORIGINAL dev host + 256
+  RAM = CELL_STATES, hardware-independent). On a faster host the same mechanism at K=8 would be
+  net-positive; on a slower host even K=2 fails. Full portability requires re-deriving the 642
+  component per host.
+- **Next step:** switch K=2-3 in the evolutionary driver and re-run the population-wide A/B.
+  Also fix the driver to record fire-count instead of post-tick max_run.
+
+## Prior Session Update (2026-07-26 — session 10b: ROOT CAUSE of the max_run=7 cap)
+
+**ANSWERED the #1 open question from session 10 ("why does max_run cap at EXACTLY 7?"). Root cause:
+a dynamical OUTPUT-STABILITY limit of the spiking substrate — NOT scroll structure, NOT reward
+granularity, NOT teaching, NOT survival. The lever to break the ceiling is output-register stability.**
+
+- **Reward (grounded, engine L1820-2050):** organism reads ram[pos], predicts ram[pos+1] via 8 vocal bits;
+  per bit correct_bits (out=1&tgt=1) vs wrong_bits (out=1&tgt=0), silence free; net=correct-wrong; net>0
+  extends g_org_run, net<=0 resets it. Footprint pays (net/8)*898/byte; lump-sum pays K*898 on the K-th
+  consecutive net>0 (K=8). Reading gate: byte in [32,126] & !=0x55.
+- **Scroll is NOT the cap:** 00_Graded.txt = 231 bytes repeated; identical-letter runs {10,5,3,2,1}x...;
+  optimal strategy = echo (next=current); **structural echo ceiling = 9** (10-letter blocks). 7 < 9, so the
+  cap is not structural.
+- **Diagnostic (decisive):** ran the seeded ancestor ALONE, teaching ON (STDP_TARGET=1), DEPLETE=0, energy
+  bank 1e9 (survival removed), 6000 ticks, recording g_org_run[0] + every read_log event. Max run = 7.
+  Streak histogram {7:476, 3:167, 5:72, 4:60, 2:37, 1:35, 6:32} -> **54% of 879 streaks peak EXACTLY at 7,
+  none reach 8-9**. Of 854 streak-ends, **47% are MID-BLOCK (target byte UNCHANGED)** vs 53% at boundaries
+  (e.g. tick 6 streak=7 target stayed 'A'; tick 15 'B'; ... tick 76 'H') -> runs break on a CONSTANT target.
+  Misses: 1954 total, 0 guess==target, but **99% same letter family** (high-nibble 0x40) -> a learned
+  NEAR-ECHO whose low-bit precision drifts; on ~the 8th tick of a constant block the output flips to net<=0.
+- **Root cause:** the substrate learns an approximate echo (net>0 for ~7 ticks) but its spiking/membrane
+  dynamics + homeostatic anchoring cannot HOLD a precise output register for an 8th tick. "~7" is the
+  substrate's characteristic output-stability timescale -> why it recurs cleanly across seeds & both arms.
+- **Reframe:** K=8 lump sum is reachable in principle (ceiling 9); the substrate just drifts before tick 8.
+  Notebook: "Session 10 — STDP_TARGET recruitment lever A/B". Write-up:
+  `tests/clusy/qwen/notes/session10b_max_run_7_root_cause.md`. Figure: `max_run_7_root_cause.png`.
+
+**#1 LOAD-BEARING NEXT STEP (session 11): test an OUTPUT-STABILITY lever.** Candidates: (1) a vocal
+LATCH / held-output that keeps the last emission stable across ticks; (2) longer membrane tau / stronger
+homeostatic anchoring to slow output drift; (3) use org_delay_buf / org_scratch to hold the emitted byte
+across the work-unit. Re-run the session-10 A/B with the lever ON: if streaks reach 8, the K=8 lump sum
+fires and the ceiling can finally be tested under finite fuel (DEPLETE=1). The reward machinery (sessions
+9-10) is correct and ready; the missing piece is a stable output register.
+
+---
+
+## Prior Session Update (2026-07-26 — session 10: STDP_TARGET=1 Recruitment Lever)
+
+**TESTED the untested recruitment lever (income-design §15 / Exp-87 H3): does `STDP_TARGET=1`
+(the per-byte delta-rule teaching signal) break the metabolic ceiling? Verdict: honest null on the
+load-bearing question, with a genuine but high-variance partial positive. Ceiling NOT broken.**
+
+- **Method:** ran the committed `session9_lumpsum_reward/run_evolution.py` as TWO fresh OS processes
+  (STDP_TARGET is compile-time + numba caches the kernel per process — separate processes are the ONLY
+  way; see `exp_stdp_target_ab_driver.py`). Matched flags `DEPLETE=0` (fuel cap lifted), `INCOME_FOOTPRINT=1`,
+  `INCOME_LUMP_SUM=1`, `LUMPSUM_K=8`; STDP_TARGET ∈ {0,1}; N_SEEDS=3, N_TICKS=8000. Notebook:
+  "Session 10 — STDP_TARGET recruitment lever A/B". Full write-up:
+  `tests/clusy/qwen/notes/session10_stdp_target_verdict.md`. Figure: `stdp_target_ab_trajectory.png`.
+- **Result (ROCK-SOLID):** `max_run` caps at **exactly 7 in ALL 6 runs, both arms** → the K=8 lump sum
+  NEVER fires under STDP_TARGET=1 any more than =0. The substrate still cannot sustain 8 consecutive
+  correct byte predictions. The lump-sum mechanism (session 9) stays starved.
+- **Result (SUGGESTIVE, n=3, high variance):** whole-run net-positive tick fraction DOUBLES with teaching
+  (0.159 → 0.319, 2.0×) and the trajectory diverges cleanly after tick ~2000 (STDP=1 → ~0.45+, STDP=0 flat
+  ~0.16; not a refugium artifact — both arms pinned at n_alive=30). BUT 2/3 STDP=1 seeds gain strongly
+  (late frac_net_pos 0.48, 0.59) while seed 0 (0.10) is BELOW every STDP=0 seed. `correct_per_tick`
+  whole-run mean is ~UNCHANGED (12.5 → 12.8): teaching lifts the energy fraction, not raw accuracy.
+- **Insight — mechanism mismatch:** the reward targets run LENGTH; the teaching lever moves run RATE.
+  A per-byte local delta rule raises the rate of correct bytes but not the longest streak the lump sum needs.
+- **H1 efficiency (modest):** brains shrink 65 → ~50 neurons, idle cost 586 → ~260–370, approaching but
+  mostly staying ABOVE the 256 income quantum (one STDP=0 seed hit 231 < 256).
+- **Bug fix (disclosed, Rule 17):** driver hardcoded `POP_SIZE=200` but session 9 made `MAX_ORGANISMS`
+  substrate-derived (=164 on 8 GiB) → IndexError spawning founder #164. Added `POP_SIZE=min(POP_SIZE,
+  MAX_ORGANISMS)` (driver L157–160). Engine behaviour unchanged; STDP_TARGET defaults OFF (byte-identical).
+
+**#1 LOAD-BEARING NEXT STEP (session 11): why does `max_run` cap at EXACTLY 7 in every run, both arms?**
+A cap this clean across independent seeds AND both treatments smells STRUCTURAL, not statistical. Rule out:
+(a) an 8-byte periodicity in `Books/English/00_Graded.txt` or the reading gate (every 8th byte excluded/reset);
+(b) the `org_delay_buf` / scratch-ring depth (a 7-deep memory caps predictable context at 7); (c) the 8-bit
+byte frame (off-by-one in run counting). **If structural, K=8 is impossible BY CONSTRUCTION and no learning
+lever can fire the lump sum** — that redirects the whole income-granularity programme. Diagnose by dumping
+one ancestor run's per-tick correct/miss sequence and inspecting the miss period, + reading the delay-buf /
+reading-gate depth constants. Secondary: raise N_SEEDS ≥ 6 on STDP=1 to settle the frac_net_pos variance;
+try a longer-horizon (eligibility-trace) teaching signal that targets sustained runs, not per-byte accuracy.
+
+---
+
+## Prior Session Update (2026-07-26 — session 9: Lump-Sum Multi-Byte Reward)
+
+**The income-granularity change (income-design §19) is IMPLEMENTED, feature-flagged, and TESTED.
+Result: honest null — the mechanism fires but does not break the metabolic ceiling.**
+
+- **Implemented (branch `session9-lumpsum`, default OFF):** `GENESIS_INCOME_LUMP_SUM` +
+  `GENESIS_LUMPSUM_K` (gated behind `GENESIS_INCOME_FOOTPRINT`). A correct byte (`net > 0`) extends a
+  per-organism run (`g_org_run`, new int32 kernel PARAMETER — numba makes module-global arrays
+  read-only, same pattern as Phase-4 `g_clear_count`); a wrong byte resets it. On the K-th consecutive
+  correct byte the organism is paid ONE lump sum `K × FOOTPRINT_QUANTUM` (898); in-progress ticks pay
+  nothing. This REPLACES the per-byte footprint path (not additive → no rigged multiplier, Rule 21.4).
+  `world_tick_numba` signature 75 → 77 args; both `genesis_lab.py` call sites + the Exp-87-derived
+  session9 driver updated (AST-verified 77 == 77). Death resets the run.
+- **Driver / verdict:** `tests/clusy/qwen/session9_lumpsum_reward/` (`run_evolution.py`, `probe_lump.py`,
+  `results/`); verdict `tests/clusy/qwen/notes/session9_lumpsum_reward_verdict.md`.
+- **Measured (seed 20260725, 2000 ticks, refugium-floored):**
+  - DEPLETE=1 (Exp-87 condition): `earning_frac = 0.0`, `max_run = 0`, **0 lump sums** — the finite
+    per-cell fuel reservoir caps income at the regrow rate (256/tick) < idle cost, so no runs form.
+  - DEPLETE=0: `earning_frac = 0.067`, `max_run = 7`; lump sums fire ~1500× for K=2 and K=4, but
+    **K=8 never fires** (longest sustained correct run = 7 bytes; run distribution falls off steeply).
+- **Conclusion:** the ceiling is NOT broken. The binding constraints are (a) finite fuel under DEPLETE
+  and (b) the substrate's inability to sustain long correct-prediction runs (max 7) — NOT reward
+  granularity. This is income-design scenario 3 / prediction P4 (the explicitly-permitted honest null).
+- **Next step (priority order):** (1) raise learning capacity so runs reach K — enable `STDP_TARGET=1`
+  and/or a richer curriculum, then re-test; this is the real bottleneck the result exposes. (2) Generalize
+  the DEPLETE cap to work-units (income-design Phase 2) so a lump sum can be paid under finite fuel
+  without minting (Rule 15). (3) Re-measure α vs β for a *learnable* work-unit (Phase 0).
+- **Regression:** with `GENESIS_INCOME_LUMP_SUM=0` (default) the new branch is compile-time skipped and
+  the reward core is byte-identical to the committed Exp-87 path; `g_org_run`/`g_lump_acc` are allocated
+  but never touched. (Historical root drivers exp78/79/80 still call the 75-arg signature and are left as
+  frozen artifacts — update them only if re-running those specific experiments.)
+
+---
+
 # Resume Next Session — Start Here
 
 Read this file FIRST. It tells you exactly where the project stands.
