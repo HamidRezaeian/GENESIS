@@ -288,6 +288,7 @@ PARAM_GENES = [
     ("tau_ref",             0.0,  8.0,                 "linear"),  # 6  engine TAU_REF (L456)
     ("sp_growth_cost",      0.0,  100.0,               "linear"),  # 7  engine SP_GROWTH_COST (L172)
     ("sp_rewire_weight",    0.5,  50.0,                "linear"),  # 8  engine SP_REWIRE_WEIGHT (L182)
+    ("food_scan_radius",    1.0,  float(FOOD_SCAN_RADIUS), "linear"),  # 9  engine FOOD_SCAN_RADIUS (L33) — Session 9
 ]
 assert len(PARAM_GENES) == N_PARAM_GENES, "PARAM_GENES length must match engine N_PARAM_GENES (=9)"
 
@@ -295,6 +296,7 @@ assert len(PARAM_GENES) == N_PARAM_GENES, "PARAM_GENES length must match engine 
 PARAM_DEFAULTS = np.array([
     float(CAM_SLOTS), float(CAM_KEY_BITS), float(CAM_MATCH_THRESHOLD), float(CAM_WRITE_THRESHOLD),
     float(STDP_DIV), float(HOMEOSTATIC_LAMBDA), float(TAU_REF), float(SP_GROWTH_COST), float(SP_REWIRE_WEIGHT),
+    float(FOOD_SCAN_RADIUS),   # Session 9: food_scan_radius default == engine global
 ], dtype=np.float32)
 
 # Per-organism evolvable-constant matrix (rows = organisms, cols = PARAM_GENES).
@@ -458,6 +460,14 @@ g_cell_owner = np.full(RAM_SIZE, -1, dtype=np.int32)
 # reset to 0 on each (re)authoring. Unused when STIGMERGY off.
 g_read_hits = np.zeros(RAM_SIZE, dtype=np.int32)
 g_clear_count = np.zeros(RAM_SIZE, dtype=np.int32)   # Phase 4: per-cell correct-prediction counter
+g_org_run = np.zeros(MAX_ORGANISMS, dtype=np.int32)     # Session 9: per-organism correct-prediction run length
+g_lump_acc = np.zeros(MAX_ORGANISMS, dtype=np.float32)  # Session 9: deferred lump-sum income accumulator
+
+# ---- Session 13: competitive racing reward arrays ----
+import neuromorphic_engine as _ne_race
+g_race_state = _ne_race.g_race_state
+g_race_attempt_q = _ne_race.g_race_attempt_q
+del _ne_race
 
 ark_dna = None
 fossil_pool = []          # (survival_age, dna) fossils of past elites, for horizontal gene transfer
@@ -1363,6 +1373,8 @@ def sim_loop():
         g_conn_w_dna,
         g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
         g_clear_count,
+        g_org_run, g_lump_acc,
+        g_race_state, g_race_attempt_q,
     )
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
@@ -1616,6 +1628,7 @@ def sim_loop():
             g_conn_w_dna,
             g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
             g_clear_count,
+            g_org_run, g_lump_acc,
         )
         
         for i in range(n_births):
