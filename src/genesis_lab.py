@@ -14,15 +14,19 @@ except ModuleNotFoundError:
 
 import tempfile
 
-# --- Live ECONOMY selection (2026-07-11) -----------------------------------------------------
-# The universe can run the ORIGINAL 0x55-food economy (breeds "weeds": survivors, not minds) or
-# the BOOK economy (energy earned by reading/solving curriculum symbols — the Prime Directive,
-# Rules 9/10). Food-only is a proven clockwork-collapse (Result.md Exp 4: MASS EXTINCTION every
-# ~6k ticks past 1.8M cycles, zero ascension), so `books` is the intended destination — but it
-# defaults to `food` for now because the sim_loop LIBRARY INJECTION and its self-sustain
-# verification are NOT yet finished. Opt in early with GENESIS_ECONOMY=books once the injection
-# path below is wired + verified.
-GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "food").lower()
+# Rule 22 (Learned 2026-07-29): Autonomous Observer Baseline & Optimal Substrate Defaults
+os.environ.setdefault("GENESIS_ECONOMY", "books")
+os.environ.setdefault("GENESIS_INCOME_FOOTPRINT", "1")
+os.environ.setdefault("GENESIS_AUTO_REPRO", "1")
+os.environ.setdefault("GENESIS_AUTO_REPRO_THRESH", "200000.0")
+os.environ.setdefault("GENESIS_REMAP", "1")
+os.environ.setdefault("GENESIS_REMAP_PERIOD", "500")
+os.environ.setdefault("GENESIS_CAM", "0")
+os.environ.setdefault("GENESIS_MULTISCALE", "1")
+os.environ.setdefault("GENESIS_STDP3C", "1")
+os.environ.setdefault("GENESIS_RESUME", "0")
+
+GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
 # worth CELL_STATES=2**8 cycles, so eating food (full cell -> 256) and solving a symbol ((bits/8)*256)
 # pay the SAME honest exchange rate in the engine — no GENESIS_READ_SCALE / GENESIS_EAT_GAIN
@@ -60,7 +64,7 @@ BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
 # (default), the single BOOK_NAME scroll is laid exactly as before (byte-identical). A pure driver change
 # (which bytes are stocked) — no kernel change, so the njit cache is unaffected. Live-flippable via
 # g_curriculum (set from the dashboard) so the user can switch the whole library on without a restart.
-CURRICULUM = os.environ.get("GENESIS_CURRICULUM", "0") == "1"
+CURRICULUM = os.environ.get("GENESIS_CURRICULUM", "1") == "1"
 
 # Seed energy is ARCHITECTURE-DERIVED, not a set number: the sentinel -1 tells spawn_organism to
 # gift each founder exactly its own CONSTRUCTION COST (genome bytes + neurons + synapses, 1 cycle
@@ -556,7 +560,7 @@ async def ws_handler(websocket):
                     # Lay the WHOLE default curriculum ladder as one contiguous scroll (the "inject
                     # everything correctly" action).
                     inject_curriculum_sequence(g_ram, RAM_SIZE, BOOK_TARGET_BYTES)
-                elif msg_type == "get_status":
+                elif msg_type in ("get_status", "get_brain"):
                     max_age = -1
                     elite_id = -1
                     for i in range(MAX_ORGANISMS):
@@ -1652,6 +1656,7 @@ def sim_loop():
             g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
             g_clear_count,
             g_org_run, g_lump_acc,
+            g_race_state, g_race_attempt_q,
         )
         
         for i in range(n_births):

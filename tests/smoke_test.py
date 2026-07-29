@@ -55,7 +55,13 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
             gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
             gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch,
-            gl.g_ram_bank_access, gl.g_ram_bank_access_next
+            gl.g_ram_bank_access, gl.g_ram_bank_access_next,
+            gl.g_curriculum_delay,
+            gl.g_conn_w_dna,
+            gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
+            gl.g_clear_count,
+            gl.g_org_run, gl.g_lump_acc,
+            gl.g_race_state, gl.g_race_attempt_q,
         )
         # process births exactly like sim_loop
         for i in range(n_births):

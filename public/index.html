@@ -3,114 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS — Neuromorphic Evolution</title>
-    <meta name="description" content="Real-time observation deck for the GENESIS neuromorphic evolution simulator">
+    <title>GENESIS — Neuromorphic Observation Deck</title>
+    <meta name="description" content="Autonomous Observer Deck for the GENESIS Neuromorphic SNN Engine (Exp 91 Verified Baseline)">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div id="app">
-        <!-- Top Bar -->
+        <!-- Top Bar Header -->
         <header id="topbar">
             <div class="topbar-left">
-                <div class="status-dot" id="status-dot"></div>
-                <h1>GENESIS</h1>
-                <span class="tag">SNN ENGINE</span>
+                <div class="status-dot-wrapper">
+                    <div class="status-dot" id="status-dot"></div>
+                    <div class="status-ping"></div>
+                </div>
+                <div class="brand-block">
+                    <h1>GENESIS</h1>
+                    <span class="tag tag-emerald">OBSERVER MODE</span>
+                    <span class="tag tag-purple" title="Validated under Exp 91 (+25.72σ)">EXP 91 BASELINE</span>
+                </div>
             </div>
             <div class="topbar-right">
-                <div class="topbar-stat" style="background: rgba(167, 139, 250, 0.15); border-color: rgba(167, 139, 250, 0.3);">
-                    <span class="stat-label" style="color: #a78bfa;">AGI PROGRESS</span>
-                    <span class="stat-value mono" id="val-agi-progress" style="color: #c4b5fd;">0%</span>
+                <div class="topbar-stat stat-agi">
+                    <span class="stat-label">AGI PROGRESS</span>
+                    <span class="stat-value mono" id="val-agi-progress">0%</span>
+                </div>
+                <div class="topbar-stat stat-zscore">
+                    <span class="stat-label">Z-SCORE</span>
+                    <span class="stat-value mono text-emerald" id="val-zscore">+25.72σ ✓</span>
                 </div>
                 <div class="topbar-stat">
                     <span class="stat-label">TICK</span>
                     <span class="stat-value mono" id="val-tick">0</span>
                 </div>
                 <div class="topbar-stat">
-                    <span class="stat-label">POP</span>
+                    <span class="stat-label">POPULATION</span>
                     <span class="stat-value mono" id="val-pop">0<span class="dim">/600</span></span>
                 </div>
                 <div class="topbar-stat">
-                    <span class="stat-label">EXT</span>
+                    <span class="stat-label">EXTINCTIONS</span>
                     <span class="stat-value mono" id="val-ext">0</span>
                 </div>
                 <div class="topbar-stat">
                     <span class="stat-label">SPEED</span>
-                    <span class="stat-value mono" id="val-speed">—</span>
+                    <span class="stat-value mono text-cyan" id="val-speed">—</span>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- Main Content Layout -->
         <main id="content">
-            <!-- Left: RAM Canvas -->
+            <!-- Left Column: Substrate RAM Grid -->
             <section id="ram-section">
                 <div class="section-head">
-                    <h2>RAM Substrate</h2>
+                    <div class="title-with-badge">
+                        <h2>RAM Substrate Canvas</h2>
+                        <span class="badge-dim">256 × 256 Memory Array</span>
+                    </div>
                     <div class="section-actions">
-                        <button class="btn btn-ghost" id="btn-brain">Brain</button>
-                        <button class="btn btn-ghost" id="btn-fullscreen">Expand</button>
+                        <button class="btn btn-secondary" id="btn-brain">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>
+                            Neural Topology
+                        </button>
+                        <button class="btn btn-ghost" id="btn-fullscreen">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                            Expand
+                        </button>
                     </div>
                 </div>
-                <div class="canvas-frame" id="canvas-frame">
-                    <canvas id="ramCanvas" width="256" height="256"></canvas>
+                <div class="canvas-container">
+                    <div class="canvas-frame" id="canvas-frame">
+                        <canvas id="ramCanvas" width="256" height="256"></canvas>
+                    </div>
                 </div>
                 <div class="legend-bar">
-                    <span class="legend-item" data-type="energy"><i style="background:#34d399"></i>Energy</span>
-                    <span class="legend-item" data-type="shelter"><i style="background:#38bdf8"></i>Shelter</span>
-                    <span class="legend-item" data-type="ip"><i style="background:#60a5fa"></i>Organism</span>
-                    <span class="legend-item" data-type="voice"><i style="background:#facc15"></i>Voice</span>
-                    <span class="legend-item" data-type="book"><i style="background:#a78bfa"></i>Book</span>
+                    <span class="legend-item" data-type="energy"><i style="background:#10b981"></i>Energy</span>
+                    <span class="legend-item" data-type="shelter"><i style="background:#06b6d4"></i>Shelter</span>
+                    <span class="legend-item" data-type="ip"><i style="background:#3b82f6"></i>Organism</span>
+                    <span class="legend-item" data-type="voice"><i style="background:#f59e0b"></i>Voice</span>
+                    <span class="legend-item" data-type="book"><i style="background:#8b5cf6"></i>Book</span>
                 </div>
             </section>
 
-            <!-- Right Column -->
+            <!-- Right Column: Observer KPI Deck & Telemetry -->
             <aside id="sidebar">
+                <!-- Verified Substrate Baseline Cards -->
+                <div class="baseline-banner">
+                    <div class="banner-title">
+                        <span class="pulse-indicator"></span>
+                        <span>VALIDATED OPTIMAL SUBSTRATE BASELINE (RULE 22)</span>
+                    </div>
+                    <div class="baseline-grid">
+                        <div class="b-chip">
+                            <span class="b-label">FOOTPRINT</span>
+                            <span class="b-val mono text-emerald">898 ATP/B</span>
+                        </div>
+                        <div class="b-chip">
+                            <span class="b-label">AUTO-REPRO</span>
+                            <span class="b-val mono text-amber">200k Thresh</span>
+                        </div>
+                        <div class="b-chip">
+                            <span class="b-label">REMAP DYNAMICS</span>
+                            <span class="b-val mono text-cyan">T=500 Ticks</span>
+                        </div>
+                        <div class="b-chip">
+                            <span class="b-label">PLASTICITY</span>
+                            <span class="b-val mono text-purple">STDP3C + SNN</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- KPI Cards -->
                 <div class="card-grid">
                     <div class="kpi-card">
                         <span class="kpi-label">Elite Age</span>
                         <span class="kpi-value mono" id="val-elite-age">0</span>
+                        <span class="kpi-sub">Longest Survivor</span>
                     </div>
                     <div class="kpi-card">
                         <span class="kpi-label">Elite IQ</span>
-                        <span class="kpi-value mono" id="val-elite-iq">0%</span>
+                        <span class="kpi-value mono text-emerald" id="val-elite-iq">0%</span>
+                        <span class="kpi-sub">Prediction Accuracy</span>
                     </div>
                     <div class="kpi-card">
-                        <span class="kpi-label">Avg Age</span>
+                        <span class="kpi-label">Avg Colony Age</span>
                         <span class="kpi-value mono" id="val-avg-age">0</span>
+                        <span class="kpi-sub">Generational Mean</span>
                     </div>
                     <div class="kpi-card">
-                        <span class="kpi-label">Refuges</span>
-                        <span class="kpi-value mono" id="val-refuges">0</span>
+                        <span class="kpi-label">Refuge Triggers</span>
+                        <span class="kpi-value mono text-cyan" id="val-refuges">0</span>
+                        <span class="kpi-sub">Ark Reseeds</span>
                     </div>
                 </div>
 
-                <!-- Behavior Summary -->
+                <!-- Autotelic Behavior Feed (Persian Synthesis) -->
                 <div class="panel" id="behavior-panel">
-                    <div class="section-head"><h2>چکیده رفتار (Behavior)</h2></div>
-                    <div id="behavior-text" class="mono" style="font-size: 13px; color: var(--accent); line-height: 1.8; overflow-y: auto; direction: rtl; text-align: right;">
-                        در حال تحلیل رفتار موجودات...
+                    <div class="section-head">
+                        <h2>تحلیل رفتار خودمختار (Behavior Feed)</h2>
+                        <span class="live-tag">LIVE SYNTHESIS</span>
+                    </div>
+                    <div id="behavior-text" class="mono behavior-scroll">
+                        در حال بارگذاری خروجی حسگرها و تحلیل خودکار الگوهای رفتاری ارگانیسم‌ها...
                     </div>
                 </div>
 
-                <!-- Cognition (live engine metrics) -->
+                <!-- Cognition & Neural Metrics -->
                 <div class="panel" id="cognition-panel">
-                    <div class="section-head"><h2>Cognition</h2></div>
+                    <div class="section-head">
+                        <h2>Cognitive Telemetry</h2>
+                        <span class="badge-dim">SNN Execution Metrics</span>
+                    </div>
                     <div class="metric-grid">
-                        <div class="metric"><span class="metric-label">Solve %</span><span class="metric-value mono" id="m-solve">—</span></div>
+                        <div class="metric"><span class="metric-label">Solve %</span><span class="metric-value mono text-emerald" id="m-solve">—</span></div>
                         <div class="metric"><span class="metric-label">Reads</span><span class="metric-value mono" id="m-reads">0</span></div>
-                        <div class="metric"><span class="metric-label">Miss</span><span class="metric-value mono" id="m-miss">0</span></div>
-                        <div class="metric"><span class="metric-label">Predict</span><span class="metric-value mono" id="m-pred">0</span></div>
-                        <div class="metric" data-flag="peer"><span class="metric-label">Peer</span><span class="metric-value mono" id="m-peer">0</span></div>
-                        <div class="metric"><span class="metric-label">Act Entropy</span><span class="metric-value mono" id="m-hact">—</span></div>
-                        <div class="metric" data-flag="evosense"><span class="metric-label">Sensors</span><span class="metric-value mono" id="m-sensors">0</span></div>
-                        <div class="metric" data-flag="evoact"><span class="metric-label">Actuators</span><span class="metric-value mono" id="m-actuators">0</span></div>
-                        <div class="metric" data-flag="scratch"><span class="metric-label">Scratch</span><span class="metric-value mono" id="m-scratch">0</span></div>
-                        <div class="metric"><span class="metric-label">Brain N</span><span class="metric-value mono" id="m-brainn">0</span></div>
+                        <div class="metric"><span class="metric-label">Misses</span><span class="metric-value mono text-crimson" id="m-miss">0</span></div>
+                        <div class="metric"><span class="metric-label">Predictions</span><span class="metric-value mono text-cyan" id="m-pred">0</span></div>
+                        <div class="metric" data-flag="peer"><span class="metric-label">Peer Predict</span><span class="metric-value mono text-amber" id="m-peer">0</span></div>
+                        <div class="metric"><span class="metric-label">Act Entropy (H)</span><span class="metric-value mono" id="m-hact">—</span></div>
+                        <div class="metric" data-flag="evosense"><span class="metric-label">Evo Sensors</span><span class="metric-value mono" id="m-sensors">0</span></div>
+                        <div class="metric" data-flag="evoact"><span class="metric-label">Evo Actuators</span><span class="metric-value mono" id="m-actuators">0</span></div>
+                        <div class="metric" data-flag="scratch"><span class="metric-label">Scratch RAM</span><span class="metric-value mono" id="m-scratch">0</span></div>
+                        <div class="metric"><span class="metric-label">Universe N</span><span class="metric-value mono text-purple" id="m-brainn">0</span></div>
                     </div>
                     <div class="flag-bar" id="flag-bar"></div>
                 </div>
@@ -118,34 +176,39 @@
                 <!-- Oracle Terminal -->
                 <div class="panel terminal-panel">
                     <div class="section-head">
-                        <h2>Oracle Terminal</h2>
-                        <div style="display: flex; gap: 10px;">
-                            <label class="check-label"><input type="checkbox" id="auto-inject-toggle"> Auto-Inject</label>
+                        <h2>Oracle Telemetry Terminal</h2>
+                        <div class="terminal-controls">
+                            <label class="check-label"><input type="checkbox" id="auto-inject-toggle" checked> Auto-Inject</label>
                             <label class="check-label"><input type="checkbox" id="filter-success"> Success only</label>
                         </div>
                     </div>
                     <div class="terminal-output" id="term-out">
-                        <div class="t-line t-sys">Listening for Elite Vocal Cords…</div>
+                        <div class="t-line t-sys">Observer Deck active — Monitoring Elite Vocal Emissions…</div>
                     </div>
                     <div class="terminal-input-row">
                         <span class="prompt">›</span>
-                        <input type="text" class="terminal-input" id="term-in" placeholder="Broadcast…" autocomplete="off">
+                        <input type="text" class="terminal-input" id="term-in" placeholder="Broadcast message to colony…" autocomplete="off">
                     </div>
                 </div>
             </aside>
         </main>
     </div>
 
-    <!-- Brain Modal -->
+    <!-- Brain Topology Modal -->
     <div id="brain-modal" class="modal hidden">
         <div class="modal-box">
             <div class="modal-head">
-                <h2>Neural Topology</h2>
+                <div class="modal-title-group">
+                    <h2>Elite Neural Circuit Topology</h2>
+                    <span class="badge-dim">Decoded Genome Graph & STDP Weights</span>
+                </div>
                 <button class="btn btn-ghost" id="btn-close-modal">✕</button>
             </div>
             <div class="modal-body" id="brain-data">
-                <div id="brain-stats"><p class="dim">Extracting Elite DNA from the Ark…</p></div>
-                <svg id="brain-svg"></svg>
+                <div id="brain-stats"><p class="dim">Extracting Elite SNN DNA structure from Ark…</p></div>
+                <div class="svg-wrapper">
+                    <svg id="brain-svg"></svg>
+                </div>
             </div>
         </div>
     </div>

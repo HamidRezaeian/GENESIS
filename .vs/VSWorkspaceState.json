@@ -1,6 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\src",
+    "\\tests",
+    "\\tests\\clusy",
+    "\\tests\\clusy\\qwen"
   ],
+  "SelectedNode": "\\src\\genesis_lab.py",
   "PreviewInSolutionExplorer": false
 }
