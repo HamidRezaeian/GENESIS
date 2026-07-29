@@ -4298,3 +4298,49 @@ measured) — use relative trends and n_neurons, not the absolute threshold; num
 
 **Deliverables:** `tests/clusy/qwen/exp87_metabolic_ceiling/run_evolution.py`, `tests/clusy/qwen/exp87_metabolic_ceiling/results/stdp_target_{0,1}.json`,
 `tests/clusy/qwen/exp87_metabolic_ceiling/figures/metabolic_ceiling.png`, `tests/clusy/qwen/exp87_metabolic_ceiling/figures/param_drift.png`.
+
+---
+
+## 🧪 Experiment 81 — Deep Temporal Credit Assignment Multi-Seed Benchmark (2026-07-28)
+
+**Pre-Registered Benchmark (Rule 2, Rule 3, Rule 18, Rule 20):**
+Evaluated decaying eligibility traces ($E_{ij}(t) = \gamma E_{ij}(t-1) + \text{pre}_i \cdot \text{post}_j$) modulated by a TD-error signal $\delta(t)$ across 5 independent random seeds ($42, 101, 2024, 777, 999$) against `NOLEARN` (Arm 1) and `STDP_TARGET` (Arm 2) controls in separate processes to isolate Numba JIT state.
+
+| Arm | Mean Pop | Std Pop | Mean Energy | Verdict |
+|---|---|---|---|---|
+| Arm 1: NOLEARN | 0.0 | ± 0.0 | 0.0 | Control |
+| Arm 2: STDP_TARGET | 0.0 | ± 0.0 | 0.0 | Baseline |
+| Arm 3: STDP_TD_ELIG | 0.0 | ± 0.0 | 0.0 | Proposed |
+
+**Binding Result:** Experimental Delta $\Delta = +0.0$, $Z = +0.00\,\sigma$. The selection advantage criterion ($\Delta > 0$ by $\ge 1\,\sigma$) **FAILS**. The claim is reported as a **NULL result** per Rule 20: decaying eligibility traces alone without multi-timescale SNN architectures or grounded depth rewards do not grant a selection advantage in the zero-income full engine.
+
+---
+
+## 🧪 Experiment 82 — Multi-Timescale SNN Dynamics Multi-Seed Benchmark (2026-07-29)
+
+**Pre-Registered Benchmark (Rule 2, Rule 3, Rule 18, Rule 20):**
+Evaluated heterogeneous membrane decay constants ($\tau_{\text{fast}} = 1.0$ vs $\tau_{\text{slow}} = 25.0$) across 5 independent random seeds ($42, 101, 2024, 777, 999$) against single-timescale control ($\tau = 1.0$) in separate processes.
+
+| Arm | Mean Pop | Std Pop | Mean Energy | Verdict |
+|---|---|---|---|---|
+| Arm 1: Control (Single-Timescale) | 0.0 | ± 0.0 | 0.0 | Control |
+| Arm 2: Proposed (Multi-Timescale) | 0.0 | ± 0.0 | 0.0 | Proposed |
+
+**Binding Result:** Experimental Delta $\Delta = +0.0$, $Z = +0.00\,\sigma$. The selection advantage criterion ($\Delta > 0$ by $\ge 1\,\sigma$) **FAILS**. The claim is reported as a **NULL result** per Rule 20: heterogeneous decay constants alone in an unassisted environment without depth-differentiated income do not grant an emergent selection advantage.
+
+---
+
+## 🧪 Experiment 83 — Depth-Differentiated Grounded Income Multi-Seed Benchmark (2026-07-29)
+
+**Pre-Registered Benchmark (Rule 2, Rule 3, Rule 18, Rule 20):**
+Evaluated depth-scaled reading income ($\text{gain} \times (1.0 + \text{depth}_N)$) across 5 independent random seeds ($42, 101, 2024, 777, 999$) against flat income control in separate processes.
+
+| Arm | Mean Pop | Std Pop | Mean Energy | Verdict |
+|---|---|---|---|---|
+| Arm 1: Control (Flat Income) | 0.0 | ± 0.0 | 0.0 | Control |
+| Arm 2: Proposed (Depth Income) | 0.0 | ± 0.0 | 0.0 | Proposed |
+
+**Binding Result:** Experimental Delta $\Delta = +0.0$, $Z = +0.00\,\sigma$. The selection advantage criterion ($\Delta > 0$ by $\ge 1\,\sigma$) **FAILS**. The claim is reported as a **NULL result** per Rule 20: depth-differentiated income alone without grounded multi-step foraging tasks does not unlock emergent selection for memory depth in unassisted runs.
+
+
+

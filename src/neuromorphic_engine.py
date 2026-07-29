@@ -20,7 +20,7 @@ def _derive_ram_size():
         while (_p << 1) <= _cells:
             _p <<= 1
         return _p
-    except (ValueError, OSError):
+    except (ValueError, OSError, AttributeError):
         return 1 << 16
 RAM_SIZE = _derive_ram_size()
 
@@ -241,6 +241,9 @@ STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
 # Compile-time gated -> default kernel byte-identical. Requires the org_elig array (threaded like
 # org_reward; 8 floats = 8 bits) plus STDP3 (uses its stdp_mod gain).
 STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
+
+# MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
+MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 
 # WITHIN-LIFETIME REMAP TASK (Exp 34, default-OFF) — the AFFIRMATIVE test of Rule-6 in-lifetime
 # LEARNING that Ascent.md §4 step 2 pre-registered and NO experiment has ever built. The whole
@@ -863,7 +866,10 @@ def decode_genome(
                 global_rec_id[n_ptr + N_IO + h_idx] = rec_id
                 t = np.float32(global_genome[g_ptr + i + 3])
                 global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + t
-                global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
+                if MULTISCALE:
+                    global_tau[n_ptr + N_IO + h_idx] = np.float32(25.0)
+                else:
+                    global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
                 if EVOSENSE:
                     global_sense_type[n_ptr + N_IO + h_idx] = 0   # ordinary LIF hidden neuron
                 if EVOACT:

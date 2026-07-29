@@ -741,3 +741,32 @@ Phase D continuous 100,000-tick Deep-Time Ascension Benchmark (Experiment 64) ve
 - **Full Substrate Integration:** Grounded Stigmergy, STDP3C Plasticity, Memory Depth $N=2$, Peer Prediction, Red-Queen Evader Defense, Evolvable Sensors/Actuators, Niche Economy, Working Memory Latches, RAM Scratchpad, Dual-Resource Heterogeneity, and Autotelic Self-Generated Curriculum.
 - **Quantitative Execution:** Continuous $100,000$ LIF ticks executed across 20 spatial substrate drift shifts at peak throughput (**>12,700,000 ticks/s**).
 - **Pre-Registered Criteria Satisfied:** Zero mass extinctions ($EXT=0$), 100% sensorimotor retention, zero human text dependency (0% human text required under Autotelic Imperative Rule 9), and 100% atomic live UI visualizer synchronization (`localhost:8081`).
+
+---
+
+## 7. Experiment 81 — Deep Temporal Credit Assignment: Decaying Eligibility Traces + TD-Error Neuromodulation (2026-07-28)
+
+**Pre-Registered Plan & Falsification Criteria (Binding — Rule 2, 18, 20):**
+- **Hypothesis:** Decaying eligibility traces ($E_{ij}(t) = \gamma E_{ij}(t-1) + \text{pre}_i \cdot \text{post}_j$) modulated by a Temporal Difference error signal $\delta(t)$ enable multi-step credit assignment across delayed-reward horizons ($5–20$ ticks), beating 1-tick `STDP_TARGET` and `NOLEARN` controls by $\ge 25\%$.
+- **Control Arms (Rule 20 / Rule 3):**
+  - Arm 1: `NOLEARN` (plasticity OFF baseline)
+  - Arm 2: `STDP_TARGET` (1-tick immediate error baseline)
+  - Arm 3: `STDP_TD_ELIG` (Decaying Eligibility Trace + TD-error)
+  Tested across $\ge 5$ independent random seeds each.
+- **Binding Falsification Criterion:** The 5-seed mean selection advantage $\Delta = \text{Mean}(\text{Arm 3}) - \text{Mean}(\text{Arm 2})$ must be $> 0$ by at least $1\,\sigma$ (standard deviation). Otherwise, the claim is falsified and reported as a null result.
+- **Verdict (2026-07-29):** NULL ($\Delta = +0.0, Z = +0.00\,\sigma$). Heterogeneous decay constants alone without depth-differentiated income fail to grant an emergent selection advantage because flat income rewards memoryless reflexes identically to deep memory.
+
+---
+
+## 9. Experiment 83 — Depth-Differentiated Grounded Income: Selective Pressure for Memory Depth (2026-07-29)
+
+**Pre-Registered Plan & Falsification Criteria (Binding — Rule 2, 18, 20):**
+- **Hypothesis:** Scaling reading/foraging income by the context depth $N$ required for prediction (`gain *= (1.0 + depth_N)`) provides emergent selective pressure that enables multi-timescale/memory-capable organisms (`GENESIS_MULTISCALE`) to out-compete memoryless reflexes, yielding a statistically significant selection advantage ($\ge 1\,\sigma$).
+- **Control Arms (Rule 20 / Rule 3):**
+  - Arm 1 (Control): Flat income baseline (`GENESIS_DEPTH_INCOME=0`)
+  - Arm 2 (Proposed): Depth-differentiated income (`GENESIS_DEPTH_INCOME=1`)
+  Tested across $\ge 5$ independent random seeds ($42, 101, 2024, 777, 999$).
+- **Binding Falsification Criterion:** The 5-seed mean selection advantage $\Delta = \text{Mean}(\text{Arm 2}) - \text{Mean}(\text{Arm 1})$ must be $> 0$ by at least $1\,\sigma$. Otherwise, the claim 'depth-differentiated income unlocks emergent selection for memory depth' is FALSIFIED and recorded as a NULL result.
+
+
+

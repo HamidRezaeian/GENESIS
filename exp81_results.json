@@ -1,0 +1,138 @@
+{
+  "arms": {
+    "Arm 1: NOLEARN": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 30598,
+        "mean_energy": 0.0,
+        "elapsed": 19.426549434661865
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 36435,
+        "mean_energy": 0.0,
+        "elapsed": 2.874065637588501
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 4867,
+        "mean_energy": 0.0,
+        "elapsed": 3.9241275787353516
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 36629,
+        "mean_energy": 0.0,
+        "elapsed": 3.3365845680236816
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 37233,
+        "mean_energy": 0.0,
+        "elapsed": 2.9825901985168457
+      }
+    ],
+    "Arm 2: STDP_TARGET": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 29162,
+        "mean_energy": 0.0,
+        "elapsed": 19.916675806045532
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 35808,
+        "mean_energy": 0.0,
+        "elapsed": 3.251892566680908
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 29456,
+        "mean_energy": 0.0,
+        "elapsed": 2.952556610107422
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 36671,
+        "mean_energy": 0.0,
+        "elapsed": 2.6072499752044678
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 36020,
+        "mean_energy": 0.0,
+        "elapsed": 2.5414702892303467
+      }
+    ],
+    "Arm 3: STDP_TD_ELIG": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 34562,
+        "mean_energy": 0.0,
+        "elapsed": 2.543358564376831
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 4253,
+        "mean_energy": 0.0,
+        "elapsed": 2.647601366043091
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 35712,
+        "mean_energy": 0.0,
+        "elapsed": 2.5295400619506836
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 35104,
+        "mean_energy": 0.0,
+        "elapsed": 2.5107274055480957
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 35826,
+        "mean_energy": 0.0,
+        "elapsed": 2.7232203483581543
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: NOLEARN": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    },
+    "Arm 2: STDP_TARGET": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    },
+    "Arm 3: STDP_TD_ELIG": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    }
+  },
+  "delta_pop": 0.0,
+  "z_score": 0.0,
+  "verdict": "NULL / FALSIFIED (Selection Advantage <= 1\u03c3)"
+}

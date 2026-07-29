@@ -1,0 +1,95 @@
+{
+  "arms": {
+    "Arm 1: Control (Single-Timescale)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 21386,
+        "mean_energy": 0.0,
+        "elapsed": 23.40358018875122
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 3882,
+        "mean_energy": 0.0,
+        "elapsed": 3.145167350769043
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 22464,
+        "mean_energy": 0.0,
+        "elapsed": 2.6354424953460693
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 20843,
+        "mean_energy": 0.0,
+        "elapsed": 3.031834125518799
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 22000,
+        "mean_energy": 0.0,
+        "elapsed": 2.937366247177124
+      }
+    ],
+    "Arm 2: Proposed (Multi-Timescale)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 22017,
+        "mean_energy": 0.0,
+        "elapsed": 3.457641839981079
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 4019,
+        "mean_energy": 0.0,
+        "elapsed": 3.2410104274749756
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 22160,
+        "mean_energy": 0.0,
+        "elapsed": 3.1100728511810303
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 21978,
+        "mean_energy": 0.0,
+        "elapsed": 2.8328630924224854
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 21950,
+        "mean_energy": 0.0,
+        "elapsed": 3.1931064128875732
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (Single-Timescale)": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    },
+    "Arm 2: Proposed (Multi-Timescale)": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    }
+  },
+  "delta_pop": 0.0,
+  "z_score": 0.0,
+  "verdict": "NULL / FALSIFIED (Selection Advantage <= 1\u03c3)"
+}

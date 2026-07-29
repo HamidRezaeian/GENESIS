@@ -1,0 +1,95 @@
+{
+  "arms": {
+    "Arm 1: Control (Flat Income)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 21930,
+        "mean_energy": 0.0,
+        "elapsed": 4.254814386367798
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 3841,
+        "mean_energy": 0.0,
+        "elapsed": 3.2137997150421143
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 22531,
+        "mean_energy": 0.0,
+        "elapsed": 3.098588466644287
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 22189,
+        "mean_energy": 0.0,
+        "elapsed": 3.853001356124878
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 22902,
+        "mean_energy": 0.0,
+        "elapsed": 3.645437002182007
+      }
+    ],
+    "Arm 2: Proposed (Depth Income)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "total_reads": 21357,
+        "mean_energy": 0.0,
+        "elapsed": 3.312755823135376
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "total_reads": 22394,
+        "mean_energy": 0.0,
+        "elapsed": 3.9436936378479004
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "total_reads": 22728,
+        "mean_energy": 0.0,
+        "elapsed": 3.7767107486724854
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "total_reads": 21404,
+        "mean_energy": 0.0,
+        "elapsed": 2.7925074100494385
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "total_reads": 4138,
+        "mean_energy": 0.0,
+        "elapsed": 3.0309979915618896
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (Flat Income)": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    },
+    "Arm 2: Proposed (Depth Income)": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "std_energy": 0.0
+    }
+  },
+  "delta_pop": 0.0,
+  "z_score": 0.0,
+  "verdict": "NULL / FALSIFIED (Selection Advantage <= 1\u03c3)"
+}
