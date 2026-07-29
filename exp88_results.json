@@ -1,0 +1,108 @@
+{
+  "arms": {
+    "Arm 1: Control (Footprint + AutoRepro, No Plasticity)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 6.004955768585205
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.882536172866821
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 5.091365814208984
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.837717056274414
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.303069353103638
+      }
+    ],
+    "Arm 2: Proposed (Footprint + AutoRepro, MULTISCALE+STDP3C)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.312060117721558
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.030725955963135
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.9821324348449707
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.094902753829956
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.5766613483428955
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (Footprint + AutoRepro, No Plasticity)": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "mean_births": 0.0,
+      "std_births": 0.0
+    },
+    "Arm 2: Proposed (Footprint + AutoRepro, MULTISCALE+STDP3C)": {
+      "mean_pop": 0.0,
+      "std_pop": 0.0,
+      "mean_energy": 0.0,
+      "mean_births": 0.0,
+      "std_births": 0.0
+    }
+  },
+  "delta_pop": 0.0,
+  "z_pop": 0.0,
+  "delta_births": 0.0,
+  "verdict": "VERDICT: \u0394Pop Z=+0.00\u03c3, \u0394Births=+0.0"
+}

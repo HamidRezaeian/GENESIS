@@ -1,0 +1,108 @@
+{
+  "arms": {
+    "Arm 1: Control (REMAP, Fixed Reflex, No Plasticity)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.98,
+        "mean_energy": 42664.3046875,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 21.62249517440796
+      },
+      {
+        "seed": 101,
+        "mean_pop": 1.03,
+        "mean_energy": 30729.411071777344,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.51479172706604
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 1.39,
+        "mean_energy": 31396.939208984375,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.49085259437561
+      },
+      {
+        "seed": 777,
+        "mean_pop": 1.0,
+        "mean_energy": 39760.12890625,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 3.9231998920440674
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.687454700469971
+      }
+    ],
+    "Arm 2: Proposed (REMAP, Plastic MULTISCALE+STDP3C)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 22.476191997528076
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 101,
+        "total_deaths": 121,
+        "elapsed": 5.168843507766724
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 1.01,
+        "mean_energy": 33822.97265625,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 5.258756637573242
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.99,
+        "mean_energy": 49267.7890625,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.763707876205444
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.681511163711548
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (REMAP, Fixed Reflex, No Plasticity)": {
+      "mean_pop": 0.8799999999999999,
+      "std_pop": 0.46505913602465654,
+      "mean_energy": 28910.156774902345,
+      "mean_births": 50.0,
+      "std_births": 0.0
+    },
+    "Arm 2: Proposed (REMAP, Plastic MULTISCALE+STDP3C)": {
+      "mean_pop": 0.4,
+      "std_pop": 0.4899387716847892,
+      "mean_energy": 16618.15234375,
+      "mean_births": 60.2,
+      "std_births": 20.4
+    }
+  },
+  "delta_pop": -0.47999999999999987,
+  "z_pop": -0.9797142576599681,
+  "delta_births": 10.200000000000003,
+  "verdict": "VERDICT: \u0394Pop Z=-0.98\u03c3, \u0394Births=+10.2"
+}

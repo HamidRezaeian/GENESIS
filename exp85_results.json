@@ -1,0 +1,95 @@
+{
+  "arms": {
+    "Arm 1: Control (10k Phase D Reflex)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 42941.28125,
+        "elapsed": 4.191457986831665
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 42791.3359375,
+        "elapsed": 3.6194024085998535
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "elapsed": 3.553262948989868
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 42270.57421875,
+        "elapsed": 3.3114013671875
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 61557.18359375,
+        "elapsed": 3.2991063594818115
+      }
+    ],
+    "Arm 2: Proposed (10k Multi-Timescale SNN)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 117927.9765625,
+        "elapsed": 4.013830184936523
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "mean_pop": 1.0,
+        "mean_energy": 76526.9658203125,
+        "elapsed": 4.00200891494751
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "mean_pop": 1.0,
+        "mean_energy": 74164.34033203125,
+        "elapsed": 3.8208200931549072
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 119524.078125,
+        "elapsed": 4.057446479797363
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "mean_pop": 0.5,
+        "mean_energy": 103299.0234375,
+        "elapsed": 3.7148208618164062
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (10k Phase D Reflex)": {
+      "mean_pop": 0.4,
+      "std_pop": 0.2,
+      "mean_energy": 37912.075,
+      "std_energy": 20320.00595205106
+    },
+    "Arm 2: Proposed (10k Multi-Timescale SNN)": {
+      "mean_pop": 0.7,
+      "std_pop": 0.2449489742783178,
+      "mean_energy": 98288.47685546875,
+      "std_energy": 19582.153163563915
+    }
+  },
+  "delta_pop": 0.29999999999999993,
+  "z_score": 1.224744871391589,
+  "verdict": "ASCENT CONFIRMED (Selection Advantage >= 1.0\u03c3)"
+}

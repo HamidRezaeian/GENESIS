@@ -1,0 +1,108 @@
+{
+  "arms": {
+    "Arm 1: Control (Reflex, No Plasticity)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 58,
+        "total_deaths": 107,
+        "elapsed": 5.9557225704193115
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 5.156174182891846
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.85727071762085
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.99,
+        "mean_energy": 6136.00927734375,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.537734270095825
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.705157279968262
+      }
+    ],
+    "Arm 2: Proposed (MULTISCALE + STDP3C)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.02,
+        "mean_energy": 27.552387237548828,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.4826061725616455
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.349997520446777
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.01,
+        "mean_energy": 4338.9091796875,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 3.5802018642425537
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.474819898605347
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.01,
+        "mean_energy": 184.1037139892578,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.206387281417847
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (Reflex, No Plasticity)": {
+      "mean_pop": 0.198,
+      "std_pop": 0.396,
+      "mean_energy": 1227.20185546875,
+      "mean_births": 51.6,
+      "std_births": 3.1999999999999997
+    },
+    "Arm 2: Proposed (MULTISCALE + STDP3C)": {
+      "mean_pop": 0.008,
+      "std_pop": 0.0074833147735478825,
+      "mean_energy": 910.1130561828613,
+      "mean_births": 50.0,
+      "std_births": 0.0
+    }
+  },
+  "delta_pop": -0.19,
+  "z_pop": -25.389817981680316,
+  "delta_births": -1.6000000000000014,
+  "verdict": "VERDICT: \u0394Pop Z=-25.39\u03c3, \u0394Births=-1.6"
+}

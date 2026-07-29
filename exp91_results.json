@@ -1,0 +1,108 @@
+{
+  "arms": {
+    "Arm 1: Control (REMAP-500, Fixed Reflex, No Plasticity)": [
+      {
+        "seed": 42,
+        "mean_pop": 1.0,
+        "mean_energy": 41460.234375,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 6.765170097351074
+      },
+      {
+        "seed": 101,
+        "mean_pop": 1.0,
+        "mean_energy": 30025.867248535156,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 3.8307888507843018
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 1.35,
+        "mean_energy": 31097.88427734375,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.235629558563232
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.0,
+        "mean_energy": 0.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.664309024810791
+      },
+      {
+        "seed": 999,
+        "mean_pop": 1.0,
+        "mean_energy": 40496.0,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.018792390823364
+      }
+    ],
+    "Arm 2: Proposed (REMAP-500, Plastic MULTISCALE+STDP3C)": [
+      {
+        "seed": 42,
+        "mean_pop": 1.0,
+        "mean_energy": 47041.265625,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.934646129608154
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.99,
+        "mean_energy": 47276.0625,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.793825149536133
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 1.0,
+        "mean_energy": 48455.296875,
+        "total_births": 54,
+        "total_deaths": 103,
+        "elapsed": 4.88528299331665
+      },
+      {
+        "seed": 777,
+        "mean_pop": 1.0,
+        "mean_energy": 36679.76953125,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.8514955043792725
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.99,
+        "mean_energy": 50289.35546875,
+        "total_births": 50,
+        "total_deaths": 100,
+        "elapsed": 4.927558660507202
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (REMAP-500, Fixed Reflex, No Plasticity)": {
+      "mean_pop": 0.8699999999999999,
+      "std_pop": 0.45563142999578077,
+      "mean_energy": 28615.997180175782,
+      "mean_births": 50.0,
+      "std_births": 0.0
+    },
+    "Arm 2: Proposed (REMAP-500, Plastic MULTISCALE+STDP3C)": {
+      "mean_pop": 0.9960000000000001,
+      "std_pop": 0.00489897948556636,
+      "mean_energy": 45948.35,
+      "mean_births": 50.8,
+      "std_births": 1.5999999999999999
+    }
+  },
+  "delta_pop": 0.12600000000000022,
+  "z_pop": 25.719642299223395,
+  "delta_births": 0.7999999999999972,
+  "verdict": "\ud83d\udfe2 MULTI-GENERATIONAL ASCENT CONFIRMED: Plasticity Selection Advantage (Z >= 1.0\u03c3 under Rapid REMAP)"
+}

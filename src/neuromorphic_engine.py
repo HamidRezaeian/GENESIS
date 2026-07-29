@@ -293,6 +293,16 @@ DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
 DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))   # how many ticks back the target byte is
 DIGESTION = os.environ.get("GENESIS_DIGESTION", "0") == "1"
 
+# AUTO-REPRODUCE (Rule 5 minimal survival primitive) — energy-gated physical cell division.
+# When GENESIS_AUTO_REPRO=1, an organism that exceeds the threshold energy automatically
+# triggers fission regardless of neural action selection. This is biologically grounded:
+# cell division in prokaryotes is gated by nutrient sufficiency, not by authored cognition.
+# Threshold derived from initial founder energy (E-class, genome-encodable future target).
+# Default OFF to preserve prior kernel byte-identity; enabled for experiments requiring
+# genuine multi-generational selection (Rule 14/16: births > 0).
+AUTO_REPRO = os.environ.get("GENESIS_AUTO_REPRO", "0") == "1"
+AUTO_REPRO_THRESH = np.float32(float(os.environ.get("GENESIS_AUTO_REPRO_THRESH", "200000.0")))
+
 # RAM SCRATCHPAD — org-controlled EXTERNAL register (Exp 46, default-OFF, byte-identical off). Exp 43-45
 # proved a NEURAL substrate cannot hold state: the leaky membrane holds ~1 step (43), a passive latch holds
 # but ungated overwrites every tick (44), and a gated latch cannot SELF-CLOCK because STDP re-weighting a
@@ -2428,6 +2438,25 @@ def world_tick_numba(
             if m < np.float32(0.0):
                 m = np.float32(0.0)
             org_reward[org] = m
+
+        # AUTO-REPRODUCE: energy-gated physical fission (Rule 5 minimal survival primitive).
+        # Fires when AUTO_REPRO=1 AND energy > threshold AND birth buffer not full.
+        if AUTO_REPRO and energy[org] >= AUTO_REPRO_THRESH and n_births < b_pos.shape[0]:
+            g_count = org_g_count[org]
+            copy_cost = np.float32(g_count) * CYCLES_PER_BYTE_COPY
+            if energy[org] >= copy_cost + 10.0:
+                energy[org] -= copy_cost
+                child_energy = energy[org] / np.float32(2.0)
+                energy[org] -= child_energy
+                b_pos[n_births]    = pos
+                b_parent[n_births] = org
+                b_energy[n_births] = child_energy
+                g_start = org_g_ptr[org]
+                b_g_start[n_births] = g_start
+                b_g_count[n_births] = g_count
+                for x in range(g_count):
+                    b_genomes[n_births, x] = global_genome[g_start + x]
+                n_births += 1
 
         if energy[org] <= np.float32(0.0):
             alive[org] = False

@@ -1,0 +1,155 @@
+{
+  "arms": {
+    "Arm 1: Control (Reflex, No Plasticity)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.5,
+        "mean_energy": 11741.23046875,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 5.146833896636963
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.5,
+        "mean_energy": 44370.6484375,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 5.123706340789795
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.5,
+        "mean_energy": 42008.28125,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.6330902576446533
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.5,
+        "mean_energy": 40849.0078125,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.9551210403442383
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.5,
+        "mean_energy": 40819.35546875,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.805163621902466
+      }
+    ],
+    "Arm 2: Proposed (MULTISCALE + STDP3C)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.51,
+        "mean_energy": 117979.3203125,
+        "total_births": 2,
+        "total_deaths": 52,
+        "elapsed": 21.04163908958435
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.5,
+        "mean_energy": 121129.3671875,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.902990341186523
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.5,
+        "mean_energy": 121008.5703125,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.263423442840576
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.5,
+        "mean_energy": 118951.0703125,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 4.310891628265381
+      },
+      {
+        "seed": 999,
+        "mean_pop": 1.0,
+        "mean_energy": 78926.279296875,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 5.121618747711182
+      }
+    ],
+    "Arm 3: Shortcut (MULTISCALE, No Plasticity)": [
+      {
+        "seed": 42,
+        "mean_pop": 0.5,
+        "mean_energy": 43219.4453125,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.8195059299468994
+      },
+      {
+        "seed": 101,
+        "mean_pop": 0.5,
+        "mean_energy": 42200.0,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.8847780227661133
+      },
+      {
+        "seed": 2024,
+        "mean_pop": 0.5,
+        "mean_energy": 61198.80859375,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.9150240421295166
+      },
+      {
+        "seed": 777,
+        "mean_pop": 0.5,
+        "mean_energy": 37757.62109375,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.7038402557373047
+      },
+      {
+        "seed": 999,
+        "mean_pop": 0.5,
+        "mean_energy": 60654.4609375,
+        "total_births": 0,
+        "total_deaths": 50,
+        "elapsed": 3.5972726345062256
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (Reflex, No Plasticity)": {
+      "mean_pop": 0.5,
+      "std_pop": 0.0,
+      "mean_energy": 35957.7046875,
+      "mean_births": 0.0
+    },
+    "Arm 2: Proposed (MULTISCALE + STDP3C)": {
+      "mean_pop": 0.602,
+      "std_pop": 0.19903768487399565,
+      "mean_energy": 111598.921484375,
+      "mean_births": 0.4
+    },
+    "Arm 3: Shortcut (MULTISCALE, No Plasticity)": {
+      "mean_pop": 0.5,
+      "std_pop": 0.0,
+      "mean_energy": 49006.0671875,
+      "mean_births": 0.0
+    }
+  },
+  "delta_2v1": 0.10199999999999998,
+  "z_2v1": 0.5124657677995647,
+  "delta_2v3": 0.10199999999999998,
+  "z_2v3": 0.0,
+  "verdict": "STRUCTURAL ADVANTAGE ONLY \u2014 Arm2 \u2248 Arm3: slow-\u03c4 energy conservation drives advantage, not plasticity"
+}

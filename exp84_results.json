@@ -1,0 +1,95 @@
+{
+  "arms": {
+    "Arm 1: Control (Phase D Reflex)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 39259.015625,
+        "elapsed": 3.915259838104248
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 59202.2109375,
+        "elapsed": 4.355666637420654
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 57276.62109375,
+        "elapsed": 2.6958394050598145
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 60681.7109375,
+        "elapsed": 2.7569236755371094
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 58726.39453125,
+        "elapsed": 2.678025245666504
+      }
+    ],
+    "Arm 2: Proposed (Multi-Timescale SNN)": [
+      {
+        "seed": 42,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 118640.4375,
+        "elapsed": 23.41016960144043
+      },
+      {
+        "seed": 101,
+        "final_pop": 0,
+        "mean_pop": 3.3333333333333335,
+        "mean_energy": 77329.3525390625,
+        "elapsed": 3.205075979232788
+      },
+      {
+        "seed": 2024,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 118890.671875,
+        "elapsed": 2.8768765926361084
+      },
+      {
+        "seed": 777,
+        "final_pop": 0,
+        "mean_pop": 3.3333333333333335,
+        "mean_energy": 75948.8974609375,
+        "elapsed": 2.839301824569702
+      },
+      {
+        "seed": 999,
+        "final_pop": 0,
+        "mean_pop": 1.6666666666666667,
+        "mean_energy": 116380.4765625,
+        "elapsed": 2.832552194595337
+      }
+    ]
+  },
+  "stats": {
+    "Arm 1: Control (Phase D Reflex)": {
+      "mean_pop": 1.6666666666666667,
+      "std_pop": 0.0,
+      "mean_energy": 55029.190625,
+      "std_energy": 7959.6955265719025
+    },
+    "Arm 2: Proposed (Multi-Timescale SNN)": {
+      "mean_pop": 2.333333333333333,
+      "std_pop": 0.816496580927726,
+      "mean_energy": 101437.9671875,
+      "std_energy": 20271.746091424448
+    }
+  },
+  "delta_pop": 0.6666666666666663,
+  "z_score": 0.8164965809277256,
+  "verdict": "NULL / FALSIFIED (Selection Advantage <= 1\u03c3)"
+}
