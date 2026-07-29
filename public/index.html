@@ -62,30 +62,33 @@
                 <div class="section-head">
                     <div class="title-with-badge">
                         <h2>RAM Substrate Canvas</h2>
-                        <span class="badge-dim">256 × 256 Memory Array</span>
+                        <span class="badge">1024 × 1024 Memory Array (1MB Substrate)</span>
                     </div>
                     <div class="section-actions">
+                        <button class="btn btn-secondary btn-sm" id="btn-zoom-fit">Fit</button>
+                        <button class="btn btn-secondary btn-sm" id="btn-zoom-2x">2x</button>
                         <button class="btn btn-secondary" id="btn-brain">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>
                             Neural Topology
                         </button>
-                        <button class="btn btn-ghost" id="btn-fullscreen">
+                        <button class="btn btn-ghost" id="btn-fullscreen" title="Toggle Fullscreen">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                             Expand
                         </button>
                     </div>
                 </div>
-                <div class="canvas-container">
+                <div class="canvas-container" id="canvas-container">
                     <div class="canvas-frame" id="canvas-frame">
                         <canvas id="ramCanvas" width="256" height="256"></canvas>
                     </div>
+                    <div id="ram-tooltip" class="ram-tooltip hidden"></div>
                 </div>
                 <div class="legend-bar">
                     <span class="legend-item" data-type="energy"><i style="background:#10b981"></i>Energy</span>
                     <span class="legend-item" data-type="shelter"><i style="background:#06b6d4"></i>Shelter</span>
-                    <span class="legend-item" data-type="ip"><i style="background:#3b82f6"></i>Organism</span>
-                    <span class="legend-item" data-type="voice"><i style="background:#f59e0b"></i>Voice</span>
-                    <span class="legend-item" data-type="book"><i style="background:#8b5cf6"></i>Book</span>
+                    <span class="legend-item" data-type="ip"><i style="background:#f59e0b"></i>Organisms</span>
+                    <span class="legend-item" data-type="voice"><i style="background:#eab308"></i>Voice (Scream)</span>
+                    <span class="legend-item" data-type="book"><i style="background:#8b5cf6"></i>Books</span>
                 </div>
             </section>
 
@@ -95,7 +98,7 @@
                 <div class="baseline-banner">
                     <div class="banner-title">
                         <span class="pulse-indicator"></span>
-                        <span>VALIDATED OPTIMAL SUBSTRATE BASELINE (RULE 22)</span>
+                        <span>VALIDATED OPTIMAL SUBSTRATE BASELINE (PHASE 2: 4,096 CORTICAL NEURONS LOADED)</span>
                     </div>
                     <div class="baseline-grid">
                         <div class="b-chip">
@@ -199,15 +202,32 @@
         <div class="modal-box">
             <div class="modal-head">
                 <div class="modal-title-group">
-                    <h2>Elite Neural Circuit Topology</h2>
-                    <span class="badge-dim">Decoded Genome Graph & STDP Weights</span>
+                    <h2>Neocortical SNN Topology Visualizer</h2>
+                    <span class="badge-dim">Live STDP3C Plasticity & Biological Synapses</span>
+                </div>
+                <div class="modal-filter-group">
+                    <button class="btn btn-sm btn-secondary active" id="btn-filter-all">All Paths</button>
+                    <button class="btn btn-sm btn-ghost" id="btn-filter-exc">Excitatory (+)</button>
+                    <button class="btn btn-sm btn-ghost" id="btn-filter-inh">Inhibitory (-)</button>
                 </div>
                 <button class="btn btn-ghost" id="btn-close-modal">✕</button>
             </div>
-            <div class="modal-body" id="brain-data">
-                <div id="brain-stats"><p class="dim">Extracting Elite SNN DNA structure from Ark…</p></div>
-                <div class="svg-wrapper">
-                    <svg id="brain-svg"></svg>
+            <div class="modal-body-split">
+                <div class="modal-main-svg">
+                    <div id="brain-stats"><p class="dim">Extracting Elite SNN DNA structure from Ark…</p></div>
+                    <div class="svg-wrapper">
+                        <svg id="brain-svg"></svg>
+                    </div>
+                </div>
+                <!-- Neuron Inspector HUD -->
+                <div class="neuron-inspector" id="neuron-inspector">
+                    <div class="inspector-head">
+                        <span class="pulse-indicator"></span>
+                        <h3 id="insp-title">تحلیل‌گر نورون بیولوژیک (Inspector HUD)</h3>
+                    </div>
+                    <div class="inspector-body" id="insp-body">
+                        <p class="dim">روی هر یک از نورون‌های قشر حسی، نئوکورتکس یا قشر حرکتی کلیک کنید یا موس را نگه دارید تا ساختار بیولوژیک و اتصالات سیناپسی آن را آنالیز کنید.</p>
+                    </div>
                 </div>
             </div>
         </div>

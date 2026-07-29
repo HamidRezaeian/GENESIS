@@ -1,11 +1,12 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Brain",
     "\\src",
     "\\tests",
     "\\tests\\clusy",
     "\\tests\\clusy\\qwen"
   ],
-  "SelectedNode": "\\src\\genesis_lab.py",
+  "SelectedNode": "\\Brain\\Brain_Elite_AGI.npz",
   "PreviewInSolutionExplorer": false
 }

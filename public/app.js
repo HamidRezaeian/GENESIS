@@ -1,14 +1,83 @@
 /* ═══════════════════════════════════════════════════════════
    GENESIS — Neuromorphic Observation Deck (app.js)
-   Observer Mode: Real-time Telemetry & Neural Circuit Visualizer
+   Observer Mode: Real-time Telemetry & Neocortical SNN Visualizer
    ═══════════════════════════════════════════════════════════ */
 
-// ── Canvas Setup ──────────────────────────────────────────
+// ── Canvas Setup & Dynamic Zoom ──────────────────────────
 const canvas = document.getElementById('ramCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 canvas.width = 256;
 canvas.height = 256;
 let imgData = ctx.createImageData(256, 256);
+let rawRamBytes = new Uint8Array(256 * 256);
+let activeLegendFilter = null;
+
+// Zoom & Fullscreen Controls
+const btnFit = document.getElementById('btn-zoom-fit');
+const btn2x = document.getElementById('btn-zoom-2x');
+const btnFull = document.getElementById('btn-fullscreen');
+
+if (btnFit && btn2x) {
+    btnFit.addEventListener('click', () => {
+        canvas.classList.remove('zoom-2x');
+        btnFit.classList.add('active');
+        btn2x.classList.remove('active');
+    });
+    btn2x.addEventListener('click', () => {
+        canvas.classList.add('zoom-2x');
+        btn2x.classList.add('active');
+        btnFit.classList.remove('active');
+    });
+}
+
+if (btnFull) {
+    btnFull.addEventListener('click', () => {
+        const container = document.getElementById('canvas-container') || document.body;
+        if (!document.fullscreenElement) {
+            if (container.requestFullscreen) container.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    });
+}
+
+// Interactive Legend Filtering
+document.querySelectorAll('.legend-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+        activeLegendFilter = item.getAttribute('data-type');
+        renderRamCanvas();
+    });
+    item.addEventListener('mouseleave', () => {
+        activeLegendFilter = null;
+        renderRamCanvas();
+    });
+});
+
+// RAM Tooltip on Canvas Hover
+const tooltip = document.getElementById('ram-tooltip');
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = 256 / rect.width;
+    const scaleY = 256 / rect.height;
+    const x = Math.floor((e.clientX - rect.left) * scaleX);
+    const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+    if (x >= 0 && x < 256 && y >= 0 && y < 256) {
+        const addr = y * 256 + x;
+        const val = rawRamBytes[addr] || 0;
+        const hex = '0x' + val.toString(16).padStart(2, '0').toUpperCase();
+        const char = (val >= 32 && val <= 126) ? `'${String.fromCharCode(val)}'` : 'Non-printable';
+        
+        if (tooltip) {
+            tooltip.classList.remove('hidden');
+            tooltip.innerHTML = `<strong>Addr 0x${addr.toString(16).padStart(4, '0').toUpperCase()}</strong> (${x}, ${y}) | Val: ${val} (${hex}) | Char: ${char}`;
+        }
+    }
+});
+
+canvas.addEventListener('mouseleave', () => {
+    if (tooltip) tooltip.classList.add('hidden');
+});
 
 // ── WebSocket Connection ─────────────────────────────────
 let ws = null;
@@ -33,17 +102,17 @@ function connect() {
         const d = JSON.parse(e.data);
         if (d.type === 'state') onState(d);
         else if (d.type === 'status') onBrain(d);
-        else if (d.type === 'library_list') onLibrary(d);
     };
 }
 connect();
 
-// ── State Handler ─────────────────────────────────────────
+// ── State Handler & Renderer ─────────────────────────────
 let lastTick = 0, lastTime = performance.now();
 let lastExtinctions = -1;
+let currentServerState = null;
 
 function onState(s) {
-    // KPI updates
+    currentServerState = s;
     const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     
     setTxt('val-tick', s.tick ? s.tick.toLocaleString() : '0');
@@ -72,7 +141,6 @@ function onState(s) {
         if (s.universe_n !== undefined) setTxt('m-brainn', s.universe_n.toLocaleString());
     }
 
-    // Engine Flags
     if (s.flags) applyFlags(s.flags);
 
     // Speed calculation
@@ -92,20 +160,20 @@ function onState(s) {
     if (behavEl) {
         let text = "";
         if (lastExtinctions !== -1 && s.extinctions > lastExtinctions) {
-            text = "💥 <span class='text-crimson'>انقراض کلونی رخ داد!</span> نسل فعلی پاکسازی شد و نسل جدید متولد گردید.<br><br>";
+            text = "💥 <span class='text-crimson'>انقراض کلونی رخ داد!</span> نسل جدید از فسیل‌های الیت متولد شد.<br><br>";
         } else if (s.metrics && s.metrics.solve_pct !== undefined) {
             const pct = s.metrics.solve_pct;
             if (pct > 75) {
-                text = "🧠 <span class='text-emerald'>ارگانیسم‌ها به پایداری شناختی رسیده‌اند!</span> پیش‌بینی دقیق توالی با موفقیت بالا انجام می‌شود.<br><br>";
+                text = "🧠 <span class='text-emerald'>ارگانیسم‌ها به پایداری کامل درک متنی رسیده‌اند!</span> پیش‌بینی دقیق توالی با موفقیت بالا انجام می‌شود.<br><br>";
             } else if (pct < 25) {
-                text = "⚠️ <span class='text-amber'>ارگانیسم‌ها در فاز اکتشاف غیرایستا (REMAP) هستند.</span> انطباق درون-عمر STDP3C در حال بروزرسانی سیناپسی است.<br><br>";
+                text = "⚠️ <span class='text-amber'>ارگانیسم‌ها در فاز اکتشاف غیرایستا (REMAP) هستند.</span> اتصالات سیناپسی STDP3C در حال بازسازی است.<br><br>";
             } else {
-                text = "🔍 ارگانیسم‌ها در حال یادگیری تدریجی و حفظ نرخ انرژی مثبت تحت Footprint Economy هستند.<br><br>";
+                text = "🔍 ارگانیسم‌ها در حال چراگری، هضم و یادگیری الگوهای کتاب متنی هستند.<br><br>";
             }
         }
         
         if (s.elite_iq !== undefined) {
-            let eliteDesc = `👑 <b>تحلیل ارگانیسم الیت (سن: ${s.elite_age} تیک | هوش: ${s.elite_iq}%)</b>: `;
+            let eliteDesc = `👑 <b>تحلیل ارگانیسم الیت (سن: ${s.elite_age} تیک)</b>: `;
             if (s.elite_iq > 70) {
                 eliteDesc += "مدار عصبی الیت توانسته تغییرات الگوی محیطی را به صورت درون-عمر ردیابی و پیش‌بینی کند. ";
             } else {
@@ -125,35 +193,78 @@ function onState(s) {
     }
     lastExtinctions = s.extinctions;
 
-    // RAM Canvas Render
-    if (s.ram_b64 && imgData) {
+    // Save RAM Bytes & Trigger Render
+    if (s.ram_b64) {
         const bin = atob(s.ram_b64);
-        const px = imgData.data;
         const len = bin.length;
+        const dim = Math.round(Math.sqrt(len));
 
-        for (let i = 0; i < len; i++) {
-            const v = bin.charCodeAt(i);
-            const p = i << 2;
-            let r = 7, g = 8, b = 14;
-
-            if (v === 0x55) { r = 16; g = 185; b = 129; }       // Food (Emerald)
-            else if (v === 0xAA) { r = 6; g = 182; b = 212; }   // Shelter (Cyan)
-            else if (v >= 32 && v <= 126) { r = 139; g = 92; b = 246; } // Books (Purple)
-            else if (v > 0) { r = 59; g = 130; b = 246; }      // Activity (Blue)
-
-            px[p] = r; px[p+1] = g; px[p+2] = b; px[p+3] = 255;
-        }
-
-        // Draw Organisms
-        if (s.org_positions) {
-            for (let i = 0; i < s.org_positions.length; i++) {
-                const pos = s.org_positions[i];
-                const p = pos << 2;
-                px[p] = 245; px[p+1] = 158; px[p+2] = 11; // Amber Organism Dot
+        if (canvas.width !== dim || canvas.height !== dim) {
+            canvas.width = dim;
+            canvas.height = dim;
+            imgData = ctx.createImageData(dim, dim);
+            rawRamBytes = new Uint8Array(len);
+            const badgeEl = document.querySelector('.badge');
+            if (badgeEl) {
+                badgeEl.textContent = `${dim} × ${dim} Memory Array (${(len / 1024).toFixed(0)}KB Substrate)`;
             }
         }
-        ctx.putImageData(imgData, 0, 0);
+
+        for (let i = 0; i < len; i++) {
+            rawRamBytes[i] = bin.charCodeAt(i);
+        }
+        renderRamCanvas();
     }
+}
+
+function renderRamCanvas() {
+    if (!currentServerState || !imgData) return;
+    const s = currentServerState;
+    const px = imgData.data;
+    const len = rawRamBytes.length;
+
+    const orgPositions = s.org_positions || s.orgs || [];
+    const orgPosSet = new Set(orgPositions);
+    const screamingSet = new Set(s.screaming_orgs || []);
+    const elitePos = s.elite_pos !== undefined ? s.elite_pos : -1;
+
+    for (let i = 0; i < len; i++) {
+        const v = rawRamBytes[i];
+        const p = i << 2;
+        let r = 7, g = 8, b = 14; // Default Background
+        let cellType = "bg";
+
+        if (v === 0x55) { r = 16; g = 185; b = 129; cellType = "energy"; }          // Food (Emerald)
+        else if (v === 0xAA) { r = 6; g = 182; b = 212; cellType = "shelter"; }      // Shelter (Cyan)
+        else if (v >= 32 && v <= 126) { r = 139; g = 92; b = 246; cellType = "book"; } // Books (Purple)
+        else if (v > 0) { r = 59; g = 130; b = 246; cellType = "bg"; }
+
+        // Overlay Organisms
+        if (orgPosSet.has(i)) {
+            cellType = "ip";
+            if (i === elitePos) {
+                r = 6; g = 182; b = 212; // Elite (Cyan)
+            } else if (screamingSet.has(i)) {
+                r = 234; g = 179; b = 8; cellType = "voice"; // Voice (Yellow)
+            } else {
+                r = 245; g = 158; b = 11; // Normal Organism (Orange)
+            }
+        }
+
+        // Legend Filter Hover Effect
+        if (activeLegendFilter && cellType !== activeLegendFilter) {
+            r = Math.floor(r * 0.15);
+            g = Math.floor(g * 0.15);
+            b = Math.floor(b * 0.15);
+        } else if (activeLegendFilter && cellType === activeLegendFilter) {
+            r = Math.min(255, r + 50);
+            g = Math.min(255, g + 50);
+            b = Math.min(255, b + 50);
+        }
+
+        px[p] = r; px[p+1] = g; px[p+2] = b; px[p+3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
 }
 
 function applyFlags(flags) {
@@ -169,22 +280,102 @@ function applyFlags(flags) {
     });
 }
 
-// ── Neural Circuit Topology (D3.js) ────────────────────────
+// ── Human-Readable Neocortical Mapping ───────────────────
+function getNeuronBioMeta(idStr) {
+    // Map In/Out/H codes into clear Persian & English biological functions
+    if (idStr.startsWith('In')) {
+        const idx = parseInt(idStr.replace('In ', ''));
+        if (idx < 23) {
+            return {
+                name: `👁️ دیداری RAM (بایت ${idx})`,
+                cortex: 'Sensory',
+                color: '#10b981',
+                desc: `ورودی حس‌گر نوری/دیداری از آدرس بایت ${idx} در حافظه RAM`
+            };
+        } else if (idx === 23) {
+            return {
+                name: '⚡ ذخیره انرژی ATP',
+                cortex: 'Sensory',
+                color: '#f59e0b',
+                desc: 'حس‌گر متابولیسم درونی: سطح فعلی انرژی ارگانیسم برای بقا'
+            };
+        } else {
+            return {
+                name: `📡 حس‌گر محیطی (پایه ${idx})`,
+                cortex: 'Sensory',
+                color: '#10b981',
+                desc: 'ردیاب الگوی متنی/خوراک در خانه همسایه'
+            };
+        }
+    } else if (idStr.startsWith('Out')) {
+        const idx = parseInt(idStr.replace('Out ', ''));
+        const motorMap = [
+            { name: '🐾 حرکت مستقیم (Step Fwd)', desc: 'فرمان حرکتی پیشروی به سمت جلو در فضای RAM' },
+            { name: '↩️ چرخش به چپ (Turn Left)', desc: 'تغییر زاویه دیداری ارگانیسم به سمت چپ' },
+            { name: '↪️ چرخش به راست (Turn Right)', desc: 'تغییر زاویه دیداری ارگانیسم به سمت راست' },
+            { name: '🍕 هضم و بلعیدن (Consume)', desc: 'جذب انرژی بایت‌های خوراک/کتاب در موقعیت فعلی' },
+            { name: '🧬 تکثیر خودکار (Reproduce)', desc: 'انتقال ژنوم و متولد کردن ارگانیسم فرزند' },
+            { name: '🗣️ انتشار صوت (Voice Out)', desc: 'انتشار بایت صوتی به ارگانیسم‌های همسایه' }
+        ];
+        const m = motorMap[idx] || { name: `🎬 محرک حرکتی ${idx}`, desc: 'خروجی رفتاری قشر حرکتی' };
+        return {
+            name: m.name,
+            cortex: 'Motor',
+            color: '#06b6d4',
+            desc: m.desc
+        };
+    } else {
+        // Interneurons / Neocortex
+        const isExcitatory = !idStr.includes('-');
+        return {
+            name: `🧠 نئوکورتکس پردازشی (${idStr})`,
+            cortex: 'Neocortex',
+            color: isExcitatory ? '#8b5cf6' : '#ef4444',
+            type: isExcitatory ? 'Excitatory (+)' : 'Inhibitory (-)',
+            desc: isExcitatory ? 'نورون تحریکی قشر مخ: افزایش احتمال شلیک نورون‌های هدف' : 'نورون بازدارنده قشر مخ: کنترل و مهار شلیک‌های اضافی برای صرفه‌جویی در انرژی'
+        };
+    }
+}
+
+// ── Neural Circuit Visualizer (SVG + D3.js) ──────────────
+let pathFilter = 'all'; // 'all', 'exc', 'inh'
+let currentBrainSynapses = [];
+
+const btnFilterAll = document.getElementById('btn-filter-all');
+const btnFilterExc = document.getElementById('btn-filter-exc');
+const btnFilterInh = document.getElementById('btn-filter-inh');
+
+if (btnFilterAll && btnFilterExc && btnFilterInh) {
+    btnFilterAll.addEventListener('click', () => { setPathFilter('all'); });
+    btnFilterExc.addEventListener('click', () => { setPathFilter('exc'); });
+    btnFilterInh.addEventListener('click', () => { setPathFilter('inh'); });
+}
+
+function setPathFilter(filter) {
+    pathFilter = filter;
+    [btnFilterAll, btnFilterExc, btnFilterInh].forEach(b => b.classList.remove('active'));
+    if (filter === 'all') btnFilterAll.classList.add('active');
+    if (filter === 'exc') btnFilterExc.classList.add('active');
+    if (filter === 'inh') btnFilterInh.classList.add('active');
+    if (currentBrainSynapses.length) renderBrainSVG(currentBrainSynapses);
+}
+
 function onBrain(d) {
     if (!d.elite) return;
     const statsEl = document.getElementById('brain-stats');
     if (statsEl) {
         statsEl.innerHTML = `
             <div style="display: flex; gap: 16px; margin-bottom: 12px; font-family: var(--mono); font-size: 12px; flex-wrap: wrap;">
-                <span>👑 <b>Elite Organism ID:</b> #${d.elite.id}</span>
+                <span>👑 <b>Elite ID:</b> #${d.elite.id}</span>
                 <span>⏳ <b>Age:</b> ${d.elite.age.toLocaleString()} Ticks</span>
                 <span>🔬 <b>Viscosity:</b> ${d.elite.viscosity.toFixed(2)}</span>
-                <span>🧬 <b>DNA Prefix:</b> <code style="color: var(--emerald);">${d.elite.genome_hex}...</code></span>
+                <span>🧬 <b>DNA:</b> <code style="color: var(--emerald);">${d.elite.genome_hex.slice(0, 16)}...</code></span>
                 <span>⚡ <b>Active Synapses:</b> ${d.elite.synapses ? d.elite.synapses.length : 0}</span>
             </div>
         `;
     }
     if (d.elite.synapses) {
+        currentBrainSynapses = d.elite.synapses;
         renderBrainSVG(d.elite.synapses);
     }
 }
@@ -194,82 +385,146 @@ function renderBrainSVG(synapses) {
     svg.selectAll('*').remove();
 
     const wrapper = document.querySelector('.svg-wrapper');
-    const width = wrapper ? wrapper.clientWidth : 800;
-    const height = wrapper ? wrapper.clientHeight : 500;
+    const width = wrapper ? wrapper.clientWidth : 700;
+    const height = wrapper ? wrapper.clientHeight : 480;
 
-    // Collect Nodes
+    // Filter Synapses based on toggle
+    let filteredSynapses = synapses;
+    if (pathFilter === 'exc') filteredSynapses = synapses.filter(s => s.weight > 0);
+    if (pathFilter === 'inh') filteredSynapses = synapses.filter(s => s.weight < 0);
+
     const nodeMap = new Map();
-    synapses.forEach(s => {
+    filteredSynapses.forEach(s => {
         if (!nodeMap.has(s.source)) nodeMap.set(s.source, { id: s.source });
         if (!nodeMap.has(s.target)) nodeMap.set(s.target, { id: s.target });
     });
 
     const nodes = Array.from(nodeMap.values());
-    const links = synapses.map(s => ({
-        source: s.source,
-        target: s.target,
-        weight: s.weight
-    }));
-
-    // Layer Position Assignment (Inputs -> Hidden -> Outputs)
     const inNodes = nodes.filter(n => n.id.startsWith('In'));
     const outNodes = nodes.filter(n => n.id.startsWith('Out'));
     const hNodes = nodes.filter(n => !n.id.startsWith('In') && !n.id.startsWith('Out'));
 
+    // Cortical Column Coordinates
     inNodes.forEach((n, i) => {
-        n.x = 80;
-        n.y = ((i + 1) * height) / (inNodes.length + 1);
+        n.x = 90;
+        n.y = ((i + 1) * (height - 40)) / (inNodes.length + 1) + 20;
     });
     outNodes.forEach((n, i) => {
-        n.x = width - 80;
-        n.y = ((i + 1) * height) / (outNodes.length + 1);
+        n.x = width - 90;
+        n.y = ((i + 1) * (height - 40)) / (outNodes.length + 1) + 20;
     });
     hNodes.forEach((n, i) => {
-        n.x = width / 2 + (i % 2 === 0 ? -40 : 40);
-        n.y = ((i + 1) * height) / (hNodes.length + 1);
+        n.x = width / 2 + (i % 2 === 0 ? -50 : 50);
+        n.y = ((i + 1) * (height - 40)) / (hNodes.length + 1) + 20;
     });
 
     const g = svg.append('g');
 
-    // Draw Synaptic Links
-    const linkGroup = g.append('g').selectAll('line')
-        .data(links)
+    // Draw Bezier Curved Axon Paths
+    g.append('g').selectAll('path')
+        .data(filteredSynapses)
         .enter()
-        .append('line')
+        .append('path')
+        .attr('d', d => {
+            const src = nodeMap.get(d.source);
+            const dst = nodeMap.get(d.target);
+            if (!src || !dst) return '';
+            const dx = dst.x - src.x;
+            const dy = dst.y - src.y;
+            const cx1 = src.x + dx * 0.4;
+            const cy1 = src.y;
+            const cx2 = dst.x - dx * 0.4;
+            const cy2 = dst.y;
+            return `M ${src.x} ${src.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${dst.x} ${dst.y}`;
+        })
+        .attr('fill', 'none')
         .attr('stroke', d => d.weight > 0 ? '#10b981' : '#ef4444')
-        .attr('stroke-opacity', 0.7)
-        .attr('stroke-width', d => Math.min(Math.abs(d.weight) * 0.8 + 1, 5))
-        .attr('x1', d => nodeMap.get(d.source).x)
-        .attr('y1', d => nodeMap.get(d.source).y)
-        .attr('x2', d => nodeMap.get(d.target).x)
-        .attr('y2', d => nodeMap.get(d.target).y);
+        .attr('stroke-opacity', 0.65)
+        .attr('stroke-width', d => Math.min(Math.abs(d.weight) * 0.9 + 1.2, 5))
+        .attr('class', 'axon-pulse');
 
-    // Draw Neurons
+    // Draw Neuron Nodes
     const nodeGroup = g.append('g').selectAll('g')
         .data(nodes)
         .enter()
         .append('g')
-        .attr('transform', d => `translate(${d.x}, ${d.y})`);
+        .attr('transform', d => `translate(${d.x}, ${d.y})`)
+        .style('cursor', 'pointer')
+        .on('click', (event, d) => inspectNeuron(d.id, synapses))
+        .on('mouseenter', (event, d) => inspectNeuron(d.id, synapses));
 
+    // Outer Glow Halo Ring
     nodeGroup.append('circle')
-        .attr('r', 14)
-        .attr('fill', d => {
-            if (d.id.startsWith('In')) return '#10b981';
-            if (d.id.startsWith('Out')) return '#06b6d4';
-            return '#8b5cf6';
-        })
-        .attr('stroke', '#fff')
+        .attr('r', 16)
+        .attr('fill', 'none')
+        .attr('stroke', d => getNeuronBioMeta(d.id).color)
         .attr('stroke-width', 1.5)
-        .style('filter', 'drop-shadow(0 0 6px rgba(139,92,246,0.5))');
+        .attr('stroke-opacity', 0.5);
 
+    // Core Neuron Body
+    nodeGroup.append('circle')
+        .attr('r', 12)
+        .attr('fill', d => getNeuronBioMeta(d.id).color)
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 1.5);
+
+    // Label Text
     nodeGroup.append('text')
         .text(d => d.id)
         .attr('dy', 4)
         .attr('text-anchor', 'middle')
         .attr('fill', '#fff')
-        .attr('font-size', '10px')
+        .attr('font-size', '9px')
         .attr('font-family', 'var(--mono)')
         .attr('font-weight', '700');
+}
+
+// ── Neuron Inspector HUD ─────────────────────────────────
+function inspectNeuron(nodeId, synapses) {
+    const meta = getNeuronBioMeta(nodeId);
+    const titleEl = document.getElementById('insp-title');
+    const bodyEl = document.getElementById('insp-body');
+
+    if (titleEl) titleEl.textContent = `تحلیل نورون: ${meta.name}`;
+
+    const incoming = synapses.filter(s => s.target === nodeId);
+    const outgoing = synapses.filter(s => s.source === nodeId);
+
+    let incHtml = incoming.map(s => `
+        <div class="synapse-item">
+            <span>${s.source} ➔ ${nodeId}</span>
+            <span class="stdp-badge ${s.weight > 0 ? 'stdp-exc' : 'stdp-inh'}">${s.weight > 0 ? '+' : ''}${s.weight.toFixed(2)}</span>
+        </div>
+    `).join('');
+
+    let outHtml = outgoing.map(s => `
+        <div class="synapse-item">
+            <span>${nodeId} ➔ ${s.target}</span>
+            <span class="stdp-badge ${s.weight > 0 ? 'stdp-exc' : 'stdp-inh'}">${s.weight > 0 ? '+' : ''}${s.weight.toFixed(2)}</span>
+        </div>
+    `).join('');
+
+    if (bodyEl) {
+        bodyEl.innerHTML = `
+            <div class="insp-card">
+                <div class="insp-title">
+                    <span>${meta.name}</span>
+                    <span class="insp-tag" style="background:${meta.color}22; color:${meta.color}; border:1px solid ${meta.color}55;">${meta.cortex}</span>
+                </div>
+                <p style="margin-top:4px; font-size:11px; color:var(--text-muted);">${meta.desc}</p>
+            </div>
+
+            <div class="insp-card">
+                <span class="b-label" style="margin-bottom:4px;">ورودی‌های سیناپسی (${incoming.length}):</span>
+                <div class="synapse-list">${incHtml || '<span class="dim">بدون سیناپس ورودی</span>'}</div>
+            </div>
+
+            <div class="insp-card">
+                <span class="b-label" style="margin-bottom:4px;">خروجی‌های آکسونی (${outgoing.length}):</span>
+                <div class="synapse-list">${outHtml || '<span class="dim">بدون سیناپس خروجی</span>'}</div>
+            </div>
+        `;
+    }
 }
 
 // ── Oracle Broadcast Terminal ─────────────────────────────
@@ -278,8 +533,8 @@ if (termIn) {
     termIn.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && termIn.value.trim() && ws) {
             const text = termIn.value.trim();
-            ws.send(JSON.stringify({ type: 'broadcast', text: text }));
-            addTermLine('› ' + text, 't-sys');
+            ws.send(JSON.stringify({ type: 'inject_custom_book', text: text }));
+            addTermLine('› [ORACLE INJECTED]: ' + text, 't-sys');
             termIn.value = '';
         }
     });
@@ -296,17 +551,32 @@ function addTermLine(msg, cls = '') {
     out.scrollTop = out.scrollHeight;
 }
 
-// ── Brain Modal ───────────────────────────────────────────
+// ── Brain Modal Live Streaming ───────────────────────────
 const btnBrain = document.getElementById('btn-brain');
 const modal = document.getElementById('brain-modal');
 const btnClose = document.getElementById('btn-close-modal');
+let brainStreamInterval = null;
 
 if (btnBrain && modal) {
     btnBrain.addEventListener('click', () => {
         modal.classList.remove('hidden');
         if (ws) ws.send(JSON.stringify({ type: 'get_brain' }));
+        if (!brainStreamInterval) {
+            brainStreamInterval = setInterval(() => {
+                if (ws && modal && !modal.classList.contains('hidden')) {
+                    ws.send(JSON.stringify({ type: 'get_brain' }));
+                }
+            }, 1000);
+        }
     });
 }
+
 if (btnClose && modal) {
-    btnClose.addEventListener('click', () => modal.classList.add('hidden'));
+    btnClose.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        if (brainStreamInterval) {
+            clearInterval(brainStreamInterval);
+            brainStreamInterval = null;
+        }
+    });
 }

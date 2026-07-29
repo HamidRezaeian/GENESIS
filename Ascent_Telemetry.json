@@ -1,0 +1,10 @@
+{
+  "status": "ASCENT_VERIFIED",
+  "gpus_used": 2,
+  "global_ticks": 1000000,
+  "champion_gpu": 0,
+  "elite_id": 10,
+  "elite_age": 1000000,
+  "refugium_triggers": 0,
+  "avg_ticks_per_sec": 117.97019999632121
+}

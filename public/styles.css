@@ -612,8 +612,8 @@ canvas#ramCanvas {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(12px);
+    background: rgba(4, 5, 10, 0.88);
+    backdrop-filter: blur(16px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -621,22 +621,23 @@ canvas#ramCanvas {
     opacity: 1;
     transition: var(--transition);
 }
+
 .modal.hidden {
-    display: none;
-    opacity: 0;
-    pointer-events: none;
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 .modal-box {
-    background: var(--surface);
-    border: 1px solid var(--border-hi);
+    background: #0e111a;
+    border: 1px solid rgba(16, 185, 129, 0.4);
     border-radius: var(--radius-lg);
-    width: 90vw;
-    max-width: 1100px;
-    height: 85vh;
+    width: 92vw;
+    max-width: 1200px;
+    height: 88vh;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
     overflow: hidden;
 }
 
@@ -644,9 +645,9 @@ canvas#ramCanvas {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
+    padding: 14px 22px;
     border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
+    background: #141824;
 }
 
 .modal-title-group {
@@ -656,29 +657,231 @@ canvas#ramCanvas {
 }
 
 .modal-head h2 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #fff;
 }
 
-.modal-body {
+/* ── Buttons Extra ────────────────────────── */
+.btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+}
+.btn.active {
+    background: var(--emerald-glow) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    color: var(--emerald) !important;
+}
+
+/* ── Dynamic Canvas Scaling & Tooltips ───── */
+.canvas-container {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    padding: 16px;
+    align-items: center;
+    justify-content: center;
+    background: #05060a;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
     overflow: hidden;
     position: relative;
+    user-select: none;
+}
+
+.canvas-frame {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    transition: var(--transition);
+}
+
+canvas#ramCanvas {
+    object-fit: contain;
+    image-rendering: pixelated;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.9);
+    transition: transform 150ms ease;
+    cursor: crosshair;
+}
+
+canvas#ramCanvas.zoom-2x {
+    max-width: none;
+    max-height: none;
+    width: 512px;
+    height: 512px;
+}
+
+.ram-tooltip {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(14, 16, 23, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #fff;
+    pointer-events: none;
+    z-index: 50;
+    box-shadow: var(--shadow);
+}
+.ram-tooltip.hidden { display: none; }
+
+.legend-bar .legend-item {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+.legend-bar .legend-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* ── Modal Split Layout & Neuron Inspector HUD ──────── */
+.modal-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modal-body-split {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+    padding: 16px;
+    overflow: hidden;
+}
+
+.modal-main-svg {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
 }
 
 .svg-wrapper {
     flex: 1;
-    background: #000;
+    background: #030408;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     overflow: hidden;
+    position: relative;
+    min-height: 400px;
 }
 
 svg#brain-svg {
     width: 100%;
     height: 100%;
+}
+
+.neuron-inspector {
+    background: #111420;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    overflow-y: auto;
+    direction: rtl;
+    text-align: right;
+}
+
+.inspector-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+}
+
+.inspector-head h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.inspector-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+}
+
+.insp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.insp-title {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.insp-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.synapse-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 140px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    direction: ltr;
+}
+
+.synapse-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #000;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.stdp-badge {
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+}
+.stdp-exc { background: var(--emerald-glow); color: var(--emerald); }
+.stdp-inh { background: var(--crimson-glow); color: var(--crimson); }
+
+/* SVG Pulse Animations */
+@keyframes pulse-axon {
+    0% { stroke-dashoffset: 40; }
+    100% { stroke-dashoffset: 0; }
+}
+
+.axon-pulse {
+    stroke-dasharray: 6 6;
+    animation: pulse-axon 1.2s linear infinite;
 }

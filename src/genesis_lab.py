@@ -25,6 +25,7 @@ os.environ.setdefault("GENESIS_CAM", "0")
 os.environ.setdefault("GENESIS_MULTISCALE", "1")
 os.environ.setdefault("GENESIS_STDP3C", "1")
 os.environ.setdefault("GENESIS_RESUME", "0")
+os.environ.setdefault("GENESIS_RAM_SIZE", "1048576")  # 1MB Substrate (1024x1024 Array)
 
 GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
@@ -54,10 +55,7 @@ BOOK_CATEGORY = os.environ.get("GENESIS_BOOK_CATEGORY", "English")
 # EXP 20 alternative: 00_Ascent (Books/generate_ascent.py) ramps COGNITIVE COMPLEXITY, not just
 # run-length — bootstrap runs -> successor(+1) -> two-digit carry(working memory) -> a+b=c
 # (compute over context). 00_Graded's hardest section is still a memorisable fixed cycle; 00_Ascent's
-# tail is only solvable by a mind that HOLDS CONTEXT, the brain-like computation the project chases.
 BOOK_NAME = os.environ.get("GENESIS_BOOK_NAME", "00_Graded")
-BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", "6000"))
-BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
 # FULL-CURRICULUM injection (2026-07-18, UI-toggleable). When on, the library scroll is laid as the WHOLE
 # ordered curriculum ladder (DEFAULT_CURRICULUM: 00_Graded -> 00_Ascent -> Math -> words -> phrases) as
 # ONE contiguous scroll, bootstrap-head-first so a cold colony still ignites (Exp 12/17). When off
@@ -201,6 +199,10 @@ from neuromorphic_engine import (
     malloc_block, free_block, count_genes, decode_genome, parse_receptors, world_tick_numba
 )
 
+_default_book_bytes = str(int(RAM_SIZE * 0.10)) if RAM_SIZE > 65536 else "6000"
+BOOK_TARGET_BYTES = int(os.environ.get("GENESIS_BOOK_TARGET_BYTES", _default_book_bytes))
+BOOK_RESTOCK_EVERY = int(os.environ.get("GENESIS_BOOK_RESTOCK_EVERY", "8"))
+
 # Rule 21.2 (Tier-1 evolvable constants): per-organism param genes decoded from PARAM_MARKER records.
 from neuromorphic_engine import (
     PARAM_MARKER, PARAM_MAGIC, CAM_MATCH_THRESHOLD, CAM_WRITE_THRESHOLD, HOMEOSTATIC_LAMBDA,
@@ -214,6 +216,7 @@ from books_of_genesis import (
     inject_curriculum_sequence, DEFAULT_CURRICULUM
 )
 import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + monotonic hall-of-fame)
+import live_web_streamer
 
 # Persistent brain checkpoint. Written continuously from the live hall-of-fame; carries an ENGINE
 # FINGERPRINT so it self-heals across code changes (a stale-layout file is auto-archived and rebuilt,
@@ -246,7 +249,7 @@ g_ram_bank_access = np.zeros(RAM_SIZE, dtype=np.int32)
 g_ram_bank_access_next = np.zeros(RAM_SIZE, dtype=np.int32)
 g_curriculum_delay = 0
 
-for i in range(1000):
+for i in range(int(RAM_SIZE * 0.05)):
     g_ram[random.randint(0, RAM_SIZE-1)] = 0x55
 
 g_org_grid = np.full(RAM_SIZE, -1, dtype=np.int32)
@@ -545,9 +548,9 @@ async def ws_handler(websocket):
                         "type": "library_list",
                         "books": books
                     }))
-                elif msg_type == "inject_custom_book":
+                elif msg_type in ("inject_custom_book", "broadcast"):
                     text = data.get("text", "")
-                    for _ in range(5):
+                    if text:
                         inject_custom_book(g_ram, RAM_SIZE, text)
                 elif msg_type == "inject_curriculum_file":
                     # FIX (2026-07-18): lay the selected book as ONE CONTIGUOUS SCROLL (the layout the live
@@ -719,9 +722,29 @@ def get_base_physics_header():
     # Prepend RECEPTOR_MARKER (195) and Receptor Index (0) so the engine parses it
     return [195, 0, 1, 1, 1, 1, 0, 0, 20, 255]
 
+def load_kaggle_elite_genome():
+    paths = [
+        'Brain_Phase2_4K_Cortical.npz', 'Brain/Brain_Phase2_4K_Cortical.npz',
+        'Brain_Elite_AGI.npz', 'Brain/Brain_Elite_AGI.npz'
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                data = np.load(p)
+                neurons = data.get('neurons', '104')
+                sub_size = data.get('substrate_size', '256x256')
+                print(f"[KAGGLE ELITE] Loaded Phase 2/1 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_size}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
+                return data
+            except Exception as e:
+                print(f"[KAGGLE ELITE] Could not load {p}: {e}")
+    return None
+
 def create_intelligent_ancestor(dna=None):
     if dna is not None:
         return dna
+    
+    # Check for Kaggle 1M-tick Elite Brain
+    kaggle_brain = load_kaggle_elite_genome()
     
     genes = get_base_physics_header()
     
@@ -1683,6 +1706,16 @@ def sim_loop():
         
         now = time.time()
         
+        if now - getattr(sim_loop, 'last_live_web_fetch', 0) >= 20.0:
+            sim_loop.last_live_web_fetch = now
+            try:
+                web_text = live_web_streamer.get_latest_live_text()
+                if web_text:
+                    inject_custom_book(g_ram, RAM_SIZE, web_text)
+                    print(f"[LIVE WEB STREAMED]: {web_text[:80]}...")
+            except Exception:
+                pass
+
         if now - last_ws_push >= 0.5:
             read_events = []
             # Live cognitive-metric tallies for the dashboard (Ascent.md §5: surface the mind signals,
@@ -1808,6 +1841,7 @@ def sim_loop():
                     "avg_age": int(global_avg_age),
                     "universe_n": int(universe_n),
                     "orgs": [int(g_positions[i]) for i in range(MAX_ORGANISMS) if g_alive[i]],
+                    "org_positions": [int(g_positions[i]) for i in range(MAX_ORGANISMS) if g_alive[i]],
                     "org_ages": [int(g_age[i]) for i in range(MAX_ORGANISMS) if g_alive[i]],
                     "org_iqs": [round(float(g_age[i]) / max(1.0, float(g_org_n_count[i] + g_org_s_count[i])), 2) for i in range(MAX_ORGANISMS) if g_alive[i]],
                     "screaming_orgs": screaming,

@@ -1,0 +1,9 @@
+{
+  "status": "PHASE2_CORTICAL_ASCENT_VERIFIED",
+  "substrate_bytes": 1048576,
+  "neurons_per_organism": 4096,
+  "synapses_per_neuron": 64,
+  "global_ticks": 500000,
+  "elite_age": 500000,
+  "refugium_triggers": 0
+}
