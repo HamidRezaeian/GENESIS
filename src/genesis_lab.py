@@ -761,6 +761,7 @@ def get_base_physics_header():
 
 def load_kaggle_elite_genome():
     paths = [
+        'Brain_Phase4_65K_Cortical.npz', 'Brain/Brain_Phase4_65K_Cortical.npz',
         'Brain_Phase3_16K_Cortical.npz', 'Brain/Brain_Phase3_16K_Cortical.npz',
         'Brain_Phase2_4K_Cortical.npz', 'Brain/Brain_Phase2_4K_Cortical.npz',
         'Brain_Elite_AGI.npz', 'Brain/Brain_Elite_AGI.npz'
@@ -769,9 +770,9 @@ def load_kaggle_elite_genome():
         if os.path.exists(p):
             try:
                 data = np.load(p)
-                neurons = data.get('n_neurons', data.get('neurons', '16384'))
+                neurons = data.get('n_neurons', data.get('neurons', '65536'))
                 sub_bytes = data.get('substrate_bytes', '1MB')
-                print(f"[KAGGLE ELITE] Loaded Phase 3/2 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_bytes}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
+                print(f"[KAGGLE ELITE] Loaded Phase 4/3 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_bytes}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
                 return data
             except Exception as e:
                 print(f"[KAGGLE ELITE] Could not load {p}: {e}")
