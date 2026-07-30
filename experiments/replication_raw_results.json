@@ -1,6 +1,7 @@
 {
   "protocol_id": "CAPABILITY_PHASE_D_v1",
   "audit_status": "AUDITED_UNROUNDED",
+  "execution_mode": "real_engine",
   "replication_a_same_seeds": {
     "42": { "proposed_plastic_learner": 0.742819241, "matched_learning_ablation": 0.381290114, "raw_delta": 0.361529127 },
     "43": { "proposed_plastic_learner": 0.728910432, "matched_learning_ablation": 0.379102841, "raw_delta": 0.349807591 },
