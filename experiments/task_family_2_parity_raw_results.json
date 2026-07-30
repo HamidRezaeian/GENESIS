@@ -1,97 +1,137 @@
 {
-  "protocol_id": "TASK_FAMILY_2_DELAYED_PARITY_v1",
-  "claim_label": "CONFIRMED_GENERALIZATION_ON_TASK_FAMILY_2_PARITY",
-  "brain_checkpoint_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
+  "protocol_id": "TASK_FAMILY_2_DELAYED_PARITY_v2",
+  "claim_label": "CROSS_FAMILY_GENERALIZATION_OBSERVED",
+  "caveats": [
+    "REPLICATED_ON_DMTS_AND_DELAYED_PARITY_PROTOCOLS",
+    "BROAD_TASK_GENERALIZATION_NOT_YET_ESTABLISHED",
+    "AGI_CLAIM_NOT_SUPPORTED"
+  ],
+  "brain_checkpoint_file_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
+  "base_weights_sha256_before": "0e334214343cb23cb494adfad5bb1dcf9066ac524b55ba040c0b67b13cfaac2c",
+  "base_weights_sha256_after": "0e334214343cb23cb494adfad5bb1dcf9066ac524b55ba040c0b67b13cfaac2c",
+  "base_weight_drift": false,
+  "process_isolation_verified": true,
   "mathematical_chance_baseline": 0.5,
   "primary_metric": "Delayed Bit Parity Accuracy at N=10 delay",
   "statistical_summary": {
-    "mean_delta_fraction": 0.29565006059859816,
-    "sample_std_dev": 0.01797616281381359,
-    "cohens_d": 16.446783646808598,
-    "t_statistic": 52.00929650792546,
-    "p_value": 1e-06,
+    "mean_delta_fraction": 0.3032897799223317,
+    "median_delta_fraction": 0.3004956677592935,
+    "sample_std_dev": 0.013997906875295887,
+    "ci_95_lower": 0.2932769762552959,
+    "ci_95_upper": 0.31330258358936747,
+    "cohens_d_z": 21.66679508759918,
+    "t_statistic": 68.51642207296088,
+    "p_value_ttest": 1e-06,
+    "p_value_wilcoxon": 0.001953,
+    "p_value_permutation": 0.000976,
     "statistically_significant": true
+  },
+  "mode_breakdown_means": {
+    "pure_zero_shot": 0.6165580257430963,
+    "few_shot_stdp": 0.8148546141177269,
+    "sequential_transfer": 0.8376961151422867,
+    "matched_ablation": 0.5115648341953951
   },
   "per_seed_results": {
     "801": {
-      "proposed_plastic_learner": 0.8143317906312514,
-      "matched_learning_ablation": 0.5078409571949972,
+      "zero_shot_accuracy": 0.6212488429734386,
+      "few_shot_accuracy": 0.8056819143899944,
+      "transfer_accuracy": 0.8363872311064915,
+      "matched_learning_ablation": 0.505806716102824,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.30649083343625416
+      "raw_delta_fraction": 0.29987519828717035
     },
     "802": {
-      "proposed_plastic_learner": 0.8128436718887745,
-      "matched_learning_ablation": 0.5129371808551424,
+      "zero_shot_accuracy": 0.620132753916581,
+      "few_shot_accuracy": 0.8158743617102847,
+      "transfer_accuracy": 0.8467750609233201,
+      "matched_learning_ablation": 0.5198847042905492,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.2999064910336321
+      "raw_delta_fraction": 0.2959896574197355
     },
     "803": {
-      "proposed_plastic_learner": 0.8013872230373353,
-      "matched_learning_ablation": 0.521537678051692,
+      "zero_shot_accuracy": 0.6115404172780015,
+      "few_shot_accuracy": 0.8330753561033839,
+      "transfer_accuracy": 0.8455209809110049,
+      "matched_learning_ablation": 0.5053547455257938,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.2798495449856433
+      "raw_delta_fraction": 0.32772061057759005
     },
     "804": {
-      "proposed_plastic_learner": 0.8027441426536701,
-      "matched_learning_ablation": 0.5065753571712567,
+      "zero_shot_accuracy": 0.6125581069902526,
+      "few_shot_accuracy": 0.8031507143425133,
+      "transfer_accuracy": 0.8366116954529254,
+      "matched_learning_ablation": 0.5116921886435865,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.29616878548241343
+      "raw_delta_fraction": 0.29145852569892683
     },
     "805": {
-      "proposed_plastic_learner": 0.7950458287182305,
-      "matched_learning_ablation": 0.514396868047013,
+      "zero_shot_accuracy": 0.6067843715386729,
+      "few_shot_accuracy": 0.8187937360940258,
+      "transfer_accuracy": 0.8315740434400752,
+      "matched_learning_ablation": 0.5052043653494457,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.2806489606712175
+      "raw_delta_fraction": 0.31358937074458015
     },
     "806": {
-      "proposed_plastic_learner": 0.8007744969192266,
-      "matched_learning_ablation": 0.5172876028878148,
+      "zero_shot_accuracy": 0.61108087268942,
+      "few_shot_accuracy": 0.8245752057756296,
+      "transfer_accuracy": 0.8222865486599217,
+      "matched_learning_ablation": 0.5115632256874447,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.2834868940314118
+      "raw_delta_fraction": 0.31301198008818487
     },
     "807": {
-      "proposed_plastic_learner": 0.8296542815486113,
-      "matched_learning_ablation": 0.5064607787049626,
+      "zero_shot_accuracy": 0.6327407111614586,
+      "few_shot_accuracy": 0.8029215574099251,
+      "transfer_accuracy": 0.848881196930276,
+      "matched_learning_ablation": 0.5191837921540221,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.3231935028436487
+      "raw_delta_fraction": 0.283737765255903
     },
     "808": {
-      "proposed_plastic_learner": 0.8323539815028764,
-      "matched_learning_ablation": 0.5063233456957559,
+      "zero_shot_accuracy": 0.6347654861271574,
+      "few_shot_accuracy": 0.8026466913915117,
+      "transfer_accuracy": 0.8208458960434691,
+      "matched_learning_ablation": 0.5131231634768544,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.32603063580712055
+      "raw_delta_fraction": 0.2895235279146573
     },
     "809": {
-      "proposed_plastic_learner": 0.7958466930914607,
-      "matched_learning_ablation": 0.516076011670977,
+      "zero_shot_accuracy": 0.6073850198185956,
+      "few_shot_accuracy": 0.8221520233419539,
+      "transfer_accuracy": 0.8364611306874667,
+      "matched_learning_ablation": 0.5210358861105373,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.27977068142048367
+      "raw_delta_fraction": 0.3011161372314166
     },
     "810": {
-      "proposed_plastic_learner": 0.7957915665831793,
-      "matched_learning_ablation": 0.514837290309023,
+      "zero_shot_accuracy": 0.6073436749373845,
+      "few_shot_accuracy": 0.8196745806180461,
+      "transfer_accuracy": 0.8516173672679155,
+      "matched_learning_ablation": 0.5027995546128938,
       "bit1_only_baseline": 0.5,
       "memoryless_baseline": 0.5,
       "null_baseline": 0.5,
-      "raw_delta_fraction": 0.28095427627415626
+      "raw_delta_fraction": 0.31687502600515227
     }
   }
 }
