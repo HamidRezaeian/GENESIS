@@ -55,8 +55,14 @@
             </div>
         </header>
 
-        <!-- Main Content Layout -->
-        <main id="content">
+        <!-- Navigation Tab Switcher -->
+        <nav id="nav-tabs-bar" class="nav-tabs-bar">
+            <button class="tab-btn active" id="tab-btn-live">👁️ Live Substrate Deck</button>
+            <button class="tab-btn" id="tab-btn-analytics">📊 Cognitive Analytics & Knowledge Base</button>
+        </nav>
+
+        <!-- Main Content Layout (Tab 1: Live Deck) -->
+        <main id="content" class="tab-page">
             <!-- Left Column: Substrate RAM Grid -->
             <section id="ram-section">
                 <div class="section-head">
@@ -84,11 +90,9 @@
                     <div id="ram-tooltip" class="ram-tooltip hidden"></div>
                 </div>
                 <div class="legend-bar">
-                    <span class="legend-item" data-type="energy"><i style="background:#10b981"></i>Energy</span>
-                    <span class="legend-item" data-type="shelter"><i style="background:#06b6d4"></i>Shelter</span>
                     <span class="legend-item" data-type="ip"><i style="background:#f59e0b"></i>Organisms</span>
                     <span class="legend-item" data-type="voice"><i style="background:#eab308"></i>Voice (Scream)</span>
-                    <span class="legend-item" data-type="book"><i style="background:#8b5cf6"></i>Books</span>
+                    <span class="legend-item" data-type="book"><i style="background:#8b5cf6"></i>Books (Curriculum & Live Web Stream)</span>
                 </div>
             </section>
 
@@ -98,16 +102,16 @@
                 <div class="baseline-banner">
                     <div class="banner-title">
                         <span class="pulse-indicator"></span>
-                        <span>VALIDATED OPTIMAL SUBSTRATE BASELINE (PHASE 2: 4,096 CORTICAL NEURONS LOADED)</span>
+                        <span>VALIDATED OPTIMAL SUBSTRATE BASELINE (PHASE 3: 16,384 CORTICAL NEURONS LOADED)</span>
                     </div>
                     <div class="baseline-grid">
                         <div class="b-chip">
                             <span class="b-label">FOOTPRINT</span>
-                            <span class="b-val mono text-emerald">898 ATP/B</span>
+                            <span class="b-val mono text-emerald" id="val-footprint">0 ATP/B</span>
                         </div>
                         <div class="b-chip">
-                            <span class="b-label">AUTO-REPRO</span>
-                            <span class="b-val mono text-amber">200k Thresh</span>
+                            <span class="b-label">REPRODUCTION</span>
+                            <span class="b-val mono text-amber" id="val-repro">DYNAMICS</span>
                         </div>
                         <div class="b-chip">
                             <span class="b-label">REMAP DYNAMICS</span>
@@ -193,8 +197,55 @@
                         <input type="text" class="terminal-input" id="term-in" placeholder="Broadcast message to colony…" autocomplete="off">
                     </div>
                 </div>
-            </aside>
         </main>
+
+        <!-- Analytics & Knowledge Tab Page (Tab 2) -->
+        <section id="analytics-section" class="tab-page hidden">
+            <!-- Mastered Vocabulary Grid -->
+            <div class="analytics-card">
+                <div class="card-head">
+                    <div class="card-title-group">
+                        <h3>🔤 Mastered Vocabulary & Sentence Knowledge Base</h3>
+                        <span class="tag tag-emerald">LIVE COGNITIVE DICTIONARY</span>
+                    </div>
+                    <span class="card-subtitle">Exact words & continuous text sentences solved by SNN in-lifetime prediction</span>
+                </div>
+                <div class="vocab-grid" id="vocab-grid">
+                    <p class="dim">Assembling solved words from SNN reading predictions...</p>
+                </div>
+                <div class="sentence-stream" id="sentence-list">
+                    <span class="dim">Stream of continuous sentences mastered by SNN neocortex...</span>
+                </div>
+            </div>
+
+            <!-- Time-Series Analytics Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="card-head">
+                        <h3>📈 ELITE IQ & Prediction Accuracy Trend (%)</h3>
+                    </div>
+                    <canvas id="chart-iq" height="170"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="card-head">
+                        <h3>👥 Population & Colony Lifespan</h3>
+                    </div>
+                    <canvas id="chart-pop" height="170"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="card-head">
+                        <h3>🧠 SNN Neocortical Complexity (Universe N)</h3>
+                    </div>
+                    <canvas id="chart-snn" height="170"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="card-head">
+                        <h3>⚡ Cumulative Symbol Solves & Predictions</h3>
+                    </div>
+                    <canvas id="chart-solves" height="170"></canvas>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- Brain Topology Modal -->

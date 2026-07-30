@@ -1887,7 +1887,7 @@ def world_tick_numba(
             next_byte = ram_substrate[nxt]
         else:
             next_byte = 0
-        if next_byte >= 32 and next_byte <= 126 and next_byte != 0x55:
+        if next_byte >= 32 and next_byte <= 126:
             # WITHIN-LIFETIME REMAP (Exp 34): the reward target is next_byte LEFT-ROTATED by this tick's
             # phase (remap_rot bits). rot==0 is the ordinary echo/predict target (byte-identical to the
             # default, so REMAP off is unchanged); rot!=0 remaps which emission bits are "correct" for

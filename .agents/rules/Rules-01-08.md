@@ -7,7 +7,7 @@ trigger: always_on
 These rules are binding. Distinguish what was designed, assumed, measured, emerged, and falsified.
 
 ## Rule 1: Context and documentation sync
-Before implementation or architectural analysis, read the relevant current documents, normally `Docs/ARD.md`, `Docs/PRD.md`, `Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/Result.md`, and `Docs/Ascent.md`. After changes or experiments, update authoritative documentation; mark superseded material as historical rather than presenting it as current.
+Before implementation or architectural analysis, read the relevant current documents in `Docs/` and `Docs/Architecture/` (`Docs/ARD.md`, `Docs/PRD.md`, `Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/Result.md`, `Docs/Architecture/Ascent.md`, `Docs/Architecture/FixedRules.md`, `Docs/Architecture/DYNAMIC_COMPACT_RAM_DESIGN.md`, `Docs/Architecture/HARDWARE_AWARE_CAPACITY_DESIGN.md`, `Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md`, and `Docs/Architecture/RULE21_INCOME_REFACTOR_DESIGN.md`). After changes or experiments, update authoritative documentation; mark superseded material as historical rather than presenting it as current.
 
 ## Rule 2: Pre-register falsification
 Before each experiment, archive a quantitative, binding falsification criterion in `Docs/Ascent.md` or the experiment header. A failed criterion invalidates or revises the claim; it must never be ignored after observing results.

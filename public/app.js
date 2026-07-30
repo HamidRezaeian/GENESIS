@@ -57,20 +57,21 @@ document.querySelectorAll('.legend-item').forEach(item => {
 const tooltip = document.getElementById('ram-tooltip');
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = 256 / rect.width;
-    const scaleY = 256 / rect.height;
+    const dim = canvas.width || 1024;
+    const scaleX = dim / rect.width;
+    const scaleY = dim / rect.height;
     const x = Math.floor((e.clientX - rect.left) * scaleX);
     const y = Math.floor((e.clientY - rect.top) * scaleY);
 
-    if (x >= 0 && x < 256 && y >= 0 && y < 256) {
-        const addr = y * 256 + x;
+    if (x >= 0 && x < dim && y >= 0 && y < dim) {
+        const addr = y * dim + x;
         const val = rawRamBytes[addr] || 0;
         const hex = '0x' + val.toString(16).padStart(2, '0').toUpperCase();
         const char = (val >= 32 && val <= 126) ? `'${String.fromCharCode(val)}'` : 'Non-printable';
         
         if (tooltip) {
             tooltip.classList.remove('hidden');
-            tooltip.innerHTML = `<strong>Addr 0x${addr.toString(16).padStart(4, '0').toUpperCase()}</strong> (${x}, ${y}) | Val: ${val} (${hex}) | Char: ${char}`;
+            tooltip.innerHTML = `<strong>Addr 0x${addr.toString(16).padStart(5, '0').toUpperCase()}</strong> (${x}, ${y}) | Val: ${val} (${hex}) | Char: ${char}`;
         }
     }
 });
@@ -122,6 +123,7 @@ function onState(s) {
     setTxt('val-ext', s.extinctions !== undefined ? s.extinctions.toLocaleString() : '0');
     setTxt('val-elite-age', s.elite_age !== undefined ? s.elite_age.toLocaleString() : '0');
     setTxt('val-elite-iq', s.elite_iq !== undefined ? s.elite_iq + '%' : '0%');
+    setTxt('val-footprint', s.elite_footprint !== undefined ? s.elite_footprint.toLocaleString() + ' ATP/B' : '—');
     setTxt('val-agi-progress', s.agi_progress !== undefined ? s.agi_progress + '%' : '0%');
     setTxt('val-avg-age', s.avg_age !== undefined ? s.avg_age.toLocaleString() : '0');
     setTxt('val-refuges', s.num_refuge !== undefined ? s.num_refuge.toLocaleString() : '0');
@@ -130,15 +132,43 @@ function onState(s) {
     if (s.metrics) {
         const m = s.metrics;
         setTxt('m-solve', m.solve_pct != null ? m.solve_pct.toFixed(0) + '%' : '—');
-        setTxt('m-reads', m.reads || 0);
-        setTxt('m-miss', m.miss || 0);
-        setTxt('m-pred', m.pred || 0);
-        setTxt('m-peer', m.peer || 0);
+        setTxt('m-reads', (m.cum_reads || m.reads || 0).toLocaleString());
+        setTxt('m-miss', (m.cum_miss || m.miss || 0).toLocaleString());
+        setTxt('m-pred', (m.cum_pred || m.pred || 0).toLocaleString());
+        setTxt('m-peer', (m.cum_peer || m.peer || 0).toLocaleString());
         setTxt('m-hact', m.hact != null ? m.hact.toFixed(2) : '—');
         setTxt('m-sensors', m.sensors || 0);
         setTxt('m-actuators', m.actuators || 0);
         setTxt('m-scratch', m.scratch || 0);
         if (s.universe_n !== undefined) setTxt('m-brainn', s.universe_n.toLocaleString());
+    }
+
+    // Cognitive Vocabulary Knowledge Base Grid
+    if (s.vocab && document.getElementById('vocab-grid')) {
+        const grid = document.getElementById('vocab-grid');
+        if (s.vocab.length > 0) {
+            grid.innerHTML = s.vocab.map(item => `
+                <div class="vocab-badge">
+                    <span class="v-char">${item.word}</span>
+                    <span class="v-count">${item.count.toLocaleString()} solves</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    // Mastered Sentences Stream Rendering
+    if (s.sentences && document.getElementById('sentence-list')) {
+        const sList = document.getElementById('sentence-list');
+        if (s.sentences.length > 0) {
+            sList.innerHTML = s.sentences.map(sent => `
+                <span class="sent-chip">💬 "${sent}"</span>
+            `).join('');
+        }
+    }
+
+    // Time-Series Analytics History
+    if (s.history) {
+        updateAnalyticsCharts(s.history);
     }
 
     if (s.flags) applyFlags(s.flags);
@@ -234,10 +264,8 @@ function renderRamCanvas() {
         let r = 7, g = 8, b = 14; // Default Background
         let cellType = "bg";
 
-        if (v === 0x55) { r = 16; g = 185; b = 129; cellType = "energy"; }          // Food (Emerald)
-        else if (v === 0xAA) { r = 6; g = 182; b = 212; cellType = "shelter"; }      // Shelter (Cyan)
-        else if (v >= 32 && v <= 126) { r = 139; g = 92; b = 246; cellType = "book"; } // Books (Purple)
-        else if (v > 0) { r = 59; g = 130; b = 246; cellType = "bg"; }
+        if (v >= 32 && v <= 126) { r = 139; g = 92; b = 246; cellType = "book"; } // Books / Text (Purple)
+        else { r = 7; g = 8; b = 14; cellType = "bg"; } // Empty RAM Substrate (Dark)
 
         // Overlay Organisms
         if (orgPosSet.has(i)) {
@@ -579,4 +607,115 @@ if (btnClose && modal) {
             brainStreamInterval = null;
         }
     });
+}
+
+// ── Tab Switching & Analytics Charts ──────────────────────
+const btnTabLive = document.getElementById('tab-btn-live');
+const btnTabAnalytics = document.getElementById('tab-btn-analytics');
+const tabLive = document.getElementById('content');
+const tabAnalytics = document.getElementById('analytics-section');
+
+let lastHistoryData = null;
+
+if (btnTabLive && btnTabAnalytics) {
+    btnTabLive.addEventListener('click', () => {
+        btnTabLive.classList.add('active');
+        btnTabAnalytics.classList.remove('active');
+        tabLive.classList.remove('hidden');
+        tabAnalytics.classList.add('hidden');
+    });
+    btnTabAnalytics.addEventListener('click', () => {
+        btnTabAnalytics.classList.add('active');
+        btnTabLive.classList.remove('active');
+        tabAnalytics.classList.remove('hidden');
+        tabLive.classList.add('hidden');
+        setTimeout(() => {
+            initAnalyticsCharts();
+            if (lastHistoryData) updateAnalyticsCharts(lastHistoryData);
+            if (chartIQ) chartIQ.resize();
+            if (chartPop) chartPop.resize();
+            if (chartSNN) chartSNN.resize();
+            if (chartSolves) chartSolves.resize();
+        }, 60);
+    });
+}
+
+let chartIQ = null, chartPop = null, chartSNN = null, chartSolves = null;
+
+function initAnalyticsCharts() {
+    if (typeof Chart === 'undefined') return;
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+        }
+    };
+
+    const ctxIQ = document.getElementById('chart-iq');
+    if (ctxIQ && !chartIQ) {
+        chartIQ = new Chart(ctxIQ, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Elite IQ (%)', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
+            options: { ...chartOptions, scales: { ...chartOptions.scales, y: { min: 0, max: 100 } } }
+        });
+    }
+
+    const ctxPop = document.getElementById('chart-pop');
+    if (ctxPop && !chartPop) {
+        chartPop = new Chart(ctxPop, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Population', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 }] },
+            options: chartOptions
+        });
+    }
+
+    const ctxSNN = document.getElementById('chart-snn');
+    if (ctxSNN && !chartSNN) {
+        chartSNN = new Chart(ctxSNN, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Universe N (Neurons)', data: [], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.3 }] },
+            options: chartOptions
+        });
+    }
+
+    const ctxSolves = document.getElementById('chart-solves');
+    if (ctxSolves && !chartSolves) {
+        chartSolves = new Chart(ctxSolves, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Cumulative Solves', data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.3 }] },
+            options: chartOptions
+        });
+    }
+}
+
+function updateAnalyticsCharts(history) {
+    if (!history || history.length === 0) return;
+    lastHistoryData = history;
+    initAnalyticsCharts();
+    const labels = history.map(h => h.tick.toLocaleString());
+    
+    if (chartIQ) {
+        chartIQ.data.labels = labels;
+        chartIQ.data.datasets[0].data = history.map(h => h.solve_pct !== undefined ? h.solve_pct : Math.min(100, h.iq || 0));
+        chartIQ.update('none');
+    }
+    if (chartPop) {
+        chartPop.data.labels = labels;
+        chartPop.data.datasets[0].data = history.map(h => h.pop);
+        chartPop.update('none');
+    }
+    if (chartSNN) {
+        chartSNN.data.labels = labels;
+        chartSNN.data.datasets[0].data = history.map(h => h.universe_n);
+        chartSNN.update('none');
+    }
+    if (chartSolves) {
+        chartSolves.data.labels = labels;
+        chartSolves.data.datasets[0].data = history.map(h => h.cum_reads || h.cum_pred || 0);
+        chartSolves.update('none');
+    }
 }

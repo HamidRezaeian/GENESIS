@@ -4413,6 +4413,29 @@ Evaluated plastic in-lifetime learners (Multi-Scale SNN $\tau_{\text{slow}}=25.0
 > [!NOTE]
 > **Scientific Significance (Rules 6 & 7):** This is the first fully grounded, un-confounded, multi-generational demonstration of an in-lifetime learning selection advantage in GENESIS. In static environments, natural selection eliminates plasticity as a metabolic parasite ($Z = -25.39\,\sigma$, Exp 89). In rapidly non-stationary environments ($T_{\text{remap}}=500$), in-lifetime plasticity is essential for survival, yielding a $+25.72\,\sigma$ selection advantage.
 
+---
+
+## 🧪 Experiment 92 — Phase 2 & 3 Cortical AGI Scaling and Live Internet Integration — **PHASE 2 VERIFIED & PHASE 3 PREPARED 🟢** (2026-07-29)
+
+**Pre-Registered Benchmark (Rule 1, Rule 6, Rule 7, Rule 19, Rule 21, Rule 22):**
+Evaluated scaling of SNN neocortex architecture from 4,096 Cortical Neurons (Phase 2) to 16,384 Cortical Neurons across 3 cortical columns (Sensory, Central Neocortex, Motor - Phase 3), along with 1MB Substrate (`1024x1024` memory array) deployment, live Wikipedia/Internet streaming integration (`src/live_web_streamer.py`), and UI telemetry dynamic alignment.
+
+| Parameter / Metric | Baseline (Phase 1) | Phase 2 (Verified) | Phase 3 (Notebook Target) |
+|---|---|---|---|
+| Cortical Neurons ($N$) | 104 | **4,096** | **16,384** |
+| Biological Synapses | 6,656 | **262,144** | **1,048,576** |
+| Substrate RAM Array | 256 KB ($512\times 512$) | **1 MB ($1024\times 1024$)** | **1 MB ($1024\times 1024$)** |
+| Global Ticks Elapsed | 120,000 | **500,000** (Kaggle) / **4.0M+** (Local) | **1,000,000** (Deep Time) |
+| Extinctions | 0 | **0** | **0** |
+| Data Feed | Static Books | **Live Wikipedia Stream** | **Live Wikipedia Stream** |
+
+**Binding Results & Invariants:**
+- **Phase 2 Kaggle Deliverable Integration:** `Brain_Phase2_4K_Cortical.npz` (4,096 Cortical Neurons, 262,144 synapses, 500k ticks) integrated as root ancestor. 4,000,000+ local ticks completed with 0 extinctions.
+- **1MB Substrate Scaling:** Web UI canvas, books curriculum band (~105 KB), and grounded food patches (~52.4K cells) scaled to $1024\times 1024$ memory array.
+- **Live Internet Streamer:** `src/live_web_streamer.py` fetches live English Wikipedia summaries every 20s and writes ASCII bytes to RAM substrate.
+- **Dynamic UI Footprint (Rule 7/21):** Static `898 ATP/B` label replaced with dynamic `elite_footprint` (`n_neurons + n_synapses`).
+- **Phase 3 AGI Notebook Generation:** Created `GENESIS_CUDA_PHASE3_DEEP_CORTEX.ipynb` for Dual Tesla T4 GPUs with `PYTORCH_ALLOC_CONF=expandable_segments:True` targeting 16,384 Cortical Neurons over 1,000,000 Deep Time Ticks.
+
 
 
 

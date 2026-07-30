@@ -7,6 +7,7 @@ import threading
 import json
 import base64
 import asyncio
+import collections
 try:
     import websockets  # only used by the live dashboard server (ws_main / ws_handler below)
 except ModuleNotFoundError:
@@ -25,6 +26,7 @@ os.environ.setdefault("GENESIS_CAM", "0")
 os.environ.setdefault("GENESIS_MULTISCALE", "1")
 os.environ.setdefault("GENESIS_STDP3C", "1")
 os.environ.setdefault("GENESIS_RESUME", "0")
+os.environ.setdefault("GENESIS_GROUNDED", "0")  # Pure Reading Economy: Only text comprehension pays energy
 os.environ.setdefault("GENESIS_RAM_SIZE", "1048576")  # 1MB Substrate (1024x1024 Array)
 
 GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
@@ -244,13 +246,10 @@ CANVAS_SEED = os.environ.get("GENESIS_CANVAS_SEED", "0") == "1"
 # These represent: (A) 55% minimum rise, (B) 75% substantial rise, (C) 87% near-perfect rise.
 ASCENT_BANDS = tuple(float(x) for x in os.environ.get("GENESIS_ASCENT_BANDS", "0.55,0.75,0.87").split(","))
 
-g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)
+g_ram = np.zeros(RAM_SIZE, dtype=np.uint8)  # Pristine clean RAM substrate (0x00)
 g_ram_bank_access = np.zeros(RAM_SIZE, dtype=np.int32)
 g_ram_bank_access_next = np.zeros(RAM_SIZE, dtype=np.int32)
 g_curriculum_delay = 0
-
-for i in range(int(RAM_SIZE * 0.05)):
-    g_ram[random.randint(0, RAM_SIZE-1)] = 0x55
 
 g_org_grid = np.full(RAM_SIZE, -1, dtype=np.int32)
 g_positions = np.zeros(MAX_ORGANISMS, dtype=np.int32)
@@ -489,6 +488,18 @@ ext_history = []
 max_ark_age = 0
 global_avg_age = 0
 
+# Cognitive Telemetry & Historical Analytics Globals
+g_cumulative_reads = 0
+g_cumulative_miss = 0
+g_cumulative_pred = 0
+g_cumulative_peer = 0
+g_vocab_counter = collections.Counter()
+g_word_counter = collections.Counter()
+g_sentence_log = collections.deque(maxlen=20)
+g_org_word_buf = ["" for _ in range(MAX_ORGANISMS)]
+g_org_phrase_buf = [[] for _ in range(MAX_ORGANISMS)]
+g_history_telemetry = []
+
 WS_CLIENTS = set()
 ws_loop = None
 g_energy_spawn_rate = float(os.environ.get("GENESIS_FOOD_RATE", "0.1"))
@@ -724,6 +735,7 @@ def get_base_physics_header():
 
 def load_kaggle_elite_genome():
     paths = [
+        'Brain_Phase3_16K_Cortical.npz', 'Brain/Brain_Phase3_16K_Cortical.npz',
         'Brain_Phase2_4K_Cortical.npz', 'Brain/Brain_Phase2_4K_Cortical.npz',
         'Brain_Elite_AGI.npz', 'Brain/Brain_Elite_AGI.npz'
     ]
@@ -731,9 +743,9 @@ def load_kaggle_elite_genome():
         if os.path.exists(p):
             try:
                 data = np.load(p)
-                neurons = data.get('neurons', '104')
-                sub_size = data.get('substrate_size', '256x256')
-                print(f"[KAGGLE ELITE] Loaded Phase 2/1 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_size}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
+                neurons = data.get('n_neurons', data.get('neurons', '16384'))
+                sub_bytes = data.get('substrate_bytes', '1MB')
+                print(f"[KAGGLE ELITE] Loaded Phase 3/2 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_bytes}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
                 return data
             except Exception as e:
                 print(f"[KAGGLE ELITE] Could not load {p}: {e}")
@@ -1391,18 +1403,29 @@ def _stock_shelter_patches(target_shelter=1500, offset=0):
     return int(np.count_nonzero(g_ram == 0xAA))
 
 
+g_curriculum = True
+
 def _lay_library(at=None):
-    """Lay the reading scroll: the WHOLE ordered curriculum (contiguous) when g_curriculum is on, else
-    the single BOOK_NAME scroll (byte-identical to the pre-2026-07-18 behaviour when off). Both are laid
-    contiguously (Exp 11) — never the confetti scatter. Used by prestock, restock, and the dashboard so
-    all three stay consistent. Returns whatever the injector returns."""
-    if g_curriculum:
-        return inject_curriculum_sequence(g_ram, RAM_SIZE, BOOK_TARGET_BYTES, at=at)
+    """Tile 100% Live Web Streamed Wikipedia articles continuously across the entire 1MB RAM substrate."""
+    import live_web_streamer
+    try:
+        live_text = live_web_streamer.get_latest_live_text()
+        if live_text:
+            encoded = [ord(c) for c in live_text if 32 <= ord(c) <= 126]
+            if len(encoded) > 10:
+                n = len(encoded)
+                # Tile live text continuously across all 1,048,576 bytes of RAM
+                for pos in range(RAM_SIZE):
+                    g_ram[pos] = encoded[pos % n]
+                return RAM_SIZE
+    except Exception:
+        pass
     return inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES, at=at)
 
 
 def sim_loop():
     global global_time, ark_dna, num_extinctions, num_refuge, ext_history, max_ark_age, global_avg_age
+    global g_cumulative_reads, g_cumulative_miss, g_cumulative_pred, g_cumulative_peer, g_vocab_counter, g_word_counter, g_sentence_log, g_org_word_buf, g_org_phrase_buf, g_history_telemetry
     print("Pre-compiling world_tick_numba (JIT warmup)...")
     
     seed_universe(1, use_ark=False)
@@ -1599,20 +1622,21 @@ def sim_loop():
             if NICHE_JUMP:
                 return random.randint(0, (RAM_SIZE // LONG_JUMP_STRIDE) - 1) * LONG_JUMP_STRIDE
             return random.randint(0, RAM_SIZE - 1)
-        if GROUNDED:
-            # Exp 42 & Exp 62: replenish food (0x55) and shelter canvas (0xAA) as DENSE PATCHES
-            if (global_time % max(1, BOOK_RESTOCK_EVERY)) == 0:
-                _stock_food_patches(int(os.environ.get("GENESIS_GROUNDED_FOOD", "3000")))
-                _stock_shelter_patches(int(os.environ.get("GENESIS_GROUNDED_SHELTER", "1500")))
-        else:
-            for _ in range(int(spawn_count)):
-                idx = _food_idx()
-                if g_ram[idx] == 0x00:
-                    g_ram[idx] = 0x55
-            if random.random() < (spawn_count - int(spawn_count)):
-                idx = _food_idx()
-                if g_ram[idx] == 0x00:
-                    g_ram[idx] = 0x55
+        if GENESIS_ECONOMY != "books":
+            if GROUNDED:
+                # Exp 42 & Exp 62: replenish food (0x55) and shelter canvas (0xAA) as DENSE PATCHES
+                if (global_time % max(1, BOOK_RESTOCK_EVERY)) == 0:
+                    _stock_food_patches(int(os.environ.get("GENESIS_GROUNDED_FOOD", "3000")))
+                    _stock_shelter_patches(int(os.environ.get("GENESIS_GROUNDED_SHELTER", "1500")))
+            else:
+                for _ in range(int(spawn_count)):
+                    idx = _food_idx()
+                    if g_ram[idx] == 0x00:
+                        g_ram[idx] = 0x55
+                if random.random() < (spawn_count - int(spawn_count)):
+                    idx = _food_idx()
+                    if g_ram[idx] == 0x00:
+                        g_ram[idx] = 0x55
 
         # World-clock step = the deepest live architecture's settle time (see stepping note above).
         # Computed BEFORE the book-restock check below, which divides by it — on the first loop
@@ -1627,9 +1651,8 @@ def sim_loop():
         # PLACE so the continuous text a saccading reader walks never fragments into confetti (the
         # gaps that kept the economy net-negative). Exp 9 reading is non-destructive so the scroll
         # rarely depletes — this restock only repairs cells lost to food-spawn (0x55) or births
-        # overwriting the block edges. Only runs when GENESIS_ECONOMY=books.
         if GENESIS_ECONOMY == "books" and g_auto_inject and (global_time // dynamic_lif_steps) % BOOK_RESTOCK_EVERY == 0:
-            printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126) & (g_ram != 0x55))
+            printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126))
             if printable < BOOK_TARGET_BYTES:
                 _lay_library()   # single book or full curriculum (g_curriculum), always contiguous
         # Exp 24 Wall-1: regrow the reading-fuel reservoir EVERY loop iteration (continuous renewal),
@@ -1718,53 +1741,67 @@ def sim_loop():
 
         if now - last_ws_push >= 0.5:
             read_events = []
-            # Live cognitive-metric tallies for the dashboard (Ascent.md §5: surface the mind signals,
-            # not just population). Counted over the same read_log drain that builds read_events, so it
-            # is free. reads/miss = comprehension solve-rate; pred = anticipated-next; peer/evade = the
-            # autotelic agent-agent economy.
             m_reads = m_miss = m_pred = m_peer = m_evade = 0
             idx = 1
-            while idx < g_read_log[0] and len(read_events) < 20:
+            while idx < g_read_log[0]:
                 log_type = g_read_log[idx]
-                if log_type == 1:
-                    m_reads += 1
-                    read_events.append({"type": "success", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
+                if log_type in (1, 3):
+                    if log_type == 1:
+                        m_reads += 1
+                        g_cumulative_reads += 1
+                    else:
+                        m_pred += 1
+                        g_cumulative_pred += 1
+
+                    org_id = int(g_read_log[idx+1])
+                    ch = chr(g_read_log[idx+2])
+                    if len(read_events) < 20:
+                        read_events.append({"type": "success" if log_type == 1 else "predict", "org": org_id, "char": ch})
+
+                    if 0 <= org_id < MAX_ORGANISMS:
+                        if ch.isalpha():
+                            g_org_word_buf[org_id] += ch
+                            w = g_org_word_buf[org_id].upper()
+                            if 3 <= len(w) <= 12 and len(set(w)) > 1:
+                                g_word_counter[w] += 1
+                                if len(w) >= 4:
+                                    g_org_phrase_buf[org_id].append(w)
+                                    if len(g_org_phrase_buf[org_id]) >= 2:
+                                        phrase = " ".join(g_org_phrase_buf[org_id][-3:])
+                                        if phrase not in g_sentence_log:
+                                            g_sentence_log.append(phrase)
+                                        if len(g_org_phrase_buf[org_id]) > 5:
+                                            g_org_phrase_buf[org_id].pop(0)
+                            if len(g_org_word_buf[org_id]) > 12:
+                                g_org_word_buf[org_id] = g_org_word_buf[org_id][-4:]
+                        else:
+                            g_org_word_buf[org_id] = ""
                     idx += 3
                 elif log_type == 2:
                     m_miss += 1
+                    g_cumulative_miss += 1
                     guess_val = int(g_read_log[idx+3])
                     guess_str = chr(guess_val) if 32 <= guess_val <= 126 else f"0x{guess_val:02X}"
-                    read_events.append({"type": "fail", "org": int(g_read_log[idx+1]), "target": chr(g_read_log[idx+2]), "guess": guess_str})
+                    if len(read_events) < 20:
+                        read_events.append({"type": "fail", "org": int(g_read_log[idx+1]), "target": chr(g_read_log[idx+2]), "guess": guess_str})
                     idx += 4
-                elif log_type == 3:
-                    # Prediction hit (type 3, stride 3): organism vocalised the symbol it then
-                    # stepped ONTO. Must be drained with the correct stride — the old `else: break`
-                    # truncated the whole buffer on the first prediction, dropping every later event
-                    # AND silently hiding the project's key cognitive signal (Rules 6/9).
-                    m_pred += 1
-                    read_events.append({"type": "predict", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
-                    idx += 3
                 elif log_type == 4:
-                    # Peer prediction (type 4, stride 3): organism drained a neighbour by vocalising
-                    # its byte (autotelic info-predation). Must be drained with its own stride or the
-                    # old `else: break` would truncate the buffer on the first peer event.
                     m_peer += 1
-                    read_events.append({"type": "peer", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
+                    g_cumulative_peer += 1
+                    ch = chr(g_read_log[idx+2])
+                    if len(read_events) < 20:
+                        read_events.append({"type": "peer", "org": int(g_read_log[idx+1]), "char": ch})
                     idx += 3
                 elif log_type == 5:
-                    # Red-Queen evasion (type 5, stride 3, Exp 19): org[idx+1] is the PREY that got paid
-                    # for taking an action a neighbour confidently mis-predicted. Same stride as peer;
-                    # needs its own arm so the first evasion event doesn't truncate the drain.
                     m_evade += 1
-                    read_events.append({"type": "evade", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
+                    if len(read_events) < 20:
+                        read_events.append({"type": "evade", "org": int(g_read_log[idx+1]), "char": chr(g_read_log[idx+2])})
                     idx += 3
                 else:
                     break
             g_read_log[0] = 1
 
             if ws_loop and WS_CLIENTS and (now - getattr(sim_loop, 'last_ws_push', 0) >= 0.2):
-
-
                 sim_loop.last_ws_push = now
                 alive_count = np.sum(g_alive)
                 universe_n = np.sum(g_neuron_map)
@@ -1785,7 +1822,6 @@ def sim_loop():
                         terminal_text = chr(v)
                     else:
                         terminal_text = f"0x{v:02X}"
-
                     # Rule 7 efficiency metric: survival time earned per unit of neural
                     # footprint (neurons + synapses = CPU cycles + RAM). Higher = the same
                     # longevity achieved with a smaller, cheaper brain.
@@ -1827,6 +1863,21 @@ def sim_loop():
                             _p = _c / _tot
                             m_hact -= _p * math.log2(_p)
 
+                total_attempts = max(1.0, float(m_reads + m_miss + m_pred))
+                solve_pct_val = round(float(m_pred) / total_attempts * 100.0, 1)
+
+                g_history_telemetry.append({
+                    "tick": int(global_time),
+                    "iq": round(float(elite_iq), 1),
+                    "solve_pct": solve_pct_val,
+                    "pop": int(alive_count),
+                    "cum_reads": int(g_cumulative_reads),
+                    "cum_pred": int(g_cumulative_pred),
+                    "universe_n": int(universe_n)
+                })
+                if len(g_history_telemetry) > 50:
+                    g_history_telemetry.pop(0)
+
                 data = {
                     "type": "state",
                     "tick": int(global_time),
@@ -1837,6 +1888,7 @@ def sim_loop():
                     "ram_b64": ram_b64,
                     "elite_age": int(max_ark_age),
                     "elite_iq": elite_iq,
+                    "elite_footprint": int(g_org_n_count[elite_id] + g_org_s_count[elite_id]) if elite_id >= 0 else 0,
                     "elite_pos": int(g_positions[elite_id]) if elite_id >= 0 else -1,
                     "avg_age": int(global_avg_age),
                     "universe_n": int(universe_n),
@@ -1848,6 +1900,9 @@ def sim_loop():
                     "terminal": terminal_text,
                     "read_events": read_events,
                     "num_refuge": int(num_refuge),
+                    "vocab": [{"word": k, "count": v} for k, v in g_word_counter.most_common(25)],
+                    "sentences": list(g_sentence_log),
+                    "history": g_history_telemetry,
                     # --- Live cognition metrics (2026-07-18: keep the UI honest with the engine) ---
                     "metrics": {
                         "reads": int(m_reads),
@@ -2119,6 +2174,7 @@ def main():
     t.start()
 
     headless = os.environ.get("GENESIS_HEADLESS", "0") == "1"
+    # headless = 1
     if not headless:
         ws_t = threading.Thread(target=start_ws_server, daemon=True)
         ws_t.start()
