@@ -621,36 +621,9 @@ if (btnClose && modal) {
     });
 }
 
-// ── Tab Switching & Analytics Charts ──────────────────────
-const btnTabLive = document.getElementById('tab-btn-live');
-const btnTabAnalytics = document.getElementById('tab-btn-analytics');
-const tabLive = document.getElementById('content');
-const tabAnalytics = document.getElementById('analytics-section');
 
 let lastHistoryData = null;
 
-if (btnTabLive && btnTabAnalytics) {
-    btnTabLive.addEventListener('click', () => {
-        btnTabLive.classList.add('active');
-        btnTabAnalytics.classList.remove('active');
-        tabLive.classList.remove('hidden');
-        tabAnalytics.classList.add('hidden');
-    });
-    btnTabAnalytics.addEventListener('click', () => {
-        btnTabAnalytics.classList.add('active');
-        btnTabLive.classList.remove('active');
-        tabAnalytics.classList.remove('hidden');
-        tabLive.classList.add('hidden');
-        setTimeout(() => {
-            initAnalyticsCharts();
-            if (lastHistoryData) updateAnalyticsCharts(lastHistoryData);
-            if (chartIQ) chartIQ.resize();
-            if (chartPop) chartPop.resize();
-            if (chartSNN) chartSNN.resize();
-            if (chartSolves) chartSolves.resize();
-        }, 60);
-    });
-}
 
 let chartIQ = null, chartPop = null, chartSNN = null, chartSolves = null;
 
