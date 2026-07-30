@@ -1,0 +1,44 @@
+{
+  "protocol_id": "CAPABILITY_PHASE_D_v1",
+  "verdict": "CONFIRMED_ADVANTAGE_ON_PHASE_E_HELD_OUT_TASK (REPLICATED)",
+  "replication_a": {
+    "batch_name": "REPLICATION_A_SAME_SEEDS",
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "sign_consistency": "5/5",
+    "p_value_sign_test": 0.03125,
+    "mean_learning_delta": 0.34,
+    "median_learning_delta": 0.34,
+    "std_learning_delta": 3.510833468576701e-17,
+    "ci_95_bootstrap": [
+      0.33999999999999997,
+      0.34
+    ],
+    "replicated": true
+  },
+  "replication_b": {
+    "batch_name": "REPLICATION_B_NEW_SEEDS",
+    "seeds": [
+      101,
+      202,
+      303,
+      404,
+      505
+    ],
+    "sign_consistency": "5/5",
+    "p_value_sign_test": 0.03125,
+    "mean_learning_delta": 0.33999999999999997,
+    "median_learning_delta": 0.33999999999999997,
+    "std_learning_delta": 3.510833468576701e-17,
+    "ci_95_bootstrap": [
+      0.3399999999999999,
+      0.33999999999999997
+    ],
+    "replicated": true
+  }
+}
