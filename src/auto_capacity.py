@@ -33,7 +33,12 @@ from the measured per-element pool sizes, not picked. N_IO is mirrored from the
 engine (kept in sync; documented below).
 """
 import os
-import psutil
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    psutil = None
+    HAS_PSUTIL = False
 from neuromorphic_engine import N_IO
 
 # ── Hardware-derived per-organism cost (measured from genesis_lab pools) ──

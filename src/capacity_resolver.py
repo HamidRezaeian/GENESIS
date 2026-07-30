@@ -103,7 +103,7 @@ def check_memory_feasibility(required_bytes, reserve_bytes=DEFAULT_ENGINEERING_R
         (feasible: bool, available_bytes: int, message: str)
     """
     try:
-        sys_avail = psutil.virtual_memory().available
+        sys_avail = psutil.virtual_memory().available if (HAS_PSUTIL and psutil is not None) else (2 * 1024 * 1024 * 1024)
     except Exception:
         sys_avail = 2 * 1024 * 1024 * 1024  # 2GB fallback assumption
 
@@ -121,7 +121,7 @@ def get_capacity_report():
     """Generates a detailed diagnostic report of system memory resources and capacity metrics."""
     ram_size, ram_src = resolve_ram_size()
     cgroup_limit = get_cgroup_memory_limit()
-    sys_avail = psutil.virtual_memory().available
+    sys_avail = psutil.virtual_memory().available if (HAS_PSUTIL and psutil is not None) else (2 * 1024 * 1024 * 1024)
 
     return {
         "resolved_ram_size": ram_size,
