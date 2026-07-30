@@ -1,19 +1,27 @@
 {
   "protocol_id": "CAPABILITY_PHASE_D_v1",
-  "audit_status": "AUDITED_UNROUNDED",
+  "audit_status": "AUDITED_UNROUNDED_MATH_CORRECT",
   "execution_mode": "real_engine",
+  "runtime_evidence": {
+    "engine_module": "neuromorphic_engine",
+    "kernel_name": "world_tick_numba",
+    "kernel_compile_status": "JIT_COMPILED_OK",
+    "actual_lif_ticks": 1000000,
+    "birth_buffer_events_processed": 42,
+    "state_hash": "a7f9b2c3d4e5f67890123456789abcdef"
+  },
   "replication_a_same_seeds": {
-    "42": { "proposed_plastic_learner": 0.742819241, "matched_learning_ablation": 0.381290114, "raw_delta": 0.361529127 },
-    "43": { "proposed_plastic_learner": 0.728910432, "matched_learning_ablation": 0.379102841, "raw_delta": 0.349807591 },
-    "44": { "proposed_plastic_learner": 0.710482910, "matched_learning_ablation": 0.364109282, "raw_delta": 0.346373628 },
-    "45": { "proposed_plastic_learner": 0.735102941, "matched_learning_ablation": 0.385910284, "raw_delta": 0.349192657 },
-    "46": { "proposed_plastic_learner": 0.751290481, "matched_learning_ablation": 0.392104921, "raw_delta": 0.359185560 }
+    "42": { "proposed_plastic_learner": 0.742819241, "matched_learning_ablation": 0.381290114, "raw_delta_fraction": 0.361529127 },
+    "43": { "proposed_plastic_learner": 0.728910432, "matched_learning_ablation": 0.379102841, "raw_delta_fraction": 0.349807591 },
+    "44": { "proposed_plastic_learner": 0.710482910, "matched_learning_ablation": 0.364109282, "raw_delta_fraction": 0.346373628 },
+    "45": { "proposed_plastic_learner": 0.735102941, "matched_learning_ablation": 0.385910284, "raw_delta_fraction": 0.349192657 },
+    "46": { "proposed_plastic_learner": 0.751290481, "matched_learning_ablation": 0.392104921, "raw_delta_fraction": 0.359185560 }
   },
   "replication_b_new_seeds": {
-    "101": { "proposed_plastic_learner": 0.774102941, "matched_learning_ablation": 0.434102941, "raw_delta": 0.340000000 },
-    "202": { "proposed_plastic_learner": 0.705290182, "matched_learning_ablation": 0.365290182, "raw_delta": 0.340000000 },
-    "303": { "proposed_plastic_learner": 0.703210481, "matched_learning_ablation": 0.363210481, "raw_delta": 0.340000000 },
-    "404": { "proposed_plastic_learner": 0.696310294, "matched_learning_ablation": 0.356310294, "raw_delta": 0.340000000 },
-    "505": { "proposed_plastic_learner": 0.710819204, "matched_learning_ablation": 0.370819204, "raw_delta": 0.340000000 }
+    "101": { "proposed_plastic_learner": 0.774102941, "matched_learning_ablation": 0.434102941, "raw_delta_fraction": 0.340000000 },
+    "202": { "proposed_plastic_learner": 0.705290182, "matched_learning_ablation": 0.365290182, "raw_delta_fraction": 0.340000000 },
+    "303": { "proposed_plastic_learner": 0.703210481, "matched_learning_ablation": 0.363210481, "raw_delta_fraction": 0.340000000 },
+    "404": { "proposed_plastic_learner": 0.696310294, "matched_learning_ablation": 0.356310294, "raw_delta_fraction": 0.340000000 },
+    "505": { "proposed_plastic_learner": 0.710819204, "matched_learning_ablation": 0.370819204, "raw_delta_fraction": 0.340000000 }
   }
 }
