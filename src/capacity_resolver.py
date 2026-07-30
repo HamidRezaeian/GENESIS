@@ -16,10 +16,17 @@ Precedence order for Population Cap:
 """
 import os
 import sys
-import psutil
+
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    psutil = None
+    HAS_PSUTIL = False
 
 # Single source of truth engine metadata import
 from neuromorphic_engine import N_IO, RAM_SIZE as ENGINE_DEFAULT_RAM_SIZE
+
 
 # Default fallback values
 DEFAULT_FALLBACK_RAM_SIZE = 1048576  # 1MB
@@ -75,14 +82,15 @@ def resolve_ram_size():
         return derived, "cgroup_limit"
 
     # 3. Available system RAM via psutil
-    try:
-        avail = psutil.virtual_memory().available
-        if avail > 0:
-            # Assign ~1% of available host RAM to RAM substrate (capped between 1MB and 64MB)
-            derived = max(DEFAULT_FALLBACK_RAM_SIZE, min(avail // 100, 67108864))
-            return derived, "host_available_memory"
-    except Exception:
-        pass
+    if HAS_PSUTIL and psutil is not None:
+        try:
+            avail = psutil.virtual_memory().available
+            if avail > 0:
+                # Assign ~1% of available host RAM to RAM substrate (capped between 1MB and 64MB)
+                derived = max(DEFAULT_FALLBACK_RAM_SIZE, min(avail // 100, 67108864))
+                return derived, "host_available_memory"
+        except Exception:
+            pass
 
     # 4. Safe documented fallback
     return DEFAULT_FALLBACK_RAM_SIZE, "documented_fallback"
