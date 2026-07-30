@@ -1,0 +1,96 @@
+{
+  "certificate_id": "PROJECT_VALIDATION_BUNDLE_SERIES_1200",
+  "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+  "pre_registration_date": "2026-07-30",
+  "git_commit": "e66a894",
+  "checkpoint_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
+  "seed_series": "Series 1200 (Seeds 1201-1210)",
+  "controls_verified": {
+    "no_refuge": true,
+    "no_ark": true,
+    "no_auto_repro": true
+  },
+  "task_replication_results": {
+    "Task_1_DMTS": {
+      "evaluation_series": "Series 1200",
+      "seed_range": "1201-1210",
+      "seed_count": 10,
+      "positive_seeds_count": 10,
+      "positive_seed_percentage": 100.0,
+      "exact_mean_delta": 0.5485235378839362,
+      "exact_sample_std": 0.09237343993775132,
+      "cohens_d_z": 5.938108814109072,
+      "p_value_exact_permutation": 0.000976,
+      "process_isolation_verified": true,
+      "base_weight_drift_bytes": 0,
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "status": "CERTIFIED"
+    },
+    "Task_2_Bit_Parity": {
+      "evaluation_series": "Series 1200",
+      "seed_range": "1201-1210",
+      "seed_count": 10,
+      "positive_seeds_count": 10,
+      "positive_seed_percentage": 100.0,
+      "exact_mean_delta": 0.4872948914000131,
+      "exact_sample_std": 0.0817417526183865,
+      "cohens_d_z": 5.961395196344297,
+      "p_value_exact_permutation": 0.000976,
+      "process_isolation_verified": true,
+      "base_weight_drift_bytes": 0,
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "status": "CERTIFIED"
+    },
+    "Task_3_Arithmetic": {
+      "evaluation_series": "Series 1200",
+      "seed_range": "1201-1210",
+      "seed_count": 10,
+      "positive_seeds_count": 10,
+      "positive_seed_percentage": 100.0,
+      "exact_mean_delta": 0.4682552936154657,
+      "exact_sample_std": 0.13466137389951685,
+      "cohens_d_z": 3.477279936003577,
+      "p_value_exact_permutation": 0.000976,
+      "process_isolation_verified": true,
+      "base_weight_drift_bytes": 0,
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "status": "CERTIFIED"
+    },
+    "Task_4_Navigation": {
+      "evaluation_series": "Series 1200",
+      "seed_range": "1201-1210",
+      "seed_count": 10,
+      "positive_seeds_count": 10,
+      "positive_seed_percentage": 100.0,
+      "exact_mean_delta": 0.4971212754994161,
+      "exact_sample_std": 0.09564388746061743,
+      "cohens_d_z": 5.197627247262529,
+      "p_value_exact_permutation": 0.000976,
+      "process_isolation_verified": true,
+      "base_weight_drift_bytes": 0,
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "status": "CERTIFIED"
+    },
+    "Task_5_Causal": {
+      "evaluation_series": "Series 1200",
+      "seed_range": "1201-1210",
+      "seed_count": 10,
+      "positive_seeds_count": 10,
+      "positive_seed_percentage": 100.0,
+      "exact_mean_delta": 0.43626360642707046,
+      "exact_sample_std": 0.09359863798308991,
+      "cohens_d_z": 4.661003790524051,
+      "p_value_exact_permutation": 0.000976,
+      "process_isolation_verified": true,
+      "base_weight_drift_bytes": 0,
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "status": "CERTIFIED"
+    }
+  },
+  "overall_verdict": {
+    "project_status": "MULTI_FAMILY_TASK_EVIDENCE_ESTABLISHED",
+    "claim_boundary": "EVALUATED_ACROSS_FIVE_DISTINCT_TASK_FAMILIES_WITH_SHARED_SUBSTRATE",
+    "broad_task_generalization": "NOT_ESTABLISHED",
+    "agi_claim": "NOT_SUPPORTED"
+  }
+}
