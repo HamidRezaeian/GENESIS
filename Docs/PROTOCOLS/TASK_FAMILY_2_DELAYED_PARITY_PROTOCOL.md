@@ -60,9 +60,13 @@ The protocol evaluates 3 distinct execution modes:
 - **Sample Unit**: $N_{\text{seeds}} = 10$ independent seeds (801-810).
 - **Evaluation Budget**: 100 trials per seed.
 
-### 5.2 Pre-Registered Statistical Methods
-- **Cohen's $d_z$ Definition**: Paired sample effect size calculated as:
-  $$d_z = \frac{\text{Mean}(\Delta)}{\text{Std}(\Delta)}$$
+### 5.2 Pre-Registered Statistical Methods & Delta Definition
+- **Explicit Delta Definition**: The primary accuracy gain ($\Delta_{\text{seed}}$) for each seed is defined strictly as:
+  $$\Delta_{\text{seed}} = \text{Few-Shot (STDP) Accuracy}_{\text{seed}} - \text{Matched Ablation Accuracy}_{\text{seed}}$$
+  *(e.g., Seed 801: $80.57\% - 50.58\% = +29.99\%$)*
+
+- **Cohen's $d_z$ Definition**: Paired sample effect size calculated at the seed level ($N=10$ independent observations, $\text{ddof}=1$):
+  $$d_z = \frac{\text{Mean}(\Delta_{\text{seed}})}{\text{Std}(\Delta_{\text{seed}})}$$
 - **Multi-Test Reporting**:
   1. Paired Two-Tailed Student's t-test
   2. Wilcoxon Signed-Rank Test
