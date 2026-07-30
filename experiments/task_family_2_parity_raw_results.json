@@ -1,0 +1,97 @@
+{
+  "protocol_id": "TASK_FAMILY_2_DELAYED_PARITY_v1",
+  "claim_label": "CONFIRMED_GENERALIZATION_ON_TASK_FAMILY_2_PARITY",
+  "brain_checkpoint_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
+  "mathematical_chance_baseline": 0.5,
+  "primary_metric": "Delayed Bit Parity Accuracy at N=10 delay",
+  "statistical_summary": {
+    "mean_delta_fraction": 0.29565006059859816,
+    "sample_std_dev": 0.01797616281381359,
+    "cohens_d": 16.446783646808598,
+    "t_statistic": 52.00929650792546,
+    "p_value": 1e-06,
+    "statistically_significant": true
+  },
+  "per_seed_results": {
+    "801": {
+      "proposed_plastic_learner": 0.8143317906312514,
+      "matched_learning_ablation": 0.5078409571949972,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.30649083343625416
+    },
+    "802": {
+      "proposed_plastic_learner": 0.8128436718887745,
+      "matched_learning_ablation": 0.5129371808551424,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.2999064910336321
+    },
+    "803": {
+      "proposed_plastic_learner": 0.8013872230373353,
+      "matched_learning_ablation": 0.521537678051692,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.2798495449856433
+    },
+    "804": {
+      "proposed_plastic_learner": 0.8027441426536701,
+      "matched_learning_ablation": 0.5065753571712567,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.29616878548241343
+    },
+    "805": {
+      "proposed_plastic_learner": 0.7950458287182305,
+      "matched_learning_ablation": 0.514396868047013,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.2806489606712175
+    },
+    "806": {
+      "proposed_plastic_learner": 0.8007744969192266,
+      "matched_learning_ablation": 0.5172876028878148,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.2834868940314118
+    },
+    "807": {
+      "proposed_plastic_learner": 0.8296542815486113,
+      "matched_learning_ablation": 0.5064607787049626,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.3231935028436487
+    },
+    "808": {
+      "proposed_plastic_learner": 0.8323539815028764,
+      "matched_learning_ablation": 0.5063233456957559,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.32603063580712055
+    },
+    "809": {
+      "proposed_plastic_learner": 0.7958466930914607,
+      "matched_learning_ablation": 0.516076011670977,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.27977068142048367
+    },
+    "810": {
+      "proposed_plastic_learner": 0.7957915665831793,
+      "matched_learning_ablation": 0.514837290309023,
+      "bit1_only_baseline": 0.5,
+      "memoryless_baseline": 0.5,
+      "null_baseline": 0.5,
+      "raw_delta_fraction": 0.28095427627415626
+    }
+  }
+}
