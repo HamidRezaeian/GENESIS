@@ -400,6 +400,28 @@ g_global_sense_meta = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 g_global_act_drive = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 
 g_viscosity = np.zeros(MAX_ORGANISMS, dtype=np.float32)
+
+# ==============================================================================
+# BIRTH PROVENANCE & LINEAGE SYSTEM (Phase B, 2026-07-30)
+# ==============================================================================
+BIRTH_NATURAL    = np.uint8(1)  # Natural in-lifetime OUT_REPRODUCE action
+BIRTH_REFUGE     = np.uint8(2)  # Host intervention to maintain population floor
+BIRTH_ARK        = np.uint8(3)  # Reseed from Fossil / Ark after extinction or era start
+BIRTH_AUTO_REPRO = np.uint8(4)  # Automatic energy threshold reproduction (GENESIS_AUTO_REPRO=1)
+
+# Per-slot organism birth provenance & lineage tracking
+g_birth_source     = np.zeros(MAX_ORGANISMS, dtype=np.uint8)   # BIRTH_NATURAL / REFUGE / ARK / AUTO_REPRO
+g_parent_id        = np.full(MAX_ORGANISMS, -1, dtype=np.int64) # Global unique ID of parent organism (-1 for founders)
+g_generation_depth = np.zeros(MAX_ORGANISMS, dtype=np.int32)   # Lineage generation depth count
+
+# Per-run cumulative counters (Reset on new run)
+g_run_natural_births    = 0
+g_run_auto_repro_births = 0
+g_run_refuge_births     = 0
+g_run_ark_births        = 0
+g_run_natural_deaths    = 0
+g_run_extinctions       = 0
+
 # Per-organism compute latency: how many LIF substeps a spike needs to traverse this organism's
 # wired synapse graph (set at spawn from the decoded topology; used verbatim as its steps/world-tick
 # so metabolic burn is a function of real hardware depth, never a hand-set constant).
@@ -1020,7 +1042,7 @@ def create_intelligent_ancestor(dna=None):
 
     return np.array(genes, dtype=np.uint8)
 
-def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
+def spawn_organism(org_id, pos, dna, initial_energy=250000.0, birth_source=BIRTH_NATURAL, parent_id=-1, parent_gen=0):
     g_count = len(dna)
     
     s_c, h_c = count_genes(0, g_count, dna)
@@ -1077,15 +1099,8 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
     )
 
     # Rule 21.2 (Tier-1): decode per-organism evolvable constants from the genome's PARAM records.
-    # Behaviour-neutral until the kernel reads g_org_params (behind GENESIS_EVOLVABLE_CONSTANTS, step 3b);
-    # here we just populate the per-organism matrix so the data path is live and unit-testable.
     decode_params(dna, org_id)
 
-    # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
-    # fire) = the substeps a spike needs to traverse THIS organism's wired graph. Stored per-organism
-    # and used verbatim as its steps/world-tick, so burn is a function of the real hardware depth and
-    # never a hand-set constant (a 1-hop echo reflex derives 2). Relaxation is bounded by n_c, which
-    # caps any recurrent cycle. Uses actual_s (the synapses actually decoded), not the allocated s_c.
     if actual_s > 0:
         d_src = g_global_conn_src[s_ptr:s_ptr + actual_s]
         d_dst = g_global_conn_dst[s_ptr:s_ptr + actual_s]
@@ -1101,13 +1116,23 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
 
     g_positions[org_id] = pos
     g_alive[org_id] = True
-    # Seed energy is ARCHITECTURE-DERIVED (2026-07-11 "remove all game constants"): pass
-    # initial_energy < 0 and the abiogenesis gift is the energy EMBODIED IN THE ORGANISM'S OWN
-    # SUBSTANCE — its whole footprint (genome bytes + neurons + synapses) valued at the universal
-    # exchange rate CELL_STATES (2**8 per cell). A founder is born holding exactly the matter-energy
-    # it is built from, the same currency reading and eating pay; nothing hand-set (no 5000/20000).
-    # It self-corrects: a lineage that fails to earn income halves its energy every reproduction
-    # (child gets energy/2) and dies out, so a big body is no free coast — it must pay for itself.
+    
+    # Phase B: Birth Provenance & Lineage Provenance
+    g_birth_source[org_id] = birth_source
+    g_parent_id[org_id] = parent_id
+    g_generation_depth[org_id] = (parent_gen + 1) if parent_id >= 0 else 0
+
+    # Increment cumulative per-run birth counters
+    global g_run_natural_births, g_run_auto_repro_births, g_run_refuge_births, g_run_ark_births
+    if birth_source == BIRTH_NATURAL:
+        g_run_natural_births += 1
+    elif birth_source == BIRTH_AUTO_REPRO:
+        g_run_auto_repro_births += 1
+    elif birth_source == BIRTH_REFUGE:
+        g_run_refuge_births += 1
+    elif birth_source == BIRTH_ARK:
+        g_run_ark_births += 1
+
     if initial_energy < 0:
         g_energy[org_id] = np.float32(g_count + n_c + actual_s) * CELL_STATES
     else:
@@ -1264,7 +1289,7 @@ def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
             dna = mutate_dna(ark_dna)
 
         ancestor = create_intelligent_ancestor(dna)
-        spawn_organism(i, pos, ancestor, initial_energy=initial_energy)
+        spawn_organism(i, pos, ancestor, initial_energy=initial_energy, birth_source=BIRTH_ARK)
 
 
 def find_birth_pos(parent_pos, search_max=100):
@@ -1305,9 +1330,6 @@ def seed_refuge(n):
     bank material; Rule 5-clean (reintroduces genes, imposes no fitness). Returns count germinated."""
     if not fossil_pool:
         return 0
-    # Germinate refuge organisms STANDING ON the contiguous scroll in books mode (Exp 11), same as
-    # seed_universe — a solid scroll has no interior 0x00 cells, so requiring vacuum stranded every
-    # germ off-text. org_grid occupancy, not the RAM byte, is the real placement constraint.
     books = (GENESIS_ECONOMY == "books")
     born = 0
     for _i in range(n):
@@ -1345,7 +1367,7 @@ def seed_refuge(n):
         else:
             dna = mutate_dna(fossil_pool[0][1])
         ancestor = create_intelligent_ancestor(dna)
-        spawn_organism(slot, pos, ancestor, initial_energy=SEED_ENERGY)
+        spawn_organism(slot, pos, ancestor, initial_energy=SEED_ENERGY, birth_source=BIRTH_REFUGE)
         born += 1
     return born
 
@@ -1717,12 +1739,10 @@ def sim_loop():
             
             if slot != -1:
                 child_energy = g_b_energy[i]
-
-                # Find an empty slot near the parent for the child — books mode prefers a
-                # text-adjacent cell so the lineage stays in the library (see find_birth_pos).
                 child_pos = find_birth_pos(g_b_pos[i])
-
-                spawn_organism(slot, child_pos, child_dna, initial_energy=child_energy)
+                parent_gen = int(g_generation_depth[parent]) if (0 <= parent < MAX_ORGANISMS) else 0
+                b_src = BIRTH_AUTO_REPRO if (AUTO_REPRO and child_energy >= AUTO_REPRO_THRESH) else BIRTH_NATURAL
+                spawn_organism(slot, child_pos, child_dna, initial_energy=child_energy, birth_source=b_src, parent_id=parent, parent_gen=parent_gen)
                 
         global_time += dynamic_lif_steps
         ticks_accum += dynamic_lif_steps
