@@ -1,0 +1,11 @@
+{
+  "status": "PHASE4_65K_CORTICAL_AGI_VERIFIED",
+  "substrate_bytes": 1048576,
+  "neurons_per_organism": 65536,
+  "synapses_per_neuron": 64,
+  "total_synapses": 4194304,
+  "global_ticks": 2000000,
+  "elite_age": 2000000,
+  "refugium_triggers": 0,
+  "gpus_used": 2
+}
