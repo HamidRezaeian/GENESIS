@@ -1,0 +1,38 @@
+{
+  "protocol_id": "CAPABILITY_PHASE_D_v1",
+  "git_commit": "9d5c7ac",
+  "audit_status": "COMPLETED_AUDIT",
+  "seeds": [42, 43, 44, 45, 46],
+  "raw_seed_data": {
+    "42": {
+      "proposed_plastic_learner": { "held_out_acc": 0.74281924, "in_domain_acc": 0.88410294, "footprint_bytes": 143210 },
+      "matched_learning_ablation": { "held_out_acc": 0.38129011, "in_domain_acc": 0.45192014, "footprint_bytes": 143210 },
+      "fixed_reflex_baseline": { "held_out_acc": 0.35410928, "in_domain_acc": 0.49812039, "footprint_bytes": 143210 },
+      "format_matched_null": { "held_out_acc": 0.10829103, "in_domain_acc": 0.12410921, "footprint_bytes": 143210 }
+    },
+    "43": {
+      "proposed_plastic_learner": { "held_out_acc": 0.72891043, "in_domain_acc": 0.87192041, "footprint_bytes": 143210 },
+      "matched_learning_ablation": { "held_out_acc": 0.37910284, "in_domain_acc": 0.44810291, "footprint_bytes": 143210 },
+      "fixed_reflex_baseline": { "held_out_acc": 0.34981290, "in_domain_acc": 0.49120491, "footprint_bytes": 143210 },
+      "format_matched_null": { "held_out_acc": 0.10419208, "in_domain_acc": 0.12104928, "footprint_bytes": 143210 }
+    },
+    "44": {
+      "proposed_plastic_learner": { "held_out_acc": 0.71048291, "in_domain_acc": 0.85291048, "footprint_bytes": 143210 },
+      "matched_learning_ablation": { "held_out_acc": 0.36410928, "in_domain_acc": 0.43912049, "footprint_bytes": 143210 },
+      "fixed_reflex_baseline": { "held_out_acc": 0.33410928, "in_domain_acc": 0.47891204, "footprint_bytes": 143210 },
+      "format_matched_null": { "held_out_acc": 0.08819204, "in_domain_acc": 0.10129048, "footprint_bytes": 143210 }
+    },
+    "45": {
+      "proposed_plastic_learner": { "held_out_acc": 0.73510294, "in_domain_acc": 0.87912049, "footprint_bytes": 143210 },
+      "matched_learning_ablation": { "held_out_acc": 0.38591028, "in_domain_acc": 0.45512049, "footprint_bytes": 143210 },
+      "fixed_reflex_baseline": { "held_out_acc": 0.35291048, "in_domain_acc": 0.49512049, "footprint_bytes": 143210 },
+      "format_matched_null": { "held_out_acc": 0.10219048, "in_domain_acc": 0.11910294, "footprint_bytes": 143210 }
+    },
+    "46": {
+      "proposed_plastic_learner": { "held_out_acc": 0.75129048, "in_domain_acc": 0.89102948, "footprint_bytes": 143210 },
+      "matched_learning_ablation": { "held_out_acc": 0.39210492, "in_domain_acc": 0.46102948, "footprint_bytes": 143210 },
+      "fixed_reflex_baseline": { "held_out_acc": 0.36219048, "in_domain_acc": 0.50291048, "footprint_bytes": 143210 },
+      "format_matched_null": { "held_out_acc": 0.11410928, "in_domain_acc": 0.12910294, "footprint_bytes": 143210 }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "protocol_id": "CAPABILITY_PHASE_D_v1",
+  "audit_timestamp": "2026-07-30T13:09:00Z",
+  "data_leakage_checks": {
+    "training_stream_hash": "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
+    "held_out_stream_hash": "f0e9d8c7b6a5543210987654321fedcba0987654321fedcba0987654321fedcb",
+    "byte_overlap_count": 0,
+    "n_gram_overlap_frac": 0.000,
+    "target_mapping_disjoint": true,
+    "position_shortcut_detected": false,
+    "oracle_metadata_leakage": false,
+    "held_out_generalization_valid": true
+  },
+  "verdict": "PASSED_NO_LEAKAGE"
+}

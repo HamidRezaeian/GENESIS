@@ -1,0 +1,21 @@
+{
+  "protocol_id": "CAPABILITY_PHASE_D_v1",
+  "arm1": "proposed_plastic_learner",
+  "arm2": "matched_learning_ablation",
+  "configuration_diff": {
+    "GENESIS_NOLEARN": {
+      "proposed_plastic_learner": "0",
+      "matched_learning_ablation": "1"
+    }
+  },
+  "invariants_verified": {
+    "RAM_SIZE": "1048576 (Identical)",
+    "MAX_ORGANISMS": "200 (Identical)",
+    "N_IO": "39 (Identical)",
+    "initial_seed_genome": "Identical",
+    "initial_energy": "250000.0 (Identical)",
+    "refuge_policy": "Phased Refugium (Identical)",
+    "ark_policy": "HGT Fossil Recombination (Identical)"
+  },
+  "matched_arm_valid": true
+}
