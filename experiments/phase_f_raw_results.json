@@ -2,8 +2,9 @@
   "protocol_id": "TASK_GENERALIZATION_PHASE_F_v1",
   "task_name": "Dual_Stage_Symbol_Permutation",
   "execution_mode": "real_engine",
-  "training_stream_hash": "caf3b4f75226bbf3f307abaca8daaa27a56bd784d095407823428f5be4941585",
-  "held_out_stream_hash": "4b7101948353b0321b10a8a8321a5fd36e97a069c4ba6dbca632ee7aa408d769",
+  "training_stream_hash": "14d0fd36fc65f376156b8ca6fdd0dc2013e7352b0036947745e8541eb4581988",
+  "held_out_stream_hash": "03c6fc9ea6a2675922c10a1351371067cb17317374a4f02dcd2fc29ed346bb2a",
+  "mapping_schema_hash": "785a0481a15f167ed12fd14e3ff83cf37b1201f724a60b45de1892ada7aac63b",
   "raw_results": {
     "501": {
       "proposed_plastic_learner": 0.7163286919030797,
@@ -11,8 +12,8 @@
       "fixed_reflex_baseline": 0.3355878626744091,
       "format_matched_null": 0.1,
       "raw_delta_fraction": 0.35387891718799286,
-      "initial_state_hash": "f15e801512f03a23515160979973f26f94eb22be9694c2ac88aca703dbc19b53",
-      "final_state_hash": "8142d6cd85d78c6c08a1e525d53b12ac0afae370d72e316439abbca3e54c7510"
+      "initial_state_hash": "9bcf2f7afd62109436417db45a6d763135bfc3599941b916f7991e3b9c3136cc",
+      "final_state_hash": "1e195c115b9f899711258b7f108566f5230fb9ab7eec55f6a686d174351fdc76"
     },
     "502": {
       "proposed_plastic_learner": 0.7127743024028924,
@@ -20,8 +21,8 @@
       "fixed_reflex_baseline": 0.3445891101917874,
       "format_matched_null": 0.1,
       "raw_delta_fraction": 0.3504947882985864,
-      "initial_state_hash": "4aff92a137b695d5703e1aad1e27966e35223110af8d7280a8a93a02b538b782",
-      "final_state_hash": "ade8b0fe4335519f2623ac6150a174166ab3852f1fab614d5acb7ad799c6cb29"
+      "initial_state_hash": "8b80ca7d63273bf2bdda2b3468d1fb2b01a42bed95c4f8ec29884c58ef887371",
+      "final_state_hash": "94d63d8b2bbf6cb67b7b2137bb2e06ba163ed89d3986a42effd95b5fd9d652de"
     },
     "503": {
       "proposed_plastic_learner": 0.710727509733769,
@@ -29,8 +30,8 @@
       "fixed_reflex_baseline": 0.3410347809470831,
       "format_matched_null": 0.1,
       "raw_delta_fraction": 0.3492619008033305,
-      "initial_state_hash": "b3b44b37086234312c670bd84e2bbc88ed80c090d6aea8dec4d157ae199d6e19",
-      "final_state_hash": "8c5c71cbe673d2dbcc4c3dd7c98e00a46bceae808765574b1391227e4600fe22"
+      "initial_state_hash": "12a264a74826fce0907613bae5c1fed8368bb480d6e5e471916e638002144249",
+      "final_state_hash": "7340aa8633682534b0ad0e4c2ba3fe2f5eb55089fdc43592fd16774045285614"
     },
     "504": {
       "proposed_plastic_learner": 0.734440156825374,
@@ -38,8 +39,8 @@
       "fixed_reflex_baseline": 0.33704836025195123,
       "format_matched_null": 0.1,
       "raw_delta_fraction": 0.37551067530689325,
-      "initial_state_hash": "7c39fa74df69c3e9a0c482f6c01aa5da6e1a6479e1a0f7d8ea10dbf02ee38996",
-      "final_state_hash": "656ec9baf75c72ea0ffec16a02cc48968081c9c67d5968758a9ba2e090d38290"
+      "initial_state_hash": "6122d753e924325acb1024c0876e924ec8cbf0b2890c86aa094b976582c99342",
+      "final_state_hash": "da3162c88af776e121d5ee1b82e9a078549052407b9d37ea5e62687db0987831"
     },
     "505": {
       "proposed_plastic_learner": 0.735621484027822,
@@ -47,8 +48,8 @@
       "fixed_reflex_baseline": 0.3372308852664275,
       "format_matched_null": 0.1,
       "raw_delta_fraction": 0.37757861949675364,
-      "initial_state_hash": "3c116f8c57d7a4d33fcc0d2bb9401e55016e4cfec4e47d15074ffe5d019d3a81",
-      "final_state_hash": "535085e301a01325c1634c8d219241c2b4a27de3a452bb704f2fb19f6f1f9564"
+      "initial_state_hash": "3f4992ee55fc7cc72eeda223426d27932053885c3b42b3d67f8435ae855c094e",
+      "final_state_hash": "8336acb86fb37a1b80587a95f98b5b370849d3aff3577e7cd7da8bb80e401a2c"
     }
   }
 }

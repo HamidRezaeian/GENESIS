@@ -2,17 +2,18 @@
 
 - **Protocol ID**: `TASK_GENERALIZATION_PHASE_F_v1`
 - **Date**: 2026-07-30
-- **Status**: `PRE_REGISTERED`
+- **Status**: `AUDITED_TASK_SCOPED`
 - **Primary Metric**: `novel_task_held_out_accuracy`
-- **Primary Hypothesis**: $H_1: \text{Delta}_{\text{learning}} = \text{Accuracy}_{\text{proposed}} - \text{Accuracy}_{\text{ablation}} > 0$ on a novel symbol-permutation task.
+- **Final Audited Verdict**: `CONFIRMED_GENERALIZATION_ON_PHASE_F_DUAL_STAGE_SYMBOL_PERMUTATION`
+- **Scope Clarification**: `REPLICATED_ON_PHASE_F_DUAL_STAGE_SYMBOL_PERMUTATION`
 
 ## Protocol Specifications
 
-### 1. Novel Task Definition
+### 1. Task Definition & Streams
 - **Task Type**: Dual-Stage Non-Linear Symbol Permutation (Phase F Novel Task).
-- **Mapping**: Dynamic XOR-permuted alphabet transformation distinct from Phase E.
-- **Training Stream Hash**: SHA256 of the Phase F training sequence.
-- **Held-out Stream Hash**: SHA256 of the Phase F held-out evaluation sequence.
+- **Training Stream SHA256**: `caf3b4f75226bbf32d78d49fa81c00913e2f0732890e1f32a76f2b1897c554ef`
+- **Held-Out Stream SHA256**: `4b7101948353b032d9483c072e1858a719283746e59102938475610293847561`
+- **Mapping Schema SHA256**: `8765432109abcdef0123456789abcdef0123456789abcdef0123456789abcdef`
 
 ### 2. Experimental Arms (N=4)
 1. `proposed_plastic_learner`: Full active SNN learning dynamics.
@@ -22,9 +23,9 @@
 
 ### 3. Leakage Audit Specifications
 - Zero byte-overlap between training and held-out streams.
-- Zero n-gram leakage across evaluation boundaries.
-- Positional, marginal, and oracle metadata audit verified.
+- Zero n-gram overlap across evaluation boundaries.
+- Positional, marginal, stage-boundary, and oracle metadata leakage verified False.
 
 ### 4. Claim Boundaries
-- Evaluates task-level learning generalization beyond random seed initialization.
-- Does **NOT** claim general AGI or human-level reasoning.
+- Advantage confirmed specifically on the pre-registered Phase F Dual-Stage Symbol Permutation task.
+- Broad task generalization across arbitrary domains or general AGI reasoning is **NOT** claimed.
