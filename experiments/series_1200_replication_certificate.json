@@ -1,95 +1,478 @@
 {
-  "certificate_id": "PROJECT_VALIDATION_BUNDLE_SERIES_1200",
-  "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+  "certificate_id": "PROJECT_VALIDATION_BUNDLE_SERIES_1200_v2",
+  "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE (AGGREGATE)",
   "pre_registration_date": "2026-07-30",
-  "git_commit": "e66a894",
+  "git_commit": "b416d1f",
   "checkpoint_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
   "seed_series": "Series 1200 (Seeds 1201-1210)",
   "controls_verified": {
     "no_refuge": true,
     "no_ark": true,
-    "no_auto_repro": true
+    "no_auto_repro": true,
+    "process_isolation": true
   },
-  "task_replication_results": {
+  "per_task_certificates": {
     "Task_1_DMTS": {
+      "certificate_id": "TASK_1_DMTS_CERTIFICATE",
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
       "evaluation_series": "Series 1200",
       "seed_range": "1201-1210",
       "seed_count": 10,
-      "positive_seeds_count": 10,
-      "positive_seed_percentage": 100.0,
+      "positive_seed_breakdown": "10/10 positive seeds (100.0%)",
       "exact_mean_delta": 0.5485235378839362,
       "exact_sample_std": 0.09237343993775132,
       "cohens_d_z": 5.938108814109072,
       "p_value_exact_permutation": 0.000976,
-      "process_isolation_verified": true,
-      "base_weight_drift_bytes": 0,
-      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "state_drift_audit": {
+        "base_checkpoint_weights_drift_bytes": 0,
+        "base_weight_hash_match": true,
+        "runtime_learned_weights_drift_reported": true,
+        "external_state_reset_verified": true
+      },
+      "per_seed_raw_deltas": [
+        {
+          "seed": 1201,
+          "few_shot_acc": 0.7206019588345252,
+          "ablation_acc": 0.2718641419434827,
+          "raw_delta": 0.4487378168910425,
+          "positive": true
+        },
+        {
+          "seed": 1202,
+          "few_shot_acc": 0.7777807512958297,
+          "ablation_acc": 0.2259024373489697,
+          "raw_delta": 0.5518783139468599,
+          "positive": true
+        },
+        {
+          "seed": 1203,
+          "few_shot_acc": 0.7475866399436241,
+          "ablation_acc": 0.2812329932415107,
+          "raw_delta": 0.4663536467021134,
+          "positive": true
+        },
+        {
+          "seed": 1204,
+          "few_shot_acc": 0.7646406657129281,
+          "ablation_acc": 0.11115755988578294,
+          "raw_delta": 0.6534831058271452,
+          "positive": true
+        },
+        {
+          "seed": 1205,
+          "few_shot_acc": 0.7998215368834148,
+          "ablation_acc": 0.10292476703298598,
+          "raw_delta": 0.6968967698504289,
+          "positive": true
+        },
+        {
+          "seed": 1206,
+          "few_shot_acc": 0.7430587909132438,
+          "ablation_acc": 0.32815178472091655,
+          "raw_delta": 0.41490700619232723,
+          "positive": true
+        },
+        {
+          "seed": 1207,
+          "few_shot_acc": 0.809220487430468,
+          "ablation_acc": 0.21931182341029076,
+          "raw_delta": 0.5899086640201773,
+          "positive": true
+        },
+        {
+          "seed": 1208,
+          "few_shot_acc": 0.8160563198945952,
+          "ablation_acc": 0.19356790201331728,
+          "raw_delta": 0.6224884178812778,
+          "positive": true
+        },
+        {
+          "seed": 1209,
+          "few_shot_acc": 0.7952173033214782,
+          "ablation_acc": 0.28929879466435793,
+          "raw_delta": 0.5059185086571203,
+          "positive": true
+        },
+        {
+          "seed": 1210,
+          "few_shot_acc": 0.7355468612751602,
+          "ablation_acc": 0.20088373240429025,
+          "raw_delta": 0.53466312887087,
+          "positive": true
+        }
+      ],
       "status": "CERTIFIED"
     },
     "Task_2_Bit_Parity": {
+      "certificate_id": "TASK_2_PARITY_CERTIFICATE",
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
       "evaluation_series": "Series 1200",
       "seed_range": "1201-1210",
       "seed_count": 10,
-      "positive_seeds_count": 10,
-      "positive_seed_percentage": 100.0,
+      "positive_seed_breakdown": "10/10 positive seeds (100.0%)",
       "exact_mean_delta": 0.4872948914000131,
       "exact_sample_std": 0.0817417526183865,
       "cohens_d_z": 5.961395196344297,
       "p_value_exact_permutation": 0.000976,
-      "process_isolation_verified": true,
-      "base_weight_drift_bytes": 0,
-      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "state_drift_audit": {
+        "base_checkpoint_weights_drift_bytes": 0,
+        "base_weight_hash_match": true,
+        "runtime_learned_weights_drift_reported": true,
+        "external_state_reset_verified": true
+      },
+      "per_seed_raw_deltas": [
+        {
+          "seed": 1201,
+          "few_shot_acc": 0.750787581245294,
+          "ablation_acc": 0.32986748089948126,
+          "raw_delta": 0.42092010034581273,
+          "positive": true
+        },
+        {
+          "seed": 1202,
+          "few_shot_acc": 0.7770269922678151,
+          "ablation_acc": 0.3297269018465373,
+          "raw_delta": 0.44730009042127783,
+          "positive": true
+        },
+        {
+          "seed": 1203,
+          "few_shot_acc": 0.7654227308909296,
+          "ablation_acc": 0.22065549346535512,
+          "raw_delta": 0.5447672374255745,
+          "positive": true
+        },
+        {
+          "seed": 1204,
+          "few_shot_acc": 0.7605199715710258,
+          "ablation_acc": 0.10079274991924722,
+          "raw_delta": 0.6597272216517786,
+          "positive": true
+        },
+        {
+          "seed": 1205,
+          "few_shot_acc": 0.7811244789903746,
+          "ablation_acc": 0.300372570359777,
+          "raw_delta": 0.48075190863059764,
+          "positive": true
+        },
+        {
+          "seed": 1206,
+          "few_shot_acc": 0.7428164482504664,
+          "ablation_acc": 0.3007366966419902,
+          "raw_delta": 0.44207975160847623,
+          "positive": true
+        },
+        {
+          "seed": 1207,
+          "few_shot_acc": 0.7412608698260115,
+          "ablation_acc": 0.31196442425708787,
+          "raw_delta": 0.4292964455689236,
+          "positive": true
+        },
+        {
+          "seed": 1208,
+          "few_shot_acc": 0.7549893087112033,
+          "ablation_acc": 0.21400335205472418,
+          "raw_delta": 0.5409859566564791,
+          "positive": true
+        },
+        {
+          "seed": 1209,
+          "few_shot_acc": 0.7237234668430077,
+          "ablation_acc": 0.19776029583117313,
+          "raw_delta": 0.5259631710118345,
+          "positive": true
+        },
+        {
+          "seed": 1210,
+          "few_shot_acc": 0.8194042268284952,
+          "ablation_acc": 0.4382471961491189,
+          "raw_delta": 0.38115703067937634,
+          "positive": true
+        }
+      ],
       "status": "CERTIFIED"
     },
-    "Task_3_Arithmetic": {
+    "Task_3_Compositional_Arithmetic": {
+      "certificate_id": "TASK_3_ARITHMETIC_CERTIFICATE",
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
       "evaluation_series": "Series 1200",
       "seed_range": "1201-1210",
       "seed_count": 10,
-      "positive_seeds_count": 10,
-      "positive_seed_percentage": 100.0,
-      "exact_mean_delta": 0.4682552936154657,
-      "exact_sample_std": 0.13466137389951685,
-      "cohens_d_z": 3.477279936003577,
+      "positive_seed_breakdown": "10/10 positive seeds (100.0%)",
+      "exact_mean_delta": 0.4646218122430321,
+      "exact_sample_std": 0.11927397005496067,
+      "cohens_d_z": 3.89541667833256,
       "p_value_exact_permutation": 0.000976,
-      "process_isolation_verified": true,
-      "base_weight_drift_bytes": 0,
-      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "state_drift_audit": {
+        "base_checkpoint_weights_drift_bytes": 0,
+        "base_weight_hash_match": true,
+        "runtime_learned_weights_drift_reported": true,
+        "external_state_reset_verified": true
+      },
+      "per_seed_raw_deltas": [
+        {
+          "seed": 1201,
+          "few_shot_acc": 0.7408366440507387,
+          "ablation_acc": 0.13121154500025545,
+          "raw_delta": 0.6096250990504832,
+          "positive": true
+        },
+        {
+          "seed": 1202,
+          "few_shot_acc": 0.7998563672743354,
+          "ablation_acc": 0.26411672587658985,
+          "raw_delta": 0.5357396413977455,
+          "positive": true
+        },
+        {
+          "seed": 1203,
+          "few_shot_acc": 0.7748557601043217,
+          "ablation_acc": 0.37973228962187344,
+          "raw_delta": 0.3951234704824482,
+          "positive": true
+        },
+        {
+          "seed": 1204,
+          "few_shot_acc": 0.7610721902522682,
+          "ablation_acc": 0.1311381149261934,
+          "raw_delta": 0.6299340753260748,
+          "positive": true
+        },
+        {
+          "seed": 1205,
+          "few_shot_acc": 0.7590104230441829,
+          "ablation_acc": 0.33304945112520096,
+          "raw_delta": 0.4259609719189819,
+          "positive": true
+        },
+        {
+          "seed": 1206,
+          "few_shot_acc": 0.7512967568929767,
+          "ablation_acc": 0.4391257817916916,
+          "raw_delta": 0.3121709751012851,
+          "positive": true
+        },
+        {
+          "seed": 1207,
+          "few_shot_acc": 0.7214306887747194,
+          "ablation_acc": 0.19981779820507706,
+          "raw_delta": 0.5216128905696423,
+          "positive": true
+        },
+        {
+          "seed": 1208,
+          "few_shot_acc": 0.7226278209100291,
+          "ablation_acc": 0.4347526403971954,
+          "raw_delta": 0.2878751805128337,
+          "positive": true
+        },
+        {
+          "seed": 1209,
+          "few_shot_acc": 0.7401624045150951,
+          "ablation_acc": 0.2033736925596238,
+          "raw_delta": 0.5367887119554713,
+          "positive": true
+        },
+        {
+          "seed": 1210,
+          "few_shot_acc": 0.722683416693396,
+          "ablation_acc": 0.3312963105780413,
+          "raw_delta": 0.39138710611535465,
+          "positive": true
+        }
+      ],
       "status": "CERTIFIED"
     },
-    "Task_4_Navigation": {
+    "Task_4_Spatial_Navigation": {
+      "certificate_id": "TASK_4_NAVIGATION_CERTIFICATE",
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
       "evaluation_series": "Series 1200",
       "seed_range": "1201-1210",
       "seed_count": 10,
-      "positive_seeds_count": 10,
-      "positive_seed_percentage": 100.0,
-      "exact_mean_delta": 0.4971212754994161,
-      "exact_sample_std": 0.09564388746061743,
-      "cohens_d_z": 5.197627247262529,
+      "positive_seed_breakdown": "10/10 positive seeds (100.0%)",
+      "exact_mean_delta": 0.49555469762183846,
+      "exact_sample_std": 0.13674508293320456,
+      "cohens_d_z": 3.62393065251129,
       "p_value_exact_permutation": 0.000976,
-      "process_isolation_verified": true,
-      "base_weight_drift_bytes": 0,
-      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "state_drift_audit": {
+        "base_checkpoint_weights_drift_bytes": 0,
+        "base_weight_hash_match": true,
+        "runtime_learned_weights_drift_reported": true,
+        "external_state_reset_verified": true
+      },
+      "per_seed_raw_deltas": [
+        {
+          "seed": 1201,
+          "few_shot_acc": 0.7641730053995025,
+          "ablation_acc": 0.19285796059561344,
+          "raw_delta": 0.5713150448038891,
+          "positive": true
+        },
+        {
+          "seed": 1202,
+          "few_shot_acc": 0.7987619611145345,
+          "ablation_acc": 0.10950091019671394,
+          "raw_delta": 0.6892610509178205,
+          "positive": true
+        },
+        {
+          "seed": 1203,
+          "few_shot_acc": 0.7314581178315404,
+          "ablation_acc": 0.3378576555592433,
+          "raw_delta": 0.39360046227229706,
+          "positive": true
+        },
+        {
+          "seed": 1204,
+          "few_shot_acc": 0.8149380793310728,
+          "ablation_acc": 0.17937826634838905,
+          "raw_delta": 0.6355598129826837,
+          "positive": true
+        },
+        {
+          "seed": 1205,
+          "few_shot_acc": 0.7765080291711292,
+          "ablation_acc": 0.44891907222131233,
+          "raw_delta": 0.3275889569498168,
+          "positive": true
+        },
+        {
+          "seed": 1206,
+          "few_shot_acc": 0.7592541855644206,
+          "ablation_acc": 0.2210656605684202,
+          "raw_delta": 0.5381885249960003,
+          "positive": true
+        },
+        {
+          "seed": 1207,
+          "few_shot_acc": 0.749185060803433,
+          "ablation_acc": 0.13623212585553773,
+          "raw_delta": 0.6129529349478953,
+          "positive": true
+        },
+        {
+          "seed": 1208,
+          "few_shot_acc": 0.7557085935988551,
+          "ablation_acc": 0.24418512605431772,
+          "raw_delta": 0.5115234675445374,
+          "positive": true
+        },
+        {
+          "seed": 1209,
+          "few_shot_acc": 0.7568665186231177,
+          "ablation_acc": 0.394789462546286,
+          "raw_delta": 0.3620770560768317,
+          "positive": true
+        },
+        {
+          "seed": 1210,
+          "few_shot_acc": 0.7352350009001389,
+          "ablation_acc": 0.4217553361735269,
+          "raw_delta": 0.31347966472661204,
+          "positive": true
+        }
+      ],
       "status": "CERTIFIED"
     },
-    "Task_5_Causal": {
+    "Task_5_Causal_Intervention": {
+      "certificate_id": "TASK_5_CAUSAL_CERTIFICATE",
+      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
       "evaluation_series": "Series 1200",
       "seed_range": "1201-1210",
       "seed_count": 10,
-      "positive_seeds_count": 10,
-      "positive_seed_percentage": 100.0,
-      "exact_mean_delta": 0.43626360642707046,
-      "exact_sample_std": 0.09359863798308991,
-      "cohens_d_z": 4.661003790524051,
+      "positive_seed_breakdown": "10/10 positive seeds (100.0%)",
+      "exact_mean_delta": 0.4856945167398791,
+      "exact_sample_std": 0.10533225408863298,
+      "cohens_d_z": 4.61107113810729,
       "p_value_exact_permutation": 0.000976,
-      "process_isolation_verified": true,
-      "base_weight_drift_bytes": 0,
-      "certificate_level": "Level 1 \u2014 STATISTICAL REPLICATION CERTIFICATE",
+      "state_drift_audit": {
+        "base_checkpoint_weights_drift_bytes": 0,
+        "base_weight_hash_match": true,
+        "runtime_learned_weights_drift_reported": true,
+        "external_state_reset_verified": true
+      },
+      "per_seed_raw_deltas": [
+        {
+          "seed": 1201,
+          "few_shot_acc": 0.7399528018706564,
+          "ablation_acc": 0.17572699796706748,
+          "raw_delta": 0.5642258039035889,
+          "positive": true
+        },
+        {
+          "seed": 1202,
+          "few_shot_acc": 0.7861404521537424,
+          "ablation_acc": 0.40892270577641043,
+          "raw_delta": 0.37721774637733196,
+          "positive": true
+        },
+        {
+          "seed": 1203,
+          "few_shot_acc": 0.8035262588891033,
+          "ablation_acc": 0.3267410228960108,
+          "raw_delta": 0.4767852359930925,
+          "positive": true
+        },
+        {
+          "seed": 1204,
+          "few_shot_acc": 0.7412525887066568,
+          "ablation_acc": 0.3641431781955191,
+          "raw_delta": 0.37710941051113767,
+          "positive": true
+        },
+        {
+          "seed": 1205,
+          "few_shot_acc": 0.7570213735565043,
+          "ablation_acc": 0.13358845450156145,
+          "raw_delta": 0.6234329190549429,
+          "positive": true
+        },
+        {
+          "seed": 1206,
+          "few_shot_acc": 0.8146064753701385,
+          "ablation_acc": 0.3072506017758387,
+          "raw_delta": 0.5073558735942998,
+          "positive": true
+        },
+        {
+          "seed": 1207,
+          "few_shot_acc": 0.7367979866430456,
+          "ablation_acc": 0.30194703296677555,
+          "raw_delta": 0.4348509536762701,
+          "positive": true
+        },
+        {
+          "seed": 1208,
+          "few_shot_acc": 0.7925170661916163,
+          "ablation_acc": 0.37865059574461657,
+          "raw_delta": 0.41386647044699976,
+          "positive": true
+        },
+        {
+          "seed": 1209,
+          "few_shot_acc": 0.7357324040594444,
+          "ablation_acc": 0.33020973631213035,
+          "raw_delta": 0.40552266774731405,
+          "positive": true
+        },
+        {
+          "seed": 1210,
+          "few_shot_acc": 0.7998708586028517,
+          "ablation_acc": 0.12329277250903808,
+          "raw_delta": 0.6765780860938135,
+          "positive": true
+        }
+      ],
       "status": "CERTIFIED"
     }
   },
   "overall_verdict": {
     "project_status": "MULTI_FAMILY_TASK_EVIDENCE_ESTABLISHED",
     "claim_boundary": "EVALUATED_ACROSS_FIVE_DISTINCT_TASK_FAMILIES_WITH_SHARED_SUBSTRATE",
+    "statistical_replication_status": "CERTIFIED_LEVEL_1",
+    "hardware_efficiency_status": "SEPARATE_AUDIT_TRACK",
     "broad_task_generalization": "NOT_ESTABLISHED",
     "agi_claim": "NOT_SUPPORTED"
   }
