@@ -546,6 +546,14 @@ g_auto_inject = (GENESIS_ECONOMY == "books")
 # the GENESIS_CURRICULUM env default.
 g_curriculum = CURRICULUM
 
+async def broadcast_msg(msg):
+    if WS_CLIENTS and websockets is not None:
+        for ws_client in list(WS_CLIENTS):
+            try:
+                await ws_client.send(msg)
+            except Exception:
+                pass
+
 async def stream_telemetry(websocket):
     """Guaranteed 5 FPS active WebSocket telemetry push to UI."""
     while True:
