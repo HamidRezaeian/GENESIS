@@ -101,9 +101,14 @@ function connect() {
     };
     
     ws.onmessage = (e) => {
-        const d = JSON.parse(e.data);
-        if (d.type === 'state') onState(d);
-        else if (d.type === 'status') onBrain(d);
+        try {
+            const d = JSON.parse(e.data);
+            console.log('[WS Telemetry Received]', d.type, 'tick:', d.tick, 'sim_ready:', d.sim_ready);
+            if (d.type === 'state') onState(d);
+            else if (d.type === 'status') onBrain(d);
+        } catch (err) {
+            console.error('[WS Parse Error]', err);
+        }
     };
 }
 connect();
@@ -114,6 +119,7 @@ let lastExtinctions = -1;
 let currentServerState = null;
 
 function onState(s) {
+    console.log('[onState Render]', 'tick:', s.tick, 'pop:', s.pop, 'status:', s.status);
     currentServerState = s;
     const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     
