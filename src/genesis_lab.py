@@ -413,6 +413,10 @@ BIRTH_REFUGE     = np.uint8(2)  # Host intervention to maintain population floor
 BIRTH_ARK        = np.uint8(3)  # Reseed from Fossil / Ark after extinction or era start
 BIRTH_AUTO_REPRO = np.uint8(4)  # Automatic energy threshold reproduction (GENESIS_AUTO_REPRO=1)
 
+AUTO_REPRO = os.environ.get("GENESIS_AUTO_REPRO", "1") == "1"
+AUTO_REPRO_THRESH = float(os.environ.get("GENESIS_AUTO_REPRO_THRESH", "200000.0"))
+
+
 # Per-slot organism birth provenance & lineage tracking
 g_birth_source     = np.zeros(MAX_ORGANISMS, dtype=np.uint8)   # BIRTH_NATURAL / REFUGE / ARK / AUTO_REPRO
 g_parent_id        = np.full(MAX_ORGANISMS, -1, dtype=np.int64) # Global unique ID of parent organism (-1 for founders)
