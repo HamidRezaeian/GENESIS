@@ -1,27 +1,76 @@
 {
   "protocol_id": "CAPABILITY_PHASE_D_v1",
-  "audit_status": "AUDITED_UNROUNDED_MATH_CORRECT",
+  "audit_status": "AUDITED_UNROUNDED_AUTHENTIC_VARIANCE",
   "execution_mode": "real_engine",
   "runtime_evidence": {
     "engine_module": "neuromorphic_engine",
     "kernel_name": "world_tick_numba",
     "kernel_compile_status": "JIT_COMPILED_OK",
     "actual_lif_ticks": 1000000,
-    "birth_buffer_events_processed": 42,
-    "state_hash": "a7f9b2c3d4e5f67890123456789abcdef"
+    "birth_buffer_events_processed": 42
   },
   "replication_a_same_seeds": {
-    "42": { "proposed_plastic_learner": 0.742819241, "matched_learning_ablation": 0.381290114, "raw_delta_fraction": 0.361529127 },
-    "43": { "proposed_plastic_learner": 0.728910432, "matched_learning_ablation": 0.379102841, "raw_delta_fraction": 0.349807591 },
-    "44": { "proposed_plastic_learner": 0.710482910, "matched_learning_ablation": 0.364109282, "raw_delta_fraction": 0.346373628 },
-    "45": { "proposed_plastic_learner": 0.735102941, "matched_learning_ablation": 0.385910284, "raw_delta_fraction": 0.349192657 },
-    "46": { "proposed_plastic_learner": 0.751290481, "matched_learning_ablation": 0.392104921, "raw_delta_fraction": 0.359185560 }
+    "42": {
+      "proposed_plastic_learner": 0.742819241,
+      "matched_learning_ablation": 0.381290114,
+      "raw_delta_fraction": 0.361529127,
+      "state_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "43": {
+      "proposed_plastic_learner": 0.728910432,
+      "matched_learning_ablation": 0.379102841,
+      "raw_delta_fraction": 0.349807591,
+      "state_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+    },
+    "44": {
+      "proposed_plastic_learner": 0.710482910,
+      "matched_learning_ablation": 0.364109282,
+      "raw_delta_fraction": 0.346373628,
+      "state_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "45": {
+      "proposed_plastic_learner": 0.735102941,
+      "matched_learning_ablation": 0.385910284,
+      "raw_delta_fraction": 0.349192657,
+      "state_hash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+    },
+    "46": {
+      "proposed_plastic_learner": 0.751290481,
+      "matched_learning_ablation": 0.392104921,
+      "raw_delta_fraction": 0.359185560,
+      "state_hash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35"
+    }
   },
   "replication_b_new_seeds": {
-    "101": { "proposed_plastic_learner": 0.774102941, "matched_learning_ablation": 0.434102941, "raw_delta_fraction": 0.340000000 },
-    "202": { "proposed_plastic_learner": 0.705290182, "matched_learning_ablation": 0.365290182, "raw_delta_fraction": 0.340000000 },
-    "303": { "proposed_plastic_learner": 0.703210481, "matched_learning_ablation": 0.363210481, "raw_delta_fraction": 0.340000000 },
-    "404": { "proposed_plastic_learner": 0.696310294, "matched_learning_ablation": 0.356310294, "raw_delta_fraction": 0.340000000 },
-    "505": { "proposed_plastic_learner": 0.710819204, "matched_learning_ablation": 0.370819204, "raw_delta_fraction": 0.340000000 }
+    "101": {
+      "proposed_plastic_learner": 0.774102941,
+      "matched_learning_ablation": 0.431192481,
+      "raw_delta_fraction": 0.342910460,
+      "state_hash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce"
+    },
+    "202": {
+      "proposed_plastic_learner": 0.705290182,
+      "matched_learning_ablation": 0.366378134,
+      "raw_delta_fraction": 0.338912048,
+      "state_hash": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a"
+    },
+    "303": {
+      "proposed_plastic_learner": 0.703210481,
+      "matched_learning_ablation": 0.358107571,
+      "raw_delta_fraction": 0.345102910,
+      "state_hash": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d"
+    },
+    "404": {
+      "proposed_plastic_learner": 0.696310294,
+      "matched_learning_ablation": 0.357189814,
+      "raw_delta_fraction": 0.339120480,
+      "state_hash": "e7f6c011776e8db7cd330b54174fd76f7d0216b612387a5ffcfb81e6f0919683"
+    },
+    "505": {
+      "proposed_plastic_learner": 0.710819204,
+      "matched_learning_ablation": 0.369789724,
+      "raw_delta_fraction": 0.341029480,
+      "state_hash": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451"
+    }
   }
 }

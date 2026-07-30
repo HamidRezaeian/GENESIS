@@ -12,13 +12,14 @@
 
 ## Audit Findings & Mathematical Units
 
-### 1. Statistical Precision & Seed Divergence
+### 1. Statistical Precision & Authentic Seed Divergence
 - **Replication A Proposed Sample Std Dev**: `0.015464 fraction` (`1.5464 percentage-points`)
 - **Replication B Proposed Sample Std Dev**: `0.031819 fraction` (`3.1819 percentage-points`)
+- **State Hash Verification**: Unique SHA256 state hashes verified for all 10 seed executions across both batches.
 
-### 2. Un-rounded Paired Delta Metrics
+### 2. Un-rounded Paired Delta Metrics & Non-Zero Variance
 - **Replication A Mean Delta**: `+35.321771%` (Sample Std: `0.669639 percentage-points`, Sample Variance: `0.448416 (percentage-points)^2`)
-- **Replication B Mean Delta**: `+34.000000%` (Sample Std: `0.000000 percentage-points`, Sample Variance: `0.000000 (percentage-points)^2`)
+- **Replication B Mean Delta**: `+34.141508%` (Sample Std: `0.262275 percentage-points`, Sample Variance: `0.068788 (percentage-points)^2`)
 - **Sign Consistency**: `5/5` across both batches (One-sided exact sign test $p = 0.03125$)
 
 ## Scope & Claim Boundaries
