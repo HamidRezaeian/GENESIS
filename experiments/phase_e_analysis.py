@@ -67,7 +67,7 @@ def main():
     print(f"  95% Bootstrap CI         : [{ci_low*100:+.4f}%, {ci_high*100:+.4f}%]")
 
     if ci_low > 0.0 and positive_seeds == len(seeds):
-        verdict = "CONFIRMED_ADVANTAGE"
+        verdict = "CONFIRMED_ADVANTAGE_ON_PHASE_E_HELD_OUT_TASK"
     else:
         verdict = "PROMISING_PENDING_REPLICATION"
 
