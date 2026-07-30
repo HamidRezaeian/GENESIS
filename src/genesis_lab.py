@@ -546,6 +546,54 @@ g_auto_inject = (GENESIS_ECONOMY == "books")
 # the GENESIS_CURRICULUM env default.
 g_curriculum = CURRICULUM
 
+g_telemetry_lock = threading.Lock()
+g_latest_snapshot = None
+
+def publish_telemetry_snapshot(n_alive, universe_n, h_act):
+    """Thread-safe non-blocking snapshot publisher called from sim_loop."""
+    global g_latest_snapshot
+    try:
+        ram_b64 = base64.b64encode(g_ram).decode("ascii")
+        org_positions = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i]]
+        screaming_orgs = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i] and g_vocal_cord[i] > 0]
+        
+        snap = {
+            "type": "state",
+            "schema_version": 1,
+            "status": "running",
+            "sim_ready": True,
+            "tick": int(global_time),
+            "pop": int(n_alive),
+            "max_pop": int(MAX_ORGANISMS),
+            "extinctions": int(num_extinctions),
+            "elite_age": int(max_ark_age if max_ark_age > 0 else (g_age[0] if n_alive > 0 else 0)),
+            "elite_iq": round(float(78.65), 2),
+            "elite_footprint": 0,
+            "agi_progress": 0,
+            "avg_age": int(global_avg_age),
+            "num_refuge": int(num_refuge),
+            "ram_b64": ram_b64,
+            "org_positions": org_positions,
+            "screaming_orgs": screaming_orgs,
+            "elite_pos": int(g_b_pos[0]) if n_alive > 0 else -1,
+            "metrics": {
+                "solve_pct": 78.65,
+                "cum_reads": int(g_cumulative_reads),
+                "cum_miss": int(g_cumulative_miss),
+                "cum_pred": int(g_cumulative_pred),
+                "cum_peer": int(g_cumulative_peer),
+                "hact": float(h_act),
+                "sensors": 32,
+                "actuators": 8,
+                "scratch": 0
+            },
+            "universe_n": int(universe_n)
+        }
+        with g_telemetry_lock:
+            g_latest_snapshot = snap
+    except Exception:
+        pass
+
 async def broadcast_msg(msg):
     if WS_CLIENTS and websockets is not None:
         for ws_client in list(WS_CLIENTS):
@@ -555,45 +603,28 @@ async def broadcast_msg(msg):
                 pass
 
 async def stream_telemetry(websocket):
-    """Guaranteed 5 FPS active WebSocket telemetry push to UI."""
+    """Asyncio WebSocket telemetry publisher pulling from thread-safe mailbox (Arena §3 Pattern)."""
+    init_snap = json.dumps({
+        "type": "state",
+        "schema_version": 1,
+        "status": "initializing",
+        "sim_ready": False,
+        "tick": 0,
+        "pop": 0,
+        "max_pop": MAX_ORGANISMS
+    })
+    try:
+        await websocket.send(init_snap)
+    except Exception:
+        return
+
     while True:
         try:
-            ram_b64 = base64.b64encode(g_ram).decode("ascii")
-            n_alive = int(np.count_nonzero(g_alive))
-            org_positions = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i]]
-            screaming_orgs = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i] and g_vocal_cord[i] > 0]
-            
-            payload = json.dumps({
-                "type": "state",
-                "tick": int(global_time),
-                "pop": n_alive,
-                "max_pop": int(MAX_ORGANISMS),
-                "extinctions": int(num_extinctions),
-                "elite_age": int(max_ark_age if max_ark_age > 0 else (g_age[0] if n_alive > 0 else 0)),
-                "elite_iq": round(float(78.65), 2),
-                "elite_footprint": 0,
-                "agi_progress": 0,
-                "avg_age": int(global_avg_age),
-                "num_refuge": int(num_refuge),
-                "ram_b64": ram_b64,
-                "org_positions": org_positions,
-                "screaming_orgs": screaming_orgs,
-                "elite_pos": int(g_b_pos[0]) if n_alive > 0 else -1,
-                "metrics": {
-                    "solve_pct": 78.65,
-                    "cum_reads": int(g_cumulative_reads),
-                    "cum_miss": int(g_cumulative_miss),
-                    "cum_pred": int(g_cumulative_pred),
-                    "cum_peer": int(g_cumulative_peer),
-                    "hact": 0.12,
-                    "sensors": 32,
-                    "actuators": 8,
-                    "scratch": 0
-                },
-                "universe_n": int(np.sum(g_org_n_count) if 'g_org_n_count' in globals() else 65536)
-            })
-            await websocket.send(payload)
-            await asyncio.sleep(0.2)
+            with g_telemetry_lock:
+                snap = g_latest_snapshot
+            if snap is not None:
+                await websocket.send(json.dumps(snap))
+            await asyncio.sleep(0.1)  # 10 Hz UI refresh rate
         except Exception:
             break
 
@@ -2216,45 +2247,8 @@ def sim_loop():
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
                   f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}{evosense_line}")
             
-            # Broadcast live state to WebSocket clients
-            if WS_CLIENTS and ws_loop is not None:
-                try:
-                    ram_b64 = base64.b64encode(g_ram).decode("ascii")
-                    org_positions = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i]]
-                    screaming_orgs = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i] and g_vocal_cord[i] > 0]
-                    
-                    state_payload = json.dumps({
-                        "type": "state",
-                        "tick": int(global_time),
-                        "pop": int(n_alive),
-                        "max_pop": int(MAX_ORGANISMS),
-                        "extinctions": int(num_extinctions),
-                        "elite_age": int(max_ark_age if max_ark_age > 0 else (g_age[0] if n_alive > 0 else 0)),
-                        "elite_iq": round(float(78.65), 2),
-                        "elite_footprint": 0,
-                        "agi_progress": 0,
-                        "avg_age": int(global_avg_age),
-                        "num_refuge": int(num_refuge),
-                        "ram_b64": ram_b64,
-                        "org_positions": org_positions,
-                        "screaming_orgs": screaming_orgs,
-                        "elite_pos": int(g_b_pos[0]) if n_alive > 0 else -1,
-                        "metrics": {
-                            "solve_pct": 78.65,
-                            "cum_reads": int(g_cumulative_reads),
-                            "cum_miss": int(g_cumulative_miss),
-                            "cum_pred": int(g_cumulative_pred),
-                            "cum_peer": int(g_cumulative_peer),
-                            "hact": float(h_act),
-                            "sensors": 32,
-                            "actuators": 8,
-                            "scratch": 0
-                        },
-                        "universe_n": int(universe_n)
-                    })
-                    asyncio.run_coroutine_threadsafe(broadcast_msg(state_payload), ws_loop)
-                except Exception as e:
-                    pass
+            # Non-blocking Mailbox Snapshot Publish for WebSocket clients (Arena Architecture)
+            publish_telemetry_snapshot(n_alive, universe_n, h_act)
 
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk

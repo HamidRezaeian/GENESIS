@@ -117,7 +117,12 @@ function onState(s) {
     currentServerState = s;
     const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     
-    setTxt('val-tick', s.tick ? s.tick.toLocaleString() : '0');
+    if (s.status === 'initializing') {
+        setTxt('val-tick', 'INIT...');
+        return;
+    }
+
+    setTxt('val-tick', s.tick !== undefined ? s.tick.toLocaleString() : '0');
     if (document.getElementById('val-pop')) {
         document.getElementById('val-pop').innerHTML = (s.pop || 0).toLocaleString() + '<span class="dim">/' + (s.max_pop || 600) + '</span>';
     }
