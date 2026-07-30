@@ -707,8 +707,8 @@ async def ws_main():
     for attempt in range(5):
         free_port(8085)
         try:
-            print(f"WebSocket Server running on ws://0.0.0.0:8085 (Attempt {attempt+1})")
-            async with websockets.serve(ws_handler, "0.0.0.0", 8085):
+            print(f"WebSocket Server running on ws://127.0.0.1:8085 (Attempt {attempt+1})")
+            async with websockets.serve(ws_handler, "127.0.0.1", 8085):
                 await asyncio.Future()  # run forever
             break
         except OSError as e:

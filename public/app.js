@@ -83,7 +83,8 @@ canvas.addEventListener('mouseleave', () => {
 // ── WebSocket Connection ─────────────────────────────────
 let ws = null;
 function connect() {
-    const host = window.location.hostname || '127.0.0.1';
+    const rawHost = window.location.hostname || '127.0.0.1';
+    const host = (rawHost === 'localhost') ? '127.0.0.1' : rawHost;
     ws = new WebSocket('ws://' + host + ':8085');
     
     ws.onopen = () => {
