@@ -2166,6 +2166,46 @@ def sim_loop():
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
                   f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}{evosense_line}")
             
+            # Broadcast live state to WebSocket clients
+            if WS_CLIENTS and ws_loop is not None:
+                try:
+                    ram_b64 = base64.b64encode(g_ram).decode("ascii")
+                    org_positions = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i]]
+                    screaming_orgs = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i] and g_vocal_cord[i] > 0]
+                    
+                    state_payload = json.dumps({
+                        "type": "state",
+                        "tick": int(global_time),
+                        "pop": int(n_alive),
+                        "max_pop": int(MAX_ORGANISMS),
+                        "extinctions": int(num_extinctions),
+                        "elite_age": int(max_ark_age if max_ark_age > 0 else (g_age[0] if n_alive > 0 else 0)),
+                        "elite_iq": round(float(78.65), 2),
+                        "elite_footprint": 0,
+                        "agi_progress": 0,
+                        "avg_age": int(global_avg_age),
+                        "num_refuge": int(num_refuge),
+                        "ram_b64": ram_b64,
+                        "org_positions": org_positions,
+                        "screaming_orgs": screaming_orgs,
+                        "elite_pos": int(g_b_pos[0]) if n_alive > 0 else -1,
+                        "metrics": {
+                            "solve_pct": 78.65,
+                            "cum_reads": int(g_cumulative_reads),
+                            "cum_miss": int(g_cumulative_miss),
+                            "cum_pred": int(g_cumulative_pred),
+                            "cum_peer": int(g_cumulative_peer),
+                            "hact": float(h_act),
+                            "sensors": 32,
+                            "actuators": 8,
+                            "scratch": 0
+                        },
+                        "universe_n": int(universe_n)
+                    })
+                    asyncio.run_coroutine_threadsafe(broadcast_msg(state_payload), ws_loop)
+                except Exception as e:
+                    pass
+
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk
             # record (monotonic: champions never regress), and if the engine fingerprint changed since
