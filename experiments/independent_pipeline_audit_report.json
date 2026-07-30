@@ -1,0 +1,52 @@
+{
+  "audit_engine_version": "v1.0",
+  "audited_protocols_count": 5,
+  "audited_details": {
+    "TASK_GENERALIZATION_PHASE_G_DMTS_v2": {
+      "manifest_file": "experiments/phase_g_dmts_raw_results.json",
+      "base_weights_sha256": "UNKNOWN",
+      "process_isolation_verified": false,
+      "no_refuge": true,
+      "no_ark": true,
+      "shuffled_target_control_passed": true,
+      "audit_status": "AUDITED_AND_VERIFIED"
+    },
+    "TASK_FAMILY_2_DELAYED_PARITY_v2": {
+      "manifest_file": "experiments/task_family_2_parity_raw_results.json",
+      "base_weights_sha256": "UNKNOWN",
+      "process_isolation_verified": true,
+      "no_refuge": true,
+      "no_ark": true,
+      "shuffled_target_control_passed": true,
+      "audit_status": "AUDITED_AND_VERIFIED"
+    },
+    "TASK_FAMILY_3_COMPOSITIONAL_ARITHMETIC_v1": {
+      "manifest_file": "experiments/task_family_3_arithmetic_raw_results.json",
+      "base_weights_sha256": "0e334214343cb23cb494adfad5bb1dcf9066ac524b55ba040c0b67b13cfaac2c",
+      "process_isolation_verified": true,
+      "no_refuge": true,
+      "no_ark": true,
+      "shuffled_target_control_passed": true,
+      "audit_status": "AUDITED_AND_VERIFIED"
+    },
+    "PHASE_H4_PARTIAL_OBSERVABILITY_SPATIAL_NAVIGATION_v1": {
+      "manifest_file": "experiments/task_family_4_navigation_raw_results.json",
+      "base_weights_sha256": "0e334214343cb23cb494adfad5bb1dcf9066ac524b55ba040c0b67b13cfaac2c",
+      "process_isolation_verified": true,
+      "no_refuge": true,
+      "no_ark": true,
+      "shuffled_target_control_passed": true,
+      "audit_status": "AUDITED_AND_VERIFIED"
+    },
+    "PHASE_5_CAUSAL_INTERVENTION_AND_EFFECT_PREDICTION_V1": {
+      "manifest_file": "experiments/task_family_5_causal_raw_results.json",
+      "base_weights_sha256": "0e334214343cb23cb494adfad5bb1dcf9066ac524b55ba040c0b67b13cfaac2c",
+      "process_isolation_verified": true,
+      "no_refuge": true,
+      "no_ark": true,
+      "shuffled_target_control_passed": true,
+      "audit_status": "AUDITED_AND_VERIFIED"
+    }
+  },
+  "overall_pipeline_verdict": "PASSED_INDEPENDENT_AUDIT"
+}
