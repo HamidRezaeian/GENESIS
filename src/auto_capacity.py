@@ -33,15 +33,15 @@ from the measured per-element pool sizes, not picked. N_IO is mirrored from the
 engine (kept in sync; documented below).
 """
 import os
+import psutil
+from neuromorphic_engine import N_IO
 
 # ── Hardware-derived per-organism cost (measured from genesis_lab pools) ──
-# These per-element sizes are the measured nbytes/element of the global pools:
 _NEURON_BYTES = 37.0     # 9 × float32/int32 (4 B) + 1 × bool map (1 B), per neuron
 _SYNAPSE_BYTES = 21.0    # measured per synapse (src/dst/weight/elig + map)
 _DNA_BYTES = 2.0         # uint8 genome + bool genome-map, per dna byte
 _ORG_INDEX_BYTES = 3782.0  # 35 organism-index arrays (MAX_ORGANISMS-sized), per org
-_N_IO = 39               # MUST match neuromorphic_engine.N_IO (kept in sync)
-_NEURONS_PER_ORG = _N_IO + 800          # mirrors engine UNIVERSE_MAX_NEURONS / M
+_NEURONS_PER_ORG = N_IO + 800           # mirrors engine UNIVERSE_MAX_NEURONS / M
 _SYNAPSES_PER_NEURON = 4                # mirrors engine UNIVERSE_MAX_SYNAPSES / neurons
 _DNA_PER_SYNAPSE = 2.5                  # mirrors engine UNIVERSE_MAX_DNA / synapses (5//2)
 _SAFETY_MARGIN = 1.20                   # +20% for misc arrays + allocator overhead

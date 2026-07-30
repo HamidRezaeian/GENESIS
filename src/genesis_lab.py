@@ -27,7 +27,11 @@ os.environ.setdefault("GENESIS_MULTISCALE", "1")
 os.environ.setdefault("GENESIS_STDP3C", "1")
 os.environ.setdefault("GENESIS_RESUME", "0")
 os.environ.setdefault("GENESIS_GROUNDED", "0")  # Pure Reading Economy: Only text comprehension pays energy
-os.environ.setdefault("GENESIS_RAM_SIZE", "1048576")  # 1MB Substrate (1024x1024 Array)
+
+import capacity_resolver
+_RAM_SIZE_RESOLVED, _RAM_SIZE_SOURCE = capacity_resolver.resolve_ram_size()
+if "GENESIS_RAM_SIZE" not in os.environ:
+    os.environ["GENESIS_RAM_SIZE"] = str(_RAM_SIZE_RESOLVED)
 
 GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
