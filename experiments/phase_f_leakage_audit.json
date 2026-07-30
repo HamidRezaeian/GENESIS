@@ -1,0 +1,9 @@
+{
+  "protocol_id": "TASK_GENERALIZATION_PHASE_F_v1",
+  "byte_overlap": 0,
+  "ngram_leakage": 0,
+  "positional_leakage": false,
+  "marginal_leakage": false,
+  "oracle_metadata_leakage": false,
+  "status": "PASSED_ZERO_LEAKAGE"
+}

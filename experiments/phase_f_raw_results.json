@@ -1,0 +1,54 @@
+{
+  "protocol_id": "TASK_GENERALIZATION_PHASE_F_v1",
+  "task_name": "Dual_Stage_Symbol_Permutation",
+  "execution_mode": "real_engine",
+  "training_stream_hash": "caf3b4f75226bbf3f307abaca8daaa27a56bd784d095407823428f5be4941585",
+  "held_out_stream_hash": "4b7101948353b0321b10a8a8321a5fd36e97a069c4ba6dbca632ee7aa408d769",
+  "raw_results": {
+    "501": {
+      "proposed_plastic_learner": 0.7163286919030797,
+      "matched_learning_ablation": 0.3624497747150868,
+      "fixed_reflex_baseline": 0.3355878626744091,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.35387891718799286,
+      "initial_state_hash": "f15e801512f03a23515160979973f26f94eb22be9694c2ac88aca703dbc19b53",
+      "final_state_hash": "8142d6cd85d78c6c08a1e525d53b12ac0afae370d72e316439abbca3e54c7510"
+    },
+    "502": {
+      "proposed_plastic_learner": 0.7127743024028924,
+      "matched_learning_ablation": 0.36227951410430603,
+      "fixed_reflex_baseline": 0.3445891101917874,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.3504947882985864,
+      "initial_state_hash": "4aff92a137b695d5703e1aad1e27966e35223110af8d7280a8a93a02b538b782",
+      "final_state_hash": "ade8b0fe4335519f2623ac6150a174166ab3852f1fab614d5acb7ad799c6cb29"
+    },
+    "503": {
+      "proposed_plastic_learner": 0.710727509733769,
+      "matched_learning_ablation": 0.36146560893043844,
+      "fixed_reflex_baseline": 0.3410347809470831,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.3492619008033305,
+      "initial_state_hash": "b3b44b37086234312c670bd84e2bbc88ed80c090d6aea8dec4d157ae199d6e19",
+      "final_state_hash": "8c5c71cbe673d2dbcc4c3dd7c98e00a46bceae808765574b1391227e4600fe22"
+    },
+    "504": {
+      "proposed_plastic_learner": 0.734440156825374,
+      "matched_learning_ablation": 0.35892948151848075,
+      "fixed_reflex_baseline": 0.33704836025195123,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.37551067530689325,
+      "initial_state_hash": "7c39fa74df69c3e9a0c482f6c01aa5da6e1a6479e1a0f7d8ea10dbf02ee38996",
+      "final_state_hash": "656ec9baf75c72ea0ffec16a02cc48968081c9c67d5968758a9ba2e090d38290"
+    },
+    "505": {
+      "proposed_plastic_learner": 0.735621484027822,
+      "matched_learning_ablation": 0.35804286453106837,
+      "fixed_reflex_baseline": 0.3372308852664275,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.37757861949675364,
+      "initial_state_hash": "3c116f8c57d7a4d33fcc0d2bb9401e55016e4cfec4e47d15074ffe5d019d3a81",
+      "final_state_hash": "535085e301a01325c1634c8d219241c2b4a27de3a452bb704f2fb19f6f1f9564"
+    }
+  }
+}
