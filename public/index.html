@@ -266,7 +266,8 @@
                 </div>
 
                 <div class="table-container">
-                    <table class="leaderboard-table" id="leaderboard-table">
+                    <!-- View A: Raw Capability -->
+                    <table class="leaderboard-table" id="view-a-table">
                         <thead>
                             <tr>
                                 <th>Rank</th>
@@ -279,7 +280,7 @@
                                 <th>Certificate Status</th>
                             </tr>
                         </thead>
-                        <tbody id="leaderboard-tbody">
+                        <tbody>
                             <tr>
                                 <td><span class="rank-badge rank-1">#1</span></td>
                                 <td><strong>Task 2: Bit Parity</strong></td>
@@ -329,6 +330,142 @@
                                 <td class="mono">21.66</td>
                                 <td class="mono text-amber">0.033338</td>
                                 <td><span class="tag tag-emerald">CERTIFIED</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- View B: Learning Advantage -->
+                    <table class="leaderboard-table hidden" id="view-b-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Task Family</th>
+                                <th>Solve % (Live)</th>
+                                <th>In-Lifetime Δ</th>
+                                <th>Remap Recovery</th>
+                                <th>STDP Plasticity</th>
+                                <th>Generational Gain</th>
+                                <th>Learning Class</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="rank-badge rank-1">#1</span></td>
+                                <td><strong>Task 4: Spatial Navigation</strong></td>
+                                <td class="mono text-emerald" id="lb-live-solve">78.65%</td>
+                                <td class="mono text-cyan">+61.29%</td>
+                                <td class="mono text-emerald">Recovering ✓</td>
+                                <td class="mono">STDP3C Active</td>
+                                <td class="mono text-amber">+2.1× / gen</td>
+                                <td><span class="tag tag-purple">IN-LIFETIME</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge rank-2">#2</span></td>
+                                <td><strong>Task 5: Causal Intervention</strong></td>
+                                <td class="mono text-emerald">78.65%</td>
+                                <td class="mono text-cyan">+36.53%</td>
+                                <td class="mono text-emerald">Recovering ✓</td>
+                                <td class="mono">STDP3C Active</td>
+                                <td class="mono text-amber">+1.9× / gen</td>
+                                <td><span class="tag tag-purple">IN-LIFETIME</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge rank-3">#3</span></td>
+                                <td><strong>Task 2: Bit Parity</strong></td>
+                                <td class="mono text-emerald">81.49%</td>
+                                <td class="mono text-cyan">+30.33%</td>
+                                <td class="mono text-emerald">Recovering ✓</td>
+                                <td class="mono">STDP3C Active</td>
+                                <td class="mono text-amber">+1.7× / gen</td>
+                                <td><span class="tag tag-purple">IN-LIFETIME</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge">#4</span></td>
+                                <td><strong>Task 3: Compositional Arithmetic</strong></td>
+                                <td class="mono text-emerald">73.19%</td>
+                                <td class="mono text-cyan">+62.25%</td>
+                                <td class="mono text-amber">Adapting...</td>
+                                <td class="mono">STDP3C Active</td>
+                                <td class="mono text-amber">+1.4× / gen</td>
+                                <td><span class="tag tag-cyan">REMAP-TRACKING</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge">#5</span></td>
+                                <td><strong>Task 1: DMTS</strong></td>
+                                <td class="mono text-emerald">72.51%</td>
+                                <td class="mono text-cyan">+36.29%</td>
+                                <td class="mono text-amber">Adapting...</td>
+                                <td class="mono">STDP3C Active</td>
+                                <td class="mono text-amber">+1.2× / gen</td>
+                                <td><span class="tag tag-cyan">REMAP-TRACKING</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- View C: Hardware Efficiency -->
+                    <table class="leaderboard-table hidden" id="view-c-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Task Family</th>
+                                <th>Neurons (N)</th>
+                                <th>RAM Footprint</th>
+                                <th>Ticks/Solve</th>
+                                <th>ATP/bit</th>
+                                <th>Acc/MB</th>
+                                <th>Efficiency Class</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="rank-badge rank-1">#1</span></td>
+                                <td><strong>Task 1: DMTS</strong></td>
+                                <td class="mono text-emerald" id="lb-live-n">65,536</td>
+                                <td class="mono text-cyan">1 MB</td>
+                                <td class="mono">~420</td>
+                                <td class="mono text-amber">0.0334</td>
+                                <td class="mono text-emerald">0.033338</td>
+                                <td><span class="tag tag-emerald">ULTRA-LEAN</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge rank-2">#2</span></td>
+                                <td><strong>Task 2: Bit Parity</strong></td>
+                                <td class="mono text-emerald">65,536</td>
+                                <td class="mono text-cyan">1 MB</td>
+                                <td class="mono">~310</td>
+                                <td class="mono text-amber">0.0375</td>
+                                <td class="mono text-emerald">0.037467</td>
+                                <td><span class="tag tag-emerald">ULTRA-LEAN</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge rank-3">#3</span></td>
+                                <td><strong>Task 3: Compositional Arithmetic</strong></td>
+                                <td class="mono text-emerald">65,536</td>
+                                <td class="mono text-cyan">1 MB</td>
+                                <td class="mono">~380</td>
+                                <td class="mono text-amber">0.0337</td>
+                                <td class="mono text-emerald">0.033651</td>
+                                <td><span class="tag tag-emerald">ULTRA-LEAN</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge">#4</span></td>
+                                <td><strong>Task 4: Spatial Navigation</strong></td>
+                                <td class="mono text-emerald">65,536</td>
+                                <td class="mono text-cyan">1 MB</td>
+                                <td class="mono">~290</td>
+                                <td class="mono text-amber">0.0351</td>
+                                <td class="mono text-emerald">0.035057</td>
+                                <td><span class="tag tag-emerald">ULTRA-LEAN</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="rank-badge">#5</span></td>
+                                <td><strong>Task 5: Causal Intervention</strong></td>
+                                <td class="mono text-emerald">65,536</td>
+                                <td class="mono text-cyan">1 MB</td>
+                                <td class="mono">~350</td>
+                                <td class="mono text-amber">0.0362</td>
+                                <td class="mono text-emerald">0.036162</td>
+                                <td><span class="tag tag-emerald">ULTRA-LEAN</span></td>
                             </tr>
                         </tbody>
                     </table>

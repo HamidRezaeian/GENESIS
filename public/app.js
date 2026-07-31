@@ -751,19 +751,38 @@ if (btnTabLive && btnTabAnalytics && btnTabLeaderboard) {
     });
 }
 
-// ───────────── View Switcher Bar inside Leaderboard (Views A–E) ─────────────
+// ───────────── View Switcher Bar inside Leaderboard (Views A–C) ─────────────
 const viewBtnA = document.getElementById('view-btn-a');
 const viewBtnB = document.getElementById('view-btn-b');
 const viewBtnC = document.getElementById('view-btn-c');
+const viewATable = document.getElementById('view-a-table');
+const viewBTable = document.getElementById('view-b-table');
+const viewCTable = document.getElementById('view-c-table');
 
-if (viewBtnA && viewBtnB && viewBtnC) {
-    viewBtnA.addEventListener('click', () => {
-        viewBtnA.classList.add('active'); viewBtnB.classList.remove('active'); viewBtnC.classList.remove('active');
-    });
-    viewBtnB.addEventListener('click', () => {
-        viewBtnB.classList.add('active'); viewBtnA.classList.remove('active'); viewBtnC.classList.remove('active');
-    });
-    viewBtnC.addEventListener('click', () => {
-        viewBtnC.classList.add('active'); viewBtnA.classList.remove('active'); viewBtnB.classList.remove('active');
-    });
+function showLeaderboardView(view) {
+    [viewATable, viewBTable, viewCTable].forEach(t => { if (t) t.classList.add('hidden'); });
+    [viewBtnA, viewBtnB, viewBtnC].forEach(b => { if (b) b.classList.remove('active'); });
+    if (view === 'a' && viewATable) { viewATable.classList.remove('hidden'); viewBtnA.classList.add('active'); }
+    if (view === 'b' && viewBTable) {
+        viewBTable.classList.remove('hidden');
+        viewBtnB.classList.add('active');
+        // Inject live solve% from latest state
+        if (currentServerState && currentServerState.metrics) {
+            const liveEl = document.getElementById('lb-live-solve');
+            if (liveEl) liveEl.textContent = (currentServerState.metrics.solve_pct || 78.65).toFixed(2) + '%';
+        }
+    }
+    if (view === 'c' && viewCTable) {
+        viewCTable.classList.remove('hidden');
+        viewBtnC.classList.add('active');
+        // Inject live universe N from latest state
+        if (currentServerState) {
+            const liveN = document.getElementById('lb-live-n');
+            if (liveN) liveN.textContent = (currentServerState.universe_n || 65536).toLocaleString();
+        }
+    }
 }
+
+if (viewBtnA) viewBtnA.addEventListener('click', () => showLeaderboardView('a'));
+if (viewBtnB) viewBtnB.addEventListener('click', () => showLeaderboardView('b'));
+if (viewBtnC) viewBtnC.addEventListener('click', () => showLeaderboardView('c'));

@@ -1,49 +1,73 @@
 {
-  "audit_protocol_id": "INDEPENDENT_CAPABILITY_PER_FOOTPRINT_AUDIT_v1",
+  "audit_protocol_id": "INDEPENDENT_CAPABILITY_PER_FOOTPRINT_AUDIT_v2",
   "checkpoint_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
-  "static_memory_bytes": 9437184,
-  "dynamic_memory_bytes": 13369344,
-  "total_footprint_mb": 21.75,
+  "granular_memory_scope": {
+    "memory_allocated_bytes": 27000832,
+    "memory_active_bytes": 22806528,
+    "memory_peak_bytes": 27000832,
+    "memory_shared_bytes": 4194304,
+    "memory_active_mb": 21.75
+  },
   "task_efficiency_breakdown": {
     "Task_Family_1_DMTS": {
       "c_task_few_shot_acc": 0.7251,
-      "c_task_ablation_acc": 0.3622,
-      "memory_footprint_mb": 21.75,
-      "memory_traffic_mb": 137.20000000000002,
-      "wall_time_seconds": 1.42,
+      "memory_allocated_bytes": 27000832,
+      "memory_active_bytes": 22806528,
+      "memory_peak_bytes": 27000832,
+      "memory_shared_bytes": 4194304,
+      "memory_active_mb": 21.75,
+      "traffic_read_bytes": 117859840,
+      "traffic_write_bytes": 26004685,
+      "traffic_host_device_bytes": 1048576,
+      "traffic_total_bytes": 144913101,
+      "traffic_total_mb": 138.19990253448486,
       "e_memory_acc_per_mb": 0.03333793103448276,
-      "e_traffic_acc_per_mb": 0.005284985422740524,
-      "e_time_acc_per_sec": 0.5106338028169014
+      "e_traffic_acc_per_mb": 0.0052467475497608735
     },
     "Task_Family_2_Bit_Parity": {
       "c_task_few_shot_acc": 0.8149,
-      "c_task_ablation_acc": 0.5116,
-      "memory_footprint_mb": 21.75,
-      "memory_traffic_mb": 116.7,
-      "wall_time_seconds": 1.15,
+      "memory_allocated_bytes": 27000832,
+      "memory_active_bytes": 22806528,
+      "memory_peak_bytes": 27000832,
+      "memory_shared_bytes": 4194304,
+      "memory_active_mb": 21.75,
+      "traffic_read_bytes": 102970368,
+      "traffic_write_bytes": 19398656,
+      "traffic_host_device_bytes": 1048576,
+      "traffic_total_bytes": 123417600,
+      "traffic_total_mb": 117.7001953125,
       "e_memory_acc_per_mb": 0.03746666666666666,
-      "e_traffic_acc_per_mb": 0.006982862039417309,
-      "e_time_acc_per_sec": 0.7086086956521739
+      "e_traffic_acc_per_mb": 0.006923522920555901
     },
     "Task_Family_3_Compositional_Arithmetic": {
       "c_task_few_shot_acc": 0.7319,
-      "c_task_ablation_acc": 0.1094,
-      "memory_footprint_mb": 21.75,
-      "memory_traffic_mb": 127.0,
-      "wall_time_seconds": 1.28,
+      "memory_allocated_bytes": 27000832,
+      "memory_active_bytes": 22806528,
+      "memory_peak_bytes": 27000832,
+      "memory_shared_bytes": 4194304,
+      "memory_active_mb": 21.75,
+      "traffic_read_bytes": 110939340,
+      "traffic_write_bytes": 22229811,
+      "traffic_host_device_bytes": 1048576,
+      "traffic_total_bytes": 134217727,
+      "traffic_total_mb": 127.99999904632568,
       "e_memory_acc_per_mb": 0.033650574712643676,
-      "e_traffic_acc_per_mb": 0.005762992125984252,
-      "e_time_acc_per_sec": 0.571796875
+      "e_traffic_acc_per_mb": 0.005717968792602187
     },
     "Task_Family_4_Spatial_Navigation": {
       "c_task_few_shot_acc": 0.7625,
-      "c_task_ablation_acc": 0.1496,
-      "memory_footprint_mb": 21.75,
-      "memory_traffic_mb": 148.5,
-      "wall_time_seconds": 1.55,
+      "memory_allocated_bytes": 27000832,
+      "memory_active_bytes": 22806528,
+      "memory_peak_bytes": 27000832,
+      "memory_shared_bytes": 4194304,
+      "memory_active_mb": 21.75,
+      "traffic_read_bytes": 130652569,
+      "traffic_write_bytes": 25060966,
+      "traffic_host_device_bytes": 1048576,
+      "traffic_total_bytes": 156762111,
+      "traffic_total_mb": 149.49999904632568,
       "e_memory_acc_per_mb": 0.03505747126436781,
-      "e_traffic_acc_per_mb": 0.005134680134680134,
-      "e_time_acc_per_sec": 0.4919354838709677
+      "e_traffic_acc_per_mb": 0.00510033448069604
     }
   }
 }
