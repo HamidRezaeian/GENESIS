@@ -513,7 +513,10 @@ All tunable parameters above are classified as either:
 | **📐 MODEL** | Model parameter with documented rationale (needs calibration) |
 | **❌ UNJUSTIFIED** | Status: needs experimental calibration (scheduled for Exp 31) |
 
-Unjustified parameters are env-gated for easy tuning. See `Docs/MagicNumbers.md` for the full audit.
+Unjustified parameters are env-gated for easy tuning. The magic-number audit itself is recorded in
+`Docs/Result.md` (Exp 36, "remaining honest magnitudes derived — Rule-17 hardening") and the binding
+classification rules in `.agents/rules/Rules-17-21.md` (a `Docs/MagicNumbers.md` was once planned but
+never existed — the reference was stale; fixed 2026-07-31).
 
 ---
 

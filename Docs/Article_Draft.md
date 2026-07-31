@@ -32,7 +32,7 @@ substrate exploits statistical regularity in its environment rather than learnin
 > compositionality impossible regardless of learning rule or curriculum design.
 > The system is a **substrate, not yet a mind**; its evolutionary trajectory has pivoted
 > from economy design to learning‑rule design, and a pre‑registered
-> finish line (Docs/Ascent.md) governs when the experiment terminates.
+> finish line (Docs/Architecture/Ascent.md) governs when the experiment terminates.
 
 Contemporary artificial intelligence is dominated by two paradigms. The first — dense,
 synchronous, globally‑coordinated backpropagation — achieves remarkable capability but at an
@@ -55,7 +55,7 @@ operating under the same conservation‑of‑compute constraint that governs rea
 tissue.
 
 The project's goal is **open‑ended evolution of general intelligence**, governed by a
-pre‑registered, quantitative finish line (`Docs/Ascent.md`): a ≥25 % monotone rise in
+pre‑registered, quantitative finish line (`Docs/Architecture/Ascent.md`): a ≥25 % monotone rise in
 prediction‑depth metric `C(t)` over 5 M world‑ticks, with learning load‑bearing and
 efficiency non‑decreasing. This article reports the engine's baseline characterisation,
 critical open questions, and the current evaluation against that finish line.

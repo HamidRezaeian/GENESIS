@@ -3,7 +3,7 @@
 > **Auditor:** Clusy Agent  
 > **Date:** 2026-07-24  
 > **Evidence base:** Exp 30 (14 arms), Exp 68 (8-seed controlled compositionality test),  
-> `Docs/Ascent.md` (binding finish line), live engine code (`neuromorphic_engine.py` v2132).  
+> `Docs/Architecture/Ascent.md` (binding finish line), live engine code (`neuromorphic_engine.py` v2132).  
 > **Stance:** Fatal-flaw-first. Each issue is graded 🔴 (fatal — sinks the paper if unaddressed),  
 > 🟡 (serious — must fix before submission), or 🟢 (cosmetic — nice to have).  
 > Every claim below is grounded in a tool result from this session — nothing is recalled from
@@ -78,7 +78,7 @@ capacity cap.
 **Where:** §4 "Discussion & Recent Empirical Ascents (Exp 60–67)" — the word "ascents" in the
 title claims these experiments demonstrate ascent.
 
-**Evidence (`Docs/Ascent.md` §2, binding since 2026-07-16):**
+**Evidence (`Docs/Architecture/Ascent.md` §2, binding since 2026-07-16):**
 > Criterion A: `C(t)` monotone up ≥25 % over 5 M world-ticks.
 > Criterion B: STDP-ablation shows learning is load-bearing.
 > Criterion C: Efficiency non-decreasing.
@@ -188,7 +188,7 @@ statistical shortcuts — early controlled experiments suggest this is not yet t
 ## 🟢 C-2: Citation for Rule 16 (Archived Original)
 
 **Where:** If the paper cites `RULES.md`, it should note which version. The original Rule 16
-was archived per `Docs/FixedRules.md` footnote [9].
+was archived per `Docs/Architecture/FixedRules.md` footnote [9].
 
 ---
 
@@ -204,6 +204,6 @@ was archived per `Docs/FixedRules.md` footnote [9].
 ---
 
 *This audit was produced by reading `Article_Draft.md` (22 kB, 226 lines) in full and cross-referencing
-every claim against `exp68_shortcut_proof_results_overall.json`, `Docs/Ascent.md`, and the live
+every claim against `exp68_shortcut_proof_results_overall.json`, `Docs/Architecture/Ascent.md`, and the live
 `neuromorphic_engine.py` source. No claim in this review is based on model memory — all numbers
 are from tool results in the 2026-07-24 session.*

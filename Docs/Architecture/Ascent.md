@@ -78,7 +78,7 @@ another economy lever. This is the escape hatch the loop never had.
 PROSPECTIVELY for the 3c multi-seed validation below, which had NOT been run when this was written.)*
 
 The Rule 21.2 refactor makes the engine's tunable constants per-organism and evolvable (design doc
-`Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md`). Each increment carries a binding falsification criterion;
+`Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md`). Each increment carries a binding falsification criterion;
 if it fails, the increment is reverted or revised, never silently kept.
 
 - **3a (data path, flag OFF):** the PARAM genome tail must be layout- and behaviour-neutral.

@@ -1,11 +1,11 @@
 # GENESIS Roadmap
 
-> **STRATEGIC PIVOT (2026-07-16): the design loop is CLOSED. See `Docs/Ascent.md` (binding).**
+> **STRATEGIC PIVOT (2026-07-16): the design loop is CLOSED. See `Docs/Architecture/Ascent.md` (binding).**
 > Experiments 13–29 formed an open-ended "build a lever → hit a new wall → build the next lever" loop
 > that accumulated economy mechanics (DEPLETE, STIGMERGY, SUPER-RENT, PERSIST, LEASE, CANVAS…) without
 > approaching the Rule-6 goal. Root cause (now fixed by **Rule 18**): "ascent" was only ever defined
 > NEGATIVELY (every run a "not yet"), and the project's **load-bearing assumption — that the brain LEARNS
-> within its lifetime — was never validated** against a control. `Docs/Ascent.md` now fixes a
+> within its lifetime — was never validated** against a control. `Docs/Architecture/Ascent.md` now fixes a
 > pre-registered, quantitative finish line (A: capability +25% sustained 5M ticks; B: learning is
 > load-bearing vs an STDP-ablation control; C: efficiency holds) AND a kill-criterion that falsifies the
 > substrate if learning cannot be made load-bearing. **The next experiment is NOT another economy lever
@@ -604,7 +604,7 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
      pull). `GENESIS_CANVAS`/`_SEED` kept as instruments (default-OFF); default byte-identical, no regression.
      Branches: churn (26), freeze (27), leak-cannibalises-reading (28), **energy-currency-frenzy (29)**.
 - 🛑 **DESIGN LOOP CLOSED + the load-bearing assumption FAILS: in-lifetime STDP is net-NEGATIVE (Exp 30,
-     2026-07-16).** Per the strategic pivot (Rule 18 / `Docs/Ascent.md`), the first validation of the
+     2026-07-16).** Per the strategic pivot (Rule 18 / `Docs/Architecture/Ascent.md`), the first validation of the
      project's core assumption — does the brain LEARN in-lifetime? — was built (`GENESIS_NOLEARN`,
      compile-time STDP-Phase-3 deletion, default-OFF, byte-identical when off) and run as a live A/B on the
      default books economy. **Ablating learning is BETTER on every axis:** pop 596→**423** (ON, decaying) vs
@@ -984,13 +984,13 @@ reading to **evolve** from scratch under the read-economy (the real Rule 9 test,
 | File | Status | Notes |
 |------|:------:|-------|
 | `Docs/Article_Draft.md` | ✅ Updated 2026-07-24 | Exp 74/75 added to §3.4c (attractor + selectivity bottleneck) |
-| `Docs/FixedRules.md` | ✅ 2026-07-24 | 21 rules with footnotes |
+| `Docs/Architecture/FixedRules.md` | ✅ 2026-07-24 | 21 rules with footnotes |
 | `Docs/Article_Draft_Review.md` | ✅ 2026-07-24 | Full audit |
 | `Docs/Result.md` | ✅ Updated 2026-07-24 | Exp 74 + 75 entries added |
 | `Docs/Roadmap.md` | ⬆️ This file | Updated: write-selectivity bottleneck, Exp 76 plan |
 | `Docs/RESUME_NEXT_SESSION.md` | ✅ Updated 2026-07-24 | Exp 76 findings, Exp 77 plan |
-| `Docs/ARD.md` | ❌ Stale (2026-07-10) | Needs update for Exp 30+ engine |
-| `Docs/PRD.md` | ❌ Needs review | Not read this session |
+| `Docs/ARD.md` | ✅ Refreshed 2026-07-31 | Engine-sovereign RAM sizing + telemetry transport v2 documented |
+| `Docs/PRD.md` | ✅ Reviewed 2026-07-31 | Implemented/scaffold/goal markings audited during the docs sync |
 
 ---
 
@@ -1088,7 +1088,7 @@ The audit found 27 game-mechanic violations and 0 evolvable parameters. Ordered 
 - **3a (data path), 3b-i (kernel wiring of 7 constants), 3b-ii (per-org `cam_key_bits`) DONE** and
   regression- + wire-verified. The engine's tunable constants are now per-organism and evolvable
   behind `GENESIS_EVOLVABLE_CONSTANTS` (8 of the 9 PARAM genes wired; `cam_write_threshold` decoded
-  but unused). See `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md` §6.3/§7.4 and `Docs/Ascent.md` §2.D.
+  but unused). See `Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md` §6.3/§7.4 and `Docs/Architecture/Ascent.md` §2.D.
 - **3c (Exp 78b) — in-engine PARAM evolution under selection — ROBUST NULL.** Over 5 seeds x 2
   mutation operators (EA Gaussian + faithful `mutate_dna`), the selection advantage was
   EA -0.011±0.632 and genome -0.058±0.324 (both <=0, within 1 std). The constants are evolvable

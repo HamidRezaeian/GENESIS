@@ -20,9 +20,13 @@ Two modules plus a curriculum helper:
 - **`books_of_genesis.py`** — injects ASCII curriculum text into the RAM substrate.
 
 ### 1.2 The Universe (RAM Substrate)
-- **Space is literal RAM.** A 1D toroidal `uint8` array of **`RAM_SIZE = 65536`** bytes
-  (`g_ram`). An organism's position is a byte address; movement is pointer arithmetic
-  modulo `RAM_SIZE`.
+- **Space is literal RAM.** A 1D toroidal `uint8` array of `RAM_SIZE` bytes (`g_ram`).
+  `RAM_SIZE` is **engine-derived from the host** (2026-07-31: the engine is sovereign over
+  sizing — a host-RAM-derived power of two, e.g. 2–16 MB on typical dev machines;
+  `src/capacity_resolver.py` is a read-only reporting layer that never overrides it;
+  explicit `GENESIS_RAM_SIZE` user override still wins). It was a hardcoded 65536 (and
+  briefly an entry-point-forced 1 MB) before the audit fix. An organism's position is a
+  byte address; movement is pointer arithmetic modulo `RAM_SIZE`.
 - **Food** is the byte value `0x55`, seeded (≈1000 bytes at start, then replenished at a
   user-controlled rate) only into empty (`0x00`) cells.
 - **Curriculum / Oracle text** occupies the printable ASCII range (`32–126`).
@@ -94,7 +98,8 @@ alongside it, with Phases B/C — evolvable actuators, then dissolving the fixed
   `5` reproduce, `6–13` the 8 vocal-cord bits (emitted ASCII character).
 
 ### 1.7 Frontend: The Observation Deck (`public/`)
-- Renders the 65536-byte RAM as a folded 256×256 HTML5 canvas: food `0x55` green, living
+- Renders the RAM (engine-sized, e.g. 2 MB folds to 1448×1448; the canvas dimension is
+  derived from the decoded frame at runtime) as an HTML5 canvas: food `0x55` green, living
   organisms blue, vocalising ("screaming") organisms yellow, curriculum text purple.
 - KPI tiles (era lifespan, population, extinctions, elite age), a **Behavior Summary** that translates live metrics into human-readable insights, a D3
   **Brain Analyzer** that decompiles the Elite genome's synapses (neuron roles derived live from
@@ -110,6 +115,17 @@ alongside it, with Phases B/C — evolvable actuators, then dissolving the fixed
   (`set_auto_inject` over the WebSocket → the `g_auto_inject` gate on the sim_loop restock); the manual
   inject button is unaffected. The WebSocket `state` payload carries a `metrics` and `flags` block so
   the UI stays honest with whatever engine configuration is live.
+- **Telemetry transport v2 (2026-07-31 audit, Rule 16).** One publisher (`_publish_state`) stores the
+  state dict + pre-serialized JSON under a lock with a monotone sequence; `stream_telemetry` sends a
+  client a snapshot **only when the sequence advanced** (no unchanged re-sends, no per-client
+  re-serialization). RAM rides the state at a **1 Hz cadence** (`ram_b64` is null on intermediate
+  frames; the canvas keeps its last frame). The payload (`schema_version: 2`) additionally carries a
+  **`births` provenance block** (natural / auto-repro / refuge / ark births, natural deaths, run
+  extinctions — closing the Exp-85/86 survivorship-confound enabler) and an explicitly honest
+  `agi_progress: 0` placeholder. Two older competing paths were removed in the audit: a ~2 Hz direct
+  broadcast AND a 10 Hz mailbox that re-sent full-RAM snapshots AND published fabricated constants —
+  along with the fabricated static "certified leaderboard" content in `public/index.html`
+  (`tests/telemetry_honesty_test.py` now guards all of it).
 
 ## 2. Core Mechanisms
 ### 2.1 Thermodynamics = CPU Cycles
@@ -504,7 +520,7 @@ byte-identical and was re-verified with no regression.
 
 **The design loop is closed and the load-bearing assumption fails: in-lifetime STDP is net-negative (Exp 30,
 2026-07-16).** The 17-lever economy search (Exp 13–29) never validated the assumption underneath it — that a
-GENESIS brain learns within its lifetime. Under the strategic pivot (Rule 18 / `Docs/Ascent.md`), a
+GENESIS brain learns within its lifetime. Under the strategic pivot (Rule 18 / `Docs/Architecture/Ascent.md`), a
 compile-time learning-ablation control (`GENESIS_NOLEARN`, deletes STDP Phase 3, byte-identical when off) was
 A/B'd against the learning-on default. Ablating learning is strictly better: population stays flat at ~599
 instead of decaying to ~423, the brain holds ~25.8k neurons/synapses instead of shedding 34 % to ~17.4k, and
@@ -557,7 +573,7 @@ Rule 6, requires). This does **not** trigger the kill-criterion; it localises th
 REWARD signal, not an ERROR signal** — and fixes the next step as a *substrate change to the plasticity rule*
 (a target/teaching current that depolarises wanted-silent vocal neurons so their afferents become LTP-eligible),
 not another economy lever. `GENESIS_REMAP` and the sandbox probe are retained as permanent instruments; the
-default path is byte-identical (re-verified). Full account: `Docs/Ascent.md` §4f, `Result.md` Exp 34.
+default path is byte-identical (re-verified). Full account: `Docs/Architecture/Ascent.md` §4f, `Result.md` Exp 34.
 
 **The teaching signal repairs it — the substrate CONSTRUCTS a new mapping in-lifetime (Exp 35, 2026-07-18).**
 The pre-registered fix was built: `GENESIS_STDP_TARGET` (default-OFF, compile-time gated, byte-identical off), a
@@ -577,7 +593,7 @@ concrete evidence the substrate can support the circuit-*construction* that reas
 scope: proven in the isolated sandbox (frozen, energy-pinned cohort on the seeded 2-bit cross-fabric); its value
 on the **live** economy over deep time, and its generalisation to *evolved* topology, are the pre-registered next
 tests. `GENESIS_STDP_TARGET` is retained as a permanent instrument; the default path is byte-identical
-(re-verified). Full account: `Docs/Ascent.md` §4g, `Result.md` Exp 35.
+(re-verified). Full account: `Docs/Architecture/Ascent.md` §4g, `Result.md` Exp 35.
 
 ### 2.6 Reproduction & Mutation
 `mutate_dna` applies insertion (5%), deletion (5%) or gene duplication (5%), otherwise

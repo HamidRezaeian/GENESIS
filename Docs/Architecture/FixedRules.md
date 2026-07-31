@@ -2,7 +2,7 @@
 
 > **Status:** Proposal. Supersedes `RULES.md` once ratified per `Q.md` voting protocol.
 > **Date:** 2026-07-24
-> **Author:** Clusy Agent, based on Exp 30–68 findings and `Docs/Ascent.md` (2026-07-16) kill criterion.
+> **Author:** Clusy Agent, based on Exp 30–68 findings and `Docs/Architecture/Ascent.md` (2026-07-16) kill criterion.
 >
 > **Convention:** [ R ] = substantially revised from original; [ N ] = new (fills a gap or adds
 > post-Exp-68 accountability); [ U ] = unchanged in substance, wording may be modernised.
@@ -28,7 +28,7 @@ The project's ultimate responsibility is to the question, not to a specific subs
 
 At the exact start of any new session or task, before writing code or analysing implementation logic,
 the agent MUST explicitly read the current project documentation (`Docs/ARD.md`, `Docs/PRD.md`,
-`Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/Result.md`, `Docs/Ascent.md`).
+`Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/Result.md`, `Docs/Architecture/Ascent.md`).
 
 No implementation or architectural analysis may begin until the relevant project context has been
 loaded. At the end of every task, especially when files are added, deleted, architectures change,
@@ -47,7 +47,7 @@ that tests it begins. The criterion must be:
 
 - **Quantitative** (a numeric threshold, e.g., "chance level = 12.5%", "Δ > 0 with p < 0.05").
 - **Binding** (if the criterion fails, the claim is abandoned or revised — never silently ignored).
-- **Archived** in `Docs/Ascent.md` or the experiment's own header.
+- **Archived** in `Docs/Architecture/Ascent.md` or the experiment's own header.
 
 A claim with no falsification criterion is not a scientific hypothesis; it is a narrative.
 Experiments without kill criteria are not experiments — they are demonstrations. [2]
@@ -285,7 +285,7 @@ be silently hard-coded without a written justification (this rule) and a corresp
 **Principle unchanged:** The search must terminate on a pre-registered quantitative criterion, not
 drift indefinitely.
 
-**Revised clause:** The binding finish line is `Docs/Ascent.md` §2, requiring ALL THREE of:
+**Revised clause:** The binding finish line is `Docs/Architecture/Ascent.md` §2, requiring ALL THREE of:
 - **A:** `C(t)` monotone up ≥25 % over 5 M ticks (prediction-depth metric).
 - **B:** STDP-ablation control shows learning is load-bearing.
 - **C:** Efficiency (capability per brain footprint) non-decreasing.

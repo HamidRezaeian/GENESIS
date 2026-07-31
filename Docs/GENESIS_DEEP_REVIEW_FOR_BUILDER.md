@@ -1,6 +1,20 @@
 # GENESIS — بررسی عمیق و برنامه‌ی اصلاح برای سازنده‌ی پروژه
 
 > تاریخ بررسی: 2026-07-30
+
+> **وضعیت اجرا — به‌روزرسانی 2026-07-31 (Session 15, branch `arena/019fb620-genesis`):**
+> ✅ **انجام‌شده:** P0‑1 (تکثیر brain_io + AST guard), P0‑2 (pyproject + قالب CI در `Docs/CI_WORKFLOW.yml.template` — فعال‌سازی Actions نیازمند کپیِ آن به `.github/workflows/` توسط مالک ریپوست، چون توکن اپ اجازه‌ی workflows ندارد),
+> P0‑3 (حذف override پنهان RAM؛ engine حاکم بر sizing), P0‑4 (capacity_resolver = لایه‌ی گزارشگر read-only),
+> P0‑5 (کف صادقانه‌ی population بدون MIN اجباری), P1‑1/P1‑2 (counterهای natural/refuge/ark/auto_repro births
+> + natural deaths + extinctions — که قبلاً تعریف شده ولی هرگز افزایش نمی‌یافتند — سیم‌بندی و در payload منتشر شدند),
+> P1‑9 (GENESIS_LIVE_WEB=0 واقعاً جداسازی می‌کند؛ fetch غیرمسدودکننده با thread پس‌زمینه), P1‑10 (ردیابی و حذف
+> fake telemetry به‌همراه guard در `tests/telemetry_honesty_test.py`), P1‑11 (یک publisher با seq-gate؛
+> RAM با کادانس 1Hz؛ metrics سبک), P2‑3 (بهداشت repo و .gitignore), P2‑4 (تمام لینک‌های dangling اصلاح شدند).
+> ⚠️ **بازمانده:** P0‑6 (متریک‌های capability رسمی و سیم‌شده به leaderboard — فعلاً سلول‌ها «—» هستند),
+> P1‑3/P1‑4 (کنترل‌های کامل learning + permutation/bootstrap), P1‑5 (shortcut audit خودکار),
+> P1‑6/P1‑7 (نام‌گذاری دقیق measured-vs-estimated + سند حساسیت exchange rate), P1‑8 (اشتقاق AUTO_REPRO_THRESH),
+> P1‑12 (barrier/snapshot ownership برای checkpoint), P2‑1/P2‑2 (شکستن monolith و سازمان‌دهی experiments).
+> جزئیات هر فاز در `Docs/RESUME_NEXT_SESSION.md` (Session 15).
 >
 > این سند برای تحویل به هوش مصنوعی سازنده‌ی GENESIS تهیه شده است. هدف آن ثبت دقیق وضعیت فعلی، ایرادهای فنی و علمی، اولویت اصلاحات، و معیارهای پذیرش پیش از ادامه‌ی توسعه است.
 

@@ -25,6 +25,13 @@ cuda = [
 ]
 
 [tool.pytest.ini_options]
+# Tests are executable SCRIPTS (fast suite wrapped via tests/test_script_suite.py);
+# collecting "*_test.py"/"*_probe.py" directly crashes pytest — those modules call
+# sys.exit() at import time (fixed 2026-07-31, deep-review CI hygiene).
 testpaths = ["tests"]
-python_files = ["*_test.py", "*_probe.py"]
+python_files = ["test_*.py"]
+norecursedirs = ["legacy", "clusy"]
 addopts = "-v --tb=short"
+markers = [
+    "slow: kernel-driving probes (numba JIT compile; seconds-to-minutes each)",
+]

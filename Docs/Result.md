@@ -1685,11 +1685,11 @@ migration works, but shared-energy authoring is a collective-action collapse tha
 
 ---
 
-## 🧪 Experiment 30 — The Learning-Ablation Test: In-Lifetime STDP Is Net-NEGATIVE (the design loop closes, `Docs/Ascent.md`) (2026-07-16)
+## 🧪 Experiment 30 — The Learning-Ablation Test: In-Lifetime STDP Is Net-NEGATIVE (the design loop closes, `Docs/Architecture/Ascent.md`) (2026-07-16)
 
 **Strategic pivot.** Experiments 13–29 formed an open-ended "build a lever → hit a new wall" loop that
 reshaped the *economy* 17 times while never once validating the project's load-bearing assumption — that a
-GENESIS brain **learns within its lifetime**. `Docs/Ascent.md` + `Rules.md` Rule 18 now fix a pre-registered
+GENESIS brain **learns within its lifetime**. `Docs/Architecture/Ascent.md` + `Rules.md` Rule 18 now fix a pre-registered
 finish line (A capability rise, B learning load-bearing, C efficiency) and mandate validating that
 assumption *before* adding any more mechanics. This experiment is that validation — the test that should
 have been Exp 1.
@@ -1827,7 +1827,7 @@ Exp-32's 599 → 251). Giving the third factor *which synapses deserve credit* �
 occurred — is what makes in-lifetime learning net-positive AND stable on this substrate. This is the first
 learning rule in the project's history that measurably and durably beats not-learning; the kill-criterion
 stays un-triggered and the SNN-on-RAM substrate is now positively validated as a learner, not merely un-
-falsified (see `Docs/Ascent.md` §4e).
+falsified (see `Docs/Architecture/Ascent.md` §4e).
 
 Residual (next target = criterion A, not a new economy lever): a mild early-to-steady drift (72 % → 60 %) —
 credit assignment is *sufficient to hold above ablation* but capability criterion A (a sustained ≥25 % RISE
@@ -1954,7 +1954,7 @@ Honest gaps between the engine's *capacity* and demonstrated *emergence*:
   non-learning control (Exp 30, `GENESIS_NOLEARN`) — the result is NET-NEGATIVE:** ablating STDP *improves*
   survival, brain retention, and comprehension (solve-rate ~23 %→~51 %). In-lifetime learning as currently
   ruled is harmful, not merely unproven. Diagnosing whether this is a fixable STDP-rule flaw (wrong sign,
-  metabolic overhead, or task mismatch) or a substrate falsification is the open frontier (`Docs/Ascent.md`).
+  metabolic overhead, or task mismatch) or a substrate falsification is the open frontier (`Docs/Architecture/Ascent.md`).
 - **Communication/logic:** vocal cords, neighbour hearing and the Oracle channel exist, but
   no unsupervised language or logic-gate emergence has been measured on this engine.
 - **Efficiency selection (Rule 7):** the per-cycle physics now select *for* leaner brains
@@ -3035,37 +3035,6 @@ Designed a strict, Observation-Only "Delayed Match to Sample" diagnostic curricu
 - **Test Accuracy:** 0.00%
 - **Scientific Conclusion:** The organisms currently possess zero long-horizon working memory capabilities. Because they navigate 40 consecutive `.` characters during the delay, their STDP-driven brains adapt to predict `.`. By the time they reach the test point, they output `.` and completely ignore the original cue. This establishes a highly rigorous baseline and proves that the current `STDP3C` learning rule is incapable of wiring deep temporal logic without explicit supervision. The next physical gap for AGI ascension is strictly defined.
 
----
-
-## 🧪 Experiment 68 — Hardware-Derived Memory Bank Contention (True Contention) (2026-07-22)
-**Objective:** Address Open Research Question 4 by determining whether computational contention can be derived from actual shared-substrate constraints rather than imposed as an authored density penalty (Square-Cube Law of Code).
-
-**Method:** 
-Replaced the artificial `viscosity` density-penalty formula. The 65,536-byte RAM substrate was structurally divided into 256 distinct Memory Banks. 
-A double-buffered tracking array (`g_ram_bank_access` and `g_ram_bank_access_next`) was introduced to count every read and write access to each memory bank per tick. The stall probability (`viscosity`) for an organism is now dynamically calculated based strictly on the measured bandwidth contention of the specific memory bank it occupies.
-
-**Results:**
-- **Execution Throughput:** Numba JIT correctly integrated the double-buffered arrays with minimal overhead. The full colony `smoke_test` maintained its 9.8s/200-tick speed profile.
-- **Population Dynamics:** The colony remained stable, achieving a final population of 312 out of 350 peak, proving that the ecosystem can sustain itself under true shared-bandwidth limits without artificial penalties.
-- **Scientific Conclusion:** Computational contention is now a genuine, emergent consequence of the environment's physical hardware limits. Rule 13 is fully satisfied.
-
----
-
-## 🧪 Experiment 69 — Long-Horizon Reasoning Probe Baseline (2026-07-22)
-**Objective:** Address Open Research Question 2 and Rule 6 (Cognitive Ascension) by testing whether the evolved organisms exhibit genuine long-horizon reasoning and working memory, or if they are simply acting as memoryless markov reflexes.
-
-**Method:** 
-Designed a strict, Observation-Only "Delayed Match to Sample" diagnostic curriculum (`Books/Diagnostic/DelayedMatch.txt`) in accordance with Rule 9.
-- **Structure:** Sequences formatted as `[cue:a]........................................[ans:A]` and `[cue:b]........................................[ans:B]`.
-- **Constraint:** The 40-character `.` delay intentionally exceeds the engine's 8-byte short-term echo buffer (`DELAY_BUF`), forcing the organism to rely exclusively on its internal `WMEM` latch to bridge the temporal gap and correctly predict the final uppercase `A` or `B`.
-- **Evaluation:** Evaluated test accuracy over a continuous 15,000 tick live simulation.
-
-**Results:**
-- **Total Test Attempts:** 44,619 
-- **Correct Predictions:** 0
-- **Test Accuracy:** 0.00%
-- **Scientific Conclusion:** The organisms currently possess zero long-horizon working memory capabilities. Because they navigate 40 consecutive `.` characters during the delay, their STDP-driven brains adapt to predict `.`. By the time they reach the test point, they output `.` and completely ignore the original cue. This establishes a highly rigorous baseline and proves that the current `STDP3C` learning rule is incapable of wiring deep temporal logic without explicit supervision. The next physical gap for AGI ascension is strictly defined.
-
 ### Experiment 70: DNA-encoded Eligibility Traces & Probe Diagnostics
 **Date:** 2026-07-22
 **Objective:** Replace the global, hardcoded `ELIG_TAU` magic constant with a DNA-encoded parameter (`o_rec_tau_e`) to comply with Rule 17, and evaluate the engine's learning capacity in the delayed match reasoning probe.
@@ -3105,7 +3074,6 @@ They found a loophole to survive without reasoning. This perfectly demonstrates 
 
 **Next Step**:
 Remove all static syntactic tags from the `GradedMemory` curriculum. The format must become bare: `a <noise> A` and `b <noise> B`. Without predictable syntax, they will be forced to either predict the answer using working memory, or die.
-
 
 
 ---
@@ -3211,7 +3179,6 @@ is necessary to test compositionality, but doing so collapses the survival gradi
 | Commit (Figure 1 in article) | `fc430ea` |
 
 **Next:** Design phased curriculum to decouple survival income from compositionality test.
-
 
 
 ---
@@ -3389,109 +3356,6 @@ not noise ticks.
 
 ---
 
-## Experiment 74 — Input-Specific Attractor Tuning: Bistable Independent Neurons (2026-07-24)
-
-(Standalone LIF Probe, 16 Byte Patterns, 30-Tick Delay)
-
-**Hypothesis:** Exp 73's uniform attractor (all inputs → same hidden state) is caused by
-bidirectional pairs spreading activation across all 8 neurons. Removing cross-excitation
-and tuning self-connections for bistability should yield input-specific persistent states.
-
-**Method:**
-- Standalone Numba LIF simulation mirroring neuromorphic_engine.py dynamics.
-- 16 distinct byte inputs: 8 single-bit (0x01..0x80) + 8 multi-bit (0x03, 0x0C, 0x30, 0xC0, 0x55, 0xAA, 0x0F, 0xFF).
-- Input present for 3 ticks, then 30 ticks of zero input.
-- Measure Hamming/cosine distance of hidden-layer activity at delay ticks 10, 20, 30.
-- Compare Exp 73 config (self-conn +72, bidir +72, thresh=128, tau=129) vs
-  Exp 74 config (2× self-conn +54, NO bidir, thresh=100, tau=30).
-
-**Exp 74 Design — Bistable Independent Neurons:**
-- Each hidden neuron is an independent bistable switch (ON/OFF).
-- Doubled self-connections: 2 genes × +54 = +108 total > threshold (100).
-- Sustained firing: 108 × (1 − 1/30) = 104.4 > 100 ✓
-- Input trigger: +127 > 100 ✓
-- OFF stability: v_rest = 0 << 100 ✓
-- NO bidirectional pairs → no cross-excitation → input-specific basins.
-
-**Results:**
-
-| Config | Unique States (tick 15) | Distinct Pairs | Mean Hamming | Verdict |
-|--------|:-----------------------:|:--------------:|:------------:|:-------:|
-| Exp 73 (broken) | 6/16 | 105/120 | 0.512 | Uniform attractor |
-| Exp 74 (tuned) | **16/16** | **120/120** | 0.429 | **PASS** |
-
-- Exp 74: ALL 16 input patterns produce distinct persistent hidden states.
-- States are stable across all 30 delay ticks (no decay).
-- Hidden state perfectly mirrors input bit pattern (popcount matches).
-- 120/120 pairwise Hamming distances > 0 (fully discriminable).
-
-**Verdict:** SUCCESS. Bistable independent neurons solve the attractor discrimination
-problem. Each input bit controls one hidden neuron: ON → latches ON (self-sustaining),
-OFF → stays OFF. 16/16 unique states across 15-tick delay window.
-
-**Changes to `create_intelligent_ancestor`:**
-- NEURON_MARKER: rec_id=0, thresh=100, tau=29 (was rec_id=40, thresh=128, tau=128)
-- Self-connections: 2 genes at raw 182 (+54 each) (was 1 gene at raw 200 (+72))
-- Bidirectional pairs: REMOVED (was raw 200 (+72) per direction)
-- Input→hidden: unchanged (raw 255, +127)
-- Hidden→output: unchanged (raw 150, +22)
-
----
-
-## Experiment 75 — Shortcut-Proof Compositionality Re-evaluation (2026-07-24)
-
-(Latin-Square Probe, Bistable Hidden Layer, 5 Seeds × 200 Units)
-
-**Hypothesis:** With Exp 74's discriminable attractor basins, the combined state
-(Hidden State + CAM read) should achieve >0% accuracy on the Latin-square answer byte.
-
-**Method:**
-- Latin square: answer = (c1 + c2) mod 8. Stream: [c1, noise, noise, c2, noise, noise, answer].
-- Noise = constant 'a' (97). Cues = lowercase a-h (97-104). Answers = uppercase A-H (65-72).
-- Feed sequential byte stream through Exp 74 bistable hidden layer.
-- At answer tick: check if hidden state faithfully encodes c1, and if combined key
-  (hidden_state, c2_input) uniquely identifies the answer.
-- 5 seeds × 200 Latin-square units.
-
-**Results:**
-
-| Metric | Value |
-|--------|:-----:|
-| Hidden state fidelity (encodes c1) | 0.1% |
-| Distinct OR patterns from 64 pairs | 8 |
-| Ambiguous OR patterns (>1 answer) | 7/8 |
-| Theoretical max accuracy with OR keys | 1.6% |
-| Chance baseline | 12.5% |
-| Achieved accuracy | ~0.9% |
-
-**Root Cause — OR Accumulation:**
-Bistable neurons only turn ON, never OFF. The hidden state at the answer tick is the
-cumulative bitwise OR of ALL bytes seen (c1, noise, c2, noise...), not a clean
-representation of c1. 64 distinct (c1,c2) pairs collapse into only 8 OR patterns,
-7 of which map to multiple answers (up to 8 different answers per pattern).
-
-Example: c1=0, c2=1 → OR(97,98) = 99 → answer=1
-         c1=0, c2=2 → OR(97,99) = 99 → answer=2
-         Same OR pattern, different answers → CAM cannot disambiguate.
-
-**Verdict:** FAIL. Exp 74 solved PERSISTENCE (16/16 distinct states) but not
-SELECTIVITY. The bistable hidden layer accumulates all inputs via OR, destroying
-the temporal structure needed for compositionality. The next bottleneck is
-WRITE SELECTIVITY: the hidden layer must accept input only during cue ticks,
-not noise ticks.
-
-**Next Step (Exp 76): Gated Write Hidden Layer**
-- Add a WRITE GATE neuron controlling when hidden neurons accept afferent input.
-- Gate ON during cue ticks → accept input (latch c1 or c2).
-- Gate OFF during noise ticks → hold state (preserve c1 during delay).
-- Enables clean c1 representation at the answer tick.
-- Combined (gated_hidden, c2_input) → unique CAM key → correct answer.
-- Requires engine modification: gated afferent write for ordinary LIF hidden neurons
-  (currently only MEMORY_MARKER latches have gates via Exp 44/45 WMEM).
-
-
----
-
 ## Experiment 76 — Gated Write Hidden Layer: Write Selectivity for Compositionality (2026-07-24)
 
 (Oracle Gate Probe, Two-Bank Architecture, Latin-Square, 5 Seeds × 200 Units)
@@ -3545,109 +3409,6 @@ synapses. This is the subject of Exp 77.
 1. ~~Memory~~ (Exp 70) → ~~Topology~~ (Exp 71) → ~~Attractor discrimination~~ (Exp 74)
 2. ~~Write selectivity~~ (Exp 76: architecturally solved with gated two-bank design)
 3. **Gate learnability** (Exp 77: can evolution learn the cue-detection + position counter?)
-
-
----
-
-## Experiment 74 — Input-Specific Attractor Tuning: Bistable Independent Neurons (2026-07-24)
-
-(Standalone LIF Probe, 16 Byte Patterns, 30-Tick Delay)
-
-**Hypothesis:** Exp 73's uniform attractor (all inputs → same hidden state) is caused by
-bidirectional pairs spreading activation across all 8 neurons. Removing cross-excitation
-and tuning self-connections for bistability should yield input-specific persistent states.
-
-**Method:**
-- Standalone Numba LIF simulation mirroring neuromorphic_engine.py dynamics.
-- 16 distinct byte inputs: 8 single-bit (0x01..0x80) + 8 multi-bit (0x03, 0x0C, 0x30, 0xC0, 0x55, 0xAA, 0x0F, 0xFF).
-- Input present for 3 ticks, then 30 ticks of zero input.
-- Measure Hamming/cosine distance of hidden-layer activity at delay ticks 10, 20, 30.
-- Compare Exp 73 config (self-conn +72, bidir +72, thresh=128, tau=129) vs
-  Exp 74 config (2× self-conn +54, NO bidir, thresh=100, tau=30).
-
-**Exp 74 Design — Bistable Independent Neurons:**
-- Each hidden neuron is an independent bistable switch (ON/OFF).
-- Doubled self-connections: 2 genes × +54 = +108 total > threshold (100).
-- Sustained firing: 108 × (1 − 1/30) = 104.4 > 100 ✓
-- Input trigger: +127 > 100 ✓
-- OFF stability: v_rest = 0 << 100 ✓
-- NO bidirectional pairs → no cross-excitation → input-specific basins.
-
-**Results:**
-
-| Config | Unique States (tick 15) | Distinct Pairs | Mean Hamming | Verdict |
-|--------|:-----------------------:|:--------------:|:------------:|:-------:|
-| Exp 73 (broken) | 6/16 | 105/120 | 0.512 | Uniform attractor |
-| Exp 74 (tuned) | **16/16** | **120/120** | 0.429 | **PASS** |
-
-- Exp 74: ALL 16 input patterns produce distinct persistent hidden states.
-- States are stable across all 30 delay ticks (no decay).
-- Hidden state perfectly mirrors input bit pattern (popcount matches).
-- 120/120 pairwise Hamming distances > 0 (fully discriminable).
-
-**Verdict:** SUCCESS. Bistable independent neurons solve the attractor discrimination
-problem. Each input bit controls one hidden neuron: ON → latches ON (self-sustaining),
-OFF → stays OFF. 16/16 unique states across 15-tick delay window.
-
-**Changes to `create_intelligent_ancestor`:**
-- NEURON_MARKER: rec_id=0, thresh=100, tau=29 (was rec_id=40, thresh=128, tau=128)
-- Self-connections: 2 genes at raw 182 (+54 each) (was 1 gene at raw 200 (+72))
-- Bidirectional pairs: REMOVED (was raw 200 (+72) per direction)
-- Input→hidden: unchanged (raw 255, +127)
-- Hidden→output: unchanged (raw 150, +22)
-
----
-
-## Experiment 75 — Shortcut-Proof Compositionality Re-evaluation (2026-07-24)
-
-(Latin-Square Probe, Bistable Hidden Layer, 5 Seeds × 200 Units)
-
-**Hypothesis:** With Exp 74's discriminable attractor basins, the combined state
-(Hidden State + CAM read) should achieve >0% accuracy on the Latin-square answer byte.
-
-**Method:**
-- Latin square: answer = (c1 + c2) mod 8. Stream: [c1, noise, noise, c2, noise, noise, answer].
-- Noise = constant 'a' (97). Cues = lowercase a-h (97-104). Answers = uppercase A-H (65-72).
-- Feed sequential byte stream through Exp 74 bistable hidden layer.
-- At answer tick: check if hidden state faithfully encodes c1, and if combined key
-  (hidden_state, c2_input) uniquely identifies the answer.
-- 5 seeds × 200 Latin-square units.
-
-**Results:**
-
-| Metric | Value |
-|--------|:-----:|
-| Hidden state fidelity (encodes c1) | 0.1% |
-| Distinct OR patterns from 64 pairs | 8 |
-| Ambiguous OR patterns (>1 answer) | 7/8 |
-| Theoretical max accuracy with OR keys | 1.6% |
-| Chance baseline | 12.5% |
-| Achieved accuracy | ~0.9% |
-
-**Root Cause — OR Accumulation:**
-Bistable neurons only turn ON, never OFF. The hidden state at the answer tick is the
-cumulative bitwise OR of ALL bytes seen (c1, noise, c2, noise...), not a clean
-representation of c1. 64 distinct (c1,c2) pairs collapse into only 8 OR patterns,
-7 of which map to multiple answers (up to 8 different answers per pattern).
-
-Example: c1=0, c2=1 → OR(97,98) = 99 → answer=1
-         c1=0, c2=2 → OR(97,99) = 99 → answer=2
-         Same OR pattern, different answers → CAM cannot disambiguate.
-
-**Verdict:** FAIL. Exp 74 solved PERSISTENCE (16/16 distinct states) but not
-SELECTIVITY. The bistable hidden layer accumulates all inputs via OR, destroying
-the temporal structure needed for compositionality. The next bottleneck is
-WRITE SELECTIVITY: the hidden layer must accept input only during cue ticks,
-not noise ticks.
-
-**Next Step (Exp 76): Gated Write Hidden Layer**
-- Add a WRITE GATE neuron controlling when hidden neurons accept afferent input.
-- Gate ON during cue ticks → accept input (latch c1 or c2).
-- Gate OFF during noise ticks → hold state (preserve c1 during delay).
-- Enables clean c1 representation at the answer tick.
-- Combined (gated_hidden, c2_input) → unique CAM key → correct answer.
-- Requires engine modification: gated afferent write for ordinary LIF hidden neurons
-  (currently only MEMORY_MARKER latches have gates via Exp 44/45 WMEM).
 
 
 ---
@@ -3743,61 +3504,6 @@ count_genome_neurons, decode_genome, Phase 1 gate check, mutation-protected mark
 
 ---
 
-## Experiment 77 — Learnable Gate Drive: Full Circuit Verification (2026-07-24)
-
-(Standalone Numba Probe, Full Gate Drive Circuit, Latin-Square, 5 Seeds × 200 Units)
-
-**Hypothesis:** A substrate-grounded gate drive circuit (cue detector + bistable toggle)
-can replace the oracle gates from Exp 76 and achieve 100% compositionality accuracy.
-
-**Circuit Design:**
-- **OR_DET:** OR(eye bits 1,2,3) — fires when any of bits 1,2,3 is set.
-  Proof: noise 'a'=97=0b01100001 has bits 1,2,3 all 0 → silent. All cues 98-104
-  have ≥1 of bits 1,2,3 set → fires.
-- **CUE_DET:** AND(OR_DET, bit 5) — fires for cues (98-104), silent for noise (97,
-  OR_DET=0) and answers (65-72, bit5=0). Each input alone (+60) < thresh(100);
-  both together (+120) > 100.
-- **ANS_DET:** bit6 AND NOT bit5 — fires for answers (65-72, bit6=1, bit5=0),
-  silent for cues (bit5=1 → +60-60=0 < 50) and noise (bit5=1 → 0 < 50).
-- **TOGGLE:** Bistable flip-flop (ordinary LIF, tau=200, self-conn +108).
-  CUE_DET → +254 (sets ON), ANS_DET → -254 (resets OFF).
-  OFF→ON at first cue (c1), ON→OFF at answer tick.
-- **GATE_A:** CUE_DET AND NOT TOGGLE — fires only for first cue (c1).
-  CUE_DET +127, TOGGLE -127 (inhibitory). TOGGLE OFF: +127 > 100 → fires.
-  TOGGLE ON: +127-127=0 < 100 → silent.
-- **GATE_B:** CUE_DET AND TOGGLE — fires only for second cue (c2).
-  CUE_DET +60, TOGGLE +60. Both needed: +120 > 100. Either alone: +60 < 100.
-
-**Results:**
-
-| Metric | Value |
-|--------|:-----:|
-| Fidelity (Bank A=c1, Bank B=c2) | **100%** |
-| Unique 16-bit keys | **64/64** |
-| Ambiguous keys | **0** |
-| Theoretical accuracy | **100%** |
-| GATE_A: cue ticks / noise ticks | 1000 / 0 |
-| GATE_B: cue ticks / noise ticks | 1000 / 0 |
-
-**Verdict:** PASS. The full gate drive circuit achieves 100% compositionality accuracy
-with zero oracle information. All components are substrate-grounded (ordinary LIF
-neurons + synapses, no backprop, no global loss).
-
-**Engine Changes (commit pending):**
-- GATED_NEURON_MARKER (201): 6-byte gene, sense_type=253, Phase 1 gates src < N_INPUT.
-- count_genome_neurons: includes GATED_NEURON_MARKER.
-- Ancestor: 22 hidden neurons (16 gated + 6 gate circuit). TOGGLE uses NEURON_MARKER
-  with self-connection bistability (not MEMORY_MARKER, to avoid WMEM gate blocking
-  the ANS_DET reset synapse).
-
-**Bottleneck progression (COMPLETE):**
-1. ~~Memory~~ (Exp 70) → ~~Topology~~ (Exp 71) → ~~Attractor~~ (Exp 74)
-2. ~~Write selectivity~~ (Exp 76) → ~~Gate learnability~~ (Exp 77: SOLVED)
-3. **NEXT:** Full genesis_lab simulation with Exp 77 ancestor on Latin-square curriculum.
-
-
----
-
 ## Experiment 77-fix — Gate Circuit LIF Integration Bug (2026-07-24)
 
 **Bug:** AND gates (OR_DET+bit5→CUE_DET) fail under multi-substep LIF integration.
@@ -3834,116 +3540,6 @@ making the ancestor metabolically unsustainable.
 **Verdict:** The gate circuit is informationally correct but metabolically unsustainable.
 The organism starves before STDP can tune the gate weights. Next: reduce circuit depth
 or use WMEM latches (non-leaky, no substep cost).
-
-
----
-
-## Experiment 77-fix — Gate Circuit LIF Integration Bug (2026-07-24)
-
-**Bug:** AND gates (OR_DET+bit5→CUE_DET) fail under multi-substep LIF integration.
-With tau=5 and 20 substeps, a single input (+60/substep) reaches v_ss=300 >> thresh(100).
-The AND gate collapses to an OR gate.
-
-**Fix iterations:**
-1. v1: tau=2, thresh=200 → gates never fire (v_ss=I×(τ-1)=I, too low)
-2. v2: max weights (127) → CUE_DET fires but GATE_A/B don't (pulsed input too weak)
-3. v3: simplified 4-neuron circuit, direct input drive → GATE_A works (0 noise), GATE_B leaks
-4. v4: w_gA=55, w_gB=30, TOGGLE→GATE_B=95 → GATE_A perfect, GATE_B still leaks (TOGGLE timing)
-
-**Remaining issue:** TOGGLE turns ON during c1 tick, causing GATE_B to fire prematurely.
-Also: c1=0 → byte 97 = noise (indistinguishable). Max theoretical accuracy ≈ 87.5%.
-
----
-
-## Experiment 78 — Full Engine: Metabolic Bankruptcy (2026-07-24)
-
-(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
-
-**Result:** Organism dies within 500 ticks. Metabolic cost (~3587 energy/tick) exceeds
-reading income (~256/read). The 22-neuron gate circuit adds 68 LIF substeps per tick,
-making the ancestor metabolically unsustainable.
-
-| Metric | Value |
-|--------|:-----:|
-| Neurons | 67 |
-| Synapses | 189 |
-| LIF depth | 68 substeps |
-| Energy loss/tick | ~3,587 |
-| Survival | < 500 ticks |
-
-**Verdict:** The gate circuit is informationally correct but metabolically unsustainable.
-The organism starves before STDP can tune the gate weights. Next: reduce circuit depth
-or use WMEM latches (non-leaky, no substep cost).
-
-
----
-
-## Experiment 77-fix — Gate Circuit LIF Integration Bug (2026-07-24)
-
-**Bug:** AND gates (OR_DET+bit5→CUE_DET) fail under multi-substep LIF integration.
-With tau=5 and 20 substeps, a single input (+60/substep) reaches v_ss=300 >> thresh(100).
-The AND gate collapses to an OR gate.
-
-**Fix iterations:**
-1. v1: tau=2, thresh=200 → gates never fire (v_ss=I×(τ-1)=I, too low)
-2. v2: max weights (127) → CUE_DET fires but GATE_A/B don't (pulsed input too weak)
-3. v3: simplified 4-neuron circuit, direct input drive → GATE_A works (0 noise), GATE_B leaks
-4. v4: w_gA=55, w_gB=30, TOGGLE→GATE_B=95 → GATE_A perfect, GATE_B still leaks (TOGGLE timing)
-
-**Remaining issue:** TOGGLE turns ON during c1 tick, causing GATE_B to fire prematurely.
-Also: c1=0 → byte 97 = noise (indistinguishable). Max theoretical accuracy ≈ 87.5%.
-
----
-
-## Experiment 78 — Full Engine: Metabolic Bankruptcy (2026-07-24)
-
-(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
-
-**Result:** Organism dies within 500 ticks. Metabolic cost (~3587 energy/tick) exceeds
-reading income (~256/read). The 22-neuron gate circuit adds 68 LIF substeps per tick,
-making the ancestor metabolically unsustainable.
-
-| Metric | Value |
-|--------|:-----:|
-| Neurons | 67 |
-| Synapses | 189 |
-| LIF depth | 68 substeps |
-| Energy loss/tick | ~3,587 |
-| Survival | < 500 ticks |
-
-**Verdict:** The gate circuit is informationally correct but metabolically unsustainable.
-The organism starves before STDP can tune the gate weights. Next: reduce circuit depth
-or use WMEM latches (non-leaky, no substep cost).
-
-
----
-
-## Experiment 79 — WMEM Latch Banks: Metabolic Sustainability Analysis (2026-07-24)
-
-(genesis_lab, Latin-Square RAM, 10000 Ticks, Seed 42)
-
-**Design:** Replaced self-connected LIF banks with WMEM latches (non-leaky, non-resetting).
-Removed TOGGLE→GATE_A cycle to reduce depth from 86 to 5.
-
-**Results:**
-
-| Metric | Exp 78 | Exp 79 |
-|--------|:------:|:------:|
-| Neurons | 67 | 85 |
-| Depth | 68 | **5** |
-| Energy/tick | ~3,587 | **~242** |
-| Survival | <500 ticks | **~1,033 ticks** |
-| CAM entries | 16 | **32** |
-
-**Verdict:** PARTIAL PASS. Depth reduced 86→5 (17× improvement). Survival doubled.
-But still unsustainable: 85 neurons × 5 depth = 425 cycles/tick > 256 max reading income.
-
-**Key Finding — Hard Metabolic Constraint:**
-The GENESIS metabolic model (1 cycle/neuron/substep) creates a hard ceiling:
-n_neurons × depth ≤ 256. Any cycle in the synapse graph → depth = n_c → bankruptcy.
-The engine inherently selects for feedforward circuits. Recurrent circuits (toggles,
-state machines) are metabolically punished. This is a fundamental architectural
-constraint on the substrate's computational power.
 
 
 ---
@@ -4031,26 +3627,6 @@ or adding movement incentives to the Latin-square curriculum.
 
 **Next:** Increase income (constant 'a' prediction, partial credit RMSE) or decrease cost (fewer neurons).
 
-
-
----
-
-## Experiment 81 — Reading Income Debug: Cost > Income (2026-07-24)
-
-(genesis_lab, Latin-Square RAM, 5000 Ticks, Seed 42)
-
-**Fixed:** Random synapses removed (caused depth=56). Oracle scalar passed correctly. CAM reset between runs.
-
-**Results:**
-- 55 neurons, 76 synapses, **depth=4** ✓
-- Oracle working: correct predictions at noise→noise transitions
-- CAM writes only on **stationary reads** (rare with JMP_FWD +127)
-- Avg energy loss: ~160/tick. Survival: ~1,562 ticks (up from <1,000)
-- Income: ~73/tick (2/7 × 256). Cost: ~220/tick (base). Net loss: ~147/tick.
-
-**Hard constraint confirmed:** metabolic cost exceeds reading income.
-
-**Next:** Increase income (constant 'a' prediction) or decrease cost.
 
 ---
 
@@ -4170,8 +3746,8 @@ G-variables. Probe: `src/exp77c_evolvable_genome_probe.py`.
 ## Rule 21.2 Engine Refactor — Increments 3a / 3b-i / 3b-ii (2026-07-25)
 
 **Status:** the engine's tunable constants are now per-organism and evolvable behind
-`GENESIS_EVOLVABLE_CONSTANTS` (design doc `Docs/RULE21_2_ENGINE_REFACTOR_DESIGN.md`; pre-registered
-criteria in `Docs/Ascent.md` §2.D). Full session detail in `Docs/RESUME_NEXT_SESSION.md`.
+`GENESIS_EVOLVABLE_CONSTANTS` (design doc `Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md`; pre-registered
+criteria in `Docs/Architecture/Ascent.md` §2.D). Full session detail in `Docs/RESUME_NEXT_SESSION.md`.
 
 - **3a (data path, flag OFF):** a PARAM genome tail (9 genes, 5-byte `[200,201,gid,lo,hi]` records,
   14-bit fraction) is decoded at spawn into `g_org_params[org]`. Regression-verified layout- and
@@ -4196,7 +3772,7 @@ Deliverables: `src/neuromorphic_engine.py`, `src/genesis_lab.py`, design doc §6
 (full engine `world_tick_numba`, flag ON; Latin-square RAM; fixed long-lived ancestor seed 20260725,
 `lif_steps`=4; P=24, truncation top-25%, 40 generations, 180-tick evaluation; **Rule-3 compliant:
 5 independent seeds x 2 mutation operators**, fitness = correct next-symbol predictions averaged
-over 3 replicates). Driver: `src/exp78b_inengine_evolution.py`. Pre-registered criterion: `Docs/Ascent.md` §2.D.
+over 3 replicates). Driver: `src/exp78b_inengine_evolution.py`. Pre-registered criterion: `Docs/Architecture/Ascent.md` §2.D.
 
 **Question (design doc §9.3):** do the per-organism PARAM constants drift OFF DEFAULT **under
 selection** in the full engine — the definitive Rule-21.2 test (vs the exp77e simplified probe)?
@@ -4394,7 +3970,17 @@ Evaluated Multi-Timescale SNN ($\tau_{\text{slow}}=25.0$) + TD-Eligibility Trace
 
 ---
 
-## 🧪 Experiment 91 — Rapid Non-Stationary Selection Benchmark (REMAP_PERIOD=500) — **ASCENT CONFIRMED 🟢** (2026-07-29)
+## 🧪 Experiment 91 — Rapid Non-Stationary Selection Benchmark (REMAP_PERIOD=500) — **LEARNING-ADVANTAGE SIGNAL, NOT ASCENT** (2026-07-29)
+
+> **Rule-16 reclassification (2026-07-31 audit).** This entry was titled "ASCENT CONFIRMED 🟢".
+> It does **not** satisfy the binding Ascent finish line (`Docs/Architecture/Ascent.md` §2):
+> criterion A requires a ≥25 % sustained capability rise over ≥5 M ticks (this ran 10 k ticks with
+> population ≈ 1 — founder-scale, one extinction in the control), criterion C (capability per
+> footprint non-decreasing) is unmeasured, and the Z-scores come from n=5 with near-zero variance
+> (deep review P1-4 cautions exactly this shape of "huge Z"). What Exp 91 *does* show — and it is
+> genuinely valuable — is a **selection advantage for in-lifetime plasticity over a fixed reflex
+> under rapid non-stationarity** (the affirmative, sandbox-grade form of criterion B, consistent
+> with Exp 42). It is a learning-advantage **signal**, not ascent. The finish line stands unmet.
 
 **Pre-Registered Benchmark (Rule 2, Rule 3, Rule 6, Rule 7, Rule 14, Rule 16, Rule 18, Rule 20):**
 Evaluated plastic in-lifetime learners (Multi-Scale SNN $\tau_{\text{slow}}=25.0$ + STDP3C plasticity) against fixed-reflex controls under a rapid non-stationary environment (`GENESIS_REMAP=1`, `REMAP_PERIOD=500` ticks, target mapping rotates every 500 ticks) across 5 independent random seeds ($42, 101, 2024, 777, 999$) over **10,000 continuous ticks** under footprint economy (`INCOME_FOOTPRINT=1`, `AUTO_REPRO=1`).
@@ -4402,7 +3988,7 @@ Evaluated plastic in-lifetime learners (Multi-Scale SNN $\tau_{\text{slow}}=25.0
 | Arm | Mean Pop | Std Pop | Mean Energy | Std Energy | Births | Verdict |
 |---|---|---|---|---|---|---|
 | Arm 1: Control (REMAP-500, Fixed Reflex) | 0.87 | ± 0.46 | 28,616 | ± 14,845 | 50.0 ± 0.0 | Control (1 Extinction) |
-| Arm 2: Proposed (REMAP-500, Multi-Scale + STDP3C) | **1.00** | **± 0.00** | **45,948** | **± 4,888** | **50.8 ± 1.6** | **ASCENT CONFIRMED 🟢** |
+| Arm 2: Proposed (REMAP-500, Multi-Scale + STDP3C) | **1.00** | **± 0.00** | **45,948** | **± 4,888** | **50.8 ± 1.6** | **LEARNING ADVANTAGE (see reclassification note above)** |
 
 **Binding Result (Rule 18 Finish Line):**
 - $\Delta_{\text{Pop}} = +0.13$, **$Z_{\text{Pop}} = +25.72\,\sigma$** — **PASSES binding Rule 18 finish line ($Z \ge 1.0\,\sigma$).**
@@ -4435,10 +4021,5 @@ Evaluated scaling of SNN neocortex architecture from 4,096 Cortical Neurons (Pha
 - **Live Internet Streamer:** `src/live_web_streamer.py` fetches live English Wikipedia summaries every 20s and writes ASCII bytes to RAM substrate.
 - **Dynamic UI Footprint (Rule 7/21):** Static `898 ATP/B` label replaced with dynamic `elite_footprint` (`n_neurons + n_synapses`).
 - **Phase 3 AGI Notebook Generation:** Created `GENESIS_CUDA_PHASE3_DEEP_CORTEX.ipynb` for Dual Tesla T4 GPUs with `PYTORCH_ALLOC_CONF=expandable_segments:True` targeting 16,384 Cortical Neurons over 1,000,000 Deep Time Ticks.
-
-
-
-
-
 
 

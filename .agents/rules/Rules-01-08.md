@@ -10,7 +10,7 @@ These rules are binding. Distinguish what was designed, assumed, measured, emerg
 Before implementation or architectural analysis, read the relevant current documents in `Docs/` and `Docs/Architecture/` (`Docs/ARD.md`, `Docs/PRD.md`, `Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/Result.md`, `Docs/Architecture/Ascent.md`, `Docs/Architecture/FixedRules.md`, `Docs/Architecture/DYNAMIC_COMPACT_RAM_DESIGN.md`, `Docs/Architecture/HARDWARE_AWARE_CAPACITY_DESIGN.md`, `Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md`, and `Docs/Architecture/RULE21_INCOME_REFACTOR_DESIGN.md`). After changes or experiments, update authoritative documentation; mark superseded material as historical rather than presenting it as current.
 
 ## Rule 2: Pre-register falsification
-Before each experiment, archive a quantitative, binding falsification criterion in `Docs/Ascent.md` or the experiment header. A failed criterion invalidates or revises the claim; it must never be ignored after observing results.
+Before each experiment, archive a quantitative, binding falsification criterion in `Docs/Architecture/Ascent.md` or the experiment header. A failed criterion invalidates or revises the claim; it must never be ignored after observing results.
 
 ## Rule 3: Reproduce across seeds
 Treat single-seed findings as preliminary. Validate quantitative claims with at least five independent seeds and report mean, standard deviation, experimental-control delta, and z-score or an equivalent statistic.

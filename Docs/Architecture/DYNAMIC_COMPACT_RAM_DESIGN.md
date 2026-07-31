@@ -248,5 +248,5 @@ it delivers the measured root cause and the pre-registered experiment that decid
 * `tests/dynamic_compact_ram_probe.py` — **new**: 9-check execution proof.
 * `tests/oscillation_maxrun_probe.py` — **new**: measured root-cause probe.
 * `tests/oscillation_diagnosis.json` — **new**: diagnosis evidence.
-* `Docs/DYNAMIC_COMPACT_RAM_DESIGN.md` — this document.
+* `Docs/Architecture/DYNAMIC_COMPACT_RAM_DESIGN.md` — this document.
 * `Docs/RESUME_NEXT_SESSION.md` — Session-14 entry prepended.
