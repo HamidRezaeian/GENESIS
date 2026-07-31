@@ -18,12 +18,24 @@ decisive repetition is pre-registered BEFORE the data exists.**
   direction is DIV-robust, nothing significant; invariance check `equal: true`. Cross-invocation
   determinism re-verified byte-for-byte against the committed n=3 row. Full record:
   `Docs/Result.md` Exp 94.
-- **Exp 94b (pre-registered, binding):** single decisive repetition at **n=24** (seeds 0..23,
-  same protocol/gates/test/tail, α=0.05, power ≈ 80% for the observed effect size; seeds 8-23
-  generated only after registration). Results appended in `Docs/Result.md` Exp 94(c).
-- **Next after 94b:** if significant → replicate at a second operating point / extend tick
+- **Exp 94b (pre-registered, binding) — EXECUTED, VERDICT NULL:** n=24 paired permutation at the
+  same operating point: mean delta **+1.43**, exact two-sided **p=0.606** (seeds 8-23 generated
+  only after the 953b34b registration; gates green; byte-reuse for 0-7 verified). The n=8 signal
+  regressed to the mean — small-sample optimism caught by design. Full record:
+  `Docs/Result.md` Exp 94(c). **Next lever per the pre-registration: instrument/task axis, not
+  more seeds** — stability/plasticity trade-off mapping (DIV × tempo) as hypothesis-generation,
+  then ONE confirmatory replication at a nominated operating point.
+- **Exp 95 (fabrication archipelago, same session):** extending the 92b audit class to all of
+  `experiments/` root-caused that the Phase-D/E/F/G drivers, all four Task-Family-2-5 drivers,
+  the replication/1200 chain, and two CI "contract" tests NEVER measured anything — hardcoded
+  constants + RNG jitter for accuracies and even hardcoded Wilcoxon/permutation p-values;
+  verifiers only re-audited the fabricated JSONs. All 18 scripts + 22 artifacts quarantined to
+  `experiments/legacy_fabricated/` (+ README stamp), the 2 tests to `tests/legacy/`, 7 protocol
+  docs bannered, and a new CI guard `tests/fabrication_scan_test.py` watches for the signatures.
+  **Consequence: TF1 (Exp 94/94b) is currently the ONLY measured capability row.**
+- **Next after 94b:** if significant → replicate TF1 at a second operating point / extend tick
   budget; if not → instrument-difficulty lever (swap-window yield) rather than more peeks;
-  then Task Family 2-5 driver audits (same 92b class) → new leaderboard rows; P1-8
+  build MEASURED TF2-5 drivers from scratch under the 92b admission gate; P1-8
   AUTO_REPRO_THRESH derivation; terminal-extinction arm for 92-M.
 
 <details>

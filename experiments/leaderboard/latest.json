@@ -1,8 +1,8 @@
 {
  "protocol_id": "REMAP_SANDBOX_TF1_v1",
  "family": "Task Family 1 \u2014 Non-stationary Tracking (remap sandbox)",
- "date_utc": "2026-07-31T07:00:29Z",
- "git_commit": "b95f791",
+ "date_utc": "2026-07-31T07:18:20Z",
+ "git_commit": "953b34b",
  "compile_fingerprint": {
   "error": "AttributeError: module 'compile_fingerprint' has no attribute 'current_fingerprint'"
  },
@@ -21,7 +21,23 @@
    4,
    5,
    6,
-   7
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23
   ],
   "remap_period": 4000,
   "stdp_div": 1,
@@ -69,6 +85,70 @@
    "nolearn_ablation|remap0|s7": {
     "static_unch": 96.30281690140845,
     "n": 3408
+   },
+   "nolearn_ablation|remap0|s8": {
+    "static_unch": 95.11970534069981,
+    "n": 3258
+   },
+   "nolearn_ablation|remap0|s9": {
+    "static_unch": 95.24627720504009,
+    "n": 3492
+   },
+   "nolearn_ablation|remap0|s10": {
+    "static_unch": 89.72829688535454,
+    "n": 3018
+   },
+   "nolearn_ablation|remap0|s11": {
+    "static_unch": 94.3840579710145,
+    "n": 3312
+   },
+   "nolearn_ablation|remap0|s12": {
+    "static_unch": 92.87020109689215,
+    "n": 3282
+   },
+   "nolearn_ablation|remap0|s13": {
+    "static_unch": 94.28822495606327,
+    "n": 3414
+   },
+   "nolearn_ablation|remap0|s14": {
+    "static_unch": 91.59132007233273,
+    "n": 3318
+   },
+   "nolearn_ablation|remap0|s15": {
+    "static_unch": 90.79106280193237,
+    "n": 3312
+   },
+   "nolearn_ablation|remap0|s16": {
+    "static_unch": 94.59298871063577,
+    "n": 3366
+   },
+   "nolearn_ablation|remap0|s17": {
+    "static_unch": 93.78427787934187,
+    "n": 3282
+   },
+   "nolearn_ablation|remap0|s18": {
+    "static_unch": 86.78822776711452,
+    "n": 3126
+   },
+   "nolearn_ablation|remap0|s19": {
+    "static_unch": 96.21212121212122,
+    "n": 3300
+   },
+   "nolearn_ablation|remap0|s20": {
+    "static_unch": 93.36917562724014,
+    "n": 3348
+   },
+   "nolearn_ablation|remap0|s21": {
+    "static_unch": 95.43057996485061,
+    "n": 3414
+   },
+   "nolearn_ablation|remap0|s22": {
+    "static_unch": 94.3847072879331,
+    "n": 3348
+   },
+   "nolearn_ablation|remap0|s23": {
+    "static_unch": 96.48664343786295,
+    "n": 3444
    },
    "nolearn_ablation|remap1|s0": {
     "swap_mix": 66.84491978609626,
@@ -118,6 +198,102 @@
     "swap_n": 448,
     "unch_n": 3408
    },
+   "nolearn_ablation|remap1|s8": {
+    "swap_mix": 56.50684931506849,
+    "unch_mix": 95.42362399505257,
+    "swap_n": 292,
+    "unch_n": 3234
+   },
+   "nolearn_ablation|remap1|s9": {
+    "swap_mix": 55.44871794871795,
+    "unch_mix": 95.94671201814059,
+    "swap_n": 312,
+    "unch_n": 3528
+   },
+   "nolearn_ablation|remap1|s10": {
+    "swap_mix": 52.84090909090909,
+    "unch_mix": 91.61616161616162,
+    "swap_n": 352,
+    "unch_n": 2970
+   },
+   "nolearn_ablation|remap1|s11": {
+    "swap_mix": 57.48031496062992,
+    "unch_mix": 94.71618357487922,
+    "swap_n": 254,
+    "unch_n": 3312
+   },
+   "nolearn_ablation|remap1|s12": {
+    "swap_mix": 54.166666666666664,
+    "unch_mix": 91.02564102564102,
+    "swap_n": 312,
+    "unch_n": 3198
+   },
+   "nolearn_ablation|remap1|s13": {
+    "swap_mix": 51.731601731601735,
+    "unch_mix": 94.93783303730018,
+    "swap_n": 462,
+    "unch_n": 3378
+   },
+   "nolearn_ablation|remap1|s14": {
+    "swap_mix": 71.12676056338029,
+    "unch_mix": 92.88728149487643,
+    "swap_n": 284,
+    "unch_n": 3318
+   },
+   "nolearn_ablation|remap1|s15": {
+    "swap_mix": 63.111111111111114,
+    "unch_mix": 93.58068315665489,
+    "swap_n": 450,
+    "unch_n": 3396
+   },
+   "nolearn_ablation|remap1|s16": {
+    "swap_mix": 46.186440677966104,
+    "unch_mix": 94.36450839328538,
+    "swap_n": 236,
+    "unch_n": 3336
+   },
+   "nolearn_ablation|remap1|s17": {
+    "swap_mix": 63.306451612903224,
+    "unch_mix": 93.75380865326021,
+    "swap_n": 248,
+    "unch_n": 3282
+   },
+   "nolearn_ablation|remap1|s18": {
+    "swap_mix": 55.88235294117647,
+    "unch_mix": 89.60332693538068,
+    "swap_n": 374,
+    "unch_n": 3126
+   },
+   "nolearn_ablation|remap1|s19": {
+    "swap_mix": 52.976190476190474,
+    "unch_mix": 96.26955475330927,
+    "swap_n": 504,
+    "unch_n": 3324
+   },
+   "nolearn_ablation|remap1|s20": {
+    "swap_mix": 46.32034632034632,
+    "unch_mix": 93.14251639833036,
+    "swap_n": 462,
+    "unch_n": 3354
+   },
+   "nolearn_ablation|remap1|s21": {
+    "swap_mix": 51.05263157894737,
+    "unch_mix": 95.36873156342183,
+    "swap_n": 380,
+    "unch_n": 3390
+   },
+   "nolearn_ablation|remap1|s22": {
+    "swap_mix": 65.89861751152074,
+    "unch_mix": 94.53309692671395,
+    "swap_n": 434,
+    "unch_n": 3384
+   },
+   "nolearn_ablation|remap1|s23": {
+    "swap_mix": 47.53086419753087,
+    "unch_mix": 96.07487922705315,
+    "swap_n": 486,
+    "unch_n": 3312
+   },
    "stdp3c_learner|remap0|s0": {
     "static_unch": 90.89108910891089,
     "n": 3030
@@ -149,6 +325,70 @@
    "stdp3c_learner|remap0|s7": {
     "static_unch": 94.89007724301842,
     "n": 3366
+   },
+   "stdp3c_learner|remap0|s8": {
+    "static_unch": 91.10275689223057,
+    "n": 3192
+   },
+   "stdp3c_learner|remap0|s9": {
+    "static_unch": 96.3631156930126,
+    "n": 3492
+   },
+   "stdp3c_learner|remap0|s10": {
+    "static_unch": 89.5542248835662,
+    "n": 3006
+   },
+   "stdp3c_learner|remap0|s11": {
+    "static_unch": 91.1783238815375,
+    "n": 3174
+   },
+   "stdp3c_learner|remap0|s12": {
+    "static_unch": 92.57861635220125,
+    "n": 3180
+   },
+   "stdp3c_learner|remap0|s13": {
+    "static_unch": 94.3666082895505,
+    "n": 3426
+   },
+   "stdp3c_learner|remap0|s14": {
+    "static_unch": 88.12375249500998,
+    "n": 3006
+   },
+   "stdp3c_learner|remap0|s15": {
+    "static_unch": 92.63220439691028,
+    "n": 3366
+   },
+   "stdp3c_learner|remap0|s16": {
+    "static_unch": 94.9090909090909,
+    "n": 3300
+   },
+   "stdp3c_learner|remap0|s17": {
+    "static_unch": 90.37735849056604,
+    "n": 3180
+   },
+   "stdp3c_learner|remap0|s18": {
+    "static_unch": 87.50821827744905,
+    "n": 3042
+   },
+   "stdp3c_learner|remap0|s19": {
+    "static_unch": 94.56521739130434,
+    "n": 3312
+   },
+   "stdp3c_learner|remap0|s20": {
+    "static_unch": 94.23536439665472,
+    "n": 3348
+   },
+   "stdp3c_learner|remap0|s21": {
+    "static_unch": 93.02752293577981,
+    "n": 3270
+   },
+   "stdp3c_learner|remap0|s22": {
+    "static_unch": 93.59430604982207,
+    "n": 3372
+   },
+   "stdp3c_learner|remap0|s23": {
+    "static_unch": 95.43859649122807,
+    "n": 3420
    },
    "stdp3c_learner|remap1|s0": {
     "swap_mix": 62.311557788944725,
@@ -197,16 +437,112 @@
     "unch_mix": 93.50533807829181,
     "swap_n": 448,
     "unch_n": 3372
+   },
+   "stdp3c_learner|remap1|s8": {
+    "swap_mix": 71.66666666666667,
+    "unch_mix": 90.72657743785851,
+    "swap_n": 420,
+    "unch_n": 3138
+   },
+   "stdp3c_learner|remap1|s9": {
+    "swap_mix": 67.05202312138728,
+    "unch_mix": 95.46734234234235,
+    "swap_n": 346,
+    "unch_n": 3552
+   },
+   "stdp3c_learner|remap1|s10": {
+    "swap_mix": 59.308510638297875,
+    "unch_mix": 91.91817572099262,
+    "swap_n": 376,
+    "unch_n": 2982
+   },
+   "stdp3c_learner|remap1|s11": {
+    "swap_mix": 62.43386243386244,
+    "unch_mix": 88.75968992248062,
+    "swap_n": 378,
+    "unch_n": 3096
+   },
+   "stdp3c_learner|remap1|s12": {
+    "swap_mix": 56.52173913043478,
+    "unch_mix": 90.08238276299113,
+    "swap_n": 414,
+    "unch_n": 3156
+   },
+   "stdp3c_learner|remap1|s13": {
+    "swap_mix": 47.77777777777778,
+    "unch_mix": 94.08318687756298,
+    "swap_n": 450,
+    "unch_n": 3414
+   },
+   "stdp3c_learner|remap1|s14": {
+    "swap_mix": 62.971698113207545,
+    "unch_mix": 88.83463541666667,
+    "swap_n": 424,
+    "unch_n": 3072
+   },
+   "stdp3c_learner|remap1|s15": {
+    "swap_mix": 59.95850622406639,
+    "unch_mix": 93.21428571428571,
+    "swap_n": 482,
+    "unch_n": 3360
+   },
+   "stdp3c_learner|remap1|s16": {
+    "swap_mix": 56.9364161849711,
+    "unch_mix": 93.20872274143302,
+    "swap_n": 346,
+    "unch_n": 3210
+   },
+   "stdp3c_learner|remap1|s17": {
+    "swap_mix": 55.78947368421053,
+    "unch_mix": 89.4955300127714,
+    "swap_n": 380,
+    "unch_n": 3132
+   },
+   "stdp3c_learner|remap1|s18": {
+    "swap_mix": 56.666666666666664,
+    "unch_mix": 90.45275590551181,
+    "swap_n": 390,
+    "unch_n": 3048
+   },
+   "stdp3c_learner|remap1|s19": {
+    "swap_mix": 47.817460317460316,
+    "unch_mix": 94.64500601684718,
+    "swap_n": 504,
+    "unch_n": 3324
+   },
+   "stdp3c_learner|remap1|s20": {
+    "swap_mix": 63.55555555555556,
+    "unch_mix": 93.6056838365897,
+    "swap_n": 450,
+    "unch_n": 3378
+   },
+   "stdp3c_learner|remap1|s21": {
+    "swap_mix": 53.541666666666664,
+    "unch_mix": 92.65691651432054,
+    "swap_n": 480,
+    "unch_n": 3282
+   },
+   "stdp3c_learner|remap1|s22": {
+    "swap_mix": 22.972972972972972,
+    "unch_mix": 93.33333333333333,
+    "swap_n": 444,
+    "unch_n": 3360
+   },
+   "stdp3c_learner|remap1|s23": {
+    "swap_mix": 46.846846846846844,
+    "unch_mix": 95.85522475189725,
+    "swap_n": 444,
+    "unch_n": 3426
    }
   },
-  "learner_swap_mix_mean": 61.297408892496954,
-  "ablation_swap_mix_mean": 57.035073703573566,
-  "swap_delta_learner_minus_ablation": 4.262335188923387,
+  "learner_swap_mix_mean": 57.5915464225428,
+  "ablation_swap_mix_mean": 56.16030901388564,
+  "swap_delta_learner_minus_ablation": 1.4312374086571609,
   "stats": {
    "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
    "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
    "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
-   "n_pairs": 8,
+   "n_pairs": 24,
    "per_seed_deltas": [
     -4.53336199715153,
     0.6666666666666714,
@@ -215,19 +551,35 @@
     5.851619644723094,
     16.134243141623735,
     9.457999745838094,
-    4.464285714285715
+    4.464285714285715,
+    15.159817351598178,
+    11.60330517266933,
+    6.467601547388782,
+    4.953547473232518,
+    2.355072463768117,
+    -3.9538239538239566,
+    -8.155062450172743,
+    -3.152604887044724,
+    10.749975507004997,
+    -7.516977928692697,
+    0.7843137254901933,
+    -5.158730158730158,
+    17.23520923520924,
+    2.4890350877192944,
+    -42.92564453854777,
+    -0.684017350684023
    ],
-   "mean_delta": 4.262335188923379,
-   "median_delta": 5.157952679504405,
-   "min_delta": -6.267630917577073,
-   "max_delta": 16.134243141623735,
-   "p_two_sided": 0.15625,
-   "method": "exact enumeration over all 2^8 = 256 sign assignments",
-   "min_attainable_p": 0.0078125,
+   "mean_delta": 1.4312374086571504,
+   "median_delta": 2.4220537757437057,
+   "min_delta": -42.92564453854777,
+   "max_delta": 17.23520923520924,
+   "p_two_sided": 0.6061539384606154,
+   "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+   "min_attainable_p": null,
    "confirmatory": true,
    "multiplicity_note": "SINGLE confirmatory test (DIV=1 swap_mix delta). Any DIV-sweep p-values below are sensitivity/exploratory and are NOT adjusted for \u2014 treat them as hypothesis-generating."
   },
-  "note": "n=8 seed pairs; confirmatory paired permutation (two-sided, exact at this n). alpha reference 0.05 \u2014 min attainable p here is 0.0078125."
+  "note": "n=24 seed pairs; confirmatory paired permutation (two-sided, exact at this n). alpha reference 0.05 \u2014 min attainable p here is None."
  },
  "div_sensitivity": {
   "axis": "GENESIS_STDP_DIV (dopamine-modulated STDP divisor)",
@@ -246,7 +598,7 @@
   ],
   "results": {
    "1": {
-    "learner_swap_mix_mean": 61.297408892496954,
+    "learner_swap_mix_mean": 57.5915464225428,
     "per_seed_swap_mix": {
      "0": 62.311557788944725,
      "1": 55.333333333333336,
@@ -255,13 +607,29 @@
      "4": 65.9090909090909,
      "5": 75.11627906976744,
      "6": 61.202185792349724,
-     "7": 48.214285714285715
+     "7": 48.214285714285715,
+     "8": 71.66666666666667,
+     "9": 67.05202312138728,
+     "10": 59.308510638297875,
+     "11": 62.43386243386244,
+     "12": 56.52173913043478,
+     "13": 47.77777777777778,
+     "14": 62.971698113207545,
+     "15": 59.95850622406639,
+     "16": 56.9364161849711,
+     "17": 55.78947368421053,
+     "18": 56.666666666666664,
+     "19": 47.817460317460316,
+     "20": 63.55555555555556,
+     "21": 53.541666666666664,
+     "22": 22.972972972972972,
+     "23": 46.846846846846844
     },
     "stats_vs_main_ablation": {
      "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
      "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
      "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
-     "n_pairs": 8,
+     "n_pairs": 24,
      "per_seed_deltas": [
       -4.53336199715153,
       0.6666666666666714,
@@ -270,20 +638,36 @@
       5.851619644723094,
       16.134243141623735,
       9.457999745838094,
-      4.464285714285715
+      4.464285714285715,
+      15.159817351598178,
+      11.60330517266933,
+      6.467601547388782,
+      4.953547473232518,
+      2.355072463768117,
+      -3.9538239538239566,
+      -8.155062450172743,
+      -3.152604887044724,
+      10.749975507004997,
+      -7.516977928692697,
+      0.7843137254901933,
+      -5.158730158730158,
+      17.23520923520924,
+      2.4890350877192944,
+      -42.92564453854777,
+      -0.684017350684023
      ],
-     "mean_delta": 4.262335188923379,
-     "median_delta": 5.157952679504405,
-     "min_delta": -6.267630917577073,
-     "max_delta": 16.134243141623735,
-     "p_two_sided": 0.15625,
-     "method": "exact enumeration over all 2^8 = 256 sign assignments",
-     "min_attainable_p": 0.0078125,
+     "mean_delta": 1.4312374086571504,
+     "median_delta": 2.4220537757437057,
+     "min_delta": -42.92564453854777,
+     "max_delta": 17.23520923520924,
+     "p_two_sided": 0.6061539384606154,
+     "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+     "min_attainable_p": null,
      "exploratory_unadjusted": true
     }
    },
    "8": {
-    "learner_swap_mix_mean": 59.007767183498,
+    "learner_swap_mix_mean": 56.23454149690745,
     "per_seed_swap_mix": {
      "0": 53.5,
      "1": 54.333333333333336,
@@ -292,13 +676,29 @@
      "4": 67.3529411764706,
      "5": 65.625,
      "6": 50.0,
-     "7": 46.103896103896105
+     "7": 46.103896103896105,
+     "8": 57.81990521327014,
+     "9": 55.44871794871795,
+     "10": 48.88268156424581,
+     "11": 59.831460674157306,
+     "12": 61.5,
+     "13": 55.82959641255606,
+     "14": 57.87671232876713,
+     "15": 56.03448275862069,
+     "16": 60.0,
+     "17": 57.01219512195122,
+     "18": 69.16167664670658,
+     "19": 52.16535433070866,
+     "20": 53.728070175438596,
+     "21": 56.282722513089006,
+     "22": 23.318385650224215,
+     "23": 52.674897119341566
     },
     "stats_vs_main_ablation": {
      "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
      "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
      "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
-     "n_pairs": 8,
+     "n_pairs": 24,
      "per_seed_deltas": [
       -13.344919786096256,
       -0.3333333333333286,
@@ -307,20 +707,36 @@
       7.2954699121027815,
       6.642964071856291,
       -1.7441860465116292,
-      2.353896103896105
+      2.353896103896105,
+      1.3130558982016467,
+      0.0,
+      -3.9582275266632863,
+      2.351145713527387,
+      7.333333333333336,
+      4.097994680954322,
+      -13.25004823461316,
+      -7.076628352490424,
+      13.813559322033896,
+      -6.294256490952002,
+      13.27932370553011,
+      -0.8108361454818152,
+      7.407723855092279,
+      5.230090934141636,
+      -42.580231861296525,
+      5.144032921810698
      ],
-     "mean_delta": 1.972693479924427,
-     "median_delta": 1.0102813852813881,
-     "min_delta": -13.344919786096256,
+     "mean_delta": 0.07423248302181307,
+     "median_delta": 1.832100805864517,
+     "min_delta": -42.580231861296525,
      "max_delta": 19.43173943173943,
-     "p_two_sided": 0.5625,
-     "method": "exact enumeration over all 2^8 = 256 sign assignments",
-     "min_attainable_p": 0.0078125,
+     "p_two_sided": 0.979450205497945,
+     "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+     "min_attainable_p": null,
      "exploratory_unadjusted": true
     }
    },
    "32": {
-    "learner_swap_mix_mean": 61.3924362409076,
+    "learner_swap_mix_mean": 58.08503535129888,
     "per_seed_swap_mix": {
      "0": 66.84491978609626,
      "1": 54.666666666666664,
@@ -329,13 +745,29 @@
      "4": 73.1638418079096,
      "5": 56.9060773480663,
      "6": 63.311688311688314,
-     "7": 49.15611814345991
+     "7": 49.15611814345991,
+     "8": 51.89393939393939,
+     "9": 55.44871794871795,
+     "10": 55.13513513513514,
+     "11": 64.0625,
+     "12": 56.666666666666664,
+     "13": 53.04347826086956,
+     "14": 68.34532374100719,
+     "15": 54.7008547008547,
+     "16": 46.34146341463415,
+     "17": 61.15384615384615,
+     "18": 57.25806451612903,
+     "19": 50.59055118110236,
+     "20": 59.787234042553195,
+     "21": 51.358695652173914,
+     "22": 66.04651162790698,
+     "23": 51.06837606837607
     },
     "stats_vs_main_ablation": {
      "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
      "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
      "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
-     "n_pairs": 8,
+     "n_pairs": 24,
      "per_seed_deltas": [
       0.0,
       0.0,
@@ -344,23 +776,39 @@
       13.106370543541793,
       -2.075958580077412,
       11.567502265176685,
-      5.4061181434599135
+      5.4061181434599135,
+      -4.612909921129102,
+      0.0,
+      2.2942260442260434,
+      6.582185039370081,
+      2.5,
+      1.3118765292678276,
+      -2.781436822373095,
+      -8.410256410256416,
+      0.15502273666804456,
+      -2.152605459057071,
+      1.375711574952561,
+      -2.3856392950881116,
+      13.466887722206877,
+      0.30606407322654405,
+      0.14789411638624017,
+      3.5375118708452007
      ],
-     "mean_delta": 4.35736253733403,
-     "median_delta": 2.7030590717299567,
-     "min_delta": -2.075958580077412,
-     "max_delta": 13.106370543541793,
-     "p_two_sided": 0.125,
-     "method": "exact enumeration over all 2^8 = 256 sign assignments",
-     "min_attainable_p": 0.0078125,
+     "mean_delta": 1.9247263374132444,
+     "median_delta": 0.2305434049472943,
+     "min_delta": -8.410256410256416,
+     "max_delta": 13.466887722206877,
+     "p_two_sided": 0.0960490395096049,
+     "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+     "min_attainable_p": null,
      "exploratory_unadjusted": true
     }
    }
   },
   "note": "SENSITIVITY, not confirmatory; p-values unadjusted for the multi-div look."
  },
- "runs_manifest_hash": "9f71dbe077f0fc153b5f05628853da1b1a1762d87c6f8a2ffeae436249118eef",
+ "runs_manifest_hash": "4b9e8301941eb31c506247bf012b2f39d7a714518d0a6c1c2a0ea0b2838f5d09",
  "main_ladder_runs_reused_from_cache": 32,
- "main_ladder_runs_executed_live": 0,
+ "main_ladder_runs_executed_live": 64,
  "energy_basis": "cycles MEASURED natively per Rule 21.1 (see Docs/Architecture/ENERGY_ACCOUNTING.md)"
 }

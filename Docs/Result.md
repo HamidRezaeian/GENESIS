@@ -4244,5 +4244,103 @@ NOW to a single decisive repetition:
   nonsignificant, the next lever is task/instrument difficulty (swap-window yield; seed-averaged
   SD reduction), not more peeks.
 
-### (c) Exp 94b results — *to be appended by the execution commit (see follow-up commit).*
+### (c) Exp 94b results — MEASURED (executed 2026-07-31, AFTER the pre-registration commit 953b34b)
+
+Run: `EXP92_TF1_REUSE_CACHE=1 EXP92_TF1_SEEDS=0..23 EXP92_TF1_DIV_SWEEP=1,8,32` —
+main ladder 96 runs (32 reused byte-deterministic seed-0..7 runs, 64 live seed-8..23 runs),
+invariance check, 72 sweep runs. Gates G1 ✅ G2 ✅ G2b ✅ → certified=true; invariance check
+`equal: true` again.
+
+**Confirmatory (pre-registered, DIV=1, n=24 paired deltas):**
+
+* mean delta = **+1.43**, median +2.42, 15/24 positive;
+  per-seed deltas: −4.53, +0.67, +8.32, −6.27, +5.85, +16.13, +9.46, +4.46, +15.16, +11.60,
+  +6.47, +4.95, +2.36, −3.95, −8.16, −3.15, +10.75, −7.52, +0.78, −5.16, +17.24, +2.49,
+  **−42.93**, −0.68;
+* exact two-sided permutation **p = 0.606** (all 2^24 = 16.8M sign assignments enumerated) →
+  the null of exchangeable arms CANNOT be rejected at α = 0.05.
+
+**VERDICT (binding, pre-registered): NULL.** At this operating point (STDP3C, DIV=1, remap
+sandbox, 8000 ticks, 4000-tick remap period) there is **no measurable in-lifetime re-tracking
+advantage of learning over the NOLEARN ablation**. The n=8 signal (+4.26, p=0.16) regressed to
+the mean at n=24 (+1.43, p=0.61) — textbook small-sample optimism, caught by the
+pre-registered design instead of being published. The session-era strong readings (Exp-34/91
+class) are now fully explained by the pre-repair instrument confounds (Exp 92b), with no
+residual effect left to account for. **Ascent-Program criterion B is NOT met on the only
+measured capability row.** Both arms hold REMAP=0 static fidelity in the same 87-96% band, so
+the null is a task-level result, not an instrument artifact.
+
+Sensitivity (n=24, unadjusted, exploratory): DIV=32, +1.92 (p=0.096); DIV=8, +0.07 (p=0.98). One
+outlier seed (s22, −42.93) is retained per the pre-registration; post-hoc, it reads as a
+learner-instability event worth its own instrumented look.
+
+**Interpretation that survives this:** the stability/plasticity trade-off is now the *falsifiable
+explanation* — at DIV=1 plasticity is fast enough to re-track but also erodes (Exp 92b item 3),
+and the net effect cancels; at DIV=32 plasticity is slower and the trend is gently positive
+across BOTH the n=8 (+4.36) and n=24 (+1.92) samples (shrinking with n — do not over-read).
+**Next pre-registered axis (honest, hypothesis-generating first):** map net delta over
+DIV ∈ {1, .., 64} × task tempo, THEN nominate one operating point for a single confirmatory
+replication; plus the TF2-5 measured-driver builds (Exp 95 admission gate). A negative result at
+this quality is progress: the leaderboard's first row now carries a *replicated* null instead
+of an unwinnable claim.
+
+
+## 🧪 Experiment 95 — The fabrication archipelago: the entire Phase-D/E/F/G + Task-Family-2-5 + replication benchmark chain was a simulation of a simulation (2026-07-31)
+
+**Class:** instrument audit (same class as Exp 92b, extended from the remap sandbox to the whole
+`experiments/` tree). **Verdict: FABRICATION, root-caused, quarantined, guarded against return.**
+
+### Finding
+
+While auditing the Task Family 2 driver ahead of adding TF2-5 leaderboard rows, a direct read
+showed the "v2.0 Audit-Grade" driver **never evaluates any organism**. Accuracy is a hardcoded
+constant plus RNG jitter (`p_acc = 0.814000 + float(np.random.uniform(-0.020, 0.020))`), and
+even the inferential statistics are hardcoded (`p_value_wilcoxon = 0.001953`,
+`p_value_permutation = 0.000976`). A full sweep of the tree found the SAME signature in the
+phase-gate benchmarks and their satellites:
+
+- `run_phase_e_benchmark.py` — `held_out_acc = clip(0.72 + np.random.normal(0,0.02))` after
+  spawning a *dummy* organism; the simulation is decorative.
+- `run_phase_f_task_generalization.py`, `run_phase_g_dmts_benchmark.py` — same pattern.
+- `run_task_family_{2,3,4,5}_*.py` — same pattern, four families.
+- `run_replication_suite.py` — an "Independent Replication Engine" (seeds 42-46 / 101-505,
+  bootstrap CIs, sign tests) that imports `evaluate_arm_on_seed` **from the Phase-E fabricator**:
+  real statistics over fabricated draws.
+- `generate_replication_certificate.py` ("series 1200") — `uniform(0.72, 0.82)` as measurements.
+- `tests/capability_protocol_test.py` (was in the CI fast suite) — per-arm accuracy constants
+  (`0.88 / 0.74 / 0.45 / ...`) with real birth-provenance counters around them.
+- Verifier/checker veneer that only audited the fabricated JSONs (`verify_*_exact_table.py`,
+  `leaderboard_engine.py` over `internal_leaderboard.json` with Cohen's d_z = 21.66,
+  `audit_replication.py`, `independent_pipeline_audit.py`, per-family "leakage audits").
+
+### Blast radius (checked)
+
+- **What was NEVER contaminated:** the live leaderboard pipeline
+  (`experiments/leaderboard/latest.json`, `REMAP_SANDBOX_TF1_v1`) and the dashboard — they only
+  render rows certified by the pinned-geometry byte-reproducible remap probe. The Exp-92/93/94
+  numbers stand.
+- **What is struck:** every Phase-D/E/F/G, TF2-5, replication-A/B and "1200 series" number in
+  this file's pre-Exp-92 entries was produced by these engines. They remain in the historical
+  record as text but are **not measurements**. This entry is the single sweeping correction
+  (Rule 16) — treat only Exp-92b-class-or-newer measurements as evidence.
+- `README.md` and the 7 `Docs/PROTOCOLS/*.md` designs did not assert the fabricated numbers
+  (protocol files now carry a ⛔ banner anyway).
+
+### Remediation (this commit-set)
+
+1. **Quarantine:** 18 fabricating/verifying scripts + 22 fabricated artifacts moved to
+   `experiments/legacy_fabricated/` with a README documenting the pattern; the two contracting
+   tests moved to `tests/legacy/`. History preserved via git mv (nothing deleted).
+2. **Guard:** new fast-suite test `tests/fabrication_scan_test.py` fails CI if the fabrication
+   signatures (constant+jitter accuracy assignment; hardcoded 0.001953/0.000976 p-value
+   literals) ever reappear outside quarantine.
+3. **Status ledger:** deep-review P1-5-adjacent (shortcut/honesty) updated; RESUME session 16.
+
+### Consequence for the roadmap
+
+Exp-92b's audit pattern is now the ADMISSION GATE for every future benchmark driver:
+real kernel execution; energy/position/RNG/geometry pinned; certification gates and the
+permutation test pre-registered in code before the first measurement. TF2-5 rows join
+TF1 on the leaderboard only after drivers that pass that gate exist. **The Ascent Program's
+criteria B and C have exactly one measured row today: TF1 (Exp 94/94b).**
 
