@@ -38,6 +38,28 @@ import numpy as np
 DEFAULT_CLOCK_GHZ   = 3.0       # nominal host clock; cycles = seconds x clock_hz
 DEFAULT_JOULES_PER_FLOP = 10e-12  # ~10 pJ/op, order-of-magnitude (RAPL gap, see note)
 
+# ---- basis classes (Deep review P1-6, documented in Docs/Architecture/ENERGY_ACCOUNTING.md) ----
+# Every energy number this project quotes must name its basis class:
+BASIS_CLASSES = {
+    "MEASURED":       "timed on the actual host (@njit tight loop), native cycles incl. loop bookkeeping",
+    "FORCED-BY-DESIGN": "algebraically fixed by the substrate (uint8 cells: CELL_STATES=256; BASE_ENERGY=16x256; food=25% concentration)",
+    "NOMINAL-HOST":   "host-dependent reporting constant (3.0 GHz clock; 10 pJ/flop) — recompute on the reference host",
+    "POLICY":         "evolution-facing env-gated knob, recorded in the compile fingerprint (empirical justification required)",
+}
+ENGINE_CHARGING_BASIS = ("charging=MEASURED native cycles (engine_primitive_cycles @njit on this host); "
+                         "reporting=NOMINAL 3.0 GHz clock for seconds->cycles; "
+                         "joules=ORDER-OF-MAGNITUDE (10 pJ/flop; RAPL power measurement outstanding)")
+
+# public telemetry string (genesis_lab state payload -> energy_basis)
+TELEMETRY_ENERGY_BASIS = (
+    "cycles charged in-engine are MEASURED native cycles (@njit, this host — Rule 21.1); "
+    "seconds/cycles shown in reports use a NOMINAL 3.0 GHz host clock; "
+    "joule figures are ORDER-OF-MAGNITUDE estimates (10 pJ/flop) pending RAPL power monitoring; "
+    "income quantum CELL_STATES=256 is FORCED BY DESIGN (one uint8 cell = log2(256) bits), not a tuned exchange rate; "
+    "AUTO_REPRO_THRESH=200000 is a POLICY constant — env-gated, fingerprint-recorded, empirical derivation outstanding (P1-8). "
+    "See Docs/Architecture/ENERGY_ACCOUNTING.md."
+)
+
 
 class PhysicalCostModel:
     """Calibrates and accounts for the REAL hardware cost of substrate operations."""
@@ -68,6 +90,9 @@ class PhysicalCostModel:
             "cycles":  seconds * self.clock_hz,
             "flops":   float(flops),
             "joules":  flops * self.joules_per_flop,
+            # Basis labels (P1-6): seconds is MEASURED wall-time; cycles/joules here are
+            # reporting-layer NOMINAL-HOST derivations, not measurements.
+            "basis": "seconds=MEASURED; cycles=seconds*3.0GHz(NOMINAL-HOST); joules=order-of-magnitude(NOMINAL-HOST)",
         }
 
     # --------------------------------------------------------------- calibrate

@@ -132,14 +132,15 @@ alongside it, with Phases B/C — evolvable actuators, then dissolving the fixed
 Energy is execution cycles, drained per action from each organism's reserve
 (`ATP_MAX = RAM_SIZE × CELL_STATES` ceiling — the total matter-energy the universe holds, i.e. the honest
 physical bound on the cycles one organism can bank; a Rule-17 derivation of the former arbitrary `1e6`, Exp 36
-2026-07-18). Costs are **honest raw-cycle counts** — one executed
-operation debits one cycle (Rule 15/17), with no arbitrary discounts:
-- synapse transmission `1` (when the pre-synaptic neuron fired), **neuron membrane update
-  `1 × n_spiked` per step** (`CYCLES_PER_NEURON_UPDATE`, **event-driven** — charged per action
-  potential fired, not per neuron present: on a 20 W substrate the spike is the energy event and
-  an idle neuron draws ~nothing, Rule 11; Result Exp 8), **STDP weight update `1`**
-  (`CYCLES_PER_STDP_UPDATE`, charged only when a synapse actually potentiates or depresses —
-  likewise activity-gated), movement `3`, and a viscosity stall costs `n_neurons` cycles.
+2026-07-18). Costs are **REAL measured native cycles** (`CYCLES_PER_*`, timed on the host per Rule 21.1 via
+`physical_cost_model.engine_primitive_cycles` — **MEASURED basis class**; the fixed classes of every
+energy number are binding in `Docs/Architecture/ENERGY_ACCOUNTING.md`). Charging is
+**event-driven** where physics demands it: membrane updates debit `CYCLES_PER_NEURON_UPDATE`
+per action potential fired (on a 20 W substrate the spike is the energy event and an idle neuron
+draws ~nothing, Rule 11; Result Exp 8), STDP debits `CYCLES_PER_STDP_UPDATE` only on an actual
+potentiation/depression event, synapse reads debit `CYCLES_PER_SYNAPSE_READ` per forward-prop
+sample, movement/sensing their measured primitives, and a viscosity stall costs `n_neurons`
+cycles. (The `1`-cycle-per-op litterals this paragraph once listed were retired by Rule 21.1.)
 - **Reclaiming a cell** (matter → energy) pays one derived exchange rate, `CELL_STATES =
   2**BITS_PER_BYTE = 256`: a RAM cell is an 8-bit register holding one of 256 microstates, worth
   256 cycles of state-space. **Eating** a `0x55` food byte reclaims the whole cell → `+256` and

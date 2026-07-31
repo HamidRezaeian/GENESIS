@@ -88,6 +88,11 @@ def main():
     # [8] Schema versioned snapshot.
     record("[8] Snapshot carries schema_version", '"schema_version": 2' in lab)
 
+    # [9] Energy-accounting basis is named in telemetry (deep review P1-6).
+    record("[9] energy_basis exposed in telemetry", '"energy_basis"' in lab)
+    record("[9b] basis classes documented",
+           os.path.exists(os.path.join(ROOT, "Docs/Architecture/ENERGY_ACCOUNTING.md")))
+
     print("=" * 60)
     passed = sum(1 for _, ok, _ in RESULTS if ok)
     total = len(RESULTS)

@@ -47,7 +47,17 @@ removed those so that future capability claims stand on real numbers.**
   `.github/workflows/ci.yml` once to enable GitHub Actions.** pytest was unusable via pyproject
   (`python_files` collected sys.exit-at-import scripts → INTERNALERROR); now discovers `test_*.py`
   only, with `tests/test_script_suite.py` wrapping the 11 fast scripts (+ slow smoke marker) —
-  `pytest -m "not slow"`: 11/11 green. Dangling doc paths fixed repo-wide
+  `pytest -m "not slow"`: 11/11 green.
+- **Phase 8 (economy honesty, P1-6/P1-7/P1-8):** NEW `Docs/Architecture/ENERGY_ACCOUNTING.md`
+  binding basis classes — every energy number must declare its class: MEASURED (all engine
+  charging, CYCLES_PER_* native @njit), FORCED-BY-DESIGN (CELL_STATES=256 — one uint8 cell =
+  log2(256) bits, NOT a tunable "exchange rate"; sweeps only meaningful jointly with substrate
+  byte-width), NOMINAL-HOST (3.0 GHz clock, 10 pJ/flop — RAPL gap outstanding), POLICY
+  (AUTO_REPRO_THRESH=200000 — env-gated, fingerprint-recorded, **flagged as underived**;
+  AUTO_REPRO=1 runs count as life-support-assisted until derivation lands, visible via
+  births.auto_repro). `physical_cost_model` entries carry basis labels; telemetry schema v2
+  exposes `"energy_basis"`; ARD §2.1's stale "1-cycle, invented" cost text replaced by the
+  measured-cost account. Dangling doc paths fixed repo-wide
   (`Docs/Ascent.md` → `Docs/Architecture/Ascent.md` etc.; `Docs/MagicNumbers.md` never existed —
   Runbook now points at Result.md Exp 36). **Result.md lost 443 lines of byte-identical duplicate
   experiment entries** (Exp 68×2, 69 dup, 74×3, 75×3, 77×2, 77-fix×3, 78×3, 79×2, 81 dup) —

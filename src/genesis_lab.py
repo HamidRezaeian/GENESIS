@@ -208,6 +208,9 @@ from books_of_genesis import (
 import brain_io  # self-describing, forward-compatible Brain.npz (fingerprint + monotonic hall-of-fame)
 import live_web_streamer
 
+# Energy-basis telemetry string (deep review P1-6); reporting-only, never feeds the physics.
+from physical_cost_model import TELEMETRY_ENERGY_BASIS as _TELEMETRY_ENERGY_BASIS
+
 # Persistent brain checkpoint. Written continuously from the live hall-of-fame; carries an ENGINE
 # FINGERPRINT so it self-heals across code changes (a stale-layout file is auto-archived and rebuilt,
 # never manually deleted). Opt-in RESUME (default OFF, mirrors the peer default-OFF discipline) seeds a
@@ -2051,6 +2054,9 @@ def sim_loop():
                     },
                     # engine feature flags so the dashboard can label/enable the right panels
                     "flags": {
+                        # Energy-accounting basis string (deep review P1-6): every number on
+                        # this dashboard must be traceable to its basis class.
+                        "energy_basis": _TELEMETRY_ENERGY_BASIS,
                         "economy": GENESIS_ECONOMY,
                         "peer": bool(PEER_PREDICT),
                         "evosense": bool(EVOSENSE),
