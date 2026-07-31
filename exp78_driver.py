@@ -28,6 +28,7 @@ from genesis_lab import (
     g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
     g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
     g_conn_w_dna, g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+    g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q,
     world_tick_numba, spawn_organism, mutate_dna, find_birth_pos,
     CANVAS_LO, CANVAS_HI, MAX_ORGANISMS, RAM_SIZE,
 )
@@ -75,6 +76,7 @@ world_tick_numba(
     g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
     g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
     g_conn_w_dna, g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+    g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q,
 )
 print(f"  Warmup: {time.time()-t0:.1f}s, alive={g_alive[0]}, E={g_energy[0]:.0f}", flush=True)
 
@@ -106,6 +108,7 @@ for tick in range(N_TICKS):
         g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
         g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
         g_conn_w_dna, g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+        g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q,
     )
     for i in range(n_births):
         child_dna = mutate_dna(g_b_genomes[i, :g_b_g_count[i]])

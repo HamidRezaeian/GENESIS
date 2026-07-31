@@ -65,6 +65,7 @@ from genesis_lab import (g_ram, g_org_grid, g_positions, g_alive, g_energy, g_ag
     g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
     g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna,
     g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+    g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q,
     world_tick_numba, spawn_organism, mutate_dna, decode_params,
     CANVAS_LO, CANVAS_HI, MAX_ORGANISMS, RAM_SIZE, PARAM_GENES, PARAM_DEFAULTS)
 from neuromorphic_engine import g_org_params, EVOLVABLE_CONSTANTS, CAM_SLOTS, CAM_KEY_BITS
@@ -154,7 +155,8 @@ def _args():
         g_org_reward, g_org_elig, g_global_sense_type, g_global_sense_meta, g_global_act_drive,
         g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
         g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna,
-        g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick)
+        g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
+        g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q)
 
 def reset_all():
     global _gt

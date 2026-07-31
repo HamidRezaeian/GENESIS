@@ -23,3 +23,21 @@ Thumbs.db
 # Environment
 .env
 *.token
+
+# IDE / editor state (never part of the substrate)
+.vs/
+.vscode/
+.idea/
+
+# Virtual environments
+.venv/
+venv/
+
+# Stale backups & scratch logs (use git history instead of *.bak files)
+*.bak
+*.bak_*
+.tmp*
+profile*.txt
+
+# Runtime brain-checkpoint self-heal archives (brain_io._archive_stale)
+*.legacy-*.npz

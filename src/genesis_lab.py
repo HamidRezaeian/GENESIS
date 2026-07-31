@@ -845,6 +845,21 @@ def get_base_physics_header():
     return [195, 0, 1, 1, 1, 1, 0, 0, 20, 255]
 
 def load_kaggle_elite_genome():
+    """Load a Kaggle CUDA-notebook cortical checkpoint, if present.
+
+    2026-07-31 audit (Rule 16): the Phase 2/3/4 `Brain_Phase*.npz` files are produced by the
+    CUDA notebooks, a SEPARATE engine — they store a dense float32 weight matrix
+    (`weights`, `n_neurons`, ...), NOT a GENESIS marker-genome byte string. There is no
+    validated conversion into a `create_intelligent_ancestor` genome, so this checkpoint
+    format CANNOT seed the live engine. The previous revision loaded the 78 MB file on
+    EVERY ancestor creation, printed a success-looking "[KAGGLE ELITE] Loaded ... as root
+    ancestor" line, and then silently discarded the result (dead variable) — the run was
+    always seeded by the byte-fabric ancestor below. To keep the engine honest (and to stop
+    a 78 MB no-op disk read per seeding), this function no longer runs at ancestor-creation
+    time; it only REPORTS what the file is when called explicitly, and never pretends the
+    brain was grafted. A genuine Phase-N brain → genome migration is future work and must be
+    validated by a decode-equivalence probe before any claim is made.
+    """
     paths = [
         'Brain_Phase4_65K_Cortical.npz', 'Brain/Brain_Phase4_65K_Cortical.npz',
         'Brain_Phase3_16K_Cortical.npz', 'Brain/Brain_Phase3_16K_Cortical.npz',
@@ -855,21 +870,21 @@ def load_kaggle_elite_genome():
         if os.path.exists(p):
             try:
                 data = np.load(p)
-                neurons = data.get('n_neurons', data.get('neurons', '65536'))
-                sub_bytes = data.get('substrate_bytes', '1MB')
-                print(f"[KAGGLE ELITE] Loaded Phase 4/3 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_bytes}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
-                return data
+                neurons = data.get('n_neurons', data.get('neurons', 'N/A'))
+                sub_bytes = data.get('substrate_bytes', 'N/A')
+                has_genome = 'genome' in getattr(data, 'files', [])
+                print(f"[KAGGLE CKPT] '{p}' = CUDA dense-weight checkpoint "
+                      f"(n_neurons={neurons}, substrate={sub_bytes}, genome_present={has_genome}) "
+                      f"— NOT loadable as a GENESIS ancestor genome; using the byte-fabric ancestor.")
+                return None
             except Exception as e:
-                print(f"[KAGGLE ELITE] Could not load {p}: {e}")
+                print(f"[KAGGLE CKPT] Could not inspect {p}: {e}")
     return None
 
 def create_intelligent_ancestor(dna=None):
     if dna is not None:
         return dna
-    
-    # Check for Kaggle 1M-tick Elite Brain
-    kaggle_brain = load_kaggle_elite_genome()
-    
+
     genes = get_base_physics_header()
     
     # 5 Hidden neurons for evolution buffer (NEURON_MARKER takes 5 bytes).

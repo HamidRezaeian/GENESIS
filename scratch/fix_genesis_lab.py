@@ -55,3 +55,9 @@ with open(filepath, "w", encoding="utf-8") as f:
     f.write(code)
 
 print("Fix applied.")
+
+# ─── DEPRECATED (2026-07-31 audit) ───────────────────────────────────────────
+# This was a one-off Windows path string-patcher for a corrupted genesis_lab.py
+# (pointed at C:\Users\Hamid\source\repos\GENESIS). genesis_lab.py has since been
+# restored and rewritten; this patcher is kept in scratch/ for history only and
+# must NOT be run against current sources.

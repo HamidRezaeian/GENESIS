@@ -32,6 +32,15 @@ Run:
 """
 import os, sys
 os.environ.setdefault("GENESIS_ECONOMY", "books")
+# Measurement-window integrity (2026-07-31 audit): this probe attributes accuracy to a remap
+# PHASE, so the report window (PROBE_REPORT, default 2000) must fit INSIDE one remap phase and
+# alternate idnt/SWAP between samples — i.e. REMAP_PERIOD == 2*REPORT, the era the probe was
+# designed for. Rule 22 later set genesis_lab's fallback default to 500, which (a) aliases every
+# 2000-tick sample onto the identity phase and (b) mixes both phases inside each window, silently
+# voiding per-phase attribution. Pin the documented default HERE (a user-explicit env still wins,
+# and a startup check below refuses to emit phase-attributed numbers if the window/period
+# relationship is broken).
+os.environ.setdefault("GENESIS_REMAP_PERIOD", "4000")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 import numpy as np
@@ -108,6 +117,14 @@ def measure_window(swapped):
 
 def main():
     mode = ("NOLEARN" if ne.NOLEARN else ("STDP3C" if ne.STDP3C else ("STDP3" if ne.STDP3 else "STDP")))
+    # Startup integrity check: refuse to emit phase-attributed measurements if the report
+    # window would span or alias remap phases (see the env pin at the top of this file).
+    _period = int(ne.REMAP_PERIOD)
+    if ne.REMAP and (2 * REPORT > _period or _period % (2 * REPORT) != 0):
+        raise SystemExit(
+            f"[SANDBOX] INVALID MEASUREMENT GEOMETRY: REPORT={REPORT} vs REMAP_PERIOD={_period}. "
+            f"Per-phase attribution requires REMAP_PERIOD == 2*REPORT*k (k>=1); fix PROBE_REPORT or "
+            f"GENESIS_REMAP_PERIOD before trusting any output.")
     print(f"[SANDBOX] mode={mode} REMAP={ne.REMAP} period={int(ne.REMAP_PERIOD)} states={int(ne.REMAP_STATES)} "
           f"swapbits=({SB0},{SB1}) DIV={float(ne.STDP_DIV):.0f} N={N_ORG} ticks={TICKS} patch={PATCH}")
     # JIT warmup on a throwaway single org handled by first real tick.
@@ -137,7 +154,10 @@ def main():
             gl.action_now, gl.action_prev, gl.g_read_log, gl.g_read_fuel, gl.g_cell_owner, gl.g_read_hits,
             gl.CANVAS_LO, gl.CANVAS_HI, gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
-            gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch, gl.g_ram_bank_access, gl.g_ram_bank_access_next)
+            gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch, gl.g_ram_bank_access, gl.g_ram_bank_access_next,
+            gl.g_curriculum_delay, gl.g_conn_w_dna,
+            gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
+            gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q)
 
         # Ignore births entirely (frozen cohort): free any birth-buffer bodies were NOT allocated (the
         # kernel only fills b_* arrays; spawning happens in sim_loop which we don't call), so nothing to
