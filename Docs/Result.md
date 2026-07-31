@@ -4418,5 +4418,36 @@ As a consequence, the already-existing default|div32 n=24 *sensitivity* numbers 
   if nothing confirms, the learning-advantage axis moves to mechanism changes (gated plasticity /
   two-timescale consolidation), per the substrate-hypothesis clause.
 
-### Results — *to be appended by the execution commit.*
+### Results — MEASURED (executed 2026-07-31 after the pre-registration commit f67fb2d; raw per-run probe JSONs + full payload in `experiments/exp97_confirmatory_results.json`; 98 runs, all live, reuse cache disabled by construction; completeness ✅, G2b ✅, invariance-recorded ✅ both tempos; permutation method string recorded verbatim: Monte-Carlo 10^5 pinned draws)
+
+| Target (nominated by Exp 96) | n | mean Δ | median Δ | p (two-sided) | Bonferroni α | **CONFIRMED** |
+|---|---|---|---|---|---|---|
+| DIV=32, default tempo | 24 | **−1.49** | −0.12 | 0.075 | 0.025 | **NO** |
+| DIV=1, fast tempo | 24 | +0.20 | −0.08 | 0.843 | 0.025 | **NO** |
+
+**VERDICT (binding, pre-registered): BOTH NOMINATED OPERATING POINTS FAILED CONFIRMATION.**
+The default|div32 nomination signal (+4.36 at election) not only regressed but flipped sign on
+fresh data (−1.49) — the winner's-curse correction did exactly the job it was designed for, and
+it did so BEFORE any claim reached the record. The fast|div1 point shows nothing (+0.20).
+
+**Synthesis across the repaired-instrument record (92b → 94 → 94b → 96 → 97):** vanilla
+reward-modulated STDP3C, at every operating point tested on this re-tracking task, shows
+**no confirmable in-lifetime learning advantage over the matched NOLEARN ablation**, while its
+plasticity measurably ERODES static memory at high strength (Exp 92b) — cost without benefit.
+Per the pre-registered clause, the tuning axis (DIV × tempo) is hereby CLOSED as a path to
+criterion B on this mechanism; the next experiments must change the MECHANISM, not the knobs:
+
+* **Exp 98 (candidate, to be pre-registered): plasticity gating — learn only on surprise.**
+  Measured pathology it targets: erosion happens *everywhere*, reward or not; a gate that
+  admits plasticity only on prediction error should kill the erosion while keeping what
+  re-tracking benefit exists. Falsification target: gated learner beats ablation under the
+  Exp-97 protocol shape (fresh seeds, single candidate test — α = 0.05, no Bonferroni needed).
+* **Exp 99 (candidate): two-timescale consolidation — fast plastic weights + slow
+  consolidating weights** (declarative/episodic split). Targets the same pathology from the
+  memory side: fast weights re-track, slow weights must not erode (static fidelity held ≥95%
+  becomes a certification gate alongside the swap-era delta).
+
+Both candidates must pass the 92b admission gate before any token of compute is spent on them
+as benchmarks. **The leaderboard's only certified row remains TF1 with its replicated NULL —
+and that, at this quality, is the most trustworthy statement in the project's history.**
 

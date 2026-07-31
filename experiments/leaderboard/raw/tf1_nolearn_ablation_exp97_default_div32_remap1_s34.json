@@ -1,0 +1,51 @@
+{
+ "instrument": "remap_sandbox_probe",
+ "instrument_rev": "2026-07-31+drift-pin",
+ "seed": 34,
+ "mode": "NOLEARN",
+ "remap": true,
+ "period": 4000,
+ "states": 2,
+ "swapbits": [
+  0,
+  1
+ ],
+ "stdp_div": 32.0,
+ "n_orgs": 120,
+ "ticks": 8000,
+ "patch": 2000,
+ "report": 2000,
+ "pin_pos": true,
+ "windows": [
+  {
+   "t": 2000,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 495,
+   "swapbit_total": 612,
+   "unchbit_correct": 1806,
+   "unchbit_total": 1836,
+   "alive": 120
+  },
+  {
+   "t": 4000,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 329,
+   "swapbit_total": 504,
+   "unchbit_correct": 1375,
+   "unchbit_total": 1512,
+   "alive": 120
+  },
+  {
+   "t": 6000,
+   "remap_active": true,
+   "phase_label": "SWAP",
+   "swapbit_correct": 94,
+   "swapbit_total": 200,
+   "unchbit_correct": 398,
+   "unchbit_total": 600,
+   "alive": 120
+  }
+ ]
+}

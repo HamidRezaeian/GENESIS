@@ -1,4 +1,35 @@
-## Latest Session Update (2026-07-31 — Session 16: TF1 Goes Inferential — n=8 Paired Permutation, DIV Sensitivity, Exp-94b Pre-Registered at n=24)
+## Latest Session Update (2026-07-31 — Session 17: Owed Corrections + Exp 96 Map + Exp 97 Decisive — Tuning Axis CLOSED, Mechanism Change Is Next)
+
+**Continuation of the AGI-readiness audit on `arena/019fb620-genesis`, after the second
+adversarial audit round (no files modified in that round; its findings were checked read-only).
+This session converts the audit's verdicts into the next measurement steps.**
+
+- **Owed corrections (commit db14310):** `Docs/Result.md:4260` — 94b's p-value was a pinned-seed
+  Monte-Carlo estimate (100k draws), not "exact 2^24 enumeration" (wording was wrong in the
+  entry AND in commit ee70e94's message; numerical impact nil, ~0.61 vs α=0.05). Exp-93 92-M
+  Ark narrative corrected: Ark births are NOT extinction-exclusive (arm A logs 301 with zero
+  extinctions; code-grounded decomposition: founding‑300 + per‑extinction‑300 + residual‑1
+  unattributed). Both corrections cite the audit rounds verbatim.
+- **Exp 96 — Stability/Plasticity map (commit f67fb2d, pre-registered before data):** 14 combos
+  (DIV {1,2,4,8,16,32,64} × tempos {default, fast}, n=8, exploratory). H1 (interior optimum)
+  NOT cleanly supported (curve oscillates at noise scale); fast tempo shows no advantage
+  anywhere. Nominations per the registered rule: default|div32 (+4.36), fast|div1 (+1.71).
+- **⚠ Caught a statistical trap before it fired:** Exp 96's docstring allowed seeds 0-7 to be
+  reused in the n=24 confirmation — circular for outcomes that nominated THEMSELVES using those
+  seeds (winner's curse). Overridden pre-execution: **Exp 97 = fresh seeds 24..47 only, two
+  tests Bonferroni α=0.025, reuse cache hard-disabled** (`experiments/exp97_confirmatory.py`).
+- **Exp 97 — DECISIVE, both targets FAILED (commit this session):** default|div32: Δ=−1.49
+  (sign FLIPPED from nomination), p=0.075, CONFIRMED=False; fast|div1: Δ=+0.20, p=0.843,
+  CONFIRMED=False. 98 live runs, gates green, methods recorded verbatim.
+- **Consequence (pre-registered clause executed):** tuning axis (DIV × tempo) CLOSED for
+  vanilla STDP3C — at every tested point: no confirmable learning advantage PLUS static-memory
+  erosion at high plasticity (92b). Next = mechanism change, pre-registered candidates:
+  **Exp 98 gated plasticity (learn only on surprise)** / **Exp 99 two-timescale consolidation**,
+  each admitted only through the 92b gate. Ledger P1-4 stays closed (TF1 axis resolved);
+  Rule-18-B remains unproven — honestly and informatively.
+
+<details>
+<summary>2026-07-31 — Session 16: TF1 Goes Inferential — n=8 Paired Permutation, DIV Sensitivity, Exp-94b Pre-Registered at n=24</summary>
 
 **Continued the AGI-readiness audit on `arena/019fb620-genesis`. Session theme: the leaderboard's
 first row was descriptive (n=3); now TF1 carries a real statistical verdict machine, and its
@@ -37,6 +68,8 @@ decisive repetition is pre-registered BEFORE the data exists.**
   budget; if not → instrument-difficulty lever (swap-window yield) rather than more peeks;
   build MEASURED TF2-5 drivers from scratch under the 92b admission gate; P1-8
   AUTO_REPRO_THRESH derivation; terminal-extinction arm for 92-M.
+
+</details>
 
 <details>
 <summary>2026-07-31 — Session 15: Deep-Review Remediation Sprint — Honest Telemetry, Wired Provenance, Deduped Record, CI, Docs Sync</summary>
