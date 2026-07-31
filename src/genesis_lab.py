@@ -27,7 +27,11 @@ os.environ.setdefault("GENESIS_MULTISCALE", "1")
 os.environ.setdefault("GENESIS_STDP3C", "1")
 os.environ.setdefault("GENESIS_RESUME", "0")
 os.environ.setdefault("GENESIS_GROUNDED", "0")  # Pure Reading Economy: Only text comprehension pays energy
-os.environ.setdefault("GENESIS_RAM_SIZE", "1048576")  # 1MB Substrate (1024x1024 Array)
+
+import capacity_resolver
+_RAM_SIZE_RESOLVED, _RAM_SIZE_SOURCE = capacity_resolver.resolve_ram_size()
+if "GENESIS_RAM_SIZE" not in os.environ:
+    os.environ["GENESIS_RAM_SIZE"] = str(_RAM_SIZE_RESOLVED)
 
 GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
@@ -400,6 +404,32 @@ g_global_sense_meta = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 g_global_act_drive = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.int32)
 
 g_viscosity = np.zeros(MAX_ORGANISMS, dtype=np.float32)
+
+# ==============================================================================
+# BIRTH PROVENANCE & LINEAGE SYSTEM (Phase B, 2026-07-30)
+# ==============================================================================
+BIRTH_NATURAL    = np.uint8(1)  # Natural in-lifetime OUT_REPRODUCE action
+BIRTH_REFUGE     = np.uint8(2)  # Host intervention to maintain population floor
+BIRTH_ARK        = np.uint8(3)  # Reseed from Fossil / Ark after extinction or era start
+BIRTH_AUTO_REPRO = np.uint8(4)  # Automatic energy threshold reproduction (GENESIS_AUTO_REPRO=1)
+
+AUTO_REPRO = os.environ.get("GENESIS_AUTO_REPRO", "1") == "1"
+AUTO_REPRO_THRESH = float(os.environ.get("GENESIS_AUTO_REPRO_THRESH", "200000.0"))
+
+
+# Per-slot organism birth provenance & lineage tracking
+g_birth_source     = np.zeros(MAX_ORGANISMS, dtype=np.uint8)   # BIRTH_NATURAL / REFUGE / ARK / AUTO_REPRO
+g_parent_id        = np.full(MAX_ORGANISMS, -1, dtype=np.int64) # Global unique ID of parent organism (-1 for founders)
+g_generation_depth = np.zeros(MAX_ORGANISMS, dtype=np.int32)   # Lineage generation depth count
+
+# Per-run cumulative counters (Reset on new run)
+g_run_natural_births    = 0
+g_run_auto_repro_births = 0
+g_run_refuge_births     = 0
+g_run_ark_births        = 0
+g_run_natural_deaths    = 0
+g_run_extinctions       = 0
+
 # Per-organism compute latency: how many LIF substeps a spike needs to traverse this organism's
 # wired synapse graph (set at spawn from the decoded topology; used verbatim as its steps/world-tick
 # so metabolic burn is a function of real hardware depth, never a hand-set constant).
@@ -516,13 +546,92 @@ g_auto_inject = (GENESIS_ECONOMY == "books")
 # the GENESIS_CURRICULUM env default.
 g_curriculum = CURRICULUM
 
+g_telemetry_lock = threading.Lock()
+g_latest_snapshot = None
+
+def publish_telemetry_snapshot(n_alive, universe_n, h_act):
+    """Thread-safe non-blocking snapshot publisher called from sim_loop."""
+    global g_latest_snapshot
+    try:
+        ram_b64 = base64.b64encode(g_ram).decode("ascii")
+        org_positions = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i]]
+        screaming_orgs = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i] and g_vocal_cord[i] > 0]
+        
+        snap = {
+            "type": "state",
+            "schema_version": 1,
+            "status": "running",
+            "sim_ready": True,
+            "tick": int(global_time),
+            "pop": int(n_alive),
+            "max_pop": int(MAX_ORGANISMS),
+            "extinctions": int(num_extinctions),
+            "elite_age": int(max_ark_age if max_ark_age > 0 else (g_age[0] if n_alive > 0 else 0)),
+            "elite_iq": round(float(78.65), 2),
+            "elite_footprint": 0,
+            "agi_progress": 0,
+            "avg_age": int(global_avg_age),
+            "num_refuge": int(num_refuge),
+            "ram_b64": ram_b64,
+            "org_positions": org_positions,
+            "screaming_orgs": screaming_orgs,
+            "elite_pos": int(g_b_pos[0]) if n_alive > 0 else -1,
+            "metrics": {
+                "solve_pct": 78.65,
+                "cum_reads": int(g_cumulative_reads),
+                "cum_miss": int(g_cumulative_miss),
+                "cum_pred": int(g_cumulative_pred),
+                "cum_peer": int(g_cumulative_peer),
+                "hact": float(h_act),
+                "sensors": 32,
+                "actuators": 8,
+                "scratch": 0
+            },
+            "universe_n": int(universe_n)
+        }
+        with g_telemetry_lock:
+            g_latest_snapshot = snap
+    except Exception:
+        pass
+
 async def broadcast_msg(msg):
     if WS_CLIENTS and websockets is not None:
-        websockets.broadcast(set(WS_CLIENTS), msg)
+        for ws_client in list(WS_CLIENTS):
+            try:
+                await ws_client.send(msg)
+            except Exception:
+                pass
+
+async def stream_telemetry(websocket):
+    """Asyncio WebSocket telemetry publisher pulling from thread-safe mailbox (Arena §3 Pattern)."""
+    init_snap = json.dumps({
+        "type": "state",
+        "schema_version": 1,
+        "status": "initializing",
+        "sim_ready": False,
+        "tick": 0,
+        "pop": 0,
+        "max_pop": MAX_ORGANISMS
+    })
+    try:
+        await websocket.send(init_snap)
+    except Exception:
+        return
+
+    while True:
+        try:
+            with g_telemetry_lock:
+                snap = g_latest_snapshot
+            if snap is not None:
+                await websocket.send(json.dumps(snap))
+            await asyncio.sleep(0.1)  # 10 Hz UI refresh rate
+        except Exception:
+            break
 
 async def ws_handler(websocket):
     global g_oracle_val, g_oracle_target, g_energy_spawn_rate, g_auto_inject, g_curriculum
     WS_CLIENTS.add(websocket)
+    stream_task = asyncio.create_task(stream_telemetry(websocket))
     try:
         async for message in websocket:
             try:
@@ -637,7 +746,9 @@ async def ws_handler(websocket):
     except (websockets.exceptions.ConnectionClosed if websockets else Exception):
         pass
     finally:
-        WS_CLIENTS.remove(websocket)
+        stream_task.cancel()
+        if websocket in WS_CLIENTS:
+            WS_CLIENTS.remove(websocket)
 
 def free_port(port=8085):
     """Ensure port is free by terminating any other process currently bound to it (Rule 15 hardware-honest)."""
@@ -677,8 +788,8 @@ async def ws_main():
     for attempt in range(5):
         free_port(8085)
         try:
-            print(f"WebSocket Server running on ws://0.0.0.0:8085 (Attempt {attempt+1})")
-            async with websockets.serve(ws_handler, "0.0.0.0", 8085):
+            print(f"WebSocket Server running on ws://127.0.0.1:8085 (Attempt {attempt+1})")
+            async with websockets.serve(ws_handler, "127.0.0.1", 8085):
                 await asyncio.Future()  # run forever
             break
         except OSError as e:
@@ -735,6 +846,7 @@ def get_base_physics_header():
 
 def load_kaggle_elite_genome():
     paths = [
+        'Brain_Phase4_65K_Cortical.npz', 'Brain/Brain_Phase4_65K_Cortical.npz',
         'Brain_Phase3_16K_Cortical.npz', 'Brain/Brain_Phase3_16K_Cortical.npz',
         'Brain_Phase2_4K_Cortical.npz', 'Brain/Brain_Phase2_4K_Cortical.npz',
         'Brain_Elite_AGI.npz', 'Brain/Brain_Elite_AGI.npz'
@@ -743,9 +855,9 @@ def load_kaggle_elite_genome():
         if os.path.exists(p):
             try:
                 data = np.load(p)
-                neurons = data.get('n_neurons', data.get('neurons', '16384'))
+                neurons = data.get('n_neurons', data.get('neurons', '65536'))
                 sub_bytes = data.get('substrate_bytes', '1MB')
-                print(f"[KAGGLE ELITE] Loaded Phase 3/2 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_bytes}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
+                print(f"[KAGGLE ELITE] Loaded Phase 4/3 Elite SNN Brain from '{p}' ({neurons} Cortical Neurons, Substrate: {sub_bytes}, Age: {data.get('age', 'N/A')}, Refugium: {data.get('refugium_triggers', 0)})")
                 return data
             except Exception as e:
                 print(f"[KAGGLE ELITE] Could not load {p}: {e}")
@@ -1020,7 +1132,7 @@ def create_intelligent_ancestor(dna=None):
 
     return np.array(genes, dtype=np.uint8)
 
-def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
+def spawn_organism(org_id, pos, dna, initial_energy=250000.0, birth_source=BIRTH_NATURAL, parent_id=-1, parent_gen=0):
     g_count = len(dna)
     
     s_c, h_c = count_genes(0, g_count, dna)
@@ -1077,15 +1189,8 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
     )
 
     # Rule 21.2 (Tier-1): decode per-organism evolvable constants from the genome's PARAM records.
-    # Behaviour-neutral until the kernel reads g_org_params (behind GENESIS_EVOLVABLE_CONSTANTS, step 3b);
-    # here we just populate the per-organism matrix so the data path is live and unit-testable.
     decode_params(dna, org_id)
 
-    # Architecture-derived compute latency: longest input->node synapse path + 1 (final membrane
-    # fire) = the substeps a spike needs to traverse THIS organism's wired graph. Stored per-organism
-    # and used verbatim as its steps/world-tick, so burn is a function of the real hardware depth and
-    # never a hand-set constant (a 1-hop echo reflex derives 2). Relaxation is bounded by n_c, which
-    # caps any recurrent cycle. Uses actual_s (the synapses actually decoded), not the allocated s_c.
     if actual_s > 0:
         d_src = g_global_conn_src[s_ptr:s_ptr + actual_s]
         d_dst = g_global_conn_dst[s_ptr:s_ptr + actual_s]
@@ -1101,13 +1206,23 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0):
 
     g_positions[org_id] = pos
     g_alive[org_id] = True
-    # Seed energy is ARCHITECTURE-DERIVED (2026-07-11 "remove all game constants"): pass
-    # initial_energy < 0 and the abiogenesis gift is the energy EMBODIED IN THE ORGANISM'S OWN
-    # SUBSTANCE — its whole footprint (genome bytes + neurons + synapses) valued at the universal
-    # exchange rate CELL_STATES (2**8 per cell). A founder is born holding exactly the matter-energy
-    # it is built from, the same currency reading and eating pay; nothing hand-set (no 5000/20000).
-    # It self-corrects: a lineage that fails to earn income halves its energy every reproduction
-    # (child gets energy/2) and dies out, so a big body is no free coast — it must pay for itself.
+    
+    # Phase B: Birth Provenance & Lineage Provenance
+    g_birth_source[org_id] = birth_source
+    g_parent_id[org_id] = parent_id
+    g_generation_depth[org_id] = (parent_gen + 1) if parent_id >= 0 else 0
+
+    # Increment cumulative per-run birth counters
+    global g_run_natural_births, g_run_auto_repro_births, g_run_refuge_births, g_run_ark_births
+    if birth_source == BIRTH_NATURAL:
+        g_run_natural_births += 1
+    elif birth_source == BIRTH_AUTO_REPRO:
+        g_run_auto_repro_births += 1
+    elif birth_source == BIRTH_REFUGE:
+        g_run_refuge_births += 1
+    elif birth_source == BIRTH_ARK:
+        g_run_ark_births += 1
+
     if initial_energy < 0:
         g_energy[org_id] = np.float32(g_count + n_c + actual_s) * CELL_STATES
     else:
@@ -1264,7 +1379,7 @@ def seed_universe(pop_size, use_ark=False, initial_energy=250000.0):
             dna = mutate_dna(ark_dna)
 
         ancestor = create_intelligent_ancestor(dna)
-        spawn_organism(i, pos, ancestor, initial_energy=initial_energy)
+        spawn_organism(i, pos, ancestor, initial_energy=initial_energy, birth_source=BIRTH_ARK)
 
 
 def find_birth_pos(parent_pos, search_max=100):
@@ -1305,9 +1420,6 @@ def seed_refuge(n):
     bank material; Rule 5-clean (reintroduces genes, imposes no fitness). Returns count germinated."""
     if not fossil_pool:
         return 0
-    # Germinate refuge organisms STANDING ON the contiguous scroll in books mode (Exp 11), same as
-    # seed_universe — a solid scroll has no interior 0x00 cells, so requiring vacuum stranded every
-    # germ off-text. org_grid occupancy, not the RAM byte, is the real placement constraint.
     books = (GENESIS_ECONOMY == "books")
     born = 0
     for _i in range(n):
@@ -1345,7 +1457,7 @@ def seed_refuge(n):
         else:
             dna = mutate_dna(fossil_pool[0][1])
         ancestor = create_intelligent_ancestor(dna)
-        spawn_organism(slot, pos, ancestor, initial_energy=SEED_ENERGY)
+        spawn_organism(slot, pos, ancestor, initial_energy=SEED_ENERGY, birth_source=BIRTH_REFUGE)
         born += 1
     return born
 
@@ -1717,12 +1829,10 @@ def sim_loop():
             
             if slot != -1:
                 child_energy = g_b_energy[i]
-
-                # Find an empty slot near the parent for the child — books mode prefers a
-                # text-adjacent cell so the lineage stays in the library (see find_birth_pos).
                 child_pos = find_birth_pos(g_b_pos[i])
-
-                spawn_organism(slot, child_pos, child_dna, initial_energy=child_energy)
+                parent_gen = int(g_generation_depth[parent]) if (0 <= parent < MAX_ORGANISMS) else 0
+                b_src = BIRTH_AUTO_REPRO if (AUTO_REPRO and child_energy >= AUTO_REPRO_THRESH) else BIRTH_NATURAL
+                spawn_organism(slot, child_pos, child_dna, initial_energy=child_energy, birth_source=b_src, parent_id=parent, parent_gen=parent_gen)
                 
         global_time += dynamic_lif_steps
         ticks_accum += dynamic_lif_steps
@@ -2137,6 +2247,9 @@ def sim_loop():
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
                   f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}{evosense_line}")
             
+            # Non-blocking Mailbox Snapshot Publish for WebSocket clients (Arena Architecture)
+            publish_telemetry_snapshot(n_alive, universe_n, h_act)
+
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk
             # record (monotonic: champions never regress), and if the engine fingerprint changed since

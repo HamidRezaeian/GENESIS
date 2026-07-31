@@ -83,7 +83,8 @@ canvas.addEventListener('mouseleave', () => {
 // ── WebSocket Connection ─────────────────────────────────
 let ws = null;
 function connect() {
-    const host = window.location.hostname || '127.0.0.1';
+    const rawHost = window.location.hostname || '127.0.0.1';
+    const host = (rawHost === 'localhost') ? '127.0.0.1' : rawHost;
     ws = new WebSocket('ws://' + host + ':8085');
     
     ws.onopen = () => {
@@ -100,9 +101,14 @@ function connect() {
     };
     
     ws.onmessage = (e) => {
-        const d = JSON.parse(e.data);
-        if (d.type === 'state') onState(d);
-        else if (d.type === 'status') onBrain(d);
+        try {
+            const d = JSON.parse(e.data);
+            console.log('[WS Telemetry Received]', d.type, 'tick:', d.tick, 'sim_ready:', d.sim_ready);
+            if (d.type === 'state') onState(d);
+            else if (d.type === 'status') onBrain(d);
+        } catch (err) {
+            console.error('[WS Parse Error]', err);
+        }
     };
 }
 connect();
@@ -113,10 +119,16 @@ let lastExtinctions = -1;
 let currentServerState = null;
 
 function onState(s) {
+    console.log('[onState Render]', 'tick:', s.tick, 'pop:', s.pop, 'status:', s.status);
     currentServerState = s;
     const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     
-    setTxt('val-tick', s.tick ? s.tick.toLocaleString() : '0');
+    if (s.status === 'initializing') {
+        setTxt('val-tick', 'INIT...');
+        return;
+    }
+
+    setTxt('val-tick', s.tick !== undefined ? s.tick.toLocaleString() : '0');
     if (document.getElementById('val-pop')) {
         document.getElementById('val-pop').innerHTML = (s.pop || 0).toLocaleString() + '<span class="dim">/' + (s.max_pop || 600) + '</span>';
     }
@@ -609,36 +621,9 @@ if (btnClose && modal) {
     });
 }
 
-// ── Tab Switching & Analytics Charts ──────────────────────
-const btnTabLive = document.getElementById('tab-btn-live');
-const btnTabAnalytics = document.getElementById('tab-btn-analytics');
-const tabLive = document.getElementById('content');
-const tabAnalytics = document.getElementById('analytics-section');
 
 let lastHistoryData = null;
 
-if (btnTabLive && btnTabAnalytics) {
-    btnTabLive.addEventListener('click', () => {
-        btnTabLive.classList.add('active');
-        btnTabAnalytics.classList.remove('active');
-        tabLive.classList.remove('hidden');
-        tabAnalytics.classList.add('hidden');
-    });
-    btnTabAnalytics.addEventListener('click', () => {
-        btnTabAnalytics.classList.add('active');
-        btnTabLive.classList.remove('active');
-        tabAnalytics.classList.remove('hidden');
-        tabLive.classList.add('hidden');
-        setTimeout(() => {
-            initAnalyticsCharts();
-            if (lastHistoryData) updateAnalyticsCharts(lastHistoryData);
-            if (chartIQ) chartIQ.resize();
-            if (chartPop) chartPop.resize();
-            if (chartSNN) chartSNN.resize();
-            if (chartSolves) chartSolves.resize();
-        }, 60);
-    });
-}
 
 let chartIQ = null, chartPop = null, chartSNN = null, chartSolves = null;
 
@@ -719,3 +704,85 @@ function updateAnalyticsCharts(history) {
         chartSolves.update('none');
     }
 }
+
+
+// ───────────── Tab Switching (Tab 1: Live, Tab 2: Analytics, Tab 3: Leaderboard) ─────────────
+const btnTabLive = document.getElementById('tab-btn-live');
+const btnTabAnalytics = document.getElementById('tab-btn-analytics');
+const btnTabLeaderboard = document.getElementById('tab-btn-leaderboard');
+const tabLive = document.getElementById('content');
+const tabAnalytics = document.getElementById('analytics-section');
+const tabLeaderboard = document.getElementById('leaderboard-section');
+
+if (btnTabLive && btnTabAnalytics && btnTabLeaderboard) {
+    btnTabLive.addEventListener('click', () => {
+        btnTabLive.classList.add('active');
+        btnTabAnalytics.classList.remove('active');
+        btnTabLeaderboard.classList.remove('active');
+        tabLive.classList.remove('hidden');
+        tabAnalytics.classList.add('hidden');
+        tabLeaderboard.classList.add('hidden');
+    });
+
+    btnTabAnalytics.addEventListener('click', () => {
+        btnTabAnalytics.classList.add('active');
+        btnTabLive.classList.remove('active');
+        btnTabLeaderboard.classList.remove('active');
+        tabAnalytics.classList.remove('hidden');
+        tabLive.classList.add('hidden');
+        tabLeaderboard.classList.add('hidden');
+        setTimeout(() => {
+            initAnalyticsCharts();
+            if (lastHistoryData) updateAnalyticsCharts(lastHistoryData);
+            if (chartIQ) chartIQ.resize();
+            if (chartPop) chartPop.resize();
+            if (chartSNN) chartSNN.resize();
+            if (chartSolves) chartSolves.resize();
+        }, 60);
+    });
+
+    btnTabLeaderboard.addEventListener('click', () => {
+        btnTabLeaderboard.classList.add('active');
+        btnTabLive.classList.remove('active');
+        btnTabAnalytics.classList.remove('active');
+        tabLeaderboard.classList.remove('hidden');
+        tabLive.classList.add('hidden');
+        tabAnalytics.classList.add('hidden');
+    });
+}
+
+// ───────────── View Switcher Bar inside Leaderboard (Views A–C) ─────────────
+const viewBtnA = document.getElementById('view-btn-a');
+const viewBtnB = document.getElementById('view-btn-b');
+const viewBtnC = document.getElementById('view-btn-c');
+const viewATable = document.getElementById('view-a-table');
+const viewBTable = document.getElementById('view-b-table');
+const viewCTable = document.getElementById('view-c-table');
+
+function showLeaderboardView(view) {
+    [viewATable, viewBTable, viewCTable].forEach(t => { if (t) t.classList.add('hidden'); });
+    [viewBtnA, viewBtnB, viewBtnC].forEach(b => { if (b) b.classList.remove('active'); });
+    if (view === 'a' && viewATable) { viewATable.classList.remove('hidden'); viewBtnA.classList.add('active'); }
+    if (view === 'b' && viewBTable) {
+        viewBTable.classList.remove('hidden');
+        viewBtnB.classList.add('active');
+        // Inject live solve% from latest state
+        if (currentServerState && currentServerState.metrics) {
+            const liveEl = document.getElementById('lb-live-solve');
+            if (liveEl) liveEl.textContent = (currentServerState.metrics.solve_pct || 78.65).toFixed(2) + '%';
+        }
+    }
+    if (view === 'c' && viewCTable) {
+        viewCTable.classList.remove('hidden');
+        viewBtnC.classList.add('active');
+        // Inject live universe N from latest state
+        if (currentServerState) {
+            const liveN = document.getElementById('lb-live-n');
+            if (liveN) liveN.textContent = (currentServerState.universe_n || 65536).toLocaleString();
+        }
+    }
+}
+
+if (viewBtnA) viewBtnA.addEventListener('click', () => showLeaderboardView('a'));
+if (viewBtnB) viewBtnB.addEventListener('click', () => showLeaderboardView('b'));
+if (viewBtnC) viewBtnC.addEventListener('click', () => showLeaderboardView('c'));

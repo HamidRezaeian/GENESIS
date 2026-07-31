@@ -1,0 +1,110 @@
+{
+  "protocol_id": "PHASE_5_CAUSAL_INTERVENTION_AND_EFFECT_PREDICTION_V1",
+  "claim_label": "CONFIRMED_GENERALIZATION_ON_PHASE_5_CAUSAL_INTERVENTION",
+  "caveats": [
+    "REPLICATED_ON_HELD_OUT_INTERVENTIONAL_TASKS",
+    "CORRELATION_ONLY_BASELINE_BEATEN",
+    "BROAD_TASK_GENERALIZATION_NOT_YET_ESTABLISHED",
+    "AGI_CLAIM_NOT_SUPPORTED"
+  ],
+  "brain_checkpoint_file_sha256": "6c2318dcd37c8a5ed9a9ede3e2d20e8c14563d35e4897e94c1507fcb9e8b345c",
+  "base_weights_sha256": "0e334214343cb23cb494adfad5bb1dcf9066ac524b55ba040c0b67b13cfaac2c",
+  "process_isolation_verified": true,
+  "controls_verified": {
+    "no_refuge": true,
+    "no_ark": true,
+    "no_privileged_causal_hint": true
+  },
+  "statistical_summary": {
+    "mean_delta_fraction": 0.3652573882638339,
+    "median_delta_fraction": 0.3624421275745693,
+    "sample_std_dev": 0.007934156181996482,
+    "ci_95_lower": 0.35958202916752974,
+    "ci_95_upper": 0.3709327473601381,
+    "cohens_d_z": 46.03607237939747,
+    "t_statistic": 145.5788432472632,
+    "p_value_permutation": 0.000976
+  },
+  "per_seed_results": {
+    "1101": {
+      "zero_shot_accuracy": 0.49493264791293534,
+      "few_shot_accuracy": 0.7983536129211659,
+      "matched_learning_ablation": 0.4182899941517896,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.38006361876937633
+    },
+    "1102": {
+      "zero_shot_accuracy": 0.4791556850697372,
+      "few_shot_accuracy": 0.7963609958891595,
+      "matched_learning_ablation": 0.4242504296351934,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.37211056625396616
+    },
+    "1103": {
+      "zero_shot_accuracy": 0.4739940900904086,
+      "few_shot_accuracy": 0.7893388695182624,
+      "matched_learning_ablation": 0.4166639884566542,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.3726748810616082
+    },
+    "1104": {
+      "zero_shot_accuracy": 0.4868411293764368,
+      "few_shot_accuracy": 0.7809322985181814,
+      "matched_learning_ablation": 0.4243606865567836,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.35657161196139775
+    },
+    "1105": {
+      "zero_shot_accuracy": 0.48631525744682286,
+      "few_shot_accuracy": 0.7806842773769815,
+      "matched_learning_ablation": 0.42064798602517606,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.3600362913518055
+    },
+    "1106": {
+      "zero_shot_accuracy": 0.48465189435753436,
+      "few_shot_accuracy": 0.7862146132374622,
+      "matched_learning_ablation": 0.42769411103319116,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.35852050220427106
+    },
+    "1107": {
+      "zero_shot_accuracy": 0.4814442841860734,
+      "few_shot_accuracy": 0.7975186035443949,
+      "matched_learning_ablation": 0.42788545165502095,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.3696331518893739
+    },
+    "1108": {
+      "zero_shot_accuracy": 0.49509738953957144,
+      "few_shot_accuracy": 0.7885885721061388,
+      "matched_learning_ablation": 0.4237406083088056,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.36484796379733314
+    },
+    "1109": {
+      "zero_shot_accuracy": 0.48952060461784763,
+      "few_shot_accuracy": 0.7814113431465215,
+      "matched_learning_ablation": 0.42162188266732353,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.35978946047919796
+    },
+    "1110": {
+      "zero_shot_accuracy": 0.4726166462414997,
+      "few_shot_accuracy": 0.7858725105168884,
+      "matched_learning_ablation": 0.42754667564687954,
+      "observational_correlation_baseline": 0.425,
+      "null_baseline": 0.25,
+      "raw_delta_fraction": 0.3583258348700089
+    }
+  }
+}

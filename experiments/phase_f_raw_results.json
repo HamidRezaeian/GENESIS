@@ -1,0 +1,55 @@
+{
+  "protocol_id": "TASK_GENERALIZATION_PHASE_F_v1",
+  "task_name": "Dual_Stage_Symbol_Permutation",
+  "execution_mode": "real_engine",
+  "training_stream_hash": "14d0fd36fc65f376156b8ca6fdd0dc2013e7352b0036947745e8541eb4581988",
+  "held_out_stream_hash": "03c6fc9ea6a2675922c10a1351371067cb17317374a4f02dcd2fc29ed346bb2a",
+  "mapping_schema_hash": "785a0481a15f167ed12fd14e3ff83cf37b1201f724a60b45de1892ada7aac63b",
+  "raw_results": {
+    "501": {
+      "proposed_plastic_learner": 0.7163286919030797,
+      "matched_learning_ablation": 0.3624497747150868,
+      "fixed_reflex_baseline": 0.3355878626744091,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.35387891718799286,
+      "initial_state_hash": "9bcf2f7afd62109436417db45a6d763135bfc3599941b916f7991e3b9c3136cc",
+      "final_state_hash": "1e195c115b9f899711258b7f108566f5230fb9ab7eec55f6a686d174351fdc76"
+    },
+    "502": {
+      "proposed_plastic_learner": 0.7127743024028924,
+      "matched_learning_ablation": 0.36227951410430603,
+      "fixed_reflex_baseline": 0.3445891101917874,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.3504947882985864,
+      "initial_state_hash": "8b80ca7d63273bf2bdda2b3468d1fb2b01a42bed95c4f8ec29884c58ef887371",
+      "final_state_hash": "94d63d8b2bbf6cb67b7b2137bb2e06ba163ed89d3986a42effd95b5fd9d652de"
+    },
+    "503": {
+      "proposed_plastic_learner": 0.710727509733769,
+      "matched_learning_ablation": 0.36146560893043844,
+      "fixed_reflex_baseline": 0.3410347809470831,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.3492619008033305,
+      "initial_state_hash": "12a264a74826fce0907613bae5c1fed8368bb480d6e5e471916e638002144249",
+      "final_state_hash": "7340aa8633682534b0ad0e4c2ba3fe2f5eb55089fdc43592fd16774045285614"
+    },
+    "504": {
+      "proposed_plastic_learner": 0.734440156825374,
+      "matched_learning_ablation": 0.35892948151848075,
+      "fixed_reflex_baseline": 0.33704836025195123,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.37551067530689325,
+      "initial_state_hash": "6122d753e924325acb1024c0876e924ec8cbf0b2890c86aa094b976582c99342",
+      "final_state_hash": "da3162c88af776e121d5ee1b82e9a078549052407b9d37ea5e62687db0987831"
+    },
+    "505": {
+      "proposed_plastic_learner": 0.735621484027822,
+      "matched_learning_ablation": 0.35804286453106837,
+      "fixed_reflex_baseline": 0.3372308852664275,
+      "format_matched_null": 0.1,
+      "raw_delta_fraction": 0.37757861949675364,
+      "initial_state_hash": "3f4992ee55fc7cc72eeda223426d27932053885c3b42b3d67f8435ae855c094e",
+      "final_state_hash": "8336acb86fb37a1b80587a95f98b5b370849d3aff3577e7cd7da8bb80e401a2c"
+    }
+  }
+}

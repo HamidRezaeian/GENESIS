@@ -11,6 +11,20 @@
    - `GENESIS_STDP3C=1` (Reward-Modulated STDP3 Plasticity)
 2. **UI Observer Mode Invariant:** The user interface (web dashboard / observation deck) operates strictly in **Observer Mode**. Manual parameter sliders, energy rate controls, and manual tuning inputs are locked to the optimal substrate baseline. The user interacts purely as an observer monitoring live telemetry, population trajectories, and autotelic behavioral evolution.
 
+## Rule 23: PyTorch HPC FP16 Tensor Core Kernel Optimization (Learned 2026-07-30)
+
+1. **FP16 Tensor Cores Activation:** All cortical time loops running on Turing (Tesla T4) GPUs MUST cast weights and state vectors to `torch.float16` to activate Turing Tensor Cores, unlocking up to 65.0 TFLOPS (vs 8.1 TFLOPS FP32 cap).
+2. **Zero-Allocation Broadcasts:** Avoid dynamic `.repeat()` calls inside time loops; use `.view(pop, 32, 1024)` + `.unsqueeze(1)` to eliminate dynamic VRAM memory allocation overheads.
+
+## Rule 24: Consolidation & Level 1 Replication Certification Invariants (Learned 2026-07-30)
+
+1. **5 Task Families Evaluation Range:** DMTS (Task 1), Bit Parity (Task 2), Compositional Arithmetic (Task 3), Spatial Navigation (Task 4), Causal Intervention (Task 5).
+2. **Strict Claim Boundary:** `STATISTICAL_REPLICATION_STATUS: CERTIFIED_LEVEL_1`, `BROAD_TASK_GENERALIZATION: NOT_ESTABLISHED`, `AGI_CLAIM: NOT_SUPPORTED`.
+3. **Artifact-Linked Frameworks:**
+   - **Internal Leaderboard Spec:** `Docs/FRAMEWORKS/INTERNAL_LEADERBOARD_SPEC.md`
+   - **Replication Certificate Spec:** `Docs/FRAMEWORKS/REPLICATION_CERTIFICATE_SPEC.md`
+   - **Series 1200 Seeds (1201-1210):** Evaluated across fresh processes with zero base weight drift ($0$ Bytes).
+
 ## Core Architectural Specifications (Organized under `Docs/Architecture/`)
 
 - [Ascent.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/Ascent.md): Deep Time evolution, cognitive probes, and binding finish line criteria.

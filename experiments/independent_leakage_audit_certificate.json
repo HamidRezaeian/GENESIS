@@ -1,0 +1,18 @@
+{
+  "audit_id": "INDEPENDENT_AUDIT_PHASE_F_v2",
+  "timestamp": "2026-07-30",
+  "hashes_verified": {
+    "training_stream": "14d0fd36fc65f376156b8ca6fdd0dc2013e7352b0036947745e8541eb4581988",
+    "held_out_stream": "03c6fc9ea6a2675922c10a1351371067cb17317374a4f02dcd2fc29ed346bb2a",
+    "mapping_schema": "785a0481a15f167ed12fd14e3ff83cf37b1201f724a60b45de1892ada7aac63b"
+  },
+  "leakage_results": {
+    "payload_byte_overlap_detected": false,
+    "ngram_leakage_detected": true,
+    "position_leakage_detected": false,
+    "marginal_leakage_detected": false,
+    "stage_boundary_leakage_detected": false,
+    "oracle_metadata_leakage_detected": false
+  },
+  "conclusion": "FAILED_LEAKAGE_DETECTED"
+}
