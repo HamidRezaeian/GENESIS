@@ -1,0 +1,91 @@
+{
+ "instrument": "remap_sandbox_probe",
+ "instrument_rev": "2026-07-31+drift-pin",
+ "seed": 6,
+ "mode": "STDP3C",
+ "remap": true,
+ "period": 2000,
+ "states": 2,
+ "swapbits": [
+  0,
+  1
+ ],
+ "stdp_div": 4.0,
+ "n_orgs": 120,
+ "ticks": 8000,
+ "patch": 2000,
+ "report": 1000,
+ "pin_pos": true,
+ "windows": [
+  {
+   "t": 1000,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 487,
+   "swapbit_total": 606,
+   "unchbit_correct": 1788,
+   "unchbit_total": 1818,
+   "alive": 120
+  },
+  {
+   "t": 2000,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 309,
+   "swapbit_total": 524,
+   "unchbit_correct": 1465,
+   "unchbit_total": 1572,
+   "alive": 120
+  },
+  {
+   "t": 3000,
+   "remap_active": true,
+   "phase_label": "SWAP",
+   "swapbit_correct": 208,
+   "swapbit_total": 476,
+   "unchbit_correct": 1315,
+   "unchbit_total": 1428,
+   "alive": 120
+  },
+  {
+   "t": 4000,
+   "remap_active": true,
+   "phase_label": "SWAP",
+   "swapbit_correct": 236,
+   "swapbit_total": 342,
+   "unchbit_correct": 722,
+   "unchbit_total": 1026,
+   "alive": 120
+  },
+  {
+   "t": 5000,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 238,
+   "swapbit_total": 340,
+   "unchbit_correct": 649,
+   "unchbit_total": 1020,
+   "alive": 120
+  },
+  {
+   "t": 6000,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 236,
+   "swapbit_total": 348,
+   "unchbit_correct": 667,
+   "unchbit_total": 1044,
+   "alive": 120
+  },
+  {
+   "t": 7000,
+   "remap_active": true,
+   "phase_label": "SWAP",
+   "swapbit_correct": 229,
+   "swapbit_total": 322,
+   "unchbit_correct": 613,
+   "unchbit_total": 966,
+   "alive": 120
+  }
+ ]
+}

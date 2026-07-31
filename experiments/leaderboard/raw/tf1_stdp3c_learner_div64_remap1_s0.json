@@ -2,7 +2,7 @@
  "instrument": "remap_sandbox_probe",
  "instrument_rev": "2026-07-31+drift-pin",
  "seed": 0,
- "mode": "NOLEARN",
+ "mode": "STDP3C",
  "remap": true,
  "period": 4000,
  "states": 2,

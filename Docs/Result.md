@@ -4376,5 +4376,47 @@ DIV=1; H2 — the optimum's location shifts with tempo (direction exploratory). 
 positive, no nomination is made and the next lever is a MECHANISM change (plasticity gating /
 two-timescale consolidation), not more sweeping (Rule 18's substrate-hypothesis clause).
 
-### Results — *to be appended by the execution commit (following commit, same protocol).*
+### Results (measured 2026-07-31; raw + stats in `experiments/exp96_map_results.json`; invariance per tempo: default = previously verified, fast = `true`)
+
+Mean paired deltas (learner − ablation swap-era accuracy, n=8, ALL exploratory/unadjusted):
+
+| tempo \\ DIV | 1 | 2 | 4 | 8 | 16 | 32 | 64 |
+|---|---|---|---|---|---|---|---|
+| **default** | +4.26 | −0.22 | −1.40 | +1.97 | −0.48 | **+4.36** | +2.80 (p .0625) |
+| **fast** | +1.71 | −1.78 | −1.52 | −0.14 | −0.08 | −0.03 | +1.39 |
+
+**H1 (interior optimum above DIV=1): NOT cleanly supported.** The default-tempo curve is not
+the hypothesized smooth trade-off — it oscillates at the scale of per-combo noise (≈2.3 pp
+at n=8): div1 +4.26, div2/4/16 around zero/negative, div32 +4.36, div64 +2.80 with the
+map's smallest p (0.0625). **H2 (interaction):** default nominates div32, fast nominates div1 —
+but the fast tempo shows NO combo above +1.71, so the interaction reads as "in a faster world
+learning helps nowhere on this axis" more than "the optimum moves". **Nominations per the
+pre-registered rule (largest mean delta per tempo): `default|div32`, `fast|div1`.**
+
+### ⚠️ Methodological fix BEFORE Exp 97 execution (registered here, superseding one clause above)
+
+The Exp-96 docstring said the confirmatory n=24 may reuse seeds 0-7 via the deterministic
+cache. That is **circular** for any combo whose nomination depended on those very seeds
+(winner's-curse inflation) — and every nominated combo has that property. Overridden BEFORE
+any Exp-97 data exists: Exp 97 runs on **entirely fresh seeds 24..47**, still n=24 pairs per
+target, with **two confirmatory tests and Bonferroni correction (α = 0.025 two-sided each)**.
+As a consequence, the already-existing default|div32 n=24 *sensitivity* numbers from Exp 94b
+(+1.92, p=0.096) stay exploratory and do NOT count as confirmation.
+
+## 🧪 Experiment 97 — PRE-REGISTERED confirmatory at the two nominated operating points (2026-07-31)
+
+* Targets: `(DIV=32, default tempo)` and `(DIV=1, fast tempo)`, nominated by Exp 96 under its
+  registered selection rule.
+* Design: per target, n=24 seed pairs (24..47; NOTHING reused from nomination data), learner vs
+  matched NOLEARN ablation, 8000 ticks, same pinned geometry/RNG seeding, same paired sign-flip
+  permutation (branch per code: exact n≤20, pinned-seed MC 10^5 draws otherwise), the swap-era
+  accuracy as endpoint; gates: completeness + measured swap eras + per-tempo invariance check
+  recorded.
+* Decision: a target is CONFIRMED iff its two-sided p ≤ 0.025 (Bonferroni for two targets).
+  One confirmed, both confirmed, or none — all are binding publishable outcomes (Rule 16).
+  If `default|div32` confirms, the next step is the Rule 18-A horizon question at that point;
+  if nothing confirms, the learning-advantage axis moves to mechanism changes (gated plasticity /
+  two-timescale consolidation), per the substrate-hypothesis clause.
+
+### Results — *to be appended by the execution commit.*
 
