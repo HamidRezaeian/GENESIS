@@ -1,4 +1,33 @@
-## Latest Session Update (2026-07-31 — Session 15: Deep-Review Remediation Sprint — Honest Telemetry, Wired Provenance, Deduped Record, CI, Docs Sync)
+## Latest Session Update (2026-07-31 — Session 16: TF1 Goes Inferential — n=8 Paired Permutation, DIV Sensitivity, Exp-94b Pre-Registered at n=24)
+
+**Continued the AGI-readiness audit on `arena/019fb620-genesis`. Session theme: the leaderboard's
+first row was descriptive (n=3); now TF1 carries a real statistical verdict machine, and its
+decisive repetition is pre-registered BEFORE the data exists.**
+
+- **Exp 94 (commit A, this session):** `experiments/exp92_tf1_leaderboard_runner.py` extended —
+  default seeds 0..7 (n=8); pre-registered confirmatory **paired sign-flip permutation test**
+  (exact 2^n enumeration, two-sided, sign not pre-assumed; multiplicity discipline: single
+  confirmatory DIV=1 test, sweep exploratory); optional `EXP92_TF1_DIV_SWEEP=1,8,32` with an
+  EMPIRICAL ablation-DIV-invariance check (bit-for-bit) before any shared-ablation pairing;
+  opt-in `EXP92_TF1_REUSE_CACHE=1` (off by default; justified by measured byte-determinism;
+  reused runs flagged in payload). Slow pytest asserts the stats block (n=2 CI budget,
+  backup/restore of the published row intact).
+- **Results (certified, n=8):** mean paired delta **+4.26** (median +5.16, 6/8 positive,
+  range [−6.27,+16.13]), exact two-sided **p=0.15625** — directionally positive, NOT resolved
+  at α=0.05. DIV sweep: +4.26 (p=0.16) / +1.97 (p=0.56) / +4.36 (p=0.13) at DIV 1/8/32 —
+  direction is DIV-robust, nothing significant; invariance check `equal: true`. Cross-invocation
+  determinism re-verified byte-for-byte against the committed n=3 row. Full record:
+  `Docs/Result.md` Exp 94.
+- **Exp 94b (pre-registered, binding):** single decisive repetition at **n=24** (seeds 0..23,
+  same protocol/gates/test/tail, α=0.05, power ≈ 80% for the observed effect size; seeds 8-23
+  generated only after registration). Results appended in `Docs/Result.md` Exp 94(c).
+- **Next after 94b:** if significant → replicate at a second operating point / extend tick
+  budget; if not → instrument-difficulty lever (swap-window yield) rather than more peeks;
+  then Task Family 2-5 driver audits (same 92b class) → new leaderboard rows; P1-8
+  AUTO_REPRO_THRESH derivation; terminal-extinction arm for 92-M.
+
+<details>
+<summary>2026-07-31 — Session 15: Deep-Review Remediation Sprint — Honest Telemetry, Wired Provenance, Deduped Record, CI, Docs Sync</summary>
 
 **Executed the `Docs/GENESIS_DEEP_REVIEW_FOR_BUILDER.md` remediation plan (the Persian deep review,
 2026-07-30) end-to-end on branch `arena/019fb620-genesis`. All phases commit + pushed. The theme:
@@ -107,6 +136,8 @@ cells via the Docs/PROTOCOLS task families (P0-6); (2) no-refuge control + permu
 report for any future Exp-91-class claim (P1-3/P1-4); (3) exchange-rate (`CELL_STATES=256`/byte)
 sensitivity documentation (P1-7) + measured-vs-estimated energy naming (P1-6); (4) P1-12
 snapshot/barrier ownership for state (checkpoint mid-tick races); (5) monolith split (P2-1).
+
+</details>
 
 ---
 

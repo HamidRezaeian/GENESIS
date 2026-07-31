@@ -1,8 +1,8 @@
 {
  "protocol_id": "REMAP_SANDBOX_TF1_v1",
  "family": "Task Family 1 \u2014 Non-stationary Tracking (remap sandbox)",
- "date_utc": "2026-07-31T06:08:57Z",
- "git_commit": "e521f4b",
+ "date_utc": "2026-07-31T07:00:29Z",
+ "git_commit": "b95f791",
  "compile_fingerprint": {
   "error": "AttributeError: module 'compile_fingerprint' has no attribute 'current_fingerprint'"
  },
@@ -16,7 +16,12 @@
   "seeds": [
    0,
    1,
-   2
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
   ],
   "remap_period": 4000,
   "stdp_div": 1,
@@ -27,7 +32,8 @@
  },
  "gates": {
   "G1_instrument_sanity_nolearn_static_unch>=80": true,
-  "G2_run_completeness": true
+  "G2_run_completeness": true,
+  "G2b_swap_windows_measured": true
  },
  "certified": true,
  "metrics": {
@@ -43,6 +49,26 @@
    "nolearn_ablation|remap0|s2": {
     "static_unch": 94.85749690210656,
     "n": 3228
+   },
+   "nolearn_ablation|remap0|s3": {
+    "static_unch": 90.3225806451613,
+    "n": 3162
+   },
+   "nolearn_ablation|remap0|s4": {
+    "static_unch": 93.69538077403246,
+    "n": 3204
+   },
+   "nolearn_ablation|remap0|s5": {
+    "static_unch": 92.02094886013555,
+    "n": 3246
+   },
+   "nolearn_ablation|remap0|s6": {
+    "static_unch": 95.3556731334509,
+    "n": 3402
+   },
+   "nolearn_ablation|remap0|s7": {
+    "static_unch": 96.30281690140845,
+    "n": 3408
    },
    "nolearn_ablation|remap1|s0": {
     "swap_mix": 66.84491978609626,
@@ -62,6 +88,36 @@
     "swap_n": 370,
     "unch_n": 3204
    },
+   "nolearn_ablation|remap1|s3": {
+    "swap_mix": 69.1542288557214,
+    "unch_mix": 90.18661518661519,
+    "swap_n": 402,
+    "unch_n": 3108
+   },
+   "nolearn_ablation|remap1|s4": {
+    "swap_mix": 60.05747126436781,
+    "unch_mix": 92.93680297397769,
+    "swap_n": 348,
+    "unch_n": 3228
+   },
+   "nolearn_ablation|remap1|s5": {
+    "swap_mix": 58.98203592814371,
+    "unch_mix": 92.27871939736346,
+    "swap_n": 334,
+    "unch_n": 3186
+   },
+   "nolearn_ablation|remap1|s6": {
+    "swap_mix": 51.74418604651163,
+    "unch_mix": 95.65347721822542,
+    "swap_n": 344,
+    "unch_n": 3336
+   },
+   "nolearn_ablation|remap1|s7": {
+    "swap_mix": 43.75,
+    "unch_mix": 95.80399061032864,
+    "swap_n": 448,
+    "unch_n": 3408
+   },
    "stdp3c_learner|remap0|s0": {
     "static_unch": 90.89108910891089,
     "n": 3030
@@ -73,6 +129,26 @@
    "stdp3c_learner|remap0|s2": {
     "static_unch": 92.76032039433149,
     "n": 3246
+   },
+   "stdp3c_learner|remap0|s3": {
+    "static_unch": 92.60651629072682,
+    "n": 3192
+   },
+   "stdp3c_learner|remap0|s4": {
+    "static_unch": 94.81074481074481,
+    "n": 3276
+   },
+   "stdp3c_learner|remap0|s5": {
+    "static_unch": 86.98016634676904,
+    "n": 3126
+   },
+   "stdp3c_learner|remap0|s6": {
+    "static_unch": 94.58560193587417,
+    "n": 3306
+   },
+   "stdp3c_learner|remap0|s7": {
+    "static_unch": 94.89007724301842,
+    "n": 3366
    },
    "stdp3c_learner|remap1|s0": {
     "swap_mix": 62.311557788944725,
@@ -91,13 +167,200 @@
     "unch_mix": 93.93939393939394,
     "swap_n": 404,
     "unch_n": 3234
+   },
+   "stdp3c_learner|remap1|s3": {
+    "swap_mix": 62.88659793814433,
+    "unch_mix": 93.30097087378641,
+    "swap_n": 388,
+    "unch_n": 3090
+   },
+   "stdp3c_learner|remap1|s4": {
+    "swap_mix": 65.9090909090909,
+    "unch_mix": 95.58457711442786,
+    "swap_n": 308,
+    "unch_n": 3216
+   },
+   "stdp3c_learner|remap1|s5": {
+    "swap_mix": 75.11627906976744,
+    "unch_mix": 88.19047619047619,
+    "swap_n": 430,
+    "unch_n": 3150
+   },
+   "stdp3c_learner|remap1|s6": {
+    "swap_mix": 61.202185792349724,
+    "unch_mix": 95.21244763614602,
+    "swap_n": 366,
+    "unch_n": 3342
+   },
+   "stdp3c_learner|remap1|s7": {
+    "swap_mix": 48.214285714285715,
+    "unch_mix": 93.50533807829181,
+    "swap_n": 448,
+    "unch_n": 3372
    }
   },
-  "learner_swap_mix_mean": 59.01694390544583,
-  "ablation_swap_mix_mean": 57.530889177948005,
-  "swap_delta_learner_minus_ablation": 1.486054727497823,
-  "note": "n=3 seeds per arm; descriptive reporting only \u2014 no z-claim at this n (deep review P1-4)."
+  "learner_swap_mix_mean": 61.297408892496954,
+  "ablation_swap_mix_mean": 57.035073703573566,
+  "swap_delta_learner_minus_ablation": 4.262335188923387,
+  "stats": {
+   "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
+   "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
+   "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
+   "n_pairs": 8,
+   "per_seed_deltas": [
+    -4.53336199715153,
+    0.6666666666666714,
+    8.324859512978328,
+    -6.267630917577073,
+    5.851619644723094,
+    16.134243141623735,
+    9.457999745838094,
+    4.464285714285715
+   ],
+   "mean_delta": 4.262335188923379,
+   "median_delta": 5.157952679504405,
+   "min_delta": -6.267630917577073,
+   "max_delta": 16.134243141623735,
+   "p_two_sided": 0.15625,
+   "method": "exact enumeration over all 2^8 = 256 sign assignments",
+   "min_attainable_p": 0.0078125,
+   "confirmatory": true,
+   "multiplicity_note": "SINGLE confirmatory test (DIV=1 swap_mix delta). Any DIV-sweep p-values below are sensitivity/exploratory and are NOT adjusted for \u2014 treat them as hypothesis-generating."
+  },
+  "note": "n=8 seed pairs; confirmatory paired permutation (two-sided, exact at this n). alpha reference 0.05 \u2014 min attainable p here is 0.0078125."
  },
- "runs_manifest_hash": "da197afdae7cbba80bb4671cd3e7eaee153a798c12b453dbf3aafbd79e1a4ce9",
+ "div_sensitivity": {
+  "axis": "GENESIS_STDP_DIV (dopamine-modulated STDP divisor)",
+  "pairing": "learner(div) vs the SAME main-ladder ablation runs, per seed",
+  "ablation_div_invariance": {
+   "checked": true,
+   "equal": true,
+   "details": {
+    "0": true
+   }
+  },
+  "swept_divs": [
+   1,
+   8,
+   32
+  ],
+  "results": {
+   "1": {
+    "learner_swap_mix_mean": 61.297408892496954,
+    "per_seed_swap_mix": {
+     "0": 62.311557788944725,
+     "1": 55.333333333333336,
+     "2": 59.40594059405941,
+     "3": 62.88659793814433,
+     "4": 65.9090909090909,
+     "5": 75.11627906976744,
+     "6": 61.202185792349724,
+     "7": 48.214285714285715
+    },
+    "stats_vs_main_ablation": {
+     "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
+     "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
+     "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
+     "n_pairs": 8,
+     "per_seed_deltas": [
+      -4.53336199715153,
+      0.6666666666666714,
+      8.324859512978328,
+      -6.267630917577073,
+      5.851619644723094,
+      16.134243141623735,
+      9.457999745838094,
+      4.464285714285715
+     ],
+     "mean_delta": 4.262335188923379,
+     "median_delta": 5.157952679504405,
+     "min_delta": -6.267630917577073,
+     "max_delta": 16.134243141623735,
+     "p_two_sided": 0.15625,
+     "method": "exact enumeration over all 2^8 = 256 sign assignments",
+     "min_attainable_p": 0.0078125,
+     "exploratory_unadjusted": true
+    }
+   },
+   "8": {
+    "learner_swap_mix_mean": 59.007767183498,
+    "per_seed_swap_mix": {
+     "0": 53.5,
+     "1": 54.333333333333336,
+     "2": 70.51282051282051,
+     "3": 64.63414634146342,
+     "4": 67.3529411764706,
+     "5": 65.625,
+     "6": 50.0,
+     "7": 46.103896103896105
+    },
+    "stats_vs_main_ablation": {
+     "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
+     "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
+     "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
+     "n_pairs": 8,
+     "per_seed_deltas": [
+      -13.344919786096256,
+      -0.3333333333333286,
+      19.43173943173943,
+      -4.520082514257979,
+      7.2954699121027815,
+      6.642964071856291,
+      -1.7441860465116292,
+      2.353896103896105
+     ],
+     "mean_delta": 1.972693479924427,
+     "median_delta": 1.0102813852813881,
+     "min_delta": -13.344919786096256,
+     "max_delta": 19.43173943173943,
+     "p_two_sided": 0.5625,
+     "method": "exact enumeration over all 2^8 = 256 sign assignments",
+     "min_attainable_p": 0.0078125,
+     "exploratory_unadjusted": true
+    }
+   },
+   "32": {
+    "learner_swap_mix_mean": 61.3924362409076,
+    "per_seed_swap_mix": {
+     "0": 66.84491978609626,
+     "1": 54.666666666666664,
+     "2": 58.79120879120879,
+     "3": 68.29896907216495,
+     "4": 73.1638418079096,
+     "5": 56.9060773480663,
+     "6": 63.311688311688314,
+     "7": 49.15611814345991
+    },
+    "stats_vs_main_ablation": {
+     "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
+     "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
+     "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
+     "n_pairs": 8,
+     "per_seed_deltas": [
+      0.0,
+      0.0,
+      7.710127710127708,
+      -0.8552597835564484,
+      13.106370543541793,
+      -2.075958580077412,
+      11.567502265176685,
+      5.4061181434599135
+     ],
+     "mean_delta": 4.35736253733403,
+     "median_delta": 2.7030590717299567,
+     "min_delta": -2.075958580077412,
+     "max_delta": 13.106370543541793,
+     "p_two_sided": 0.125,
+     "method": "exact enumeration over all 2^8 = 256 sign assignments",
+     "min_attainable_p": 0.0078125,
+     "exploratory_unadjusted": true
+    }
+   }
+  },
+  "note": "SENSITIVITY, not confirmatory; p-values unadjusted for the multi-div look."
+ },
+ "runs_manifest_hash": "9f71dbe077f0fc153b5f05628853da1b1a1762d87c6f8a2ffeae436249118eef",
+ "main_ladder_runs_reused_from_cache": 32,
+ "main_ladder_runs_executed_live": 0,
  "energy_basis": "cycles MEASURED natively per Rule 21.1 (see Docs/Architecture/ENERGY_ACCOUNTING.md)"
 }

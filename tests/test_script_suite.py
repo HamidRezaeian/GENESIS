@@ -61,8 +61,9 @@ def test_slow_script(script):
 @pytest.mark.slow
 def test_tf1_leaderboard_runner():
     """Small-budget certification: the pre-registered TF1 runner must publish a row with
-    gates evaluated and full provenance fields (Exp 92-TF1). Uses 2 seeds / short ticks for CI
-    wall-time; the certified dashboard row is produced by the full n=3 driver."""
+    gates evaluated, the Exp-94 paired-permutation stats block, and full provenance fields
+    (Exp 92-TF1 / Exp 94). Uses 2 seeds for CI wall-time; the certified dashboard row is
+    produced by the full n=8 driver."""
     env = os.environ.copy()
     env.update({
         "GENESIS_LIVE_WEB": "0",
@@ -86,7 +87,7 @@ def test_tf1_leaderboard_runner():
         with open(lb_path) as f:
             d = json.load(f)
     finally:
-        # The dashboard's published certified row belongs to the FULL n=3 driver; never let a
+        # The dashboard's published certified row belongs to the FULL n=8 driver; never let a
         # CI-budget run overwrite it.
         if backup is not None:
             with open(lb_path, "wb") as f:
@@ -94,3 +95,7 @@ def test_tf1_leaderboard_runner():
     assert d["protocol_id"] == "REMAP_SANDBOX_TF1_v1"
     assert "certified" in d and "gates" in d and "runs_manifest_hash" in d
     assert d["metrics"]["swap_delta_learner_minus_ablation"] is not None
+    st = d["metrics"]["stats"]
+    assert st["n_pairs"] == 2 and st["p_two_sided"] is not None
+    assert st["tail"].startswith("two-sided")
+    assert len(st["per_seed_deltas"]) == 2

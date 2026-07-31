@@ -4154,3 +4154,95 @@ arm; the current B arm already shows even WITH reseeds the colony cannot hold, w
 stronger form of the failure.
 
 
+
+## 🧪 Experiment 94 — From descriptive to inferential: n=8 paired permutation on TF1, and the pre-registration of the decisive n=24 verdict (2026-07-31)
+
+**Status of this entry:** part (a) reports MEASURED results (n=8, certified); part (b) is a
+binding pre-registration committed BEFORE any seed ≥ 8 datum existed (verified by git/CI
+timestamps of the commit whose message begins "Exp 94″); part (c) is appended in the follow-up
+commit with whatever the n=24 protocol measures — binding regardless of sign (Rule 16).
+
+**Motivation (deep-review P1-4).** The Exp-92-TF1 row was n=3 seeds, hence purely descriptive
+(swap_delta +1.49, "no z-claim at this n"). This experiment upgrades the SAME protocol
+(REMAP_SANDBOX_TF1_v1, instrument `2026-07-31+drift-pin`, pinned geometry MAX_ORGANISMS=512 /
+RAM_SIZE=2097152, 8000 ticks, REMAP_PERIOD=4000, DIV=1 operating point) to an inferential test.
+
+### (a) Exp 94 main — n=8 confirmatory paired permutation (MEASURED)
+
+Pre-registered before execution (runner docstring): statistic T = mean of seed-matched paired
+deltas d_s = learner_swap_mix[s] − ablation_swap_mix[s], tested against the exact sign-flip
+permutation null (within a seed pair the arm labels are exchangeable), TWO-SIDED (the sign of
+the effect was not pre-assumed), exact enumeration over all 2^8 = 256 sign assignments. Minimum
+attainable p at n=8: 2/256 ≈ 0.0078. The single DIV=1 delta is the ONLY confirmatory test;
+the DIV sweep is sensitivity-only (unadjusted).
+
+Infrastructure honesty note: the runner gained an opt-in `EXP92_TF1_REUSE_CACHE=1` mode
+(OFF by default) that reuses byte-deterministic raw per-run JSONs instead of re-executing them,
+with every reused run flagged in the payload (`main_ladder_runs_reused/executed_live`). Used
+only because this instrument was measured byte-reproducible across invocations (Exp 93 re-verified
+below). A cold-cache invocation remains a valid standalone certification; the n=8+sweep budget
+(57 runs ≈ 6-7 min) merely exceeds the sandbox's ~300 s single-call ceiling otherwise.
+
+**Certification gates:** G1 (instrument sanity, NOLEARN static_unch ≥ 80% per seed) ✅ ·
+G2 (completeness) ✅ · G2b (swap eras measured) ✅ → **row certified=true**
+(`experiments/leaderboard/latest.json`).
+
+**Results — seed-matched swap-era accuracy (`swap_mix`, REMAP=1) and deltas (learner − ablation):**
+
+| seed | learner | ablation | delta | static_unch L/A (REMAP=0) |
+|---|---|---|---|---|
+| 0 | 62.31 | 66.84 | −4.53 | 90.9 / 93.2 |
+| 1 | 55.33 | 54.67 | +0.67 | 95.3 / 96.1 |
+| 2 | 59.41 | 51.08 | +8.32 | 92.8 / 94.9 |
+| 3 | 62.89 | 69.15 | −6.27 | 92.6 / 90.3 |
+| 4 | 65.91 | 60.06 | +5.85 | 94.8 / 93.7 |
+| 5 | 75.12 | 58.98 | +16.13 | 87.0 / 92.0 |
+| 6 | 61.20 | 51.74 | +9.46 | 94.6 / 95.4 |
+| 7 | 48.21 | 43.75 | +4.46 | 94.9 / 96.3 |
+
+mean delta = **+4.26**, median +5.16, range [−6.27, +16.13], 6/8 positive;
+**exact two-sided permutation p = 0.156** → at the pre-registered α = 0.05 the learning
+advantage is **directionally positive but NOT statistically resolved at n=8**. Reported upright:
+the signal grew from the n=3 estimate (+1.49 → +4.26) and the sign did not flip, but this sample
+cannot exclude exchangeability of arms.
+
+**DIV sensitivity sweep (EXP92_TF1_DIV_SWEEP=1,8,32; learner re-run at each DIV; deltas paired
+against the SAME ablation runs):** the ablation-DIV-invariance assumption was not assumed but
+empirically verified first — ablation at DIV=32, seed 0, reproduced the main-ladder run
+bit-for-bit (flag `equal: true`), justifying the shared-ablation pairing.
+
+| DIV | learner swap_mix mean | mean delta vs ablation | p (two-sided, unadjusted) |
+|---|---|---|---|
+| 1 (confirmatory) | 61.30 | +4.26 | 0.156 |
+| 8 | 59.01 | +1.97 | 0.563 |
+| 32 | 61.39 | +4.36 | 0.125 |
+
+The positive direction is not a DIV=1 artifact (DIV=32 reproduces it), and nothing in the sweep
+reaches significance — the session-era "DIV=32 shows strong effects" reading remains explained by
+the pre-repair instrument confounds (Exp 92b), now with n=8 evidence on the repaired instrument.
+
+**Determinism re-verified cross-invocation:** all 12 per-seed metric cells shared with the
+committed Exp-92-TF1 n=3 row (produced by an earlier independent invocation) are byte-IDENTICAL
+under the new runner — the reuse-cache mode and the whole pinned-geometry stack stand verified.
+
+### (b) Exp 94b — PRE-REGISTERED (binding; committed before any seed ≥ 8 datum exists)
+
+Exp 94 (n=8) has ~30% power for an effect of the observed size (mean +4.26, SD of paired deltas
+≈ 6.6). Rather than extend sample size repeatedly after peeking (optional stopping), we commit
+NOW to a single decisive repetition:
+
+* Protocol: REMAP_SANDBOX_TF1_v1 unchanged — same instrument revision, geometry pins, tick budget,
+  remap period, gates G1/G2/G2b, confirmatory statistic, tail, and enumeration method.
+* Sample: seeds 0..23 — n=24 paired deltas (power ≈ 80% for the n=8-observed effect; minimum
+  attainable p ≈ 1.2e−7). Seeds 0-7 enter as the already-certified byte-deterministic values
+  (REUSE cache); seeds 8-23 are generated AFTER this registration.
+* Test: the SAME single confirmatory paired permutation on the DIV=1 swap_mix delta, α = 0.05
+  two-sided. The DIV sweep (1,8,32) is re-run at n=24 as sensitivity-only, unadjusted.
+* Binding: whatever 94b returns — positive and significant, null, or reversed — stands as THE
+  confirmatory verdict on in-lifetime re-tracking advantage (Exp-34-class effect) at this
+  operating point, and the Ascent-Program criterion-B story is updated accordingly. If
+  nonsignificant, the next lever is task/instrument difficulty (swap-window yield; seed-averaged
+  SD reduction), not more peeks.
+
+### (c) Exp 94b results — *to be appended by the execution commit (see follow-up commit).*
+
