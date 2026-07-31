@@ -1,9 +1,9 @@
 {
  "instrument": "remap_sandbox_probe",
  "instrument_rev": "2026-07-31+drift-pin+gate-diag",
- "seed": 1,
- "mode": "NOLEARN",
- "remap": false,
+ "seed": 53,
+ "mode": "STDP3C",
+ "remap": true,
  "period": 4000,
  "states": 2,
  "swapbits": [
@@ -19,9 +19,9 @@
  "windows": [
   {
    "t": 2000,
-   "remap_active": false,
+   "remap_active": true,
    "phase_label": "idnt",
-   "swapbit_correct": 495,
+   "swapbit_correct": 498,
    "swapbit_total": 614,
    "unchbit_correct": 1813,
    "unchbit_total": 1842,
@@ -29,22 +29,22 @@
   },
   {
    "t": 4000,
-   "remap_active": false,
+   "remap_active": true,
    "phase_label": "idnt",
-   "swapbit_correct": 377,
-   "swapbit_total": 548,
-   "unchbit_correct": 1538,
-   "unchbit_total": 1644,
+   "swapbit_correct": 263,
+   "swapbit_total": 492,
+   "unchbit_correct": 1273,
+   "unchbit_total": 1476,
    "alive": 120
   },
   {
    "t": 6000,
-   "remap_active": false,
+   "remap_active": true,
    "phase_label": "SWAP",
-   "swapbit_correct": 223,
-   "swapbit_total": 352,
-   "unchbit_correct": 911,
-   "unchbit_total": 1056,
+   "swapbit_correct": 254,
+   "swapbit_total": 456,
+   "unchbit_correct": 1027,
+   "unchbit_total": 1368,
    "alive": 120
   }
  ]

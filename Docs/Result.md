@@ -4489,4 +4489,33 @@ and that, at this quality, is the most trustworthy statement in the project's hi
   Rule-18-A horizon question; NOT confirmed closes gating at THIS locus and forces the next
   substrate-hypothesis change (Exp 99 two-timescale consolidation is the standing candidate).
 
-### Results — PENDING (driver `experiments/exp98_gated_plasticity.py`; raw per-run probe JSONs + full payload in `experiments/exp98_gated_results.json`; this section is filled ONLY after a commit containing everything above exists)
+### Results — MEASURED (executed 2026-07-31 after pre-registration commit 95cc6ad; 72/72 runs live, reuse disabled; completeness ✅, G2b ✅; permutation method recorded verbatim: Monte-Carlo 10^5 sign draws, RNG pinned at seed 0; full payload + per-arm per-seed metrics in `experiments/exp98_gated_results.json`, raw probe JSONs in `experiments/leaderboard/raw/tf1_*_exp98_{gated,vanilla,nolearn}_*.json` — 24+24+24; the measurement was executed TWICE (a first pass had its gated raws overwritten by vanilla's through a base-arm filename collision, caught pre-commit; tag now carries the arm) and the second pass reproduced the primary statistic, all per-seed metrics, and the secondaries BYTE-IDENTICALLY — a free 72-run determinism re-verification on top of the certified-row replay guard)
+
+**PRIMARY (binding):**
+
+| Comparison | n | mean Δ | median Δ | p (two-sided) | α | **CONFIRMED** |
+|---|---|---|---|---|---|---|
+| gated − NOLEARN, swap-era accuracy | 24 | **+2.22** | +1.60 | 0.219 | 0.05 | **NO** (15/24 positive) |
+
+**SECONDARIES (recorded, no alpha spent):**
+
+| Endpoint | mean Δ | p | reading |
+|---|---|---|---|
+| S1: gated − vanilla, swap-era | +0.15 | 0.939 | gate is performance-neutral on the task |
+| S2: gated − vanilla, static fidelity (unch) | **+1.14** | **0.0001** | the gate DOES mechanically reduce erosion |
+| mean static fidelity | gated 93.2 / vanilla 92.06 / NOLEARN 94.0 | — | registered ≥95 erosion-kill bar NOT met |
+
+**VERDICT (binding, pre-registered): NOT CONFIRMED — the gating hypothesis is CLOSED at this
+locus.** The mechanism is not inert — it demonstrably does what it was built for: plasticity
+fires on deviation-from-expectation only, arm weight-trajectories diverge from tick 500, and
+static-memory erosion is measurably reduced (S2, p=0.0001). But that reclaimed stability does
+NOT convert into a confirmable re-tracking advantage over the matched ablation (p=0.219), and
+even the erosion reduction does not reach the registered ≥95 bar (93.2), which NOLEARN — no
+plasticity at all — still beats at 94.0. The remaining conclusion sharpens: the missing
+learning advantage in this substrate is NOT restored by controlling *when* plasticity fires
+(raw `net` in vanilla, advantage-gated here). Per the registered clause the next move is the
+next substrate-hypothesis change: **Exp 99 — two-timescale consolidation** (fast re-tracking
+weights certified on swap-era delta + slow consolidating weights that must hold the G1/G4
+static band ≥95 as a *certification gate*, not a subsequent statistic). Its pre-registration
+must also inherit the day's instrumentation lesson: any new env-flagged mechanism lands in
+fingerprint tuple + map + smoke-divergence proof BEFORE its first measured row.

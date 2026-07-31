@@ -1,4 +1,38 @@
-## Latest Session Update (2026-07-31 — Session 17: Owed Corrections + Exp 96 Map + Exp 97 Decisive — Tuning Axis CLOSED, Mechanism Change Is Next)
+## Latest Session Update (2026-07-31 — Session 18: Exp 98 Mechanism Change EXECUTED — Gating Works Mechanically, Confirms Nothing; Next Substrate Change = Exp 99)
+
+- **The pre-registered mechanism change ran.** Exp 98 = surprise-gated plasticity:
+  `dopamine = net − era-local mean(net)` (baseline horizon = the environment's own
+  REMAP_PERIOD clock, no new constant, Rule 17), applied to BOTH the scalar dopamine and the
+  per-vocal-bit org_elig credit channel. Three arms × 24 fresh seeds (48..71): gated /
+  vanilla / NOLEARN, 72 live runs, reuse disabled.
+- **Self-inflicted Session-11-class bug caught before any measured row:** the new
+  GENESIS_STDP_SURPRISE_GATE flag was missing from `compile_fingerprint.KERNEL_STATE_VARS`
+  (the env-mirror key alone does nothing — the hash iterates only the tuple), so gate on/off
+  shared ONE numba cache dir and both arms executed ONE stale frozen kernel ('the byte-inert
+  gate paradox'). Fixed + ENV_NAME_MAP entry + driver-level raw-path collision fixed (two
+  arms shared base-arm filenames; tag now carries the arm). Guards added:
+  `tests/engine_defaultpath_regression_test.py` (slow suite) proves the gate-OFF default
+  path byte-reproduces the committed certified raw windows; smoke proof that gated/vanilla/
+  NOLEARN weight-trajectories are three distinct physics.
+- **RESULT (binding, pre-registered, commit this session): PRIMARY FAILED —** gated−NOLEARN
+  swap-era Δ=**+2.22, p=0.219** (MC 10^5 pinned draws), 15/24 positive, CONFIRMED=False.
+  Recorded secondaries: S1 gated−vanilla swap Δ=+0.15, p=0.939 (task-neutral); S2
+  gated−vanilla static fidelity Δ=**+1.14, p=0.0001** — the gate DOES mechanically reduce
+  the measured static-memory erosion (93.2 vs 92.06), but NOT to the registered ≥95 bar,
+  and NOLEARN still sits higher (94.0).
+- **Strategic reading (honest):** controlling WHEN plasticity fires works mechanically yet
+  buys no confirmable re-tracking advantage over ablation — the missing Rule-18-B advantage
+  is not hiding in the gating locus either. Per the registered clause the gating hypothesis
+  is CLOSED at this locus; the next substrate-hypothesis change is **Exp 99 — two-timescale
+  consolidation** (fast re-tracking + slow consolidated weights, with the ≥95 static band as
+  a certification GATE, not a downstream statistic). Instrument inheritance rule recorded in
+  Result.md: any new env-flagged mechanism lands in fingerprint tuple + map + smoke-divergence
+  proof BEFORE its first measured row.
+- Ledger updated (GENESIS_DEEP_REVIEW_FOR_BUILDER.md, Session-18 line). Rule-18-B remains
+  unproven — honestly, and now at MECHANISM resolution.
+
+<details>
+<summary>2026-07-31 — Session 17: Owed Corrections + Exp 96 Map + Exp 97 Decisive — Tuning Axis CLOSED, Mechanism Change Is Next</summary>
 
 **Continuation of the AGI-readiness audit on `arena/019fb620-genesis`, after the second
 adversarial audit round (no files modified in that round; its findings were checked read-only).
@@ -27,6 +61,8 @@ This session converts the audit's verdicts into the next measurement steps.**
   **Exp 98 gated plasticity (learn only on surprise)** / **Exp 99 two-timescale consolidation**,
   each admitted only through the 92b gate. Ledger P1-4 stays closed (TF1 axis resolved);
   Rule-18-B remains unproven — honestly and informatively.
+
+</details>
 
 <details>
 <summary>2026-07-31 — Session 16: TF1 Goes Inferential — n=8 Paired Permutation, DIV Sensitivity, Exp-94b Pre-Registered at n=24</summary>

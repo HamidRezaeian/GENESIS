@@ -89,8 +89,11 @@ def main():
     ok_all = True
     for arm_name, (base, extra) in ARMS.items():
         for s in SEEDS:
-            r = run_one(base, 1, s, div=1, tag="exp98", period=4000, report=2000,
-                        extra_env=extra)
+            # tag carries the arm name: two arms share base "stdp3c_learner", and raw JSON
+            # paths are arm+tag-keyed — a shared tag would silently OVERWRITE raws (caught
+            # 2026-07-31: 48 files for 72 runs; first batch's gated raws lost to vanilla).
+            r = run_one(base, 1, s, div=1, tag=f"exp98_{arm_name}", period=4000,
+                        report=2000, extra_env=extra)
             ok_all = ok_all and r["ok"]
             per[(arm_name, s)] = summarize_run(r) if r["ok"] else None
             print(f"[EXP98] {arm_name} seed={s} ok={r['ok']}", flush=True)

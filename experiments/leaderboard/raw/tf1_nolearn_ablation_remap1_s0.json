@@ -1,6 +1,6 @@
 {
  "instrument": "remap_sandbox_probe",
- "instrument_rev": "2026-07-31+drift-pin",
+ "instrument_rev": "2026-07-31+drift-pin+gate-diag",
  "seed": 0,
  "mode": "NOLEARN",
  "remap": true,
