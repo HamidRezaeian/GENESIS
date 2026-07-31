@@ -4144,9 +4144,14 @@ provenance as the WS stream.
 the refugium keeps topping the population up to its floor of 30 — the colony is at reads=0 /
 solve%=0 by ~17k ticks yet "persists" (exactly the founder-persistence mask the deep review
 warned about; without the provenance counters this looks like a viable colony). Arm B, with
-refuge AND auto-repro off, goes extinct and falls back on the Ark reseed (601 ark births =
-1+1 full resets); each 300-strong reseed cohort bleeds out to single digits within the 100k
-horizon. **On the default Rule-22 stack the economy is net-lethal by roughly −0.6 to −1.1
+refuge AND auto-repro off, goes extinct and falls back on the Ark reseed. Audit-round-2
+correction (2026-07-31): the reading originally written here ("601 ark births = 1+1 full
+resets") was wrong — Arm A logs 301 ark births with ZERO extinctions, so Ark spawns are not
+extinction-exclusive (BIRTH_ARK fires "after extinction or era start", genesis_lab BIRTH_ARK
+doc; cohort unit is a 300-organism `seed_universe` call). Code-grounded decomposition: founding
+cohort 300 (ark-sourced when resumed from Brain.npz) + Arm B's extra 300 = exactly one
+extinction reseed + a residual +1 spawn per arm whose code path is unattributed at artifact
+level. Each 300-strong reseed cohort bleeds out to single digits within the 100k horizon. **On the default Rule-22 stack the economy is net-lethal by roughly −0.6 to −1.1
 natural-net births per 100 ticks; the metabolic ceiling is the binding constraint and it is
 quantified.** Note for future configs: the Ark reseed itself is a support channel (it fires
 after full extinction) — a *terminal*-extinction control (no reseed) is an additional future
@@ -4257,7 +4262,11 @@ invariance check, 72 sweep runs. Gates G1 ✅ G2 ✅ G2b ✅ → certified=true;
   per-seed deltas: −4.53, +0.67, +8.32, −6.27, +5.85, +16.13, +9.46, +4.46, +15.16, +11.60,
   +6.47, +4.95, +2.36, −3.95, −8.16, −3.15, +10.75, −7.52, +0.78, −5.16, +17.24, +2.49,
   **−42.93**, −0.68;
-* exact two-sided permutation **p = 0.606** (all 2^24 = 16.8M sign assignments enumerated) →
+* two-sided permutation **p = 0.606** — at n=24 the pre-registered code takes its pinned-seed
+  Monte-Carlo branch (100,000 sign-flip draws, rng seed 0; exact enumeration is only used at
+  n ≤ 20 by design). The exact-enumeration phrasing in the first write of this entry and in
+  commit `ee70e94`'s message was a wording error caught in the audit rounds of 2026-07-31;
+  numerical impact is nil (~0.61 vs the 0.05 gate is insensitive to MC noise) →
   the null of exchangeable arms CANNOT be rejected at α = 0.05.
 
 **VERDICT (binding, pre-registered): NULL.** At this operating point (STDP3C, DIV=1, remap
@@ -4343,4 +4352,29 @@ real kernel execution; energy/position/RNG/geometry pinned; certification gates 
 permutation test pre-registered in code before the first measurement. TF2-5 rows join
 TF1 on the leaderboard only after drivers that pass that gate exist. **The Ascent Program's
 criteria B and C have exactly one measured row today: TF1 (Exp 94/94b).**
+
+
+## 🧪 Experiment 96 — Stability/Plasticity map: locating an operating point where learning wins (2026-07-31)
+
+**Pre-registered BEFORE execution (binding; the design logic lives in
+`experiments/exp96_stability_plasticity_map.py` docstring — instrument shared with certified
+TF1, no logic copied).**
+
+**Motivation.** Exp 94b (binding n=24) returned a replicated NULL at DIV=1 on the default
+tempo; Exp 92b showed strong plasticity erodes static memory. Both point at a
+stability/plasticity trade-off: the net re-tracking advantage should peak at an interior
+plasticity strength. This map finds the peak BEFORE any confirmatory bet.
+
+**Protocol.** DIV ∈ {1,2,4,8,16,32,64} × tempo ∈ {default (period 4000/REPORT 2000),
+fast (period 2000/REPORT 1000)} at 8000 ticks, seeds 0..7, per-tempo matched ablation pairs;
+per-tempo DIV-invariance re-checked and recorded. All 14 combos are EXPLORATORY with
+unadjusted p-values. **Pre-registered nomination rule:** within each tempo, the combo with the
+largest mean paired delta (tie-break: smaller two-sided p) is nominated as the Exp-97
+confirmatory target at n=24 (seeds 0..7 reused via the deterministic cache, 8..23 fresh;
+same gates and permutation protocol as 94b). **Hypotheses:** H1 — interior optimum above
+DIV=1; H2 — the optimum's location shifts with tempo (direction exploratory). If no combo is
+positive, no nomination is made and the next lever is a MECHANISM change (plasticity gating /
+two-timescale consolidation), not more sweeping (Rule 18's substrate-hypothesis clause).
+
+### Results — *to be appended by the execution commit (following commit, same protocol).*
 

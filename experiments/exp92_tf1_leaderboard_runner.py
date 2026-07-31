@@ -80,7 +80,7 @@ ARMS = {
 }
 
 
-def run_one(arm, remap, seed, div=1, tag=None):
+def run_one(arm, remap, seed, div=1, tag=None, period=4000, report=2000):
     os.makedirs(RAW, exist_ok=True)
     suffix = f"_{tag}" if tag else ""
     jpath = os.path.join(RAW, f"tf1_{arm}{suffix}_remap{remap}_s{seed}.json")
@@ -98,7 +98,8 @@ def run_one(arm, remap, seed, div=1, tag=None):
         "GENESIS_LIVE_WEB": "0",
         "GENESIS_ECONOMY": "books",
         "GENESIS_REMAP": str(remap),
-        "GENESIS_REMAP_PERIOD": "4000",
+        "GENESIS_REMAP_PERIOD": str(period),
+        "PROBE_REPORT": str(report),
         "GENESIS_STDP_DIV": str(div),
         "PROBE_TICKS": str(TICKS),
         "PROBE_SEED": str(seed),
@@ -126,6 +127,7 @@ def run_one(arm, remap, seed, div=1, tag=None):
         except (OSError, ValueError):
             ok = False
     return {"arm": arm, "remap": remap, "seed": seed, "div": div, "ok": ok,
+            "period": period, "report": report,
             "wall_seconds": round(wall, 1), "json": jpath if ok else None,
             "rc": proc.returncode, "reused_cache": False,
             "stderr_tail": (proc.stderr or "")[-600:], "data": data}
