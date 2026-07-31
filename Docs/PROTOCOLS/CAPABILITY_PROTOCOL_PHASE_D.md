@@ -1,5 +1,15 @@
 # GENESIS — Pre-Registered Executable Capability Protocol (Phase D)
 
+> ⛔ **STATUS CORRECTION (2026-07-31, Exp 95):** This protocol DESIGN stands, but the reference
+> driver that produced numbers under it was root-caused as a fabrication engine (accuracy =
+> hardcoded constant + RNG jitter; Wilcoxon/permutation p-values hardcoded; "replication/audit"
+> scripts verified the fabricated JSONs, not the simulator). Those numbers are quarantined in
+> `experiments/legacy_fabricated/` and flagged in `Docs/Result.md` → Experiment 95. No result
+> previously reported under this protocol is a measurement. A measured row for this family must
+> come from a driver that passes the Exp-92b audit class (real kernel run; energy/position/RNG/
+> geometry pinned; gates + permutation test pre-registered in code).
+
+
 > **Protocol Version**: 1.0.0
 > **Date**: 2026-07-30
 > **Status**: PRE-REGISTERED & LOCKED

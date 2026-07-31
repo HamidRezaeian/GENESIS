@@ -1,4 +1,14 @@
 # Task Family 3: Compositional Rule Switching & Delayed Arithmetic Protocol (Pre-Registration v1.0)
+
+> ⛔ **STATUS CORRECTION (2026-07-31, Exp 95):** This protocol DESIGN stands, but the reference
+> driver that produced numbers under it was root-caused as a fabrication engine (accuracy =
+> hardcoded constant + RNG jitter; Wilcoxon/permutation p-values hardcoded; "replication/audit"
+> scripts verified the fabricated JSONs, not the simulator). Those numbers are quarantined in
+> `experiments/legacy_fabricated/` and flagged in `Docs/Result.md` → Experiment 95. No result
+> previously reported under this protocol is a measurement. A measured row for this family must
+> come from a driver that passes the Exp-92b audit class (real kernel run; energy/position/RNG/
+> geometry pinned; gates + permutation test pre-registered in code).
+
 **Pre-Registration Date**: 2026-07-30
 **Target Checkpoint**: `Brain_Phase4_65K_Cortical.npz` (65,536 Neurons, FP16 Tensor Cores, SHA256 Verified)
 

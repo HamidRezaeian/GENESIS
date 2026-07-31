@@ -22,9 +22,10 @@ FAST_SCRIPTS = [
     "capacity_resolver_test.py",
     "brain_io_test.py",
     "birth_provenance_test.py",
-    "capability_protocol_test.py",
+    "fabrication_scan_test.py",  # Exp 95: anti-fabrication guard (replaces the quarantined
+    # capability_protocol_test.py / task_generalization_protocol_test.py, which guarded
+    # fabricated numbers — see experiments/legacy_fabricated/README.md)
     "reproducibility_smoke_test.py",
-    "task_generalization_protocol_test.py",
     "compile_fingerprint_test.py",
     "mutate_crash_test.py",
     "auto_capacity_probe.py",
