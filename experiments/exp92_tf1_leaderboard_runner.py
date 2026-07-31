@@ -80,7 +80,7 @@ ARMS = {
 }
 
 
-def run_one(arm, remap, seed, div=1, tag=None, period=4000, report=2000):
+def run_one(arm, remap, seed, div=1, tag=None, period=4000, report=2000, extra_env=None):
     os.makedirs(RAW, exist_ok=True)
     suffix = f"_{tag}" if tag else ""
     jpath = os.path.join(RAW, f"tf1_{arm}{suffix}_remap{remap}_s{seed}.json")
@@ -113,6 +113,8 @@ def run_one(arm, remap, seed, div=1, tag=None, period=4000, report=2000):
         "GENESIS_MAX_ORGANISMS": "512",
         "GENESIS_RAM_SIZE": "2097152",
     })
+    if extra_env:  # Exp 98+: mechanism flags layered on top of the named arm (e.g. gate on)
+        env.update(extra_env)
     env.update(ARMS[arm])
     t0 = time.time()
     proc = subprocess.run([sys.executable, PROBE], cwd=ROOT, env=env,

@@ -303,6 +303,8 @@ PARAM_GENES = [
 ]
 assert len(PARAM_GENES) == N_PARAM_GENES, "PARAM_GENES length must match engine N_PARAM_GENES (=9)"
 
+
+
 # Designer defaults = the engine's CURRENT resolved module globals (so flag-ON == today's behaviour).
 PARAM_DEFAULTS = np.array([
     float(CAM_SLOTS), float(CAM_KEY_BITS), float(CAM_MATCH_THRESHOLD), float(CAM_WRITE_THRESHOLD),
@@ -470,7 +472,12 @@ g_org_reward = np.ones(MAX_ORGANISMS, dtype=np.float32)
 # 8 floats = the 8 vocal bits; +1 correct, -1 wrong, 0 silent. Init zero so the first STDP tick has
 # no spurious credit (vocal-bit plasticity silent until a prediction actually scores). Only read/
 # written by the kernel when GENESIS_STDP3C=1.
-g_org_elig = np.zeros((MAX_ORGANISMS, 8), dtype=np.float32)
+g_org_elig = np.zeros((MAX_ORGANISMS, 26), dtype=np.float32)  # cols 0..7: STDP3C per-bit credit
+# (voices bits 6..13). cols 8..25: Exp-98 surprise-gate state — 8..9 SUM/CNT of era-local scalar
+# net, 10..17 SUM per credit bit, 18..25 CNT per credit bit. numba refuses to WRITE module-global
+# arrays (verified 2026-07-31: readonly typing), so the gate's per-organism state rides this
+# already-threaded writable arg; written by the kernel ONLY under GENESIS_STDP_SURPRISE_GATE=1,
+# invisible to the default path (guarded by tests/engine_defaultpath_regression_test.py).
 # Exp 43 working-memory DELAY task: per-org shift ring of recently-sensed bytes (slot 0 = now, slot k =
 # k ticks ago). The DELAY reward targets the byte DELAY_N ticks ago, on no current input, so only a brain
 # holding context can emit it. Always allocated (cheap); only read/written by the kernel when DELAY on.

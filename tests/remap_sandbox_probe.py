@@ -263,7 +263,7 @@ def main():
         import json
         payload = {
             "instrument": "remap_sandbox_probe",
-            "instrument_rev": "2026-07-31+drift-pin",
+            "instrument_rev": "2026-07-31+drift-pin+gate-diag",
             "seed": seed,
             "mode": mode, "remap": bool(ne.REMAP), "period": int(ne.REMAP_PERIOD),
             "states": int(ne.REMAP_STATES), "swapbits": [SB0, SB1],
@@ -271,6 +271,24 @@ def main():
             "patch": PATCH, "report": REPORT, "pin_pos": bool(_PIN["enabled"]),
             "windows": windows,
         }
+        if os.environ.get("PROBE_DUMP_GATE") == "1":
+            # Exp-98 build-time diagnostic (off by default; never part of certified rows):
+            # dump the gate accumulator columns so mechanism development can VERIFY that the
+            # gated branch actually executed (cols 8/9 = scalar SUM/CNT; 10-17 per-bit SUM).
+            e = gl.g_org_elig
+            payload["gate_diag"] = {
+                "col8_sum_nonzero": int(np.count_nonzero(e[:, 8])),
+                "col9_cnt_max": float(e[:, 9].max()),
+                "col9_cnt_mean": float(e[:, 9].mean()),
+                "col10_16_absmax": float(np.abs(e[:, 10:18]).max()),
+                "gate_flag_in_engine": bool(getattr(ne, "STDP_SURPRISE_GATE", False)),
+                # plasticity-health forensics: is the eligibility TRACE itself alive?
+                "conn_elig_absmax": float(np.abs(gl.g_global_conn_elig).max()),
+                "conn_elig_mean_abs": float(np.abs(gl.g_global_conn_elig).mean()),
+                "homeo_lambda": float(os.environ.get("GENESIS_HOMEOSTATIC_LAMBDA", "0.01")),
+                "weight_delta_absmax_vs_dna": float(np.abs(
+                    gl.g_global_conn_weight - gl.g_conn_w_dna).max()) if hasattr(gl, "g_conn_w_dna") else None,
+            }
         with open(out, "w") as f:
             json.dump(payload, f, indent=1)
         print(f"[SANDBOX] JSON written to {out}")

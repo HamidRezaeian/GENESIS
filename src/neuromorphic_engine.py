@@ -251,6 +251,28 @@ STDP3 = os.environ.get("GENESIS_STDP3", "0") == "1"
 # org_reward; 8 floats = 8 bits) plus STDP3 (uses its stdp_mod gain).
 STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
 
+# SURPRISE-GATED PLASTICITY (Exp 98, default-OFF). Diagnosis from the repaired-instrument
+# record (Exp 92b/94b/96/97): vanilla STDP3C's dopamine = per-tick read correctness `net`,
+# so EVERY successful read triggers a full STDP update; on familiar input the constant
+# potentiation-vs-homeostasis churn ERODES static memory (measured) while netting ZERO
+# re-tracking advantage (measured, replicated at n=24, tuning axis CLOSED by Exp 97).
+# Fix = advantage gating: fire plasticity only on the DEVIATION of this tick's correctness
+# from the organism's OWN running era-local baseline:
+#     dopamine_gated = net - baseline_era(net)
+#       baseline_era = cumulative mean of net since the last REMAP-era boundary
+# On already-mastered input net ≈ baseline → update ≈ 0 → erosion killed. On an era switch,
+# performance drops below the fresh baseline → depression of the stale mapping, then
+# re-acquisition rises above the collapsed baseline → potentiation of the new mapping:
+# learning fades IN during transients (where credit matters) and OFF at steady state.
+# Parameter-free (Rule 17): the baseline horizon is the environment's own REMAP_PERIOD clock
+# (already baked physics); learning_rate 1.0 unchanged; the per-vocal-bit credit channel
+# (org_elig dst=D path) is NOT gated — it is already a local error signal.
+# Compile-time gated -> default kernel byte-identical when the flag is off (regression-
+# guarded: tests/engine_defaultpath_regression_test.py). Per-organism state lives in the
+# module-global SURPRISE_GATE_SUM/CNT accumulators (Rule-21.2-class; read by reference like
+# g_org_params — no kernel-signature change).
+STDP_SURPRISE_GATE = os.environ.get("GENESIS_STDP_SURPRISE_GATE", "0") == "1"
+
 # MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
 MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 
@@ -603,6 +625,8 @@ BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 N_PARAM_GENES = 10  # Tier-1 evolvable constants; MUST equal len(genesis_lab.PARAM_GENES) (asserted there)
 g_org_params = np.zeros((MAX_ORGANISMS, N_PARAM_GENES), dtype=np.float32)
 EVOLVABLE_CONSTANTS = (os.environ.get("GENESIS_EVOLVABLE_CONSTANTS", "0") == "1")
+# Exp 98 note: gate state lives in org_elig[:, 8:10] (lab-allocated, threaded arg) — numba
+# treats module-global arrays as read-only, so engine-side accumulators here would not compile.
 
 # UNIVERSE PHYSICAL LIMITS
 # Derived from MAX_ORGANISMS: memory allocation for the entire ecosystem.
@@ -1629,7 +1653,13 @@ def world_tick_numba(
                     dst_gain = stdp_mod
                     if STDP3C:
                         if dst >= N_INPUT + 6 and dst < N_IO:
-                            dst_gain = stdp_mod * org_elig[org, dst - N_INPUT - 6]
+                            _gb = dst - N_INPUT - 6
+                            _gc = org_elig[org, _gb]
+                            if STDP_SURPRISE_GATE:
+                                _gv = org_elig[org, 18 + _gb]
+                                if _gv > np.float32(0.0):
+                                    _gc = org_elig[org, _gb] - org_elig[org, 10 + _gb] / _gv
+                            dst_gain = stdp_mod * _gc
 
                     if curr_spk_buf[dst]:
                         t_pre = global_t_last[n_ptr + src]
@@ -1959,6 +1989,26 @@ def world_tick_numba(
             
             if STDP3C and (correct_bits > 0 or wrong_bits > 0):
                 dopamine = np.float32(net)
+                if STDP_SURPRISE_GATE:
+                    # Exp 98 advantage gate (rationale at the flag's module docstring). v2 after
+                    # smoke-verification: gate BOTH credit channels, not only the global scalar —
+                    # in the remap fabric the vocal synapses consume the PER-BIT eligibility
+                    # (org_elig=±1/0), which vanilla never subtracts from baseline; gating only
+                    # the scalar dopamine channel measured byte-identical to off (2026-07-31).
+                    # State (see genesis_lab g_org_elig): 8/9 SUM/CNT net, 10-17 SUM/b, 18-25 CNT/b.
+                    if (global_time % REMAP_PERIOD) < n_steps:
+                        for gz in range(8, 26):
+                            org_elig[org, gz] = np.float32(0.0)
+                    gcnt = org_elig[org, 9]
+                    if gcnt > np.float32(0.0):
+                        dopamine = np.float32(net) - org_elig[org, 8] / gcnt
+                    # else: first read of era -> dopamine = net (transient acquisition kept)
+                    org_elig[org, 8] = org_elig[org, 8] + np.float32(net)
+                    org_elig[org, 9] = gcnt + np.float32(1.0)
+                    # accumulate this tick's per-bit credit (written just above) into the baselines
+                    for gb in range(8):
+                        org_elig[org, 10 + gb] = org_elig[org, 10 + gb] + org_elig[org, gb]
+                        org_elig[org, 18 + gb] = org_elig[org, 18 + gb] + np.float32(1.0)
                 # Apply Reward-Modulated STDP using eligibility traces
                 t_end = global_time + n_steps
                 learning_rate = np.float32(1.0) # We use a static learning rate instead of org_reward which is set later
@@ -1979,6 +2029,11 @@ def world_tick_numba(
                     
                     if dst >= N_INPUT + 6 and dst < N_IO:
                         D = org_elig[org, dst - N_INPUT - 6]
+                        if STDP_SURPRISE_GATE:
+                            _vb = dst - N_INPUT - 6
+                            _vc = org_elig[org, 18 + _vb]
+                            if _vc > np.float32(0.0):
+                                D = org_elig[org, _vb] - org_elig[org, 10 + _vb] / _vc
                     else:
                         D = dopamine
                     

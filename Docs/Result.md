@@ -4451,3 +4451,42 @@ Both candidates must pass the 92b admission gate before any token of compute is 
 as benchmarks. **The leaderboard's only certified row remains TF1 with its replicated NULL —
 and that, at this quality, is the most trustworthy statement in the project's history.**
 
+
+## 🧪 Experiment 98 — PRE-REGISTERED confirmatory: surprise-gated plasticity (mechanism change) (2026-07-31)
+
+* **Mechanism changed, not knobs** — the binding clause of Exp 97's verdict. Vanilla STDP3C's
+  dopamine is the raw per-tick read-correctness `net`, so every successful read triggers a full
+  update: on mastered input the potentiation-vs-homeostasis churn measurably erodes static
+  memory (Exp 92b) while buying no re-tracking advantage (94b/96/97 NULLs, tuning axis CLOSED).
+  **Gate (GENESIS_STDP_SURPRISE_GATE, default OFF):** `dopamine_gated = net − era-local mean(net)`,
+  baseline reset at each REMAP-era boundary (horizon = the environment's own REMAP_PERIOD clock —
+  no new constant, Rule 17); the per-vocal-bit credit channel is advantage-gated the same way.
+  Plasticity fires only on the *deviation from expectation*: in during transients, off at steady
+  state.
+* **Implementation audit trail (2026-07-31, same day, before any measured row):** the first gate
+  build measured byte-inert vs vanilla. Root-caused to TWO instrumentation faults, both fixed and
+  regression-guarded: (i) the new flag was missing from `compile_fingerprint.KERNEL_STATE_VARS`
+  (the mirror key alone does nothing — the fingerprint iterates only the tuple), so gate-on and
+  gate-off processes shared one numba cache dir and executed ONE stale frozen kernel — the
+  Session-11 class, self-inflicted; (ii) gating only the scalar dopamine left the dominant
+  per-vocal-bit `org_elig` channel vanilla, so even a correctly compiled gate was near-inert
+  (v2 gates both; smoke-verified: weight-hash trajectories now DIVERGE between arms from tick 500
+  on, and the true-vanilla trajectory differs from both — three distinct physics). Probes added:
+  opt-in `PROBE_DUMP_GATE` accumulator dump (instrument rev → `2026-07-31+drift-pin+gate-diag`)
+  and `tests/engine_defaultpath_regression_test.py`, which **passed**: fresh gate-off NOLEARN and
+  STDP3C probe runs reproduce the committed certified raw JSON windows byte-exactly (default path
+  untouched by the mechanism edit).
+* **Design:** three arms × 24 fresh seeds (48..71, never used before): `gated` = STDP3C +
+  gate-on, `vanilla` = STDP3C + gate-off (the Exp-97 NULL arm), `nolearn` = the matched ablation.
+  remap=1, div=1, tempo 4000/2000, 8000 ticks, pinned geometry (512 / 2 MiB), reuse disabled by
+  construction, tag namespace `exp98_`.
+* **PRIMARY decision (single test, two-sided α = 0.05):** gated beats NOLEARN on swap-era
+  accuracy (Rule-18 Ascent-B shape). CONFIRMED iff completeness + G2b + paired-permutation
+  p ≤ 0.05. **SECONDARY (recorded, no alpha spent):** S1 gated−vanilla swap delta; S2
+  gated−vanilla static-fidelity (unch_mix) delta + per-arm means, with mean gated unch_mix ≥ 95
+  as the registered erosion-kill bar.
+* **Outcomes bound regardless of sign (Rule 16):** CONFIRMED advances the mechanism to the
+  Rule-18-A horizon question; NOT confirmed closes gating at THIS locus and forces the next
+  substrate-hypothesis change (Exp 99 two-timescale consolidation is the standing candidate).
+
+### Results — PENDING (driver `experiments/exp98_gated_plasticity.py`; raw per-run probe JSONs + full payload in `experiments/exp98_gated_results.json`; this section is filled ONLY after a commit containing everything above exists)

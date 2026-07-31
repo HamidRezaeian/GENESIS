@@ -33,6 +33,7 @@ FAST_SCRIPTS = [
 
 SLOW_SCRIPTS = [
     "smoke_test.py",
+    "engine_defaultpath_regression_test.py",
 ]
 
 
