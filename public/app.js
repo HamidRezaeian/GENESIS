@@ -134,7 +134,9 @@ function onState(s) {
     }
     setTxt('val-ext', s.extinctions !== undefined ? s.extinctions.toLocaleString() : '0');
     setTxt('val-elite-age', s.elite_age !== undefined ? s.elite_age.toLocaleString() : '0');
-    setTxt('val-elite-iq', s.elite_iq !== undefined ? s.elite_iq + '%' : '0%');
+    // elite_iq is age ÷ neural footprint (a rate, NOT a percentage) — Rule-7 efficiency
+    // proxy, observation-only; never presented as "prediction accuracy" (audit 2026-07-31).
+    setTxt('val-elite-iq', s.elite_iq !== undefined ? String(s.elite_iq) : '—');
     setTxt('val-footprint', s.elite_footprint !== undefined ? s.elite_footprint.toLocaleString() + ' ATP/B' : '—');
     setTxt('val-agi-progress', s.agi_progress !== undefined ? s.agi_progress + '%' : '0%');
     setTxt('val-avg-age', s.avg_age !== undefined ? s.avg_age.toLocaleString() : '0');
@@ -766,20 +768,15 @@ function showLeaderboardView(view) {
     if (view === 'b' && viewBTable) {
         viewBTable.classList.remove('hidden');
         viewBtnB.classList.add('active');
-        // Inject live solve% from latest state
-        if (currentServerState && currentServerState.metrics) {
-            const liveEl = document.getElementById('lb-live-solve');
-            if (liveEl) liveEl.textContent = (currentServerState.metrics.solve_pct || 78.65).toFixed(2) + '%';
-        }
+        // NOTE (audit 2026-07-31): no live values are injected into this table — no certified
+        // 5-task run exists; injecting colony solve% into fabricated task rows was a false
+        // attribution (and the hardcoded solve% fallback was fabricated telemetry). Cells
+        // stay "—"; live rows become meaningful only after a real certified run publishes.
     }
     if (view === 'c' && viewCTable) {
         viewCTable.classList.remove('hidden');
         viewBtnC.classList.add('active');
-        // Inject live universe N from latest state
-        if (currentServerState) {
-            const liveN = document.getElementById('lb-live-n');
-            if (liveN) liveN.textContent = (currentServerState.universe_n || 65536).toLocaleString();
-        }
+        // Same honesty rule: no 65536/universe_n injection into fabricated efficiency rows.
     }
 }
 

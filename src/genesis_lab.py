@@ -531,63 +531,38 @@ g_auto_inject = (GENESIS_ECONOMY == "books")
 g_curriculum = CURRICULUM
 
 g_telemetry_lock = threading.Lock()
-g_latest_snapshot = None
+g_latest_snapshot = None        # last published state dict (dict, under lock)
+g_latest_snapshot_json = None   # its pre-serialized JSON string (under lock)
+g_snapshot_seq = 0              # monotonically increasing publication sequence (under lock)
 
-def publish_telemetry_snapshot(n_alive, universe_n, h_act):
-    """Thread-safe non-blocking snapshot publisher called from sim_loop."""
-    global g_latest_snapshot
-    try:
-        ram_b64 = base64.b64encode(g_ram).decode("ascii")
-        org_positions = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i]]
-        screaming_orgs = [int(g_b_pos[i]) for i in range(MAX_ORGANISMS) if g_alive[i] and g_vocal_cord[i] > 0]
-        
-        snap = {
-            "type": "state",
-            "schema_version": 1,
-            "status": "running",
-            "sim_ready": True,
-            "tick": int(global_time),
-            "pop": int(n_alive),
-            "max_pop": int(MAX_ORGANISMS),
-            "extinctions": int(num_extinctions),
-            "elite_age": int(max_ark_age if max_ark_age > 0 else (g_age[0] if n_alive > 0 else 0)),
-            "elite_iq": round(float(78.65), 2),
-            "elite_footprint": 0,
-            "agi_progress": 0,
-            "avg_age": int(global_avg_age),
-            "num_refuge": int(num_refuge),
-            "ram_b64": ram_b64,
-            "org_positions": org_positions,
-            "screaming_orgs": screaming_orgs,
-            "elite_pos": int(g_b_pos[0]) if n_alive > 0 else -1,
-            "metrics": {
-                "solve_pct": 78.65,
-                "cum_reads": int(g_cumulative_reads),
-                "cum_miss": int(g_cumulative_miss),
-                "cum_pred": int(g_cumulative_pred),
-                "cum_peer": int(g_cumulative_peer),
-                "hact": float(h_act),
-                "sensors": 32,
-                "actuators": 8,
-                "scratch": 0
-            },
-            "universe_n": int(universe_n)
-        }
-        with g_telemetry_lock:
-            g_latest_snapshot = snap
-    except Exception:
-        pass
+def _publish_state(snap):
+    """The ONE telemetry publisher (audit 2026-07-31, deep review P1-10/P1-11).
 
-async def broadcast_msg(msg):
-    if WS_CLIENTS and websockets is not None:
-        for ws_client in list(WS_CLIENTS):
-            try:
-                await ws_client.send(msg)
-            except Exception:
-                pass
+    Stores the snapshot dict + its serialized JSON and bumps the sequence so that
+    `stream_telemetry` pushes each published snapshot to a client exactly ONCE.
+
+    This REPLACES two competing live paths that used to fight on the wire:
+    (a) a per-0.2 s direct broadcast carrying the full 1 MB RAM as base64 in EVERY frame
+        (~7 MB/s per client plus a full re-serialization), and
+    (b) a 10 Hz mailbox that re-sent one snapshot (also full-RAM) up to 50 times and
+        carried FABRICATED constants (hardcoded elite_iq / solve_pct / sensor & actuator
+        counts the engine never computed) — a direct Rule-16 violation. Every value
+        published here must be real, live engine state.
+    """
+    global g_latest_snapshot, g_latest_snapshot_json, g_snapshot_seq
+    payload = json.dumps(snap)
+    with g_telemetry_lock:
+        g_latest_snapshot = snap
+        g_latest_snapshot_json = payload
+        g_snapshot_seq += 1
 
 async def stream_telemetry(websocket):
-    """Asyncio WebSocket telemetry publisher pulling from thread-safe mailbox (Arena §3 Pattern)."""
+    """Asyncio WebSocket telemetry publisher pulling from the thread-safe mailbox.
+
+    Sends a snapshot to this client only when a NEW one has been published (sequence-gated),
+    so a 1 MB RAM frame is never re-serialized or re-sent unchanged. RAM itself rides the
+    state only at the publisher's low RAM cadence; intermediate frames are metrics-only
+    (deep review P1-11: high-rate small metrics, low-rate RAM)."""
     init_snap = json.dumps({
         "type": "state",
         "schema_version": 1,
@@ -602,13 +577,16 @@ async def stream_telemetry(websocket):
     except Exception:
         return
 
+    last_sent = 0
     while True:
         try:
             with g_telemetry_lock:
-                snap = g_latest_snapshot
-            if snap is not None:
-                await websocket.send(json.dumps(snap))
-            await asyncio.sleep(0.1)  # 10 Hz UI refresh rate
+                seq = g_snapshot_seq
+                payload = g_latest_snapshot_json if seq != last_sent else None
+            if payload is not None:
+                await websocket.send(payload)
+                last_sent = seq
+            await asyncio.sleep(0.05)  # poll cadence; send only on a new publication
         except Exception:
             break
 
@@ -1515,30 +1493,33 @@ def _stock_shelter_patches(target_shelter=1500, offset=0):
 
 
 def _lay_library(at=None):
-    """Lay the live curriculum. When live-web streaming yields text, tile it across the RAM
-    substrate (engine-sized); otherwise fall back to the graded contiguous book scroll.
-    NOTE (audit 2026-07-31): the live-web path replaces the 00_Graded bootstrap — repeat-free
-    text is a cold-cliff for the prediction economy (Exp 12/17), and a non-reproducible input
-    (deep review P1-9). Disable with GENESIS_LIVE_WEB=0 for reproducible benchmark runs."""
-    import live_web_streamer
-    try:
+    """Lay the live curriculum. Demo mode (GENESIS_LIVE_WEB=1, default): when live-web
+    streaming yields text, tile it across the RAM substrate (engine-sized). Benchmark mode
+    (GENESIS_LIVE_WEB=0): ALWAYS lay the deterministic graded book scroll instead.
+
+    NOTE (audit 2026-07-31, deep review P1-9): the live-web path replaces the 00_Graded
+    bootstrap — repeat-free text is a cold-cliff for the prediction economy (Exp 12/17) and
+    a non-reproducible input. Before this fix the DISABLE switch was broken too: the
+    streamer's built-in fallback text was tiled across 100% of RAM even with the stream off,
+    silently overriding the book scroll everywhere. Live demo vs reproducible benchmark is
+    now an explicit, effective choice."""
+    if live_web_streamer.LIVE_WEB_ENABLED:
         live_text = live_web_streamer.get_latest_live_text()
         if live_text:
             encoded = [ord(c) for c in live_text if 32 <= ord(c) <= 126]
             if len(encoded) > 10:
                 n = len(encoded)
-                # Tile live text continuously across all 1,048,576 bytes of RAM
+                # Tile live text continuously across the engine-sized RAM substrate (demo mode)
                 for pos in range(RAM_SIZE):
                     g_ram[pos] = encoded[pos % n]
                 return RAM_SIZE
-    except Exception:
-        pass
     return inject_contiguous_library(g_ram, RAM_SIZE, BOOK_CATEGORY, BOOK_NAME, BOOK_TARGET_BYTES, at=at)
 
 
 def sim_loop():
     global global_time, ark_dna, num_extinctions, num_refuge, ext_history, max_ark_age, global_avg_age
     global g_cumulative_reads, g_cumulative_miss, g_cumulative_pred, g_cumulative_peer, g_vocab_counter, g_word_counter, g_sentence_log, g_org_word_buf, g_org_phrase_buf, g_history_telemetry
+    global g_run_natural_deaths, g_run_extinctions
     print("Pre-compiling world_tick_numba (JIT warmup)...")
     
     seed_universe(1, use_ark=False)
@@ -1682,6 +1663,7 @@ def sim_loop():
 
         if alive_count == 0:
             num_extinctions += 1
+            g_run_extinctions += 1  # per-run counter (deep review P1-1 provenance schema)
             ext_history.append({'tick': global_time, 'rate': num_extinctions})
             if len(ext_history) > 100: ext_history.pop(0)
             
@@ -1798,6 +1780,10 @@ def sim_loop():
                 np.minimum(g_read_fuel + np.float32(DEPLETE_REGROW), np.float32(CELL_STATES),
                            out=g_read_fuel)
 
+        # Death accounting (deep review P1-1): the kernel is the ONLY thing that kills between
+        # here and its return (host-side births/refuge/reseeds all happen outside this window),
+        # so pre-kernel alive minus kernel-returned alive = natural deaths this world-tick.
+        _pre_tick_alive = int(np.sum(g_alive))
         n_alive, n_births = world_tick_numba(
             g_ram, g_org_grid, g_positions, g_alive, g_energy, g_age,
             g_global_v, g_global_ref, g_global_t_last, g_global_thresh, g_global_tau, g_global_rec_id,
@@ -1817,7 +1803,8 @@ def sim_loop():
             g_org_run, g_lump_acc,
             g_race_state, g_race_attempt_q,
         )
-        
+        g_run_natural_deaths += max(0, _pre_tick_alive - int(n_alive))
+
         for i in range(n_births):
             parent = g_b_parent[i]
             child_dna = mutate_dna(g_b_genomes[i, :g_b_g_count[i]])
@@ -1840,15 +1827,23 @@ def sim_loop():
         
         now = time.time()
         
-        if now - getattr(sim_loop, 'last_live_web_fetch', 0) >= 20.0:
+        # Live-web curriculum injection (demo mode). GENESIS_LIVE_WEB=0 disables it entirely —
+        # reproducible benchmark runs must not be fed a non-reproducible live input (deep review
+        # P1-9: live-demo vs benchmark separation). The streamer is non-blocking (background
+        # thread, cache + honest status since 2026-07-31), so this never stalls the loop; any
+        # fetch failure is announced once by the streamer itself rather than swallowed here.
+        if live_web_streamer.LIVE_WEB_ENABLED and (now - getattr(sim_loop, 'last_live_web_fetch', 0) >= 20.0):
             sim_loop.last_live_web_fetch = now
             try:
                 web_text = live_web_streamer.get_latest_live_text()
                 if web_text:
                     inject_custom_book(g_ram, RAM_SIZE, web_text)
-                    print(f"[LIVE WEB STREAMED]: {web_text[:80]}...")
-            except Exception:
-                pass
+                    _st = live_web_streamer.status()
+                    _src = "WIKIPEDIA" if _st["healthy"] else "OFFLINE-CACHE/FALLBACK"
+                    print(f"[LIVE WEB {_src}]: {web_text[:80]}...")
+            except Exception as e:
+                # Loud, once-scale failure — never a silent pass (deep review P1-10).
+                print(f"[LIVE WEB] injection failed ({type(e).__name__}: {e}); continuing.")
 
         if now - last_ws_push >= 0.5:
             read_events = []
@@ -1916,7 +1911,13 @@ def sim_loop():
                 sim_loop.last_ws_push = now
                 alive_count = np.sum(g_alive)
                 universe_n = np.sum(g_neuron_map)
-                ram_b64 = base64.b64encode(g_ram.tobytes()).decode('utf-8')
+                # RAM at a 1 Hz cadence, NOT every 0.2 s metrics push (deep review P1-11):
+                # the expensive base64 blob rides a state frame only when it is due.
+                attach_ram = (now - getattr(sim_loop, 'last_ram_push', 0) >= 1.0)
+                ram_b64 = None
+                if attach_ram:
+                    sim_loop.last_ram_push = now
+                    ram_b64 = base64.b64encode(g_ram.tobytes()).decode('utf-8')
                 
                 max_age = -1
                 elite_id = -1
@@ -1991,12 +1992,31 @@ def sim_loop():
 
                 data = {
                     "type": "state",
+                    "schema_version": 2,  # v2: ram_b64 intermittent (1 Hz), births provenance added
+                    "status": "running",
+                    "sim_ready": True,
+                    # HONEST PLACEHOLDER: no AGI-progress metric exists (Ascent criteria A/B/C are
+                    # still unmet — Exp 68-70 compositionality 0%, criterion A FAILED). Publishing
+                    # any other number here would be a Rule-16 violation.
+                    "agi_progress": 0,
                     "tick": int(global_time),
                     "pop": int(alive_count),
                     "max_pop": int(MAX_ORGANISMS),
                     "extinctions": int(num_extinctions),
                     "ext_history": [{"tick": int(h["tick"]), "rate": int(h["rate"])} for h in ext_history],
-                    "ram_b64": ram_b64,
+                    "ram_b64": ram_b64,  # None on metrics-only frames; the canvas keeps its last frame
+                    # Birth/death provenance (deep review P1-1/P1-2, Exp 85/86 survivorship
+                    # confound): a stable population must never again be confused with founder
+                    # persistence or refuge life-support. Natural vs refuge vs Ark vs auto-repro
+                    # births, natural deaths, and run extinctions, all per-run cumulative.
+                    "births": {
+                        "natural": int(g_run_natural_births),
+                        "auto_repro": int(g_run_auto_repro_births),
+                        "refuge": int(g_run_refuge_births),
+                        "ark": int(g_run_ark_births),
+                        "natural_deaths": int(g_run_natural_deaths),
+                        "extinctions": int(g_run_extinctions),
+                    },
                     "elite_age": int(max_ark_age),
                     "elite_iq": elite_iq,
                     "elite_footprint": int(g_org_n_count[elite_id] + g_org_s_count[elite_id]) if elite_id >= 0 else 0,
@@ -2048,7 +2068,7 @@ def sim_loop():
                         "delay_n": int(DELAY_N),
                     },
                 }
-                asyncio.run_coroutine_threadsafe(broadcast_msg(json.dumps(data)), ws_loop)
+                _publish_state(data)  # single mailbox publish; stream_telemetry fans it out
             last_ws_push = now
 
         if now - last_print >= 5.0:
@@ -2248,8 +2268,9 @@ def sim_loop():
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
                   f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}{evosense_line}")
             
-            # Non-blocking Mailbox Snapshot Publish for WebSocket clients (Arena Architecture)
-            publish_telemetry_snapshot(n_alive, universe_n, h_act)
+            # (Telemetry publication happens in the 0.5 s telemetry block above via
+            # _publish_state; the old 5 s fake-constant mailbox path was removed in the
+            # 2026-07-31 telemetry-honesty overhaul.)
 
             # Persist the LIVE hall-of-fame (not just the rare-extinction ark_dna, which the refugium
             # keeps None for long spans -> the old save went stale). save_brain MERGES with the on-disk
