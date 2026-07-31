@@ -93,6 +93,14 @@ def main():
     record("[9b] basis classes documented",
            os.path.exists(os.path.join(ROOT, "Docs/Architecture/ENERGY_ACCOUNTING.md")))
 
+    # [10] Leaderboard honesty (deep review P0-6): rows come ONLY from a certified manifest.
+    record("[10] Lab ships leaderboard row from real manifest only",
+           "_load_leaderboard_row" in lab and '"leaderboard"' in lab)
+    record("[10b] App paints leaderboard only from certified manifest",
+           "renderLiveLeaderboard" in app and "lb.certified !== true" in app)
+    record("[10c] Pre-registered TF1 driver exists",
+           os.path.exists(os.path.join(ROOT, "experiments", "exp92_tf1_leaderboard_runner.py")))
+
     print("=" * 60)
     passed = sum(1 for _, ok, _ in RESULTS if ok)
     total = len(RESULTS)

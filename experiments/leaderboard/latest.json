@@ -1,0 +1,103 @@
+{
+ "protocol_id": "REMAP_SANDBOX_TF1_v1",
+ "family": "Task Family 1 \u2014 Non-stationary Tracking (remap sandbox)",
+ "date_utc": "2026-07-31T06:08:57Z",
+ "git_commit": "e521f4b",
+ "compile_fingerprint": {
+  "error": "AttributeError: module 'compile_fingerprint' has no attribute 'current_fingerprint'"
+ },
+ "instrument": "tests/remap_sandbox_probe.py @ 2026-07-31+drift-pin",
+ "arms": [
+  "stdp3c_learner",
+  "nolearn_ablation"
+ ],
+ "config": {
+  "ticks": 8000,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "remap_period": 4000,
+  "stdp_div": 1,
+  "probe_pin_pos": true,
+  "economy": "books",
+  "n_orgs": 120,
+  "patch": 2000
+ },
+ "gates": {
+  "G1_instrument_sanity_nolearn_static_unch>=80": true,
+  "G2_run_completeness": true
+ },
+ "certified": true,
+ "metrics": {
+  "per_seed": {
+   "nolearn_ablation|remap0|s0": {
+    "static_unch": 93.18734793187348,
+    "n": 3288
+   },
+   "nolearn_ablation|remap0|s1": {
+    "static_unch": 96.12736660929431,
+    "n": 3486
+   },
+   "nolearn_ablation|remap0|s2": {
+    "static_unch": 94.85749690210656,
+    "n": 3228
+   },
+   "nolearn_ablation|remap1|s0": {
+    "swap_mix": 66.84491978609626,
+    "unch_mix": 89.98161764705883,
+    "swap_n": 374,
+    "unch_n": 3264
+   },
+   "nolearn_ablation|remap1|s1": {
+    "swap_mix": 54.666666666666664,
+    "unch_mix": 95.6217162872154,
+    "swap_n": 300,
+    "unch_n": 3426
+   },
+   "nolearn_ablation|remap1|s2": {
+    "swap_mix": 51.08108108108108,
+    "unch_mix": 93.3832709113608,
+    "swap_n": 370,
+    "unch_n": 3204
+   },
+   "stdp3c_learner|remap0|s0": {
+    "static_unch": 90.89108910891089,
+    "n": 3030
+   },
+   "stdp3c_learner|remap0|s1": {
+    "static_unch": 95.33218785796106,
+    "n": 3492
+   },
+   "stdp3c_learner|remap0|s2": {
+    "static_unch": 92.76032039433149,
+    "n": 3246
+   },
+   "stdp3c_learner|remap1|s0": {
+    "swap_mix": 62.311557788944725,
+    "unch_mix": 89.09385113268608,
+    "swap_n": 398,
+    "unch_n": 3090
+   },
+   "stdp3c_learner|remap1|s1": {
+    "swap_mix": 55.333333333333336,
+    "unch_mix": 95.44159544159544,
+    "swap_n": 300,
+    "unch_n": 3510
+   },
+   "stdp3c_learner|remap1|s2": {
+    "swap_mix": 59.40594059405941,
+    "unch_mix": 93.93939393939394,
+    "swap_n": 404,
+    "unch_n": 3234
+   }
+  },
+  "learner_swap_mix_mean": 59.01694390544583,
+  "ablation_swap_mix_mean": 57.530889177948005,
+  "swap_delta_learner_minus_ablation": 1.486054727497823,
+  "note": "n=3 seeds per arm; descriptive reporting only \u2014 no z-claim at this n (deep review P1-4)."
+ },
+ "runs_manifest_hash": "da197afdae7cbba80bb4671cd3e7eaee153a798c12b453dbf3aafbd79e1a4ce9",
+ "energy_basis": "cycles MEASURED natively per Rule 21.1 (see Docs/Architecture/ENERGY_ACCOUNTING.md)"
+}

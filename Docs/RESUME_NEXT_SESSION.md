@@ -57,7 +57,38 @@ removed those so that future capability claims stand on real numbers.**
   AUTO_REPRO=1 runs count as life-support-assisted until derivation lands, visible via
   births.auto_repro). `physical_cost_model` entries carry basis labels; telemetry schema v2
   exposes `"energy_basis"`; ARD §2.1's stale "1-cycle, invented" cost text replaced by the
-  measured-cost account. Dangling doc paths fixed repo-wide
+  measured-cost account.
+- **Phase 9 (first REAL leaderboard row + instrument repair, Exp 92-TF1):** the remap sandbox
+  probe's long-standing "positions need no pinning, the scroll is long" assumption was FALSIFIED
+  by direct measurement — the un-pinned cohort saccades off the patch and per-window accuracy
+  collapses arm-independently (STDP3C reached n=0 reads with REMAP=0!). Repaired with documented
+  drift-pinning (position modulo patch each tick, same intervention class as the existing energy
+  pin) + PROBE_SEED/PROBE_JSON_OUT. Static instrument now clean: NOLEARN holds ~98.4% fidelity,
+  STDP3C on static text ERODES fidelity over time (Exp-30 class, now decoupled + quantified).
+  Leaderboard plumbing: `experiments/exp92_tf1_leaderboard_runner.py` (pre-registered
+  REMAP_SANDBOX_TF1_v1, arms learner/ablation × remap 0/1 × 3 seeds, certification gates
+  G1 instrument-sanity + G2 completeness, runs-manifest hash, compile fingerprint) publishes
+  `experiments/leaderboard/latest.json`; the lab ships it in state (`"leaderboard"`); the
+  dashboard paints it ONLY when `certified===true` — otherwise "—" stays. FIRST CERTIFIED ROW:
+  **swap_delta = -5.59 pts (learner − ablation, n=3 descriptive)** — on the current default
+  Rule-22 stack the repaired instrument shows NO net in-lifetime re-tracking advantage for
+  STDP3C (honest negative result; the session-era positive readings were config-era artifacts,
+  DIV=32 & un-pinned). Also: GENESIS_SEED now pins Python+numpy RNG (before: "seed" columns in
+  logs were decorative); GENESIS_REFUGE=0 disables the refugium (benchmark control, new).
+- **Phase 10 (Exp 92-M metabolic ceiling driver + THREE more root-causes):**
+  `experiments/exp92_metabolic_ceiling_driver.py` (pre-registered verdicts, arms default vs
+  no-life-support × seeds {0,1} × 100k ticks, pinned geometry, GD-counter telemetry parsing;
+  genesis_lab 5 s line now prints births(n/a/r/k) + deaths_nat). Certification double-pass of
+  TF1 initially flipped sign — forensic audit found NUMBA'S IN-JIT RNG UNSEEDABLE from Python
+  (kernel draws mutation/viscosity/sensing via in-JIT `random.*`; fixed with new engine entry
+  `seed_kernel_rng(seed)`, probed at PROBE_SEED and lab GENESIS_SEED) AND that pool geometry
+  (MAX_ORGANISMS, UNIVERSE_MAX_*, even RAM_SIZE) FLOATS WITH HOST FREE MEMORY at run start,
+  diverging trajectories at tick ~2000 (fixed: drivers pin GENESIS_MAX_ORGANISMS=512 /
+  GENESIS_RAM_SIZE=2097152). After fixes: two consecutive full TF1 passes produce
+  byte-identical per-seed metrics (acceptance test passed twice). ALSO fixed: headless
+  processes parked FOREVER after sim_loop returned (main slept in while-True after budget
+  exhaustion — every benchmark needed an outer kill): headless now joins the sim thread and
+  exits cleanly. TF1 final: certified, delta=+1.49 (descriptive n=3). Dangling doc paths fixed repo-wide
   (`Docs/Ascent.md` → `Docs/Architecture/Ascent.md` etc.; `Docs/MagicNumbers.md` never existed —
   Runbook now points at Result.md Exp 36). **Result.md lost 443 lines of byte-identical duplicate
   experiment entries** (Exp 68×2, 69 dup, 74×3, 75×3, 77×2, 77-fix×3, 78×3, 79×2, 81 dup) —

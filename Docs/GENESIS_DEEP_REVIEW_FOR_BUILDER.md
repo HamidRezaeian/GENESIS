@@ -10,7 +10,14 @@
 > P1‑9 (GENESIS_LIVE_WEB=0 واقعاً جداسازی می‌کند؛ fetch غیرمسدودکننده با thread پس‌زمینه), P1‑10 (ردیابی و حذف
 > fake telemetry به‌همراه guard در `tests/telemetry_honesty_test.py`), P1‑11 (یک publisher با seq-gate؛
 > RAM با کادانس 1Hz؛ metrics سبک), P2‑3 (بهداشت repo و .gitignore), P2‑4 (تمام لینک‌های dangling اصلاح شدند).
-> ⚠️ **بازمانده:** P0‑6 (متریک‌های capability رسمی و سیم‌شده به leaderboard — فعلاً سلول‌ها «—» هستند),
+> ✅ **همچنین در همان روز تکمیل شد:** P0‑6 — لوله‌کشی کامل leaderboard واقعی: درایور پیش‌ثبت‌شده‌ی TF1
+> (arms × ۳ seed × remap 0/1)، گیت‌های صدور گواهی (G1 sanity ابزار + G2 completeness)، انتشار
+> latest.json با hash مانیفست، و رندر داشبورد فقط در صورت certified=true. **اولین سطر واقعی:**
+> swap_delta=+1.49pts (توصیفی، n=3). در مسیر، سه ریشه‌ی بزرگ عدم‌تکرارپذیری هم کشف و اصلاح شد
+> (seed نشدن random پایتون، RNG داخلی numba که از پایتون قابل seed نیست — seed_kernel_rng اضافه شد،
+> و شناور بودن هندسه‌ی poolها با حافظه‌ی آزاد میزبان — pin در درایورها). جزئیات کامل در Result.md Exp 93.
+>
+> ⚠️ **بازمانده:**
 > P1‑3/P1‑4 (کنترل‌های کامل learning + permutation/bootstrap), P1‑5 (shortcut audit خودکار),
 > P1‑6/P1‑7 (نام‌گذاری دقیق measured-vs-estimated + سند حساسیت exchange rate), P1‑8 (اشتقاق AUTO_REPRO_THRESH),
 > P1‑12 (barrier/snapshot ownership برای checkpoint), P2‑1/P2‑2 (شکستن monolith و سازمان‌دهی experiments).

@@ -43,9 +43,25 @@ os.environ.setdefault("GENESIS_ECONOMY", "books")
 os.environ.setdefault("GENESIS_REMAP_PERIOD", "4000")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+
+# Multi-seed replication (Rule 3): seed BOTH RNG families BEFORE importing the lab/engine —
+# the ancestor fabricator uses Python's `random` module (create_intelligent_ancestor and the
+# lib's roll functions), numpy RNG drives placement/injectors, and module-level draws happen
+# at import time. Seeding only np.random AFTER import (the earlier hook) left per-run entropy
+# from the OS in the ancestor bytes: two "identical" leaderboard passes differed seed-for-seed
+# (caught by the 2026-07-31 reproducibility audit of Exp 92-TF1).
+import random as _pyrandom
+_EARLY_SEED = int(os.environ.get("PROBE_SEED", "0"))
+_pyrandom.seed(_EARLY_SEED)
 import numpy as np
+np.random.seed(_EARLY_SEED)
+
 import genesis_lab as gl
 import neuromorphic_engine as ne
+
+# Pin the KERNEL's internal RNG (numba in-JIT `random` draws — mutation/viscosity/sensing).
+# Python-level seeds alone were proven insufficient by the Exp-92 reproducibility audit.
+ne.seed_kernel_rng(_EARLY_SEED)
 
 N_ORG    = int(os.environ.get("PROBE_N", "120"))
 TICKS    = int(os.environ.get("PROBE_TICKS", "60000"))
@@ -55,7 +71,10 @@ SB0, SB1 = int(os.environ.get("GENESIS_REMAP_SB0", "0")), int(os.environ.get("GE
 
 
 def build_patch():
-    """Lay a fixed contiguous text scroll and stand the cohort on it, one org per cell."""
+    """Lay a fixed contiguous text scroll and stand the cohort on it, one org per cell.
+
+    Returns (placed_count, patch_start). The initial placement slots are remembered in
+    _PIN for the drift-pinning below."""
     from books_of_genesis import inject_contiguous_library
     inject_contiguous_library(gl.g_ram, gl.RAM_SIZE, gl.BOOK_CATEGORY, gl.BOOK_NAME, PATCH)
     start = gl.contiguous_library_start(gl.RAM_SIZE, PATCH)
@@ -67,7 +86,42 @@ def build_patch():
             if gl.spawn_organism(placed, p, dna, initial_energy=gl.SEED_ENERGY):
                 placed += 1
         p += 3   # space them out so they don't collide-block on the saccade
-    return placed
+    return placed, start
+
+
+_PIN = {"start": 0, "enabled": os.environ.get("PROBE_PIN_POS", "1") == "1"}
+
+def pin_positions_to_patch():
+    """Drift-pin the frozen cohort onto the patch (Exp-92b instrument repair, 2026-07-31).
+
+    The probe pins ENERGY high (nobody dies) but never pinned POSITIONS, and its own comment
+    claimed re-pinning was "unnecessary because the scroll is contiguous and long". That
+    assumption is FALSE: saccades carry the cohort off the patch within ~2k ticks, after which
+    per-window "accuracy" collapses arm-independently (STDP3C hits n=0 reads by t=6000 with
+    REMAP=0!) and any phase attribution is void — the very diagnosis class the deep review
+    warns about. Fix: at the top of every tick, wrap each placed organism's position MODULO
+    the patch (start + ((pos - start) % PATCH)) and repair the occupancy grid for the moved
+    ones. Organisms still move/saccade physically every tick (real kernel, real physics); they
+    just cannot LEAVE the measured text — the minimal bounded intervention that preserves the
+    frozen-cohort abstraction, same class as the energy pin. Disable with PROBE_PIN_POS=0 to
+    reproduce the broken historical geometry."""
+    if not _PIN["enabled"]:
+        return
+    start = _PIN["start"]
+    alive_ids = np.nonzero(gl.g_alive)[0]
+    if alive_ids.size == 0:
+        return
+    pos = gl.g_positions[alive_ids]
+    newpos = start + ((pos - start) % PATCH)
+    for oid, old, new in zip(alive_ids, pos, newpos):
+        if old == new:
+            continue
+        if gl.g_org_grid[new] != -1:
+            continue  # occupied this tick; defer (rare — 120 orgs on a 2000-cell patch)
+        if gl.g_org_grid[old] == oid:
+            gl.g_org_grid[old] = -1
+        gl.g_org_grid[new] = oid
+        gl.g_positions[oid] = new
 
 
 def remap_target(nb, swapped):
@@ -116,6 +170,9 @@ def measure_window(swapped):
 
 
 def main():
+    # Seeding is done at import time above (BEFORE the lab/engine modules hydrate), since
+    # module-level draws happen during import; re-read it here only for the manifest fields.
+    seed = _EARLY_SEED
     mode = ("NOLEARN" if ne.NOLEARN else ("STDP3C" if ne.STDP3C else ("STDP3" if ne.STDP3 else "STDP")))
     # Startup integrity check: refuse to emit phase-attributed measurements if the report
     # window would span or alias remap phases (see the env pin at the top of this file).
@@ -126,16 +183,26 @@ def main():
             f"Per-phase attribution requires REMAP_PERIOD == 2*REPORT*k (k>=1); fix PROBE_REPORT or "
             f"GENESIS_REMAP_PERIOD before trusting any output.")
     print(f"[SANDBOX] mode={mode} REMAP={ne.REMAP} period={int(ne.REMAP_PERIOD)} states={int(ne.REMAP_STATES)} "
-          f"swapbits=({SB0},{SB1}) DIV={float(ne.STDP_DIV):.0f} N={N_ORG} ticks={TICKS} patch={PATCH}")
+          f"swapbits=({SB0},{SB1}) DIV={float(ne.STDP_DIV):.0f} N={N_ORG} ticks={TICKS} patch={PATCH} pin_pos={_PIN['enabled']}")
     # JIT warmup on a throwaway single org handled by first real tick.
-    placed = build_patch()
+    placed, patch_start = build_patch()
+    _PIN["start"] = patch_start
     print(f"[SANDBOX] placed {placed} clones on a {PATCH}-byte patch; energy pinned (no death/birth)")
 
+    windows = []   # per-window metrics (exported to PROBE_JSON_OUT if set)
     global_time = 0
     HI = float(gl.ATP_MAX) * 0.5
     dummy_births = None
     while global_time < TICKS:
-        # PIN energy high every tick so nobody dies and the reproduce threshold is moot; we also zero
+        pin_positions_to_patch()
+
+        if os.environ.get("PROBE_DEBUG_HASH") == "1" and global_time % 500 == 0:
+            import hashlib as _hl
+            def hh(a): return _hl.sha256(a.tobytes()).hexdigest()[:8]
+            print(f"    [HASH t={global_time}] pos={hh(gl.g_positions)} en={hh(gl.g_energy)} "
+                  f"age={hh(gl.g_age)} v={hh(gl.g_global_v)} w={hh(gl.g_global_conn_weight)} "
+                  f"log={hh(gl.g_read_log[:64])} ram={hh(gl.g_ram[:8192])}")
+# PIN energy high every tick so nobody dies and the reproduce threshold is moot; we also zero
         # the birth buffer return so the cohort stays frozen (only weights move).
         gl.g_energy[gl.g_alive] = np.float32(HI)
 
@@ -161,21 +228,52 @@ def main():
 
         # Ignore births entirely (frozen cohort): free any birth-buffer bodies were NOT allocated (the
         # kernel only fills b_* arrays; spawning happens in sim_loop which we don't call), so nothing to
-        # undo. Organisms that saccaded off the patch wrap on the ring; re-pin positions is unnecessary
-        # because the scroll is contiguous and long.
+        # undo. Drift off the patch is handled by pin_positions_to_patch() at the top of each tick
+        # (the old "re-pinning is unnecessary" assumption was falsified by the Exp-92b instrument
+        # audit: reads collapsed to n≈0 long before the run ended).
 
         period = int(ne.REMAP_PERIOD); states = int(ne.REMAP_STATES)
-        swapped = (states > 1) and (((global_time // period) % states) != 0)
+        # Era attribution (Exp-93 instrument fix, 2026-07-31): the window just drained spans
+        # ticks [global_time-REPORT, global_time). With REMAP_PERIOD == 2*REPORT*k each report
+        # window lies FULLY inside one physical era, so its label must come from the era of its
+        # FIRST tick — labeling by `global_time` at drain time shifted every era attribution by
+        # exactly one window (identity data reported as "SWAP" and vice versa), corrupting the
+        # pre-pinning era readings of the session-era experiments on this probe.
+        era_start = (global_time - REPORT) if global_time >= REPORT else max(global_time - REPORT, 0)
+        swapped = (states > 1) and (((era_start // period) % states) != 0)
 
         if global_time % REPORT == 0 and global_time > 0:
             sc, st, uc, ut = measure_window(swapped)
             swap_acc = (100.0 * sc / st) if st else float("nan")
             unch_acc = (100.0 * uc / ut) if ut else float("nan")
             phase = "SWAP" if swapped else "idnt"
+            windows.append({"t": int(global_time), "remap_active": bool(ne.REMAP),
+                            "phase_label": phase,
+                            "swapbit_correct": int(sc), "swapbit_total": int(st),
+                            "unchbit_correct": int(uc), "unchbit_total": int(ut),
+                            "alive": int(n_alive)})
             print(f"  t={global_time:>6} phase={phase} | swapbit_acc={swap_acc:5.1f}% (n={st:4d}) "
                   f"| unchbit_acc={unch_acc:5.1f}% (n={ut:5d}) | alive={int(n_alive)}")
 
         global_time += 1
+
+    # Machine-readable export for the leaderboard driver (Experiment 92 series).
+    out = os.environ.get("PROBE_JSON_OUT")
+    if out:
+        import json
+        payload = {
+            "instrument": "remap_sandbox_probe",
+            "instrument_rev": "2026-07-31+drift-pin",
+            "seed": seed,
+            "mode": mode, "remap": bool(ne.REMAP), "period": int(ne.REMAP_PERIOD),
+            "states": int(ne.REMAP_STATES), "swapbits": [SB0, SB1],
+            "stdp_div": float(ne.STDP_DIV), "n_orgs": N_ORG, "ticks": TICKS,
+            "patch": PATCH, "report": REPORT, "pin_pos": bool(_PIN["enabled"]),
+            "windows": windows,
+        }
+        with open(out, "w") as f:
+            json.dump(payload, f, indent=1)
+        print(f"[SANDBOX] JSON written to {out}")
 
 
 if __name__ == "__main__":

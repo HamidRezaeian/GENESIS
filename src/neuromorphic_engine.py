@@ -631,6 +631,20 @@ global_neuron_sign = np.ones(UNIVERSE_MAX_NEURONS, dtype=np.int8)  # default exc
 MAX_DNA_PER_ORG = int(os.environ.get("GENESIS_MAX_DNA_PER_ORG", str(UNIVERSE_MAX_DNA // MAX_ORGANISMS)))
 
 @njit(cache=True)
+def seed_kernel_rng(seed):
+    """Rule-3 replication hook (Exp-92 reproducibility audit, 2026-07-31).
+
+    numba's internal RNG — used by world_tick_numba mutation/viscosity/sensing draws via the
+    `random` module INSIDE JIT code — is initialized from OS entropy per process and is NOT
+    affected by python-level `random.seed()` / `np.random.seed()`. Consequence discovered while
+    certifying the first real leaderboard row: two byte-identical benchmark passes diverged from
+    the first measurement window. Seeding from INSIDE JIT (this function) is the only effective
+    pin. Call before the first world_tick for reproducible runs."""
+    random.seed(seed)
+    np.random.seed(seed % 2147483647)
+
+
+@njit(cache=True)
 def malloc_block(count, g_map):
     if count <= 0: return 0
     consecutive = 0

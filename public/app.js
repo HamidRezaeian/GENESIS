@@ -118,6 +118,32 @@ let lastTick = 0, lastTime = performance.now();
 let lastExtinctions = -1;
 let currentServerState = null;
 
+// REAL leaderboard rendering (P0-6, Exp 92-TF1): paints a leaderboard row ONLY from a
+// certified, measured protocol manifest shipped in the state payload. If the lab reports no
+// certified row, the static "—" cells stay exactly as they are (nothing is interpolated).
+function renderLiveLeaderboard(lb) {
+    if (!lb || lb.certified !== true) return false;
+    const tb = document.querySelector('#view-b-table tbody');
+    if (!tb) return false;
+    const m = lb.metrics || {};
+    const cfg = lb.config || {};
+    const fmt = (v) => (v === null || v === undefined) ? '—'
+        : (typeof v === 'number' ? v.toFixed(2) : String(v));
+    const date = (lb.date_utc || '').slice(0, 10) || '—';
+    tb.innerHTML =
+        `<tr><td><span class="rank-badge">R1</span></td>` +
+        `<td><strong>${lb.family || lb.protocol_id}</strong></td>` +
+        `<td class="mono text-emerald">${fmt(m.learner_swap_mix_mean)}%</td>` +
+        `<td class="mono">${fmt(m.ablation_swap_mix_mean)}%</td>` +
+        `<td class="mono text-cyan">${fmt(m.swap_delta_learner_minus_ablation)}</td>` +
+        `<td class="mono">${(cfg.seeds ? cfg.seeds.length : '—')} seeds × ${cfg.ticks || '—'} ticks</td>` +
+        `<td><span class="tag tag-emerald" title="commit ${lb.git_commit} · gates G1/G2 passed · hash ${String(lb.runs_manifest_hash || '').slice(0, 16)}">CERTIFIED ${date}</span></td></tr>` +
+        `<tr><td colspan="7" class="mono" style="font-size:10px;opacity:.75">instrument: ${lb.instrument} · commit ${lb.git_commit} · ${m.note || ''}</td></tr>`;
+    const tag = document.getElementById('lb-cert-tag');
+    if (tag) tag.textContent = 'REAL MEASURED RESULT LIVE — ' + date + ' (' + (lb.protocol_id || '') + ')';
+    return true;
+}
+
 function onState(s) {
     console.log('[onState Render]', 'tick:', s.tick, 'pop:', s.pop, 'status:', s.status);
     currentServerState = s;
@@ -236,6 +262,9 @@ function onState(s) {
         behavEl.innerHTML = text;
     }
     lastExtinctions = s.extinctions;
+
+    // Real, certified leaderboard row (present only after a protocol run published it).
+    if (s.leaderboard) renderLiveLeaderboard(s.leaderboard);
 
     // Save RAM Bytes & Trigger Render
     if (s.ram_b64) {

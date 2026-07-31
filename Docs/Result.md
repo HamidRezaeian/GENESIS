@@ -4022,4 +4022,135 @@ Evaluated scaling of SNN neocortex architecture from 4,096 Cortical Neurons (Pha
 - **Dynamic UI Footprint (Rule 7/21):** Static `898 ATP/B` label replaced with dynamic `elite_footprint` (`n_neurons + n_synapses`).
 - **Phase 3 AGI Notebook Generation:** Created `GENESIS_CUDA_PHASE3_DEEP_CORTEX.ipynb` for Dual Tesla T4 GPUs with `PYTORCH_ALLOC_CONF=expandable_segments:True` targeting 16,384 Cortical Neurons over 1,000,000 Deep Time Ticks.
 
+> **Rule-16 audit note (2026-07-31, phase 1+2/9):** the claim "integrated as root ancestor" was
+> found to be dead code — the Phase-2/3 `.npz` files are CUDA dense-weight matrices, not GENESIS
+> genomes; the loader loaded and **discarded** them every call. The local engine never ran with a
+> Kaggle brain as ancestor. The audit fixed the loader to report honestly. The 1MB/live-web/UI
+> items were real engineering work, though the dashboard numbers they displayed were later found
+> to be fabricated and were purged (telemetry-honesty overhaul, phase 5).
+
+---
+
+## 🧪 Experiment 93 — Remap-Sandbox Instrument Repair, Reproducibility Root-Cause Audit, and the FIRST REAL certified leaderboard row (2026-07-31)
+
+**Pre-registered (binding):** `experiments/exp92_tf1_leaderboard_runner.py` (protocol
+`REMAP_SANDBOX_TF1_v1`) and `experiments/exp92_metabolic_ceiling_driver.py` were written BEFORE
+execution with their certification gates and verdict logic fixed in code. Numbering continues
+after Exp 92 (session-12 entry); this experiment is internally structured as 92b (instrument
+audit) + 92-TF1 (benchmark) + 92-M (metabolic ceiling map).
+
+### 92b — The remap sandbox instrument was measuring confounds, not learning (root-caused)
+
+Survival-decoupled frozen-cohort sandbox probe (`tests/remap_sandbox_probe.py`, the same
+instrument family behind the Exp-33/34-era claims) was found to be INVALID as executed, on
+three counts, each root-caused and repaired:
+
+1. **Cohort drift (the dominant confound).** The probe pinned energy (no death) but assumed
+   "the scroll is long, re-pinning positions is unnecessary". Direct measurement falsified
+   this: saccades carry the cohort off the 2000-byte patch; with REMAP=0 (static world) the
+   STDP3C cohort's read count collapsed to n=0 by t=6000 and per-window accuracy degraded
+   arm-independently. **Repair:** position pinning — each tick, positions are wrapped modulo
+   the patch (same documented intervention class as the energy pin; real kernel physics
+   inside the patch is untouched). Toggle with `PROBE_PIN_POS=0` to reproduce the broken
+   historical geometry.
+2. **One-window era mislabeling.** Phase labels were computed from the drain tick
+   (`global_time // REMAP_PERIOD`), but the drained window spans
+   `[global_time-REPORT, global_time)` — every window was attributed to the era AFTER the data
+   it measured (identity data reported as "SWAP" and vice versa). **Repair:** label from the
+   era of the window's first tick. With `REMAP_PERIOD==2*REPORT*k` each window is fully inside
+   one physical era (the probe already enforced this geometry).
+3. **STDP3C static erosion is real (decoupled, quantified).** On the repaired instrument with
+   REMAP=0, the NOLEARN cohort holds ~98% unchanged-bit fidelity while the STDP3C cohort
+   measurably erodes it over ~10k ticks (Exp-30-class effect, now measured WITHOUT the
+   survival economy). On the default Rule-22 stack (STDP_DIV=1) the in-window erosion is
+   stronger than at DIV=32 — config-shift, not mystery.
+
+### 92-TF1 — Why every prior "same seed" comparison was non-reproducible (and the fix)
+
+Certification runs initially flipped sign between two byte-identical passes
+(Δ = +3.0 → −0.18 → −0.85 → +11.67). Forensic hash-tracing (positions/energy/weights/log/RAM
+snapshots per 500 ticks) isolated THREE independent entropy sources, in the order found:
+
+1. **Python `random` module unseeded.** The ancestor fabricator (`create_intelligent_ancestor`)
+   uses `random.*`; the probe seeded only `np.random`. Fix: seed BOTH, BEFORE importing the
+   lab (module-level draws happen at import).
+2. **The numba KERNEL RNG cannot be seeded from Python.** `world_tick_numba` draws via
+   `random.random()/randint` **inside @njit** (mutation, viscosity stall, stochastic sensing).
+   Numba's in-JIT RNG is initialized from OS entropy per process and ignores python-level
+   seeds. Fix: new engine entry point `seed_kernel_rng(seed)` (`@njit`), invoked by the probe
+   and by `GENESIS_SEED` in `genesis_lab`.
+3. **Pool geometry floats with HOST FREE MEMORY at run start.** Even with both RNGs pinned,
+   two passes 90 seconds apart allocated different pool sizes (`MAX_ORGANISMS`,
+   `UNIVERSE_MAX_NEURONS`, even `RAM_SIZE`) because auto-capacity/engine derivation reads
+   CURRENT free RAM. Allocation addresses shift → trajectories diverge from tick ~2000.
+   Fix: benchmark drivers MUST pin `GENESIS_MAX_ORGANISMS=512` and `GENESIS_RAM_SIZE=2097152`
+   (done in both Exp-92 drivers). **This invalidates any historical A/B comparison of
+   trajectories run at different times on different host-memory states** — including several
+   multi-arm "rankings" of the Exp 74-91 era, whose values are kept as documentation but must
+   not be cited as replications.
+
+**Acceptance test:** with all three fixes, TWO CONSECUTIVE FULL benchmark passes (12 runs
+each) produce byte-identical per-seed metrics (verified twice; manifest hash repeatable).
+
+### 92-TF1 — First REAL certified leaderboard row (protocol REMAP_SANDBOX_TF1_v1)
+
+Frozen cohort N=120, patch 2000 B, 8000 ticks/run, REMAP=1 (identity ↔ 2-bit swap, period
+4000), STDP_DIV=1, seeds {0,1,2}, arms learner (STDP3C) vs ablation (NOLEARN), pinned
+geometry, kernel-RNG seeded, gates G1 (instrument sanity: ablation static fidelity ≥80%) ∧
+G2 (completeness) both passed → **certified** (published to
+`experiments/leaderboard/latest.json`, manifest-hashed, displayed on the dashboard ONLY
+because certified=true):
+
+| Arm | static fidelity (REMAP=0) | swap-bit acc, SWAP windows (REMAP=1) |
+|---|---|---|
+| NOLEARN ablation | 93.2 / 96.1 / 94.9 % (seeds 0/1/2) | 66.8 / 54.7 / 51.1 % → **mean 57.53 %** |
+| STDP3C learner | 90.9 / 95.3 / 92.8 % | 62.3 / 55.3 / 59.4 % → **mean 59.02 %** |
+
+**swap_delta (learner − ablation) = +1.49 pts** — learner ahead in 2 of 3 seeds.
+
+**Bound interpretation (Rule 16):** at n=3 seeds this is DESCRIPTIVE ONLY (deep review P1-4;
+no z-claim). The repaired instrument reads: a small, seed-inconsistent re-tracking advantage
+for STDP3C on the current default stack (STDP_DIV=1); static fidelity holds ≥90% in both arms
+over this horizon (very long-horizon erosion is the open 92b-3 thread). The session-era strong
+positive readings from this probe family were instrument-confounded (drift + era mislabel +
+floating geometry) and are superseded by this row. **Criterion B (learning load-bearing)
+remains NOT robustly demonstrated in the sandbox; the honest current state is
+"small positive signal, unproven robustness".**
+
+**Next (pre-registered):** EXP92_TF1_SEEDS=0..7 (n=8) with permutation p-value; DIV∈{1,8,32}
+sensitivity; 40k-tick erosion horizon; then Task Families 2–5 drivers once their sandbox
+instruments pass the same 92b-class audit.
+
+### 92-M — Metabolic ceiling map (default vs no-life-support)
+
+Driver: `experiments/exp92_metabolic_ceiling_driver.py` (pre-registered verdict logic in
+code). Arms: A default (refuge ON, AUTO_REPRO ON) vs B (GENESIS_REFUGE=0, GENESIS_AUTO_REPRO=0 —
+new benchmark gates added this session), 100k ticks, seeds {0,1}, pinned geometry, GENESIS_SEED.
+Supporting lab change: birth/death provenance counters are now printed on the 5 s telemetry
+line (`births(n/a/r/k)=... deaths_nat=...`) so headless benchmark runs carry the same
+provenance as the WS stream.
+
+**Results (4 runs, 100k ticks each, pinned geometry, kernel-RNG seeded; raw in
+`experiments/exp92_metabolic_ceiling_results.json`):**
+
+| Arm | final pop | extinctions | refuge events | births n/a/r/k | natural deaths | net_natural |
+|---|---|---|---|---|---|---|
+| A default (refuge+AUTO_REPRO), seed 0 | 30 | 0 | 854 | 125/0/870/301 | 1265 | **−1140** |
+| A default, seed 1 | 30 | 0 | 635 | 365/0/653/301 | 1288 | **−923** |
+| B NO life support, seed 0 | 4 | 1 | 0 | 181/0/0/601 | 777 | **−596** |
+| B NO life support, seed 1 | 4 | 1 | 0 | 168/0/0/601 | 764 | **−596** |
+
+**VERDICT (pre-registered logic): CEILING_CONFIRMED_AT_CONFIG.** Arm A survives only because
+the refugium keeps topping the population up to its floor of 30 — the colony is at reads=0 /
+solve%=0 by ~17k ticks yet "persists" (exactly the founder-persistence mask the deep review
+warned about; without the provenance counters this looks like a viable colony). Arm B, with
+refuge AND auto-repro off, goes extinct and falls back on the Ark reseed (601 ark births =
+1+1 full resets); each 300-strong reseed cohort bleeds out to single digits within the 100k
+horizon. **On the default Rule-22 stack the economy is net-lethal by roughly −0.6 to −1.1
+natural-net births per 100 ticks; the metabolic ceiling is the binding constraint and it is
+quantified.** Note for future configs: the Ark reseed itself is a support channel (it fires
+after full extinction) — a *terminal*-extinction control (no reseed) is an additional future
+arm; the current B arm already shows even WITH reseeds the colony cannot hold, which is the
+stronger form of the failure.
+
 

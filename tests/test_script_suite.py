@@ -56,3 +56,41 @@ def test_fast_script(script):
 @pytest.mark.parametrize("script", SLOW_SCRIPTS)
 def test_slow_script(script):
     _run_script(script)
+
+
+@pytest.mark.slow
+def test_tf1_leaderboard_runner():
+    """Small-budget certification: the pre-registered TF1 runner must publish a row with
+    gates evaluated and full provenance fields (Exp 92-TF1). Uses 2 seeds / short ticks for CI
+    wall-time; the certified dashboard row is produced by the full n=3 driver."""
+    env = os.environ.copy()
+    env.update({
+        "GENESIS_LIVE_WEB": "0",
+        "EXP92_TF1_SEEDS": "0,1",
+        "EXP92_TF1_TICKS": "8000",  # >= 4 windows needed for SWAP-era measurement (G2b gate)
+        "EXP92_TF1_TIMEOUT": "600",
+    })
+    lb_path = os.path.join(ROOT, "experiments", "leaderboard", "latest.json")
+    backup = None
+    if os.path.exists(lb_path):
+        with open(lb_path, "rb") as f:
+            backup = f.read()
+    try:
+        proc = subprocess.run(
+            [sys.executable, os.path.join(ROOT, "experiments", "exp92_tf1_leaderboard_runner.py")],
+            cwd=ROOT, env=env, capture_output=True, text=True, timeout=1800,
+        )
+        tail = (proc.stdout or "") + (proc.stderr or "")
+        assert proc.returncode == 0, f"tf1 runner exited {proc.returncode}:\n{tail[-3000:]}"
+        import json
+        with open(lb_path) as f:
+            d = json.load(f)
+    finally:
+        # The dashboard's published certified row belongs to the FULL n=3 driver; never let a
+        # CI-budget run overwrite it.
+        if backup is not None:
+            with open(lb_path, "wb") as f:
+                f.write(backup)
+    assert d["protocol_id"] == "REMAP_SANDBOX_TF1_v1"
+    assert "certified" in d and "gates" in d and "runs_manifest_hash" in d
+    assert d["metrics"]["swap_delta_learner_minus_ablation"] is not None

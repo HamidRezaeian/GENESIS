@@ -28,6 +28,14 @@ os.environ.setdefault("GENESIS_STDP3C", "1")
 os.environ.setdefault("GENESIS_RESUME", "0")
 os.environ.setdefault("GENESIS_GROUNDED", "0")  # Pure Reading Economy: Only text comprehension pays energy
 
+# Rule-3 replication hook (Exp 92, 2026-07-31): GENESIS_SEED pins Python `random` + numpy RNG so
+# benchmark runs are exact replicates — the lab previously left both RNG streams unseeded, which
+# made "seed" columns in experiment logs decorative rather than real.
+_seed = os.environ.get("GENESIS_SEED")
+if _seed is not None:
+    random.seed(int(_seed))
+    np.random.seed(int(_seed) % (2 ** 32))
+
 # RAM size: the ENGINE is sovereign (neuromorphic_engine._derive_ram_size: env override, else
 # host-derived pow2). Do NOT set GENESIS_RAM_SIZE here — an earlier revision resolved a DIFFERENT
 # value via capacity_resolver (~37MB) and force-wrote it into the env AFTER the engine had already
@@ -198,7 +206,13 @@ from neuromorphic_engine import (
     PARAM_MARKER, PARAM_MAGIC, CAM_MATCH_THRESHOLD, CAM_WRITE_THRESHOLD, HOMEOSTATIC_LAMBDA,
     TAU_REF, SP_GROWTH_COST, SP_REWIRE_WEIGHT,
     g_org_params, N_PARAM_GENES,
+    seed_kernel_rng as _seed_kernel_rng,
 )
+
+# Complete the GENESIS_SEED hook now that the engine is importable: also pin the KERNEL's
+# internal RNG (numba in-JIT `random` draws), which python-level seeds cannot reach.
+if _seed is not None:
+    _seed_kernel_rng(int(_seed))
 
 from books_of_genesis import (
     inject_custom_book, inject_curriculum_file, inject_passage, regrow_passage,
@@ -532,6 +546,29 @@ g_auto_inject = (GENESIS_ECONOMY == "books")
 # from the dashboard so the user can switch the entire library on/off without a restart. Initialised from
 # the GENESIS_CURRICULUM env default.
 g_curriculum = CURRICULUM
+
+# ---------------------------------------------------------------------------
+# Real-results leaderboard row (P0-6, Exp 92-TF1): a measured, pre-registered protocol row
+# (experiments/leaderboard/latest.json) is the ONLY thing allowed to populate the dashboard
+# leaderboard. Loaded lazily with mtime-keyed caching; ABSENT/invalid file -> the dashboard
+# keeps showing "—" (never fabricated content).
+g_leaderboard_row = None
+g_leaderboard_mtime = 0.0
+
+def _load_leaderboard_row():
+    global g_leaderboard_row, g_leaderboard_mtime
+    path = os.path.join("experiments", "leaderboard", "latest.json")
+    try:
+        mt = os.path.getmtime(path)
+        if mt != g_leaderboard_mtime or g_leaderboard_row is None:
+            with open(path, encoding="utf-8") as f:
+                d = json.load(f)
+            if isinstance(d, dict) and d.get("protocol_id"):
+                g_leaderboard_row = d
+                g_leaderboard_mtime = mt
+    except (OSError, ValueError):
+        pass  # absence is normal until a certified run publishes (dashboard shows "—")
+    return g_leaderboard_row
 
 g_telemetry_lock = threading.Lock()
 g_latest_snapshot = None        # last published state dict (dict, under lock)
@@ -1638,6 +1675,9 @@ def sim_loop():
         # Phase 3 (1M-1.5M): refuge_floor = 10 (high pressure)
         # Phase 4 (1.5M+): refuge_floor = 5 (near-zero safety net)
         # Proven: organisms maintain 70.9% accuracy even at Phase 4.
+        # GENESIS_REFUGE=0 (Exp 92, 2026-07-31): benchmark control — disables ALL refuge top-ups
+        # so colony persistence is paid by the economy alone. Default 1 keeps the demo behaviour.
+        REFUGE_ENABLED = os.environ.get("GENESIS_REFUGE", "1") == "1"
         if global_time < 500_000:
             refuge_floor = max(len(fossil_pool), 30)
         elif global_time < 1_000_000:
@@ -1646,7 +1686,9 @@ def sim_loop():
             refuge_floor = max(len(fossil_pool), 10)
         else:
             refuge_floor = max(len(fossil_pool), 5)
-        
+        if not REFUGE_ENABLED:
+            refuge_floor = 0
+
         if 0 < alive_count < refuge_floor:
             got = seed_refuge(refuge_floor - int(alive_count))
             if got > 0:
@@ -2002,6 +2044,9 @@ def sim_loop():
                     # still unmet — Exp 68-70 compositionality 0%, criterion A FAILED). Publishing
                     # any other number here would be a Rule-16 violation.
                     "agi_progress": 0,
+                    # REAL, measured leaderboard row (None until a certified protocol run
+                    # publishes experiments/leaderboard/latest.json — P0-6, Exp 92-TF1).
+                    "leaderboard": _load_leaderboard_row(),
                     "tick": int(global_time),
                     "pop": int(alive_count),
                     "max_pop": int(MAX_ORGANISMS),
@@ -2272,6 +2317,8 @@ def sim_loop():
                   f"| reads={r_success} miss={r_fail} pred={r_pred} peer={r_peer} evade={r_evade} "
                   f"| Hpeer={h_peer:.2f}/nd{nd_peer} Hread={h_read:.2f}/nd{nd_read} Hact={h_act:.2f}/nd{nd_act} "
                   f"| frontier b/s/c/a/off={band[0]}/{band[1]}/{band[2]}/{band[3]}/{band[4]} off={mean_off_pct:.0f}% "
+                  f"| births(n/a/r/k)={g_run_natural_births}/{g_run_auto_repro_births}/{g_run_refuge_births}/{g_run_ark_births} "
+                  f"deaths_nat={g_run_natural_deaths} "
                   f"| ext={num_extinctions} refuge={num_refuge}{act_line}{stig_line}{remap_line}{evosense_line}")
             
             # (Telemetry publication happens in the 0.5 s telemetry block above via
@@ -2325,6 +2372,16 @@ def main():
         print("Physics Engine running. Open http://localhost:8081 in your browser.")
     else:
         print("Physics Engine running (HEADLESS: no ws/http servers).")
+
+    # Exp-92 hang root-cause (2026-07-31): sim_loop returns when its probe budget is reached
+    # (GENESIS_MAX_TICKS stop, or the sim-mesh end), after which main used to park FOREVER in
+    # the sleep loop below, so every headless benchmark run had to be killed by an outer
+    # timeout (masking normal completion and stalling driver pipelines). In headless mode,
+    # returning control when the sim is done is the correct lifecycle.
+    if headless:
+        t.join()
+        print("[HEADLESS] sim_loop finished; exiting.")
+        return
 
     try:
         while True:
