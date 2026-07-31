@@ -61,8 +61,14 @@ record("SCALING: bigger machine -> bigger cap", c128 > c8 > AC.MIN_ORGANISMS,
        "8GB->%s, 128GB->%s" % (format(c8, ","), format(c128, ",")))
 
 # 5. CLAMPS
+# 2026-07-31 audit (P0-5): an infeasible floor must NOT be forced (that was a designed-in
+# OOM). 0.1GB now yields the honest feasible cap (1) instead of MIN_ORGANISMS.
 AC.detect_available_bytes = lambda: int(0.1e9)
-record("CLAMP min: 0.1GB -> MIN", AC.auto_population_cap() == AC.MIN_ORGANISMS,
+record("FEASIBILITY: 0.1GB -> honest floor, no forced MIN", 1 <= AC.auto_population_cap() < AC.MIN_ORGANISMS,
+       "cap=%s" % AC.auto_population_cap())
+# ... and a merely-tight machine still respects MIN_ORGANISMS when it IS feasible.
+AC.detect_available_bytes = lambda: int(4e9)
+record("FEASIBILITY: 4GB -> real cap >= MIN", AC.auto_population_cap() >= AC.MIN_ORGANISMS,
        "cap=%s" % AC.auto_population_cap())
 AC.detect_available_bytes = lambda: int(1e15)
 record("CLAMP max: 1PB -> MAX", AC.auto_population_cap() == AC.MAX_ORGANISMS_CAP,

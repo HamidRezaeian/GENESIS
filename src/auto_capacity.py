@@ -125,18 +125,28 @@ def auto_population_cap(memory_fraction=DEFAULT_MEMORY_FRACTION,
 
         budget = available * memory_fraction - reserve_bytes
         n      = budget // bytes_per_org
-        result = clamp(n, min_orgs, max_orgs)
+        result = min(n, max_orgs) when n >= min_orgs, else the honest feasible floor.
 
     Returns None only if the system memory cannot be detected at all (the caller
-    should then fall back to a fixed default)."""
+    should then fall back to a fixed default).
+
+    FEASIBILITY GUARD (2026-07-31 audit, deep review P0-5): when the budget cannot host
+    even `min_orgs` organisms, the old policy FORCED `min_orgs` anyway — allocating
+    min_orgs × ~143 KB of pools plus the substrate on a machine that demonstrably lacks
+    the memory, i.e. a designed-in OOM on small boxes/containers. Now the function returns
+    the honestly feasible cap (`max(1, budget // bytes_per_org)`); a host below that still
+    gets a degenerate-but-alive universe instead of a guaranteed crash. Tiny caps are the
+    correct signal that the machine is too small for the full substrate experience — the
+    engine remains importable and CI/probes stay portable."""
     available = detect_available_bytes()
     if available is None:
         return None
     budget = int(available * memory_fraction) - int(reserve_bytes)
-    if budget <= 0:
-        return int(min_orgs)
     n = budget // int(bytes_per_org)
-    return int(max(min_orgs, min(n, max_orgs)))
+    if n >= min_orgs:
+        return int(min(n, max_orgs))
+    # Infeasible for the requested floor: degrade honestly, never force an unaffordable one.
+    return int(max(1, n))
 
 
 def resolve_max_organisms(fallback=600):

@@ -1514,10 +1514,12 @@ def _stock_shelter_patches(target_shelter=1500, offset=0):
     return int(np.count_nonzero(g_ram == 0xAA))
 
 
-g_curriculum = True
-
 def _lay_library(at=None):
-    """Tile 100% Live Web Streamed Wikipedia articles continuously across the entire 1MB RAM substrate."""
+    """Lay the live curriculum. When live-web streaming yields text, tile it across the RAM
+    substrate (engine-sized); otherwise fall back to the graded contiguous book scroll.
+    NOTE (audit 2026-07-31): the live-web path replaces the 00_Graded bootstrap — repeat-free
+    text is a cold-cliff for the prediction economy (Exp 12/17), and a non-reproducible input
+    (deep review P1-9). Disable with GENESIS_LIVE_WEB=0 for reproducible benchmark runs."""
     import live_web_streamer
     try:
         live_text = live_web_streamer.get_latest_live_text()
