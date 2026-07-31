@@ -30,6 +30,9 @@
   proof BEFORE its first measured row.
 - Ledger updated (GENESIS_DEEP_REVIEW_FOR_BUILDER.md, Session-18 line). Rule-18-B remains
   unproven — honestly, and now at MECHANISM resolution.
+- **REVIEW PACK:** `Docs/REVIEW_PACK.md` — claim-to-evidence audit map of Sessions 15-18
+  (every change + reason + evidence pointer + reviewer spot-checks) built for independent
+  performance review of the agent.
 
 <details>
 <summary>2026-07-31 — Session 17: Owed Corrections + Exp 96 Map + Exp 97 Decisive — Tuning Axis CLOSED, Mechanism Change Is Next</summary>
