@@ -28,10 +28,11 @@ os.environ.setdefault("GENESIS_STDP3C", "1")
 os.environ.setdefault("GENESIS_RESUME", "0")
 os.environ.setdefault("GENESIS_GROUNDED", "0")  # Pure Reading Economy: Only text comprehension pays energy
 
-import capacity_resolver
-_RAM_SIZE_RESOLVED, _RAM_SIZE_SOURCE = capacity_resolver.resolve_ram_size()
-if "GENESIS_RAM_SIZE" not in os.environ:
-    os.environ["GENESIS_RAM_SIZE"] = str(_RAM_SIZE_RESOLVED)
+# RAM size: the ENGINE is sovereign (neuromorphic_engine._derive_ram_size: env override, else
+# host-derived pow2). Do NOT set GENESIS_RAM_SIZE here — an earlier revision resolved a DIFFERENT
+# value via capacity_resolver (~37MB) and force-wrote it into the env AFTER the engine had already
+# been imported transitively, so engine RAM_SIZE (2MB), the resolver's claim (37MB) and the
+# dashboard canvas (1MB) disagreed. capacity_resolver is now a reporting layer over the engine.
 
 GENESIS_ECONOMY = os.environ.get("GENESIS_ECONOMY", "books").lower()
 # No economy-reward constants (2026-07-11 "remove all game constants"): a cell is an 8-bit register
@@ -152,14 +153,11 @@ if GROUNDED:
 # budget / this width, so total food is bounded (carrying capacity) — NOT a tuned abundance. Derived from
 # the same food budget the uniform economy uses; only the SHAPE (dense patches vs isolated) changes.
 GROUNDED_PATCH_BYTES = int(os.environ.get("GENESIS_GROUNDED_PATCH", "24"))
-os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
-    tempfile.gettempdir(),
-    f"genesis_numba_{GENESIS_ECONOMY}{'_peer' if PEER_PREDICT else ''}{'_rq' if RED_QUEEN else ''}"
-    f"{'_actp' if ACT_PROBE else ''}{'_nolearn' if NOLEARN else ''}"
-    f"{'_costonly' if STDP_COSTONLY else ''}{'_div'+STDP_DIV if STDP_DIV != '1' else ''}"
-    f"{'_stdp3' if STDP3 else ''}{'_stdp3c' if STDP3C else ''}{'_remap' if REMAP else ''}"
-    f"{'_tgt' if STDP_TARGET else ''}{'_evosense' if EVOSENSE else ''}{'_evoact' if EVOACT else ''}"
-    f"{'_niche' if NICHE_ECON else ''}{'_delay' if DELAY else ''}{'_wmem' if WMEM else ''}{'_scratch' if SCRATCH else ''}"))
+# NUMBA_CACHE_DIR: keyed by the ENGINE itself (neuromorphic_engine -> compile_fingerprint) using a
+# fingerprint of the FULL frozen physics state (~70 module constants). The legacy lab f-string covered
+# ~22 flags and left ~34 baked values unkeyed (DALE/CAM*/INCOME_*/SP_*/EVOLVABLE_CONSTANTS/MULTISCALE/
+# REMAP_PERIOD/HOMEOSTATIC_LAMBDA/host-derived MAX_ORGANISMS...) — the Session-11 stale-kernel bug
+# class. A user-provided NUMBA_CACHE_DIR is still honoured (never overwritten).
 # JUMP-FORAGE NICHE (Exp 23, default-OFF). Exp 22 measured the action distribution collapsing to a
 # single monetized behavior (reading -> eat-monoculture; jump10 dead ~0%) because the economy pays for
 # exactly ONE behavior. This adds a SECOND, orthogonal energy niche: ambient 0x55 food (same total
@@ -170,30 +168,16 @@ os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(
 # NOT a kernel change, so the njit cache is unaffected and the default (niche OFF) food economy is
 # byte-identical. Derives its spacing from LONG_JUMP_STRIDE (no new constant).
 NICHE_JUMP = os.environ.get("GENESIS_NICHE", "0") == "1"
-# Reading depletion (Exp 24 Wall-1 lever). Compile-time branch inside world_tick (fuel-bounds the
-# reading payout), so its kernel must not share a cache with the minted default. GENESIS_DEPLETE_REGROW
-# = fuel restored per cell per restock cadence (default = CELL_STATES = full refill each restock, i.e.
-# the gentlest bound; lower values tighten scarcity). Derived from CELL_STATES, no new constant.
-DEPLETE = os.environ.get("GENESIS_DEPLETE", "0") == "1"
-# Stigmergy (Exp 25): compile-time branch inside world_tick (CONSUME-overload write + authorship
-# royalty), so its kernel must not share a cache with the non-stigmergy build. Requires DEPLETE to
-# matter (Exp 24 Wall-1).
-STIGMERGY = os.environ.get("GENESIS_STIGMERGY", "0") == "1"
-# Ownership persistence (Exp 27): a second compile-time branch inside the stigmergy write, so its
-# kernel must not share a cache with non-persist stigmergy.
-STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
-# Leaky/decaying ownership (Exp 28): owned cells get no FREE regrow (owner must refresh to hold);
-# implies the persist refresh path. A second compile-time branch, so key the cache.
-STIG_LEASE = os.environ.get("GENESIS_STIG_LEASE", "0") == "1"
-if STIG_LEASE:
-    STIG_PERSIST = True  # lease uses the owner-only refresh mechanic
-# Parallel authored canvas (Exp 29): authoring lives in a spatially-separate band, a second compile-time
-# branch, so key the cache. Requires STIGMERGY+DEPLETE to matter.
-CANVAS = os.environ.get("GENESIS_CANVAS", "0") == "1"
-os.environ["NUMBA_CACHE_DIR"] = os.environ.get("NUMBA_CACHE_DIR") + ("_dep" if DEPLETE else "") + ("_stig" if STIGMERGY else "") + ("_persist" if STIG_PERSIST else "") + ("_lease" if STIG_LEASE else "") + ("_canvas" if CANVAS else "")
+# Reading depletion (Exp 24)/Stigmergy (25)/Persist (27)/Lease (28)/Canvas (29) are COMPILE-TIME
+# kernel branches. The audit found the ENGINE defaults GENESIS_DEPLETE=1 (Exp 30: finite fuel ON)
+# while this lab defaulted the same var to 0 — so an unset env compiled a DEPLETE-ON kernel but the
+# driver never regrew fuel, silently starving reading. These mirrors are now read FROM THE ENGINE
+# import below (single source of kernel truth); the lease->persist implication lives in the engine
+# as well. GENESIS_DEPLETE_REGROW stays host-side below.
 
 from neuromorphic_engine import (
     RAM_SIZE, N_INPUT, N_OUTPUT, N_IO, RAM_BIT0_INPUT, FOOD_SCAN_RADIUS, SEEK_TEXT, CELL_STATES, MAX_ORGANISMS, BIRTH_BUF_SZ, ATP_MAX, CAM_SLOTS, CAM_KEY_BITS, CAM_KEY_BYTES,
+    DEPLETE, STIGMERGY, STIG_PERSIST, STIG_LEASE, CANVAS,
     UNIVERSE_MAX_NEURONS, UNIVERSE_MAX_SYNAPSES, UNIVERSE_MAX_DNA, MAX_DNA_PER_ORG,
     global_neuron_sign, DALE, INHIBIT_BYTE_THRESH,
     GENE_MARKER, NEURON_MARKER, RECEPTOR_MARKER, MAX_RECEPTORS_PER_ORG,

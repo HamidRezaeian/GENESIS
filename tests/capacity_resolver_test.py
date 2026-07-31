@@ -35,11 +35,15 @@ def main():
     # Clean up override for fallback test
     del os.environ["GENESIS_RAM_SIZE"]
 
-    # [2] Precedence resolution without explicit override
+    # [2] Engine-sovereign resolution without explicit override (2026-07-31 audit):
+    # the resolver must REPORT the ENGINE's value, not a competing host formula
+    # (the old avail//100 / cgroup//10 guesses varied per boot — and disagreed with the engine).
     ram_size_default, src_default = capacity_resolver.resolve_ram_size()
     assert ram_size_default >= 65536, f"RAM size below minimum safe bound: {ram_size_default}"
-    assert src_default in ("cgroup_limit", "host_available_memory", "documented_fallback"), f"Unexpected source: {src_default}"
-    print(f"[2] Default Precedence Resolution OK: {ram_size_default}B ({src_default})")
+    assert src_default == "engine_derived", f"Unexpected source: {src_default}"
+    assert ram_size_default == neuromorphic_engine.RAM_SIZE, (
+        f"resolver/engine mismatch: resolver={ram_size_default}, engine={neuromorphic_engine.RAM_SIZE}")
+    print(f"[2] Engine-Sovereign Resolution OK: {ram_size_default}B ({src_default})")
 
     # [3] Memory Feasibility Check Test
     feasible, usable, msg = capacity_resolver.check_memory_feasibility(required_bytes=1000000)

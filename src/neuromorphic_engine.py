@@ -3,6 +3,15 @@ from numba import njit
 import random
 import os
 
+# Rule 21.8 (2026-07-31 audit): pin the numba kernel cache dir by the FULL frozen physics state,
+# BEFORE the first @njit decorator below binds its file-cache locator (empirically verified on
+# numba 0.61.2: decorators bind the locator at decoration, so NUMBA_CACHE_DIR set later — the
+# whole legacy genesis_lab keying scheme — never moved artifacts out of source __pycache__).
+# A user-provided NUMBA_CACHE_DIR is honoured and disables the drift check. The end of this
+# module re-verifies the pinned fingerprint against the FINAL resolved globals (verify_module_end).
+import compile_fingerprint as _cfp
+_ENGINE_CACHE_FP, _ENGINE_CACHE_DIR = _cfp.install_early_from_env()
+
 # 65536 = 2^16 (16-bit address space default). User can override via GENESIS_RAM_SIZE.
 # ── OPEN-WORLD SIZING (Session 9): capacities DERIVED from the host's real memory + the engine's
 # MEASURED array footprints (no magic numbers). _CELL_BYTES ≈ 29 B/cell and _ORG_BYTES ≈ 12.1 MB/org
@@ -2472,3 +2481,11 @@ def world_tick_numba(
             n_alive_new += 1
 
     return n_alive_new, n_births
+
+
+# ── Rule 21.8 drift guard (audit 2026-07-31): the cache dir pinned at the TOP of this module
+# (pre-decoration, from an env-mirror) MUST equal the fingerprint of the FINAL globals resolved
+# in this module body. A mismatch means the mirror in compile_fingerprint no longer tracks this
+# file's resolution code — a real correctness hazard (wrongly keyed cache reuses stale kernels),
+# so it raises. User-explicit NUMBA_CACHE_DIR disables the check by design. ──
+_cfp.verify_module_end(globals(), _ENGINE_CACHE_FP)
