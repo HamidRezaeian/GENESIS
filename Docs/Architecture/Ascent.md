@@ -70,6 +70,34 @@ non-load-bearing and cannot be made load-bearing on this substrate — then the 
 substrate is **falsified as an AGI substrate** and the project must change substrate hypotheses, not add
 another economy lever. This is the escape hatch the loop never had.
 
+> ### ⚠️ KILL-CRITERION STATUS — TRIGGERED AT MECHANISM RESOLUTION (recorded 2026-08-01, independent audit)
+>
+> The learning-first programme has now run its full mechanism-resolution course on the
+> repaired-instrument record (Exp 92b → 94 → 94b → 96 → 97 → 98), and criterion **B has FAILED at
+> mechanism resolution**:
+>
+> * **Exp 97** (pre-registered confirmatory, fresh seeds 24–47, Bonferroni α=0.025): **BOTH** nominated
+>   operating points failed confirmation — `default|div32` Δ=−1.49 (p=0.075, sign-flipped from the
+>   +4.36 nomination), `fast|div1` Δ=+0.20 (p=0.843). The DIV×tempo tuning axis is **CLOSED**
+>   (`Docs/Result.md` Exp 97, commit `ad5b1f6`).
+> * **Exp 98** (pre-registered mechanism change — surprise-gated plasticity, fresh seeds 48–71,
+>   single-test α=0.05): the gate **works mechanically** (plasticity fires on deviation-from-expectation
+>   only; static-memory erosion reduced, S2 p=0.0001) but the learning advantage over matched NOLEARN is
+>   **NULL** — Δ=+2.22, p=0.219, CONFIRMED=false; the ≥95 erosion-kill bar was NOT met (gated 93.2 vs
+>   NOLEARN 94.0). Gating hypothesis **CLOSED at this locus** (`Docs/Result.md` Exp 98, commit `1b426b5`).
+>
+> **Binding interpretation:** tuning the knobs (Exp 97) and gating *when* plasticity fires (Exp 98) both
+> failed to restore a confirmable in-lifetime learning advantage. Per the kill-clause, **no further
+> economy levers may be added** in search of criterion B. Exactly **one** pre-registered mechanistic
+> substrate change remains before the SNN-on-RAM substrate hypothesis is formally falsified:
+>
+> * **Exp 99 — two-timescale consolidation** (fast re-tracking weights + slow consolidating weights,
+>   static band ≥95 as a *certification gate*). If Exp 99 also fails to produce a confirmable learning
+>   advantage at mechanism resolution, the kill criterion is **fully executed**: the substrate is
+>   falsified as an AGI substrate and the project must pivot substrate hypotheses.
+>
+> This entry is the formal Rule-18 record. It does not end the project; it binds what happens next.
+
 ---
 
 ### 2.D — Rule 21.2 per-organism constants: pre-registered falsification criteria (increments 3a / 3b-i / 3b-ii / 3c)

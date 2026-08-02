@@ -1,0 +1,590 @@
+{
+    "nodes": [
+        {
+            "id": "diagnostic_exp70_cam_rule_42",
+            "label": "EXP70 CAM Rule 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_exp70_cam_rule_7",
+            "label": "EXP70 CAM Rule 7 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_7.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_exp70_cam_rule_999",
+            "label": "EXP70 CAM Rule 999 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_999.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_gradedmemory",
+            "label": "GradedMemory Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\GradedMemory.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_hard_wm",
+            "label": "Hard_WM Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\Hard_WM.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phased_ab_rule_42",
+            "label": "PHASED_AB Rule 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_AB_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phased_dense_rule_42",
+            "label": "PHASED_DENSE Rule 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_DENSE_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phased_rule_42",
+            "label": "PHASED Rule 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phased_v2_rule_42",
+            "label": "PHASED_V2 Rule 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_V2_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_null_123",
+            "label": "PHASE_FINAL_NULL 123 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_123.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_null_2024",
+            "label": "PHASE_FINAL_NULL 2024 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_2024.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_null_42",
+            "label": "PHASE_FINAL_NULL 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_null_7",
+            "label": "PHASE_FINAL_NULL 7 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_7.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_null_999",
+            "label": "PHASE_FINAL_NULL 999 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_999.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_rule_123",
+            "label": "PHASE_FINAL_RULE 123 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_123.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_rule_2024",
+            "label": "PHASE_FINAL_RULE 2024 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_2024.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_rule_42",
+            "label": "PHASE_FINAL_RULE 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_rule_7",
+            "label": "PHASE_FINAL_RULE 7 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_7.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phase_final_rule_999",
+            "label": "PHASE_FINAL_RULE 999 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_999.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_sp_null_123",
+            "label": "SP_NULL 123 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_123.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_sp_null_2024",
+            "label": "SP_NULL 2024 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_2024.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_sp_null_42",
+            "label": "SP_NULL 42 Diagnostic Trace",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_cam_concept",
+            "label": "CAM (Content-Addressable Memory) Experiment Concept",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_phased_rule_concept",
+            "label": "Phased Rule Diagnostic Concept",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_RULE_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "diagnostic_null_control_concept",
+            "label": "Null Control Diagnostic Concept",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_42.txt",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        }
+    ],
+    "edges": [
+        {
+            "source": "diagnostic_exp70_cam_rule_42",
+            "target": "diagnostic_cam_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_exp70_cam_rule_7",
+            "target": "diagnostic_cam_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_7.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_exp70_cam_rule_999",
+            "target": "diagnostic_cam_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_999.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_ab_rule_42",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_AB_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_dense_rule_42",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_DENSE_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_rule_42",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_v2_rule_42",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_V2_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_null_123",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_123.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_null_2024",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_2024.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_null_42",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_null_7",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_7.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_null_999",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_999.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_sp_null_123",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_123.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_sp_null_2024",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_2024.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_sp_null_42",
+            "target": "diagnostic_null_control_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\SP_NULL_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_rule_123",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_123.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_rule_2024",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_2024.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_rule_42",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_rule_7",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_7.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_rule_999",
+            "target": "diagnostic_phased_rule_concept",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_RULE_999.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_exp70_cam_rule_42",
+            "target": "diagnostic_exp70_cam_rule_7",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_exp70_cam_rule_42",
+            "target": "diagnostic_exp70_cam_rule_999",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_ab_rule_42",
+            "target": "diagnostic_phased_dense_rule_42",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_AB_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_ab_rule_42",
+            "target": "diagnostic_phased_rule_42",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_AB_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phased_ab_rule_42",
+            "target": "diagnostic_phased_v2_rule_42",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_AB_RULE_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "diagnostic_phase_final_null_42",
+            "target": "diagnostic_sp_null_42",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_42.txt",
+            "source_location": null,
+            "weight": 1.0
+        }
+    ],
+    "hyperedges": [
+        {
+            "id": "cam_rule_diagnostics",
+            "label": "CAM Rule Diagnostic Set",
+            "nodes": [
+                "diagnostic_exp70_cam_rule_42",
+                "diagnostic_exp70_cam_rule_7",
+                "diagnostic_exp70_cam_rule_999"
+            ],
+            "relation": "participate_in",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\EXP70_CAM_RULE_42.txt"
+        },
+        {
+            "id": "phased_rule_diagnostics",
+            "label": "Phased Rule Diagnostic Set",
+            "nodes": [
+                "diagnostic_phased_ab_rule_42",
+                "diagnostic_phased_dense_rule_42",
+                "diagnostic_phased_rule_42",
+                "diagnostic_phased_v2_rule_42"
+            ],
+            "relation": "participate_in",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASED_AB_RULE_42.txt"
+        },
+        {
+            "id": "null_control_diagnostics",
+            "label": "Null Control Diagnostic Set",
+            "nodes": [
+                "diagnostic_phase_final_null_123",
+                "diagnostic_phase_final_null_2024",
+                "diagnostic_phase_final_null_42",
+                "diagnostic_phase_final_null_7",
+                "diagnostic_phase_final_null_999",
+                "diagnostic_sp_null_123",
+                "diagnostic_sp_null_2024",
+                "diagnostic_sp_null_42"
+            ],
+            "relation": "participate_in",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\Books\\Diagnostic\\PHASE_FINAL_NULL_42.txt"
+        }
+    ],
+    "input_tokens": 0,
+    "output_tokens": 0
+}

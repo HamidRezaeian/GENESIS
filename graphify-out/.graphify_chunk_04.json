@@ -1,0 +1,805 @@
+{
+    "nodes": [
+        {
+            "id": "notes_session11_corrected_story",
+            "label": "Session 11 — The Corrected Story (Cache-Key Bug, K Sweep, & What Breaks the Ceiling)",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": "Clusy Agent",
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_g_org_run_reset_artifact",
+            "label": "g_org_run Within-Tick Reset Measurement Artifact",
+            "file_type": "rationale",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_numba_cache_key_bug",
+            "label": "Numba Cache-Key Missing Income Flags Bug",
+            "file_type": "rationale",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_k_sweep_results",
+            "label": "K Sweep Results (K=2/K=3 Net-Positive)",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_footprint_quantum_898",
+            "label": "FOOTPRINT_QUANTUM = 898 (642 compute + 256 RAM)",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_physical_cost_model",
+            "label": "physical_cost_model.engine_primitive_cycles() Host Re-Measurement",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_genesis_lab",
+            "label": "genesis_lab.py (cache-dir fix, kernel call sites)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_run_evolution_driver",
+            "label": "run_evolution.py Driver (hardcoded K=8)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session11_stdp_target",
+            "label": "STDP_TARGET Teaching Signal Lever",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_lumpsum_reward_verdict",
+            "label": "Session 9 — Lump-Sum Multi-Byte Reward: Verdict",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": "Clusy Agent",
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_lumpsum_mechanism",
+            "label": "Lump-Sum Multi-Byte Reward Mechanism (GENESIS_INCOME_LUMP_SUM)",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_metabolic_ceiling",
+            "label": "Exp 87 Metabolic Ceiling (idle 436 > income 256)",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_honest_null_verdict",
+            "label": "Honest Null Verdict (income-design scenario 3 / P4)",
+            "file_type": "rationale",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_deplete_fuel_cap",
+            "label": "DEPLETE Finite Fuel Reservoir Cap",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_rule21_income_design_doc",
+            "label": "Docs/RULE21_INCOME_REFACTOR_DESIGN.md §19",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_world_tick_numba",
+            "label": "world_tick_numba Kernel (75→77 args)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "notes_session9_fixedrules_doc",
+            "label": "Docs/FixedRules.md (Rules 7/9/17/21)",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "label": "Session 8 — Rule-21 Review: Income ∝ Shannon Information vs Measured Work",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_rule21_4_tuning_test",
+            "label": "Rule 21.4 Tuning Test",
+            "file_type": "rationale",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_delay_to_digestion",
+            "label": "DELAY→DIGESTION Precedent (multiplier rejected)",
+            "file_type": "rationale",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_landauer_exchange_rate",
+            "label": "Landauer-Derived Bit→Work Exchange Rate",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_measured_work_scenario",
+            "label": "Scenario (2): Income as Measured Work Quantity",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_shannon_scenario",
+            "label": "Scenario (1): Income ∝ Shannon Information Gain",
+            "file_type": "concept",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "session8_rule21_income_verdict_rule5_catch22",
+            "label": "Rule 5 Corollary: Thermodynamic Catch-22",
+            "file_type": "rationale",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme",
+            "label": "tests/legacy — Quarantined Historical Tests README",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_sim_test",
+            "label": "sim_test.py (fossil 1D Tierra engine test)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_verify_baseline",
+            "label": "verify_baseline.py (imports deleted genesis_engine)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_tierra_trap_test",
+            "label": "tierra_trap_test.py (retired env constants)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_eat_gain_sweep",
+            "label": "eat_gain_sweep.py (CYCLES_PER_EAT_GAIN removed)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_book_read_test",
+            "label": "book_read_test.py (retired GENESIS_READ_SCALE)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_smoke_test",
+            "label": "tests/smoke_test.py (working entry point)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_self_sustain_test",
+            "label": "tests/self_sustain_test.py (working entry point)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_test_suite_runner",
+            "label": "tests/test_suite_runner.py (probe list)",
+            "file_type": "code",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        },
+        {
+            "id": "legacy_readme_roadmap_doc",
+            "label": "Docs/Roadmap.md (P4 hygiene retirement decision)",
+            "file_type": "document",
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null
+        }
+    ],
+    "edges": [
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_g_org_run_reset_artifact",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_numba_cache_key_bug",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_k_sweep_results",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_footprint_quantum_898",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_physical_cost_model",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_numba_cache_key_bug",
+            "target": "notes_session11_genesis_lab",
+            "relation": "rationale_for",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_run_evolution_driver",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session11_stdp_target",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_corrected_story",
+            "target": "notes_session9_lumpsum_reward_verdict",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_k_sweep_results",
+            "target": "notes_session9_lumpsum_mechanism",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "notes_session9_lumpsum_mechanism",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "notes_session9_metabolic_ceiling",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "notes_session9_honest_null_verdict",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "notes_session9_deplete_fuel_cap",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "notes_session9_rule21_income_design_doc",
+            "relation": "cites",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "notes_session9_fixedrules_doc",
+            "relation": "cites",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_mechanism",
+            "target": "notes_session9_world_tick_numba",
+            "relation": "implements",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session9_lumpsum_reward_verdict",
+            "target": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "session8_rule21_income_verdict_rule21_4_tuning_test",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "session8_rule21_income_verdict_delay_to_digestion",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "session8_rule21_income_verdict_landauer_exchange_rate",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "session8_rule21_income_verdict_measured_work_scenario",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "session8_rule21_income_verdict_shannon_scenario",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "session8_rule21_income_verdict_rule5_catch22",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_shannon_scenario",
+            "target": "session8_rule21_income_verdict_measured_work_scenario",
+            "relation": "conceptually_related_to",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_delay_to_digestion",
+            "target": "session8_rule21_income_verdict_rule21_4_tuning_test",
+            "relation": "rationale_for",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "session8_rule21_income_verdict_session8_rule21_income_verdict",
+            "target": "notes_session9_metabolic_ceiling",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\session8_rule21_income_review\\session8_rule21_income_verdict.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_sim_test",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_verify_baseline",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_tierra_trap_test",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_eat_gain_sweep",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_book_read_test",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_smoke_test",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_self_sustain_test",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_test_suite_runner",
+            "relation": "references",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "legacy_readme",
+            "target": "legacy_readme_roadmap_doc",
+            "relation": "cites",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_footprint_quantum_898",
+            "target": "session8_rule21_income_verdict_measured_work_scenario",
+            "relation": "semantically_similar_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        },
+        {
+            "source": "notes_session11_stdp_target",
+            "target": "notes_session9_honest_null_verdict",
+            "relation": "conceptually_related_to",
+            "confidence": "INFERRED",
+            "confidence_score": 0.65,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md",
+            "source_location": null,
+            "weight": 1.0
+        }
+    ],
+    "hyperedges": [
+        {
+            "id": "rule21_income_refactor_sessions",
+            "label": "Rule-21 Income Refactor Session Arc (8 → 9 → 11)",
+            "nodes": [
+                "session8_rule21_income_verdict_session8_rule21_income_verdict",
+                "notes_session9_lumpsum_reward_verdict",
+                "notes_session11_corrected_story"
+            ],
+            "relation": "participate_in",
+            "confidence": "INFERRED",
+            "confidence_score": 0.85,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session11_corrected_story.md"
+        },
+        {
+            "id": "metabolic_ceiling_constraint_cluster",
+            "label": "Metabolic Ceiling Binding Constraints",
+            "nodes": [
+                "notes_session9_metabolic_ceiling",
+                "notes_session9_deplete_fuel_cap",
+                "session8_rule21_income_verdict_rule5_catch22"
+            ],
+            "relation": "form",
+            "confidence": "INFERRED",
+            "confidence_score": 0.75,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\clusy\\qwen\\notes\\session9_lumpsum_reward_verdict.md"
+        },
+        {
+            "id": "legacy_quarantined_tests",
+            "label": "Quarantined Legacy Test Files",
+            "nodes": [
+                "legacy_readme_sim_test",
+                "legacy_readme_verify_baseline",
+                "legacy_readme_tierra_trap_test",
+                "legacy_readme_eat_gain_sweep",
+                "legacy_readme_book_read_test"
+            ],
+            "relation": "participate_in",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "source_file": "C:\\Users\\Hamid\\source\\repos\\GENESIS\\tests\\legacy\\README.md"
+        }
+    ],
+    "input_tokens": 0,
+    "output_tokens": 0
+}

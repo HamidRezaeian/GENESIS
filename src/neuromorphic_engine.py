@@ -1,3 +1,4 @@
+from physical_cost_model import engine_primitive_cycles as _engine_primitive_cycles
 import numpy as np
 from numba import njit
 import random
@@ -16,21 +17,29 @@ _ENGINE_CACHE_FP, _ENGINE_CACHE_DIR = _cfp.install_early_from_env()
 # ── OPEN-WORLD SIZING (Session 9): capacities DERIVED from the host's real memory + the engine's
 # MEASURED array footprints (no magic numbers). _CELL_BYTES ≈ 29 B/cell and _ORG_BYTES ≈ 12.1 MB/org
 # are measured from the actual pre-allocated genesis_lab arrays. GENESIS_RAM_SIZE overrides. ──
-_CELL_BYTES = 29.0   # measured: g_ram + bank-access + org_grid + read_fuel + owner + hits + clear
+# measured: g_ram + bank-access + org_grid + read_fuel + owner + hits + clear
+_CELL_BYTES = 29.0
+
+
 def _derive_ram_size():
     _ov = os.environ.get("GENESIS_RAM_SIZE")
     if _ov:
         return int(_ov)
     try:
-        _phys = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")   # real bytes
-        _cells = int((_phys / 8) / _CELL_BYTES)        # world gets 1/8 of RAM at the measured B/cell
-        _cells = max(1 << 16, min(_cells, 1 << 21))    # floor 65 536, cap 2 097 152 (OOM-safe)
+        _phys = os.sysconf("SC_PAGE_SIZE") * \
+            os.sysconf("SC_PHYS_PAGES")   # real bytes
+        # world gets 1/8 of RAM at the measured B/cell
+        _cells = int((_phys / 8) / _CELL_BYTES)
+        # floor 65 536, cap 2 097 152 (OOM-safe)
+        _cells = max(1 << 16, min(_cells, 1 << 21))
         _p = 1 << 16
         while (_p << 1) <= _cells:
             _p <<= 1
         return _p
     except (ValueError, OSError, AttributeError):
         return 1 << 16
+
+
 RAM_SIZE = _derive_ram_size()
 
 # ── ARCHITECTURE-DERIVED CONSTANTS (Rule 17) ──
@@ -38,7 +47,7 @@ RAM_SIZE = _derive_ram_size()
 # CELL_STATES = 256 = 2^8 = total microstates in one 8-bit cell = its energy content.
 # These must be defined BEFORE any constant that references them (MAX_RECEPTORS, ATP_MAX, etc.).
 BITS_PER_BYTE = np.float32(8.0)
-CELL_STATES   = np.float32(256.0)
+CELL_STATES = np.float32(256.0)
 
 # Derived: 15 original senses + 8 RAM eye bits + 2 food sensors = 25.
 # Any future sensor type must update this sum.
@@ -47,14 +56,17 @@ CELL_STATES   = np.float32(256.0)
 # (Body-plan EVOLVABILITY — organisms adding/droping senses — is a larger architecture change because
 # the genome addresses sensors by fixed position; documented as future work.) ──
 N_ORIGINAL_SENSES = 15                 # exteroceptive + proprioceptive senses
-N_RAM_EYE_BITS    = int(BITS_PER_BYTE) # reading eye emits the byte's 8 bits (== vocal encoding)
-N_FOOD_SENSORS    = 2                  # food-ahead + food-behind (gradient climbing, Rule 5/10)
-N_VOCAL_BITS      = 14                 # vocal-cord output channels (symbol echo)
-N_INPUT  = N_ORIGINAL_SENSES + N_RAM_EYE_BITS + N_FOOD_SENSORS   # = 25
+# reading eye emits the byte's 8 bits (== vocal encoding)
+N_RAM_EYE_BITS = int(BITS_PER_BYTE)
+# food-ahead + food-behind (gradient climbing, Rule 5/10)
+N_FOOD_SENSORS = 2
+N_VOCAL_BITS = 14                 # vocal-cord output channels (symbol echo)
+N_INPUT = N_ORIGINAL_SENSES + N_RAM_EYE_BITS + N_FOOD_SENSORS   # = 25
 N_OUTPUT = N_VOCAL_BITS                                          # = 14
-N_IO     = N_INPUT + N_OUTPUT
+N_IO = N_INPUT + N_OUTPUT
 
-RAM_BIT0_INPUT = N_ORIGINAL_SENSES   # first of the 8 eye bits, right after the original senses (= 15)
+# first of the 8 eye bits, right after the original senses (= 15)
+RAM_BIT0_INPUT = N_ORIGINAL_SENSES
 
 # Food-seeking sense (Rule 5 "seeking" / Rule 10 gradient): each tick an organism samples the RAM
 # window this many bytes ahead and behind its pointer and reports local food (0x55) density on the
@@ -137,7 +149,8 @@ TRUE_CONTENTION = os.environ.get("GENESIS_TRUE_CONTENTION", "0") == "1"
 # what it holds, so total income/time is bounded and a real carrying capacity can form (pop < cap) with
 # competition FOR the freshest/richest cells. Compile-time gated -> when off, the payout is byte-
 # identical to the verified minted economy (gain is used unchanged), so the default path is untouched.
-DEPLETE = os.environ.get("GENESIS_DEPLETE", "1") == "1"  # Exp 30: default ON — finite fuel drives learning
+# Exp 30: default ON — finite fuel drives learning
+DEPLETE = os.environ.get("GENESIS_DEPLETE", "1") == "1"
 
 # LEARNING ABLATION (Exp 30, default-OFF) — the decisive test of the project's LOAD-BEARING ASSUMPTION
 # (Rule 18 / Docs/Ascent.md criterion B): does the brain LEARN within its lifetime, or is it a fixed
@@ -181,11 +194,14 @@ HOMEOSTATIC_LAMBDA = np.float32(
 )
 
 # ── Content-Addressable Memory substrate (2026-07-23) ──
-CAM = os.environ.get("GENESIS_CAM", "1") == "1"  # Exp 30: default ON — associative memory substrate
-CAM_SLOTS = int(os.environ.get("GENESIS_CAM_SLOTS", "32"))  # Rule 19: env-gated, default 32 (Arm J proven: stores all 16 cue->answer mappings)
+# Exp 30: default ON — associative memory substrate
+CAM = os.environ.get("GENESIS_CAM", "1") == "1"
+# Rule 19: env-gated, default 32 (Arm J proven: stores all 16 cue->answer mappings)
+CAM_SLOTS = int(os.environ.get("GENESIS_CAM_SLOTS", "32"))
 CAM_KEY_BITS = int(os.environ.get("GENESIS_CAM_KEY_BITS", "8"))
 CAM_KEY_BYTES = max(1, CAM_KEY_BITS // 8)
-CAM_MATCH_THRESHOLD = np.int64(max(1, CAM_KEY_BITS * 3 // 4))  # scaled: 75% of key width (6 for 8-bit, 18 for 24-bit)
+# scaled: 75% of key width (6 for 8-bit, 18 for 24-bit)
+CAM_MATCH_THRESHOLD = np.int64(max(1, CAM_KEY_BITS * 3 // 4))
 # Derived: a CAM entry requires at least (key_bits/4) matching bits.
 # For 8-bit key: 8/4=2 bits; for 24-bit key: 24/4=6 bits.
 CAM_WRITE_THRESHOLD = np.int64(max(1, int(CAM_KEY_BITS * 0.25)))
@@ -200,19 +216,25 @@ CAM_WRITE_ON_REWARD = True
 #   rewire the weakest outgoing synapse to a new target (cost: 10 cycles).
 # Pruning: synapses with |weight| < 0.5 are set to 0 (free, saves energy).
 # This breaks the fixed-topology limitation (finite-state transducer ceiling).
-STRUCTURAL_PLASTICITY = os.environ.get("GENESIS_STRUCTURAL_PLASTICITY", "1") == "1"
+STRUCTURAL_PLASTICITY = os.environ.get(
+    "GENESIS_STRUCTURAL_PLASTICITY", "1") == "1"
 # User-configurable: energy cost of creating one new synapse.
-SP_GROWTH_COST = np.float32(float(os.environ.get("GENESIS_SP_GROWTH_COST", "10.0")))      # energy cost per new connection
+SP_GROWTH_COST = np.float32(float(os.environ.get(
+    "GENESIS_SP_GROWTH_COST", "10.0")))      # energy cost per new connection
 # Derived: weights are quantized to integer values (float32 representation of 8-bit signed ints).
 # The minimum non-zero step is |1.0|. Any weight with |w| < 0.5 rounds to 0 in practice.
 # Prune thresholds below half the minimum quantized step = 0.5.
-SP_PRUNE_THRESHOLD = np.float32(0.5)  # half the minimum quantized weight step (1.0)   # prune synapses below this |weight|
+# half the minimum quantized weight step (1.0)   # prune synapses below this |weight|
+SP_PRUNE_THRESHOLD = np.float32(0.5)
 # User-configurable: maximum new synapses created per tick per organism.
-SP_MAX_GROWTH = np.int64(int(os.environ.get("GENESIS_SP_MAX_GROWTH", "3")))            # max new connections per tick per org
+# max new connections per tick per org
+SP_MAX_GROWTH = np.int64(int(os.environ.get("GENESIS_SP_MAX_GROWTH", "3")))
 # User-configurable: maximum synapses pruned per tick per organism.
-SP_MAX_PRUNE = np.int64(int(os.environ.get("GENESIS_SP_MAX_PRUNE", "5")))             # max pruned synapses per tick per org
+# max pruned synapses per tick per org
+SP_MAX_PRUNE = np.int64(int(os.environ.get("GENESIS_SP_MAX_PRUNE", "5")))
 # User-configurable: initial weight for newly created synapses.
-SP_REWIRE_WEIGHT = np.float32(float(os.environ.get("GENESIS_SP_REWIRE_WEIGHT", "5.0")))     # initial weight for new connections
+SP_REWIRE_WEIGHT = np.float32(float(os.environ.get(
+    "GENESIS_SP_REWIRE_WEIGHT", "5.0")))     # initial weight for new connections
 
 
 # THREE-FACTOR / NEUROMODULATED PLASTICITY (Exp 32, default-OFF) — the diagnosed fix for net-negative
@@ -302,10 +324,14 @@ MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 # from the text the org already reads (Rule 9, no human label); constant-free (a bit swap, Rule 17).
 # Compile-time gated -> default kernel byte-identical. PERIOD/STATES are honest TIMESCALES, env-tunable.
 REMAP = os.environ.get("GENESIS_REMAP", "0") == "1"
-REMAP_PERIOD = np.int64(int(os.environ.get("GENESIS_REMAP_PERIOD", "4000")))  # global_time units per phase
-REMAP_STATES = np.int64(int(os.environ.get("GENESIS_REMAP_STATES", "2")))     # phases (2 = identity vs swapped)
-REMAP_SB0 = np.int64(int(os.environ.get("GENESIS_REMAP_SB0", "0")))           # the two vocal/eye bits that
-REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))           # swap in a non-zero phase
+# global_time units per phase
+REMAP_PERIOD = np.int64(int(os.environ.get("GENESIS_REMAP_PERIOD", "4000")))
+# phases (2 = identity vs swapped)
+REMAP_STATES = np.int64(int(os.environ.get("GENESIS_REMAP_STATES", "2")))
+# the two vocal/eye bits that
+REMAP_SB0 = np.int64(int(os.environ.get("GENESIS_REMAP_SB0", "0")))
+# swap in a non-zero phase
+REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))
 
 # WORKING-MEMORY DELAY TASK (Exp 43, default-OFF) — validates the load-bearing assumption UNDER criterion A
 # (Ascent §2A): can a GENESIS brain COMPUTE OVER HELD CONTEXT at all? Criterion A rewards income from cells
@@ -321,7 +347,8 @@ REMAP_SB1 = np.int64(int(os.environ.get("GENESIS_REMAP_SB1", "1")))           # 
 # building; if it stays pinned at the floor, an explicit working-memory pathway is the real substrate change.
 # Compile-time gated -> byte-identical when off.
 DELAY = os.environ.get("GENESIS_DELAY", "0") == "1"
-DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))   # how many ticks back the target byte is
+# how many ticks back the target byte is
+DELAY_N = np.int64(int(os.environ.get("GENESIS_DELAY_N", "1")))
 DIGESTION = os.environ.get("GENESIS_DIGESTION", "0") == "1"
 
 # AUTO-REPRODUCE (Rule 5 minimal survival primitive) — energy-gated physical cell division.
@@ -332,7 +359,8 @@ DIGESTION = os.environ.get("GENESIS_DIGESTION", "0") == "1"
 # Default OFF to preserve prior kernel byte-identity; enabled for experiments requiring
 # genuine multi-generational selection (Rule 14/16: births > 0).
 AUTO_REPRO = os.environ.get("GENESIS_AUTO_REPRO", "0") == "1"
-AUTO_REPRO_THRESH = np.float32(float(os.environ.get("GENESIS_AUTO_REPRO_THRESH", "200000.0")))
+AUTO_REPRO_THRESH = np.float32(
+    float(os.environ.get("GENESIS_AUTO_REPRO_THRESH", "200000.0")))
 
 # RAM SCRATCHPAD — org-controlled EXTERNAL register (Exp 46, default-OFF, byte-identical off). Exp 43-45
 # proved a NEURAL substrate cannot hold state: the leaky membrane holds ~1 step (43), a passive latch holds
@@ -417,7 +445,8 @@ STIG_PERSIST = os.environ.get("GENESIS_STIG_PERSIST", "0") == "1"
 # (an owner refreshing its own cell is already the STIG_PERSIST refresh path). Constant-free.
 STIG_LEASE = os.environ.get("GENESIS_STIG_LEASE", "0") == "1"
 if STIG_LEASE:
-    STIG_PERSIST = True   # lease reuses the owner-only refresh mechanic (in-kernel write path)
+    # lease reuses the owner-only refresh mechanic (in-kernel write path)
+    STIG_PERSIST = True
 
 # PARALLEL AUTHORED CANVAS (Exp 29, default-OFF, requires STIGMERGY+DEPLETE) — the SUBSTRATE DECOUPLING.
 # Exps 25-28 welded authoring to the reading scroll (author a DEPLETED scroll cell), so every
@@ -438,12 +467,12 @@ if STIG_LEASE:
 # (256^N states over an N-cell passage) realised without changing output count.
 CANVAS = os.environ.get("GENESIS_CANVAS", "0") == "1"
 
-OUT_JMP_FWD    = 0
-OUT_JMP_BCK    = 1
+OUT_JMP_FWD = 0
+OUT_JMP_BCK = 1
 OUT_JMP_FWD_10 = 2
 OUT_JMP_BCK_10 = 3
-OUT_CONSUME    = 4
-OUT_REPRODUCE  = 5
+OUT_CONSUME = 4
+OUT_REPRODUCE = 5
 
 # Long-jump distance (cells) for the OUT_JMP_*_10 actions. Named so the Exp 23 food-niche lattice can
 # DERIVE its spacing from the SAME number the actuator uses (a niche reachable meal-to-meal by exactly
@@ -452,11 +481,13 @@ OUT_REPRODUCE  = 5
 # Default 10 = 2 × FOOD_SCAN_RADIUS / 3.2 (approximate ratio for forward exploration).
 LONG_JUMP_STRIDE = int(os.environ.get("GENESIS_LONG_JUMP_STRIDE", "10"))
 
-GENE_MARKER  = 161
+GENE_MARKER = 161
 NEURON_MARKER = 162
 RECEPTOR_MARKER = 195
-PARAM_MARKER = 200   # Rule 21.2: evolvable-constant gene record, sentinel byte 1 (paired with PARAM_MAGIC).
-PARAM_MAGIC  = 201   # Rule 21.2: sentinel byte 2. Record = [PARAM_MARKER, PARAM_MAGIC, gene_id, val_lo, val_hi]
+# Rule 21.2: evolvable-constant gene record, sentinel byte 1 (paired with PARAM_MAGIC).
+PARAM_MARKER = 200
+# Rule 21.2: sentinel byte 2. Record = [PARAM_MARKER, PARAM_MAGIC, gene_id, val_lo, val_hi]
+PARAM_MAGIC = 201
 # (5 bytes). The [200,201] pair never occurs elsewhere in the genome, so decode_params is collision-proof;
 # payload bytes (gene_id<128, val_lo/val_hi<128) keep every existing walker self-skipping via `else: i+=1`.
 # Payload bytes are kept < 128 (val_lo/val_hi = 7 bits each, gene_id < 128) so EVERY existing genome
@@ -488,6 +519,13 @@ SENSOR_MARKER = 196
 # Derived: 6 affordance types from sense() — food_density(0), occupancy(1), neighbor_energy(2),
 # block_type(3), cell_owner(4), oracle(5). Each is a real physical quantity the engine measures.
 N_AFFORDANCE = 6
+# DEFAULT-ON APPARATUS / DEFAULT-OFF FABRIC (audit clarification 2026-08-01): the apparatus flags
+# EVOSENSE/EVOACT/WMEM/SCRATCH default "1" — the decode/transduction MACHINERY is part of the live
+# default kernel. The default path stays byte-identical because the default ANCESTOR carries no
+# SENSOR/ACTUATOR/MEMORY/SCRATCH genes: the fabric is gated by the separate GENESIS_*_SEED flags
+# (default "0", genesis_lab.py), and an empty marker set is dead code. Setting the apparatus flag to
+# "0" skips the marker at decode -> byte-identical by construction. This is the standing convention:
+# apparatus ON, fabric OFF. (GROUNDED is the exception: genesis_lab setdefault forces it "0".)
 EVOSENSE = os.environ.get("GENESIS_EVOSENSE", "1") == "1"
 
 # EVOLVABLE ACTUATORS (Exp 38 / Phase B, default-OFF, Rules 5/9/15/21). The MOTOR side of dissolving the
@@ -528,12 +566,12 @@ WMEM = os.environ.get("GENESIS_WMEM", "1") == "1"
 # V_THRESH_IO removed: was dead code (defined but never referenced)
 # Unit time step for Euler integration (LIF membrane dynamics).
 # DT = 1.0 is the canonical choice; any other value would rescale all tau constants uniformly.
-DT           = np.float32(1.0)
+DT = np.float32(1.0)
 # Physical minimum: an LIF neuron needs 1 substep of refractory period after firing
 # to allow membrane recovery before accepting new input. This is the hardware floor.
-TAU_REF      = 1
-W_MIN   = np.float32(-128.0)
-W_MAX   = np.float32(127.0)
+TAU_REF = 1
+W_MIN = np.float32(-128.0)
+W_MAX = np.float32(127.0)
 
 # --- Rule 21.1: metabolic costs are REAL MEASURED native hardware work, not invented points ---
 # Wired from physical_cost_model.engine_primitive_cycles(), which times each engine primitive in
@@ -541,15 +579,17 @@ W_MAX   = np.float32(127.0)
 # the old invented `1 cycle per canonical operation` literals -- Rule 21.1 forbids invented cost
 # points (e.g. SPIKE_COST=1). Every CYCLES_PER_* below is now hardware-derived (H) by direct
 # measurement; see physical_cost_model.calibrate_native() for the documented derivation of each.
-from physical_cost_model import engine_primitive_cycles as _engine_primitive_cycles
-_MEASURED_COST = _engine_primitive_cycles(cam_slots=CAM_SLOTS, cam_key_bits=CAM_KEY_BITS)
+_MEASURED_COST = _engine_primitive_cycles(
+    cam_slots=CAM_SLOTS, cam_key_bits=CAM_KEY_BITS)
 
 # THERMODYNAMICS = RAW EXECUTION CYCLES
 # CYCLES_PER_SPIKE_CHECK removed (Rule 21.6c): unused dead code + invented cost point.
-CYCLES_PER_SYNAPSE_READ = np.float32(_MEASURED_COST["synapse_read"])   # Rule 21.1: measured native cycles per forward-prop sample
+# Rule 21.1: measured native cycles per forward-prop sample
+CYCLES_PER_SYNAPSE_READ = np.float32(_MEASURED_COST["synapse_read"])
 # Physical derivation: minimum 3 operations to move — (1) read old position, (2) compute new,
 # (3) validate bounds. Rule 21.1: cost = REAL measured native cycles for those ops (physical_cost_model), not an invented '1 cycle each'.
-CYCLES_PER_MOVE = np.float32(_MEASURED_COST["move"])   # Rule 21.1: measured native cycles per saccade (read+compute+validate)
+# Rule 21.1: measured native cycles per saccade (read+compute+validate)
+CYCLES_PER_MOVE = np.float32(_MEASURED_COST["move"])
 # MATTER<->ENERGY EXCHANGE, DERIVED FROM THE BYTE (no reward constants — 2026-07-11 "remove all
 # game constants"). A RAM cell is an 8-bit register: it holds one of 2**8 microstates. FULLY
 # resolving a cell — eating a food byte, or SOLVING all 8 bits of a symbol, either way collapsing
@@ -562,7 +602,8 @@ CYCLES_PER_MOVE = np.float32(_MEASURED_COST["move"])   # Rule 21.1: measured nat
 # lives where text is dense, while a grazer reclaims one isolated food cell at a time.
 # BITS_PER_BYTE and CELL_STATES now defined at top of file (before MAX_RECEPTORS).
 # (Kept here for import compatibility — references will be resolved at module load.)   # 2 ** 8 — microstates in one 8-bit RAM cell = its energy content
-CYCLES_PER_BYTE_COPY = np.float32(_MEASURED_COST["byte_copy"])   # Rule 21.1: measured native cycles per genome-byte copy
+# Rule 21.1: measured native cycles per genome-byte copy
+CYCLES_PER_BYTE_COPY = np.float32(_MEASURED_COST["byte_copy"])
 # Honest raw-cycle accounting (Rule 15/17): each operation costs its REAL measured native cycle count (Rule 21.1),
 # measured per-primitive by physical_cost_model on this host. A neuron membrane update
 # is real work done for every neuron every step, so it costs the measured neuron-update cycles per neuron — replacing the
@@ -570,9 +611,12 @@ CYCLES_PER_BYTE_COPY = np.float32(_MEASURED_COST["byte_copy"])   # Rule 21.1: me
 # weight update (read + exp + scale + clamp + write) is likewise real work, charged only when
 # it actually fires (activity-gated), so a large but sparsely-firing brain stays cheap — the
 # 20W massive-sparse-parallelism paradigm (Rule 11), not a penalty on merely HAVING synapses.
-CYCLES_PER_NEURON_UPDATE = np.float32(_MEASURED_COST["neuron_update"])   # Rule 21.1: measured native cycles per LIF update + spike
-CYCLES_PER_STDP_UPDATE   = np.float32(_MEASURED_COST["stdp_update"])   # Rule 21.1: measured native cycles per STDP3C eligibility update
-CYCLES_PER_CAM_READ      = np.float32(_MEASURED_COST["cam_read"])   # Rule 21.1: measured native cycles per CAM Hamming read (CAM_SLOTS x CAM_KEY_BITS)
+# Rule 21.1: measured native cycles per LIF update + spike
+CYCLES_PER_NEURON_UPDATE = np.float32(_MEASURED_COST["neuron_update"])
+# Rule 21.1: measured native cycles per STDP3C eligibility update
+CYCLES_PER_STDP_UPDATE = np.float32(_MEASURED_COST["stdp_update"])
+# Rule 21.1: measured native cycles per CAM Hamming read (CAM_SLOTS x CAM_KEY_BITS)
+CYCLES_PER_CAM_READ = np.float32(_MEASURED_COST["cam_read"])
 # Per-organism energy ceiling (Rule 17 HARDWARE-DERIVED, 2026-07-18). Was an arbitrary 1e6 "game"
 # number. The honest physical ceiling on the cycles a single organism can hold is the TOTAL
 # matter-energy the universe contains: every one of RAM_SIZE cells, each an 8-bit register worth
@@ -614,7 +658,7 @@ try:
 except Exception:
     MAX_ORGANISMS = int(os.environ.get("GENESIS_MAX_ORGANISMS", "600"))
 # Derived: MAX_ORGANISMS // 4 = maximum concurrent births per tick (25% of population).
-BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
+BIRTH_BUF_SZ = int(MAX_ORGANISMS // 4)
 
 # Rule 21.2 (3b): per-organism evolvable-constant matrix. world_tick_numba reads g_org_params[org]
 # (decoded from the genome's PARAM records at spawn) instead of the shared module globals when
@@ -622,9 +666,11 @@ BIRTH_BUF_SZ  = int(MAX_ORGANISMS // 4)
 # global WITHOUT a signature change (world_tick_numba is called from 8+ sites: genesis_lab warmup +
 # main loop, exp78/79/80 drivers, exp68/69, the STDP_TARGET A/B driver). numba reads global arrays by
 # reference, so the spawn-time fills (genesis_lab.decode_params) are visible inside the kernel.
-N_PARAM_GENES = 10  # Tier-1 evolvable constants; MUST equal len(genesis_lab.PARAM_GENES) (asserted there)
+# Tier-1 evolvable constants; MUST equal len(genesis_lab.PARAM_GENES) (asserted there)
+N_PARAM_GENES = 10
 g_org_params = np.zeros((MAX_ORGANISMS, N_PARAM_GENES), dtype=np.float32)
-EVOLVABLE_CONSTANTS = (os.environ.get("GENESIS_EVOLVABLE_CONSTANTS", "0") == "1")
+EVOLVABLE_CONSTANTS = (os.environ.get(
+    "GENESIS_EVOLVABLE_CONSTANTS", "0") == "1")
 # Exp 98 note: gate state lives in org_elig[:, 8:10] (lab-allocated, threaded arg) — numba
 # treats module-global arrays as read-only, so engine-side accumulators here would not compile.
 
@@ -648,11 +694,15 @@ UNIVERSE_MAX_DNA = int(UNIVERSE_MAX_SYNAPSES * 5 // 2)
 # the threshold below only sets the STARTING bias near the biological 80/20.
 # Compile-time gated (GENESIS_DALE, default OFF) -> byte-identical to the prior kernel when off.
 DALE = os.environ.get("GENESIS_DALE", "0") == "1"
-INHIBIT_BYTE_THRESH = np.int64(int(256 * 0.80))  # 204: genome byte < 204 -> excitatory (+1)
-global_neuron_sign = np.ones(UNIVERSE_MAX_NEURONS, dtype=np.int8)  # default excitatory (+1)
+# 204: genome byte < 204 -> excitatory (+1)
+INHIBIT_BYTE_THRESH = np.int64(int(256 * 0.80))
+global_neuron_sign = np.ones(
+    UNIVERSE_MAX_NEURONS, dtype=np.int8)  # default excitatory (+1)
 # MAX_DNA_PER_ORG: maximum genome size per organism. 8192 = 2^13 = allows ~2048 GENE_MARKER.
 # Environmental override via GENESIS_MAX_DNA_PER_ORG.
-MAX_DNA_PER_ORG = int(os.environ.get("GENESIS_MAX_DNA_PER_ORG", str(UNIVERSE_MAX_DNA // MAX_ORGANISMS)))
+MAX_DNA_PER_ORG = int(os.environ.get(
+    "GENESIS_MAX_DNA_PER_ORG", str(UNIVERSE_MAX_DNA // MAX_ORGANISMS)))
+
 
 @njit(cache=True)
 def seed_kernel_rng(seed):
@@ -670,7 +720,8 @@ def seed_kernel_rng(seed):
 
 @njit(cache=True)
 def malloc_block(count, g_map):
-    if count <= 0: return 0
+    if count <= 0:
+        return 0
     consecutive = 0
     start = -1
     for i in range(len(g_map)):
@@ -686,12 +737,12 @@ def malloc_block(count, g_map):
             consecutive = 0
     return -1
 
+
 @njit(cache=True)
 def free_block(start, count, g_map):
     if start >= 0 and count > 0:
         for i in range(start, start + count):
             g_map[i] = False
-
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -711,8 +762,9 @@ def cam_read(
     byte1,               # int64 — prev byte (used if CAM_KEY_BITS > 8)
     byte2,               # int64 — prev-prev byte (used if CAM_KEY_BITS > 16)
     CAM_SLOTS,           # number of slots per organism
-    CAM_MATCH_THRESHOLD, # minimum Hamming distance for a match
-    CAM_KEY_BITS,        # key bits to compare (per-organism; <= backing-store width)
+    CAM_MATCH_THRESHOLD,  # minimum Hamming distance for a match
+    # key bits to compare (per-organism; <= backing-store width)
+    CAM_KEY_BITS,
 ):
     """
     Hamming similarity search: compare the current 8-bit sensory byte
@@ -752,11 +804,13 @@ def cam_write(
     org,                 # organism id
     byte0,               # int64 — current byte (always encoded)
     byte1,               # int64 — prev byte (encoded if CAM_KEY_BITS > 8)
-    byte2,               # int64 — prev-prev byte (encoded if CAM_KEY_BITS > 16)
+    # int64 — prev-prev byte (encoded if CAM_KEY_BITS > 16)
+    byte2,
     val_byte,            # int64 — vocal byte to store as value
     current_tick,        # int64 — current global time (for LRU age)
     CAM_SLOTS,           # number of slots per organism
-    CAM_KEY_BITS,        # key bits to encode (per-organism; <= backing-store width)
+    # key bits to encode (per-organism; <= backing-store width)
+    CAM_KEY_BITS,
 ):
     """
     LRU-evicting CAM write. Overwrites the least-recently-used slot.
@@ -784,6 +838,7 @@ def cam_write(
     g_cam_valid[org, target_slot] = np.int64(1)
     g_cam_tick[org, target_slot] = current_tick
 
+
 @njit(cache=True)
 def parse_receptors(
     g_ptr, g_count, global_genome, org_id,
@@ -800,32 +855,45 @@ def parse_receptors(
         o_rec_tau_def[org_id, i] = 1.0
         o_rec_tau_e[org_id, i] = 1.0
         o_rec_spk_max[org_id, i] = 1.0
-        
+
     i = 0
     rec_found = 0
     while i < g_count - 9:
         marker = global_genome[g_ptr + i]
         if marker == RECEPTOR_MARKER:
             r_idx = global_genome[g_ptr + i + 1] % MAX_RECEPTORS_PER_ORG
-            o_rec_a_plus[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 2]) / STDP_SCALE
-            o_rec_a_minus[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 3]) / STDP_SCALE
-            o_rec_tau_p[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
-            o_rec_tau_m[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 5]) + 1.0
+            o_rec_a_plus[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 2]) / STDP_SCALE
+            o_rec_a_minus[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 3]) / STDP_SCALE
+            o_rec_tau_p[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 4]) + 1.0
+            o_rec_tau_m[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 5]) + 1.0
             # V_REST / V_RESET are now DNA-encoded (Rule 17 meta-learning), not hardcoded.
             # Ancestor header bytes are 0 -> identical to the previous behaviour, but
             # evolution can now raise the resting/reset potential of each receptor type.
-            o_rec_v_rest[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 6])
-            o_rec_v_reset[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 7])
-            o_rec_tau_def[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 8]) + 1.0
-            o_rec_tau_e[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 8]) * 4.0 + 1.0
-            o_rec_spk_max[org_id, r_idx] = np.float32(global_genome[g_ptr + i + 9]) / 255.0
+            o_rec_v_rest[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 6])
+            o_rec_v_reset[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 7])
+            o_rec_tau_def[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 8]) + 1.0
+            o_rec_tau_e[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 8]) * 4.0 + 1.0
+            o_rec_spk_max[org_id, r_idx] = np.float32(
+                global_genome[g_ptr + i + 9]) / 255.0
             rec_found += 1
             i += 10
-        elif marker == GENE_MARKER: i += 4
-        elif marker == NEURON_MARKER: i += 5
-        else: i += 1
-    
+        elif marker == GENE_MARKER:
+            i += 4
+        elif marker == NEURON_MARKER:
+            i += 5
+        else:
+            i += 1
+
     return True
+
 
 @njit(cache=True)
 def count_genes(g_ptr, g_count, g_genome):
@@ -872,6 +940,7 @@ def count_genes(g_ptr, g_count, g_genome):
 
     return s_count, h_count
 
+
 @njit(cache=True)
 def decode_genome(
     g_ptr, g_count, global_genome,
@@ -881,22 +950,26 @@ def decode_genome(
     o_rec_v_rest, o_rec_tau_def, org_id,
     global_sense_type, global_sense_meta, global_act_drive,
     g_conn_w_dna,  # (N_SYN,) float32: DNA birth weight
-    global_neuron_sign,  # (N_NEU,) int8: Dale's-law E/I sign per neuron (+1 exc / -1 inh)
+    # (N_NEU,) int8: Dale's-law E/I sign per neuron (+1 exc / -1 inh)
+    global_neuron_sign,
 ):
     s_idx = 0
     h_idx = 0
     if DALE:
         for _n in range(n_c):
-            global_neuron_sign[n_ptr + _n] = 1   # default excitatory; inhibitory hidden set below
+            # default excitatory; inhibitory hidden set below
+            global_neuron_sign[n_ptr + _n] = 1
 
     for i in range(N_IO):
         global_rec_id[n_ptr + i] = 0
         global_thresh[n_ptr + i] = o_rec_v_rest[org_id, 0] + 128.0
         global_tau[n_ptr + i] = o_rec_tau_def[org_id, 0]
         if EVOSENSE:
-            global_sense_type[n_ptr + i] = 0   # fixed I/O neurons are never affordance-driven
+            # fixed I/O neurons are never affordance-driven
+            global_sense_type[n_ptr + i] = 0
         if EVOACT:
-            global_act_drive[n_ptr + i] = 0    # fixed I/O neurons drive actions by position, not by map
+            # fixed I/O neurons drive actions by position, not by map
+            global_act_drive[n_ptr + i] = 0
 
     i = 0
     while i < g_count - 3:
@@ -913,7 +986,8 @@ def decode_genome(
                 if actual_dst >= N_INPUT:
                     global_conn_src[s_ptr + s_idx] = actual_src
                     global_conn_dst[s_ptr + s_idx] = actual_dst
-                    global_conn_weight[s_ptr + s_idx] = np.float32(w_raw) - 128.0
+                    global_conn_weight[s_ptr +
+                                       s_idx] = np.float32(w_raw) - 128.0
                     g_conn_w_dna[s_ptr + s_idx] = np.float32(w_raw) - 128.0
                     s_idx += 1
             i += 4
@@ -922,15 +996,19 @@ def decode_genome(
                 rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
                 global_rec_id[n_ptr + N_IO + h_idx] = rec_id
                 t = np.float32(global_genome[g_ptr + i + 3])
-                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + t
+                global_thresh[n_ptr + N_IO +
+                              h_idx] = o_rec_v_rest[org_id, rec_id] + t
                 if MULTISCALE:
                     global_tau[n_ptr + N_IO + h_idx] = np.float32(25.0)
                 else:
-                    global_tau[n_ptr + N_IO + h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
+                    global_tau[n_ptr + N_IO +
+                               h_idx] = np.float32(global_genome[g_ptr + i + 4]) + 1.0
                 if EVOSENSE:
-                    global_sense_type[n_ptr + N_IO + h_idx] = 0   # ordinary LIF hidden neuron
+                    # ordinary LIF hidden neuron
+                    global_sense_type[n_ptr + N_IO + h_idx] = 0
                 if EVOACT:
-                    global_act_drive[n_ptr + N_IO + h_idx] = 0    # ordinary neuron, drives no action
+                    # ordinary neuron, drives no action
+                    global_act_drive[n_ptr + N_IO + h_idx] = 0
                 if DALE:
                     # Dale's law: the otherwise-unused gene byte i+1 sets excitatory (+1) vs
                     # inhibitory (-1); ~80/20 starting bias, evolvable by mutation.
@@ -952,17 +1030,21 @@ def decode_genome(
             # and param (high byte).
             if N_IO + h_idx < n_c:
                 aff = global_genome[g_ptr + i + 2] % N_AFFORDANCE
-                off_raw = np.int32(global_genome[g_ptr + i + 3]) - 128   # signed -128..127
+                # signed -128..127
+                off_raw = np.int32(global_genome[g_ptr + i + 3]) - 128
                 param = np.int32(global_genome[g_ptr + i + 4])
                 global_sense_type[n_ptr + N_IO + h_idx] = aff + 1
-                global_sense_meta[n_ptr + N_IO + h_idx] = (off_raw & 0xFF) | (param << 8)
+                global_sense_meta[n_ptr + N_IO +
+                                  h_idx] = (off_raw & 0xFF) | (param << 8)
                 # a sensor neuron needs no LIF threshold/tau (it is set directly), but keep the arrays
                 # well-defined so a stray synapse onto it (dst can still land here) does not read garbage
                 global_rec_id[n_ptr + N_IO + h_idx] = 0
-                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, 0] + 128.0
+                global_thresh[n_ptr + N_IO +
+                              h_idx] = o_rec_v_rest[org_id, 0] + 128.0
                 global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, 0]
                 if EVOACT:
-                    global_act_drive[n_ptr + N_IO + h_idx] = 0   # a sensor drives no action
+                    # a sensor drives no action
+                    global_act_drive[n_ptr + N_IO + h_idx] = 0
                 h_idx += 1
             i += 5
         elif EVOACT and marker == ACTUATOR_MARKER and i + 4 < g_count:
@@ -978,12 +1060,16 @@ def decode_genome(
             # (0 reserved for "drives nothing"). It keeps a normal receptor/threshold so it integrates.
             if N_IO + h_idx < n_c:
                 act_i = global_genome[g_ptr + i + 2] % N_OUTPUT
-                rec_id = global_genome[g_ptr + i + 4] % MAX_RECEPTORS_PER_ORG   # param byte = receptor
+                # param byte = receptor
+                rec_id = global_genome[g_ptr + i + 4] % MAX_RECEPTORS_PER_ORG
                 global_rec_id[n_ptr + N_IO + h_idx] = rec_id
-                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
-                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, rec_id]
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id,
+                                                                   rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO +
+                           h_idx] = o_rec_tau_def[org_id, rec_id]
                 if EVOSENSE:
-                    global_sense_type[n_ptr + N_IO + h_idx] = 0   # not a sensor
+                    global_sense_type[n_ptr + N_IO +
+                                      h_idx] = 0   # not a sensor
                 global_act_drive[n_ptr + N_IO + h_idx] = act_i + 1
                 h_idx += 1
             i += 5
@@ -998,15 +1084,18 @@ def decode_genome(
             if N_IO + h_idx < n_c:
                 rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
                 global_rec_id[n_ptr + N_IO + h_idx] = rec_id
-                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
-                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, rec_id]
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id,
+                                                                   rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO +
+                           h_idx] = o_rec_tau_def[org_id, rec_id]
                 global_sense_type[n_ptr + N_IO + h_idx] = 255   # LATCH_FLAG
                 # WRITE-GATE source (Exp 45): gene slot byte (i+1) % n_c picks a neuron whose spike
                 # last step enables writing this latch; 0 = ungated (holds Exp-44 always-write). Stored
                 # +1 so 0 stays "no gate" (kernel reads gate-1 as the source index). Evolution wires
                 # WHICH neuron controls the store — the store-control the passive latch lacked.
                 gate_raw = global_genome[g_ptr + i + 1] % n_c
-                global_sense_meta[n_ptr + N_IO + h_idx] = gate_raw + 1 if gate_raw > 0 else 0
+                global_sense_meta[n_ptr + N_IO +
+                                  h_idx] = gate_raw + 1 if gate_raw > 0 else 0
                 if EVOACT:
                     global_act_drive[n_ptr + N_IO + h_idx] = 0
                 h_idx += 1
@@ -1024,14 +1113,20 @@ def decode_genome(
             if N_IO + h_idx < n_c:
                 rec_id = global_genome[g_ptr + i + 2] % MAX_RECEPTORS_PER_ORG
                 global_rec_id[n_ptr + N_IO + h_idx] = rec_id
-                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id, rec_id] + np.float32(global_genome[g_ptr + i + 3])
-                global_tau[n_ptr + N_IO + h_idx] = o_rec_tau_def[org_id, rec_id]
+                global_thresh[n_ptr + N_IO + h_idx] = o_rec_v_rest[org_id,
+                                                                   rec_id] + np.float32(global_genome[g_ptr + i + 3])
+                global_tau[n_ptr + N_IO +
+                           h_idx] = o_rec_tau_def[org_id, rec_id]
                 kind = global_genome[g_ptr + i + 1]
                 if kind == 0:
-                    global_sense_type[n_ptr + N_IO + h_idx] = 254   # STORE_FLAG
+                    global_sense_type[n_ptr + N_IO +
+                                      h_idx] = 254   # STORE_FLAG
                 else:
-                    global_sense_type[n_ptr + N_IO + h_idx] = 8     # RECALL sensor (affordance 7)
-                    global_sense_meta[n_ptr + N_IO + h_idx] = global_genome[g_ptr + i + 4]   # (slot<<3)|bit
+                    # RECALL sensor (affordance 7)
+                    global_sense_type[n_ptr + N_IO + h_idx] = 8
+                    # (slot<<3)|bit
+                    global_sense_meta[n_ptr + N_IO +
+                                      h_idx] = global_genome[g_ptr + i + 4]
                 if EVOACT:
                     global_act_drive[n_ptr + N_IO + h_idx] = 0
                 h_idx += 1
@@ -1042,13 +1137,14 @@ def decode_genome(
             i += 1
     return s_idx
 
+
 @njit(cache=True)
 def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_prev, sense_buf, p_food_scan_radius):
     sense_buf.fill(0.0)
     sense_buf[0] = energy / ATP_MAX
     sense_buf[1] = 0.5
     sense_buf[2] = 0.5
-    
+
     addr = pos
     ram_byte = ram_substrate[addr]
     v = ram_byte / np.float32(255.0)
@@ -1061,23 +1157,25 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
     for bit in range(8):
         if (ram_byte >> bit) & 1:
             sense_buf[RAM_BIT0_INPUT + bit] = 1.0
-    
+
     left_pos = pos - 1 if pos > 0 else 0
     right_pos = pos + 1 if pos < len(ram_substrate) - 1 else pos
-    
+
     voice_acc = 0
     # Neighbour-voice sense (inputs 4-6): live vocal_cords. NOTE (Exp 15 isolation): this is the
     # neighbour's compressed 3-input voice, NOT the clean 8-bit reading eye, so echoing a sensed
     # neighbour byte precisely is lossy — the within-tick "sense-fresh-then-echo" shortcut the peer
     # surprise-score guards against is weak here, so sensing live (not vocal_prev) is kept to avoid
     # disturbing the reading economy. The peer block below still scores against the frozen vocal_prev.
-    if org_grid[left_pos] != -1: voice_acc |= vocal_cords[org_grid[left_pos]]
-    if org_grid[right_pos] != -1: voice_acc |= vocal_cords[org_grid[right_pos]]
-    
+    if org_grid[left_pos] != -1:
+        voice_acc |= vocal_cords[org_grid[left_pos]]
+    if org_grid[right_pos] != -1:
+        voice_acc |= vocal_cords[org_grid[right_pos]]
+
     sense_buf[4] = (voice_acc & 0x07) / 7.0
     sense_buf[5] = ((voice_acc >> 3) & 0x07) / 7.0
     sense_buf[6] = ((voice_acc >> 6) & 0x03) / 3.0
-    
+
     for bit in range(8):
         if oracle_val & (1 << bit):
             sense_buf[7 + bit] = 1.0
@@ -1101,7 +1199,8 @@ def sense(pos, ram_substrate, org_grid, energy, oracle_val, vocal_cords, vocal_p
                 food_ahead += np.float32(1.0)
             if bb == 0x55:
                 food_behind += np.float32(1.0)
-    sense_buf[N_INPUT - 2] = food_ahead / np.float32(p_food_scan_radius)   # Session 9: normalise by own radius
+    # Session 9: normalise by own radius
+    sense_buf[N_INPUT - 2] = food_ahead / np.float32(p_food_scan_radius)
     sense_buf[N_INPUT - 1] = food_behind / np.float32(p_food_scan_radius)
 
 
@@ -1146,13 +1245,13 @@ def sense_affordance(aff_type, offset, param, pos, ram_substrate, org_grid, ener
         return own_energy / ATP_MAX
 
 
-
 # ---- Phase 4 (Session 8): footprint income + threshold-based cell clearing (feature-flagged) ----
 # FOOTPRINT_QUANTUM = measured compute freed (642) + RAM freed (256) = 898 per byte.
 # Cell cleared (RAM freed, content replaced) only after CLEAR_THRESHOLD organisms
 # correctly predict it (community consensus) -> preserves learnable structure.
 INCOME_FOOTPRINT = os.environ.get("GENESIS_INCOME_FOOTPRINT", "0") == "1"
-FOOTPRINT_QUANTUM = np.float32(float(os.environ.get("GENESIS_FOOTPRINT_QUANTUM", "898.0")))
+FOOTPRINT_QUANTUM = np.float32(
+    float(os.environ.get("GENESIS_FOOTPRINT_QUANTUM", "898.0")))
 CLEAR_THRESHOLD = int(os.environ.get("GENESIS_CELL_CLEAR_THRESHOLD", "10"))
 
 # ---- Session 9: lump-sum multi-byte work-unit reward (feature-flagged, default OFF) ----
@@ -1179,6 +1278,7 @@ RACE_K = max(1, int(os.environ.get("GENESIS_RACE_K", str(LUMPSUM_K))))
 g_race_state = np.full((RACE_N_QUESTIONS, 3), np.nan, dtype=np.float32)
 g_race_attempt_q = np.full(MAX_ORGANISMS, -1, dtype=np.int32)
 
+
 @njit(cache=True)
 def world_tick_numba(
     ram_substrate, org_grid, positions, alive, energy, age,
@@ -1199,17 +1299,22 @@ def world_tick_numba(
     g_cam_vals,              # (MAX_ORG, CAM_SLOTS) int64: CAM values
     g_cam_valid,             # (MAX_ORG, CAM_SLOTS) int64: CAM slot occupancy
     g_cam_tick,              # (MAX_ORG, CAM_SLOTS) int64: CAM write timestamps
-    g_clear_count,           # (RAM_SIZE,) int32: per-cell correct-prediction counter (Phase 4)
-    g_org_run,               # (MAX_ORG,) int32: consecutive correct-prediction run length (Session 9 lump-sum)
-    g_lump_acc,              # (MAX_ORG,) float32: deferred income paid on work-unit completion (Session 9)
-    g_race_state,            # (RACE_N_QUESTIONS, 3) float32: [best_cost, solved_flag, start_pos] per question
-    g_race_attempt_q,        # (MAX_ORGANISMS,) int32: which question each organism is attempting (-1 if none)
+    # (RAM_SIZE,) int32: per-cell correct-prediction counter (Phase 4)
+    g_clear_count,
+    # (MAX_ORG,) int32: consecutive correct-prediction run length (Session 9 lump-sum)
+    g_org_run,
+    # (MAX_ORG,) float32: deferred income paid on work-unit completion (Session 9)
+    g_lump_acc,
+    # (RACE_N_QUESTIONS, 3) float32: [best_cost, solved_flag, start_pos] per question
+    g_race_state,
+    # (MAX_ORGANISMS,) int32: which question each organism is attempting (-1 if none)
+    g_race_attempt_q,
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
     atp_buf = np.zeros(1, dtype=np.float32)
     out_accum = np.zeros(N_OUTPUT, dtype=np.int32)
-    
+
     n_births = np.int32(0)
 
     # Pre-allocate reusable buffers for spiking to avoid inside-loop allocations (massive speedup)
@@ -1243,7 +1348,8 @@ def world_tick_numba(
     if PEER_PREDICT:
         for i in range(vocal_cords.shape[0]):
             vocal_prev[i] = vocal_cords[i]
-            action_prev[i] = action_now[i]     # Exp 18: freeze last tick's motor decision (hidden target)
+            # Exp 18: freeze last tick's motor decision (hidden target)
+            action_prev[i] = action_now[i]
 
     # WITHIN-LIFETIME REMAP (Exp 34): the phase advances with wall-clock, identical for every organism
     # this tick and unobservable in any sense input, so a fixed reflex cannot pre-encode it — only an
@@ -1260,9 +1366,10 @@ def world_tick_numba(
         pos = positions[org]
         for o in range(N_OUTPUT):
             out_accum[o] = 0
-            
+
         total_atp = np.float32(0.0)
-        read_gain_tick = np.float32(0.0)   # Exp 32: reading reward earned this tick (the 3rd factor)
+        # Exp 32: reading reward earned this tick (the 3rd factor)
+        read_gain_tick = np.float32(0.0)
         n_count = org_n_count[org]
 
         # Rule 21.2 (3b-i): per-organism evolvable constants. With EVOLVABLE_CONSTANTS OFF, numba bakes
@@ -1276,30 +1383,39 @@ def world_tick_numba(
             # A larger radius senses farther but drives more seeking-neuron transduction spikes,
             # which the event-driven membrane charges per spike (Rule 17 honest work) — so selection
             # tunes sensing effort to the environment. No designer-fixed value.
-            p_food_scan_radius = np.int64(g_org_params[org, 9] + np.float32(0.5))
-            if p_food_scan_radius < np.int64(1): p_food_scan_radius = np.int64(1)
-            if p_food_scan_radius > np.int64(FOOD_SCAN_RADIUS): p_food_scan_radius = np.int64(FOOD_SCAN_RADIUS)
-            p_cam_slots = np.int64(g_org_params[org, 0] + np.float32(0.5))  # round: 14-bit decode gives 5.9999 not 6
+            p_food_scan_radius = np.int64(
+                g_org_params[org, 9] + np.float32(0.5))
+            if p_food_scan_radius < np.int64(1):
+                p_food_scan_radius = np.int64(1)
+            if p_food_scan_radius > np.int64(FOOD_SCAN_RADIUS):
+                p_food_scan_radius = np.int64(FOOD_SCAN_RADIUS)
+            # round: 14-bit decode gives 5.9999 not 6
+            p_cam_slots = np.int64(g_org_params[org, 0] + np.float32(0.5))
             p_cam_match = np.int64(g_org_params[org, 2] + np.float32(0.5))
-            p_cam_key_bits = np.int64(g_org_params[org, 1] + np.float32(0.5))  # round to int key width
-            if p_cam_key_bits < np.int64(1): p_cam_key_bits = np.int64(1)
-            if p_cam_key_bits > np.int64(CAM_KEY_BITS): p_cam_key_bits = np.int64(CAM_KEY_BITS)  # clip to backing-store width
-            p_stdp_div  = np.float32(g_org_params[org, 4])
-            p_homeo     = np.float32(g_org_params[org, 5])
-            p_tau_ref   = np.int64(g_org_params[org, 6] + np.float32(0.5))
+            # round to int key width
+            p_cam_key_bits = np.int64(g_org_params[org, 1] + np.float32(0.5))
+            if p_cam_key_bits < np.int64(1):
+                p_cam_key_bits = np.int64(1)
+            if p_cam_key_bits > np.int64(CAM_KEY_BITS):
+                # clip to backing-store width
+                p_cam_key_bits = np.int64(CAM_KEY_BITS)
+            p_stdp_div = np.float32(g_org_params[org, 4])
+            p_homeo = np.float32(g_org_params[org, 5])
+            p_tau_ref = np.int64(g_org_params[org, 6] + np.float32(0.5))
             p_sp_growth = np.float32(g_org_params[org, 7])
             p_sp_rewire = np.float32(g_org_params[org, 8])
         else:
-            p_food_scan_radius = np.int64(FOOD_SCAN_RADIUS)   # Session 9: flag-OFF == module global (identical)
+            # Session 9: flag-OFF == module global (identical)
+            p_food_scan_radius = np.int64(FOOD_SCAN_RADIUS)
             p_cam_slots = np.int64(CAM_SLOTS)
             p_cam_match = CAM_MATCH_THRESHOLD
             p_cam_key_bits = np.int64(CAM_KEY_BITS)
-            p_stdp_div  = STDP_DIV
-            p_homeo     = HOMEOSTATIC_LAMBDA
-            p_tau_ref   = np.int64(TAU_REF)
+            p_stdp_div = STDP_DIV
+            p_homeo = HOMEOSTATIC_LAMBDA
+            p_tau_ref = np.int64(TAU_REF)
             p_sp_growth = SP_GROWTH_COST
             p_sp_rewire = SP_REWIRE_WEIGHT
-        
+
         # Zero the portion of the pre-allocated buffer we need
         for i in range(n_count):
             prev_spk_buf[i] = False
@@ -1329,29 +1445,30 @@ def world_tick_numba(
         # it fills half the largest body the substrate allows, not at an invented 500. Derived purely from
         # the DNA cap + the bytes-per-synapse decode width; no tuned number.
         footprint = np.float32(n_count) + np.float32(org_s_count[org])
-        
+
         if TRUE_CONTENTION:
             # TRUE CONTENTION: memory bandwidth is rivalrous.
             # 65536 bytes RAM is divided into 256 banks of 256 bytes.
             bank_id = (pos // 256) % 256
-            
+
             # The more memory footprint (synapses) the organism has, the more it hits the bank.
             # Instead of arbitrary prob, viscosity is scaled by actual local contention in the previous tick.
             # If a bank had > 4 dense brains in it last tick, contention rises steeply.
             bank_load = np.float32(ram_bank_access[bank_id])
-            local_viscosity = bank_load / np.float32(4000.0) # Assume saturation starts at ~4000 synapse reads/tick
-            
+            # Assume saturation starts at ~4000 synapse reads/tick
+            local_viscosity = bank_load / np.float32(4000.0)
+
             if local_viscosity > np.float32(0.5):
                 local_viscosity = np.float32(0.5)
-            
+
             # Record our own memory footprint onto the bank for the NEXT tick
             ram_bank_access_next[bank_id] += np.int32(footprint)
-            
+
         else:
             local_viscosity = footprint / np.float32(MAX_DNA_PER_ORG / 2)
             if local_viscosity > np.float32(0.5):
                 local_viscosity = np.float32(0.5)
-            
+
         viscosity[org] = local_viscosity
 
         # Sensory input is invariant across this organism's LIF sub-steps: energy, pointer
@@ -1359,7 +1476,8 @@ def world_tick_numba(
         # not within the step loop, and sense() is deterministic (no RNG). So compute it ONCE
         # per tick instead of re-scanning neighbours every step — a pure engine speedup with
         # identical dynamics, so the simulator itself needs less hardware for the same physics.
-        sense(pos, ram_substrate, org_grid, energy[org], oracle_val, vocal_cords, vocal_prev, sense_buf, p_food_scan_radius)
+        sense(pos, ram_substrate, org_grid,
+              energy[org], oracle_val, vocal_cords, vocal_prev, sense_buf, p_food_scan_radius)
         # Input 2 = local spatial crowding (previously a dead constant 0.5), so organisms can
         # feel population density and evolve migration/dispersal away from the trap.
         sense_buf[2] = crowding
@@ -1387,12 +1505,13 @@ def world_tick_numba(
                                 weak_c = c
                     if weak_c >= np.int64(0) and weak_w < np.float32(5.0):
                         # Rewire to a new pseudo-random target
-                        new_dst = N_IO + np.int64((global_time * 7 + n * 13 + sp_growth * 31) % max(np.int64(1), np.int64(n_count - N_IO)))
+                        new_dst = N_IO + np.int64((global_time * 7 + n * 13 + sp_growth * 31) % max(
+                            np.int64(1), np.int64(n_count - N_IO)))
                         global_conn_dst[s_ptr + weak_c] = new_dst
                         global_conn_weight[s_ptr + weak_c] = p_sp_rewire
                         total_atp += p_sp_growth
                         sp_growth += np.int64(1)
-            
+
             # PRUNING: remove synapses with very small weights
             sp_prune = np.int64(0)
             for c in range(s_count):
@@ -1420,7 +1539,8 @@ def world_tick_numba(
                 sense_buf[1] = np.float32(cam_val) / np.float32(255.0)
             else:
                 sense_buf[1] = np.float32(0.0)
-            total_atp += CYCLES_PER_CAM_READ   # Rule 21.1: real measured CAM-read cost (was invented += CAM_SLOTS)
+            # Rule 21.1: real measured CAM-read cost (was invented += CAM_SLOTS)
+            total_atp += CYCLES_PER_CAM_READ
 
         # EVOLVABLE SENSORS (Exp 37): transduce each DNA-declared sensor neuron ONCE per tick from its
         # physical affordance (tick-invariant, exactly like sense() above). A sensor neuron lives in the
@@ -1498,7 +1618,8 @@ def world_tick_numba(
 
         for step in range(n_steps):
             if random.random() < viscosity[org]:
-                total_atp += np.float32(n_count) * CYCLES_PER_NEURON_UPDATE   # Rule 21.1: viscous step maintains all neurons at measured cost
+                # Rule 21.1: viscous step maintains all neurons at measured cost
+                total_atp += np.float32(n_count) * CYCLES_PER_NEURON_UPDATE
                 continue
 
             # Zero current spike buffer
@@ -1514,11 +1635,11 @@ def world_tick_numba(
             n_spiked = 0
 
             t_now = global_time + step
-            
+
             n_ptr = org_n_ptr[org]
             s_ptr = org_s_ptr[org]
             s_count = org_s_count[org]
-            
+
             # Phase 1: Forward propagate spikes from previous step
             for c in range(s_count):
                 src = global_conn_src[s_ptr + c]
@@ -1539,18 +1660,21 @@ def world_tick_numba(
                         # Dale's law: sign comes from the PRESYNAPTIC neuron; |w| is the synapse
                         # strength, so an inhibitory neuron inhibits ALL its targets.
                         if global_neuron_sign[n_ptr + src] > 0:
-                            global_v[n_ptr + dst] += (w if w >= np.float32(0.0) else -w)
+                            global_v[n_ptr +
+                                     dst] += (w if w >= np.float32(0.0) else -w)
                         else:
-                            global_v[n_ptr + dst] -= (w if w >= np.float32(0.0) else -w)
+                            global_v[n_ptr +
+                                     dst] -= (w if w >= np.float32(0.0) else -w)
                     else:
                         global_v[n_ptr + dst] += w
                     total_atp += CYCLES_PER_SYNAPSE_READ
-            
+
             # Phase 2: Input and Hidden/Output LIF logic
             for n in range(n_count):
                 r_idx = global_rec_id[n_ptr + n]
                 spike_val = 1.0 * o_rec_spk_max[org, r_idx]
-                if spike_val > 1.0: spike_val = 1.0
+                if spike_val > 1.0:
+                    spike_val = 1.0
 
                 if n < N_INPUT:
                     if random.random() < sense_buf[n] * spike_val:
@@ -1658,7 +1782,8 @@ def world_tick_numba(
                             if STDP_SURPRISE_GATE:
                                 _gv = org_elig[org, 18 + _gb]
                                 if _gv > np.float32(0.0):
-                                    _gc = org_elig[org, _gb] - org_elig[org, 10 + _gb] / _gv
+                                    _gc = org_elig[org, _gb] - \
+                                        org_elig[org, 10 + _gb] / _gv
                             dst_gain = stdp_mod * _gc
 
                     if curr_spk_buf[dst]:
@@ -1675,7 +1800,8 @@ def world_tick_numba(
                                     e = e * np.exp(-dt_elig / tau_e)
                                 elif dt_elig > 0:
                                     e = np.float32(0.0)
-                                e += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (CELL_STATES / STDP_SCALE) / p_stdp_div
+                                e += o_rec_a_plus[org, r_idx] * np.exp(-dt / o_rec_tau_p[org, r_idx]) / (
+                                    CELL_STATES / STDP_SCALE) / p_stdp_div
                                 global_conn_elig[s_ptr + c] = e
                                 global_conn_elig_t[s_ptr + c] = t_now
                             # Plasticity is real compute (an exp() + weight write). Charge it when
@@ -1685,9 +1811,12 @@ def world_tick_numba(
                             # ── Homeostatic anchoring (Exp 30 fix) ──
                             if p_homeo > np.float32(0.0):
                                 w_now = global_conn_weight[s_ptr + c]
-                                w_now -= p_homeo * (w_now - g_conn_w_dna[s_ptr + c])
-                                if w_now > W_MAX: w_now = W_MAX
-                                elif w_now < W_MIN: w_now = W_MIN
+                                w_now -= p_homeo * \
+                                    (w_now - g_conn_w_dna[s_ptr + c])
+                                if w_now > W_MAX:
+                                    w_now = W_MAX
+                                elif w_now < W_MIN:
+                                    w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
                             total_atp += CYCLES_PER_STDP_UPDATE
 
@@ -1705,15 +1834,19 @@ def world_tick_numba(
                                     e = e * np.exp(-dt_elig / tau_e)
                                 elif dt_elig > 0:
                                     e = np.float32(0.0)
-                                e -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (CELL_STATES / STDP_SCALE) / p_stdp_div
+                                e -= o_rec_a_minus[org, r_idx] * np.exp(-dt / o_rec_tau_m[org, r_idx]) / (
+                                    CELL_STATES / STDP_SCALE) / p_stdp_div
                                 global_conn_elig[s_ptr + c] = e
                                 global_conn_elig_t[s_ptr + c] = t_now
                             # ── Homeostatic anchoring (Exp 30 fix) ──
                             if p_homeo > np.float32(0.0):
                                 w_now = global_conn_weight[s_ptr + c]
-                                w_now -= p_homeo * (w_now - g_conn_w_dna[s_ptr + c])
-                                if w_now > W_MAX: w_now = W_MAX
-                                elif w_now < W_MIN: w_now = W_MIN
+                                w_now -= p_homeo * \
+                                    (w_now - g_conn_w_dna[s_ptr + c])
+                                if w_now > W_MAX:
+                                    w_now = W_MAX
+                                elif w_now < W_MIN:
+                                    w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
                             total_atp += CYCLES_PER_STDP_UPDATE
 
@@ -1761,17 +1894,19 @@ def world_tick_numba(
         niche_same = np.int32(0)
         niche_active = False
         if NICHE_ECON and best_a >= 0:
-            n_floor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
+            n_floor = (np.float32(
+                org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
             if energy[org] > n_floor:
                 niche_active = True
                 for noff in range(-FOOD_SCAN_RADIUS, FOOD_SCAN_RADIUS + 1):
                     if noff == 0:
                         continue
                     target = pos + noff
-                    nb2 = org_grid[target] if 0 <= target < len(ram_substrate) else -1
+                    nb2 = org_grid[target] if 0 <= target < len(
+                        ram_substrate) else -1
                     if nb2 != -1 and nb2 != org and alive[nb2] and action_now[nb2] == best_a:
                         niche_same += 1
-                
+
         # A vocal bit is set if its neuron fired at all this tick. With random scratchpad synapses
         # kept OFF the vocal outputs and two max-weight copy synapses per bit driving each vocal
         # neuron cleanly above threshold, only the CORRECT bits fire — so a single spike is a
@@ -1781,7 +1916,7 @@ def world_tick_numba(
         for v_idx in range(8):
             if out_accum[6 + v_idx] > 0:
                 org_char_val |= (1 << v_idx)
-        
+
         if org == 0:
             if org_char_val >= 32 and org_char_val <= 126:
                 for v_buf_idx in range(len(voice_buf)):
@@ -1840,12 +1975,14 @@ def world_tick_numba(
                     continue
                 nb = org_grid[npos]
                 if nb != -1 and nb != org and alive[nb]:
-                    a_now = action_now[nb]       # neighbour's FRESH motor decision (t) if it stepped this tick
+                    # neighbour's FRESH motor decision (t) if it stepped this tick
+                    a_now = action_now[nb]
                     a_prev = action_prev[nb]     # its previous decision (t-1)
                     # Only a CHANGED, real action carries surprise: an unchanged/none decision is
                     # predictable by inertia (or the neighbour has not stepped yet -> a_now == a_prev).
                     if a_now >= 0 and a_now != a_prev:
-                        if (org_char_val >> a_now) & 1:   # organism asserted the neighbour's newly-taken action
+                        # organism asserted the neighbour's newly-taken action
+                        if (org_char_val >> a_now) & 1:
                             # PRECISION-GRADED (Rule 10 gradient, not a cliff). The first build penalised
                             # every OTHER asserted bit (pnet = 1 - extra); that was all-or-nothing — an
                             # organism earned NOTHING until it emitted exactly one specific action bit and
@@ -1858,12 +1995,14 @@ def world_tick_numba(
                             # ACCIDENTALLY overlaps the (text-independent) action bit, by up to s_bits-fold —
                             # so modelling is selected, not text-overlap. Constant-free: a bit-count ratio
                             # times the existing CELL_STATES/BITS_PER_BYTE rate.
-                            g = np.float32(1.0) / np.float32(s_bits) / BITS_PER_BYTE * CELL_STATES
+                            g = np.float32(1.0) / np.float32(s_bits) / \
+                                BITS_PER_BYTE * CELL_STATES
                             if g > np.float32(0.0):
                                 # NON-LETHAL floor (Exp 14): skim only surplus above body-subsistence
                                 # (footprint * CELL_STATES = the abiogenesis seed value), never starving
                                 # the speaker below the cost of its own body. No new constant.
-                                nb_floor = (np.float32(org_n_count[nb]) + np.float32(org_s_count[nb])) * CELL_STATES
+                                nb_floor = (np.float32(
+                                    org_n_count[nb]) + np.float32(org_s_count[nb])) * CELL_STATES
                                 drainable = energy[nb] - nb_floor
                                 if g > drainable:
                                     g = drainable       # never push the speaker below body-subsistence
@@ -1874,7 +2013,8 @@ def world_tick_numba(
                                     if idx < 996:
                                         read_log[idx] = 4
                                         read_log[idx+1] = org
-                                        read_log[idx+2] = (1 << a_now)   # the action bit that was predicted
+                                        # the action bit that was predicted
+                                        read_log[idx+2] = (1 << a_now)
                                         read_log[0] = idx + 3
                         elif RED_QUEEN and s_bits == 1:
                             # --- RED-QUEEN PREY DEFENCE (Exp 19, the prey half of the duel) ---
@@ -1893,9 +2033,11 @@ def world_tick_numba(
                             # bet are symmetric — no new constant. Non-lethal: capped at the PREDATOR's
                             # surplus above ITS OWN body-subsistence floor, so a wrong guess never pushes the
                             # predator into debt (it can only stake what it holds above its body cost).
-                            g = np.float32(1.0) / np.float32(s_bits) / BITS_PER_BYTE * CELL_STATES
+                            g = np.float32(1.0) / np.float32(s_bits) / \
+                                BITS_PER_BYTE * CELL_STATES
                             if g > np.float32(0.0):
-                                org_floor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
+                                org_floor = (np.float32(
+                                    org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
                                 stakeable = energy[org] - org_floor
                                 if g > stakeable:
                                     g = stakeable       # a predator only stakes surplus above its own body
@@ -1905,8 +2047,10 @@ def world_tick_numba(
                                     idx = read_log[0]
                                     if idx < 996:
                                         read_log[idx] = 5
-                                        read_log[idx+1] = nb             # the EVADER that got paid
-                                        read_log[idx+2] = (1 << a_now)   # the action the predator MISSED
+                                        # the EVADER that got paid
+                                        read_log[idx+1] = nb
+                                        # the action the predator MISSED
+                                        read_log[idx+2] = (1 << a_now)
                                         read_log[0] = idx + 3
 
         # --- Reading = PREDICT THE NEXT SYMBOL (2026-07-12, the information-economy fix) ---
@@ -1954,7 +2098,8 @@ def world_tick_numba(
                 b0 = (nb >> REMAP_SB0) & np.int64(1)
                 b1 = (nb >> REMAP_SB1) & np.int64(1)
                 # clear the two swap-bit positions, then write them back exchanged
-                nb = nb & ~((np.int64(1) << REMAP_SB0) | (np.int64(1) << REMAP_SB1))
+                nb = nb & ~((np.int64(1) << REMAP_SB0) |
+                            (np.int64(1) << REMAP_SB1))
                 nb = nb | (b1 << REMAP_SB0) | (b0 << REMAP_SB1)
                 tgt_byte = nb & np.int64(0xFF)
             if DELAY or DIGESTION:
@@ -1968,7 +2113,8 @@ def world_tick_numba(
                     if dbyte >= 32 and dbyte <= 126 and dbyte != 0x55:
                         tgt_byte = dbyte
                     else:
-                        tgt_byte = np.int64(next_byte)   # no valid history yet -> fall back (bootstrap)
+                        # no valid history yet -> fall back (bootstrap)
+                        tgt_byte = np.int64(next_byte)
             correct_bits = 0
             wrong_bits = 0
             for b in range(8):
@@ -1986,7 +2132,7 @@ def world_tick_numba(
                     if STDP3C:
                         org_elig[org, b] = np.float32(0.0)
             net = correct_bits - wrong_bits
-            
+
             if STDP3C and (correct_bits > 0 or wrong_bits > 0):
                 dopamine = np.float32(net)
                 if STDP_SURPRISE_GATE:
@@ -2007,44 +2153,50 @@ def world_tick_numba(
                     org_elig[org, 9] = gcnt + np.float32(1.0)
                     # accumulate this tick's per-bit credit (written just above) into the baselines
                     for gb in range(8):
-                        org_elig[org, 10 + gb] = org_elig[org, 10 + gb] + org_elig[org, gb]
-                        org_elig[org, 18 + gb] = org_elig[org, 18 + gb] + np.float32(1.0)
+                        org_elig[org, 10 + gb] = org_elig[org,
+                                                          10 + gb] + org_elig[org, gb]
+                        org_elig[org, 18 + gb] = org_elig[org,
+                                                          18 + gb] + np.float32(1.0)
                 # Apply Reward-Modulated STDP using eligibility traces
                 t_end = global_time + n_steps
-                learning_rate = np.float32(1.0) # We use a static learning rate instead of org_reward which is set later
+                # We use a static learning rate instead of org_reward which is set later
+                learning_rate = np.float32(1.0)
                 for c in range(s_count):
                     s_idx = s_ptr + c
                     dst = global_conn_dst[s_idx]
                     r_idx = global_rec_id[n_ptr + dst]
                     tau_e = o_rec_tau_e[org, r_idx]
-                    
+
                     t_last_elig = global_conn_elig_t[s_idx]
                     dt_elig = np.float32(t_end - t_last_elig)
                     e = global_conn_elig[s_idx]
-                    
+
                     if dt_elig > 0 and tau_e > 1.0:
                         e = e * np.exp(-dt_elig / tau_e)
                     elif dt_elig > 0:
                         e = np.float32(0.0)
-                    
+
                     if dst >= N_INPUT + 6 and dst < N_IO:
                         D = org_elig[org, dst - N_INPUT - 6]
                         if STDP_SURPRISE_GATE:
                             _vb = dst - N_INPUT - 6
                             _vc = org_elig[org, 18 + _vb]
                             if _vc > np.float32(0.0):
-                                D = org_elig[org, _vb] - org_elig[org, 10 + _vb] / _vc
+                                D = org_elig[org, _vb] - \
+                                    org_elig[org, 10 + _vb] / _vc
                     else:
                         D = dopamine
-                    
+
                     w = global_conn_weight[s_idx]
                     w += e * D * learning_rate
                     # Homeostatic anchoring: pull toward DNA birth weight
                     w -= p_homeo * (w - g_conn_w_dna[s_idx])
-                    if w > W_MAX: w = W_MAX
-                    elif w < W_MIN: w = W_MIN
+                    if w > W_MAX:
+                        w = W_MAX
+                    elif w < W_MIN:
+                        w = W_MIN
                     global_conn_weight[s_idx] = w
-                    
+
                     global_conn_elig[s_idx] = e
                     global_conn_elig_t[s_idx] = t_end
 
@@ -2070,7 +2222,8 @@ def world_tick_numba(
                         vb = tdst - (N_INPUT + 6)
                         out_vb = (org_char_val >> vb) & 1
                         tgt_vb = (int(tgt_byte) >> vb) & 1
-                        err = np.float32(tgt_vb - out_vb)     # +1 wanted-silent, -1 unwanted-fired, 0 ok
+                        # +1 wanted-silent, -1 unwanted-fired, 0 ok
+                        err = np.float32(tgt_vb - out_vb)
                         if err != np.float32(0.0):
                             tsrc = global_conn_src[ts_ptr + tc]
                             # only afferents from an ACTIVE source carry the teaching signal (potentiating a
@@ -2087,34 +2240,41 @@ def world_tick_numba(
                                 if sensor_act[tsrc] > np.float32(0.5):
                                     src_active = True
                             if src_active:
-                                    w = global_conn_weight[ts_ptr + tc]
-                                    # HARDWARE-DERIVED teaching step (Rule 17, 2026-07-18): one microstate
-                                    # (the atomic quantum of a 256-state byte weight) SHARED across the eye
-                                    # register's BITS_PER_BYTE afferents that can co-drive a vocal bit — so
-                                    # each of the (up to 8) active eye->vocal synapses moves 1/BITS_PER_BYTE
-                                    # of a microstate per event, and their SUM is at most one microstate.
-                                    # Recruiting a silent neuron across the rest->threshold gap (128) is then
-                                    # graded over ~128*8 events (Rule 11 slow/distributed), never bang-bang.
-                                    # Retires the tuned STDP_DIV knob: the step = register quantum / register
-                                    # width, both hardware facts, no picked divisor.
-                                    w += err / BITS_PER_BYTE / p_stdp_div
-                                    if w > W_MAX: w = W_MAX
-                                    elif w < W_MIN: w = W_MIN
-                                    global_conn_weight[ts_ptr + tc] = w
-                                    # ── Homeostatic anchoring (Exp 30 fix) ──
-                                    if p_homeo > np.float32(0.0):
-                                        w_now = global_conn_weight[s_ptr + c]
-                                        w_now -= p_homeo * (w_now - g_conn_w_dna[s_ptr + c])
-                                        if w_now > W_MAX: w_now = W_MAX
-                                        elif w_now < W_MIN: w_now = W_MIN
-                                        global_conn_weight[s_ptr + c] = w_now
-                                    total_atp += CYCLES_PER_STDP_UPDATE
+                                w = global_conn_weight[ts_ptr + tc]
+                                # HARDWARE-DERIVED teaching step (Rule 17, 2026-07-18): one microstate
+                                # (the atomic quantum of a 256-state byte weight) SHARED across the eye
+                                # register's BITS_PER_BYTE afferents that can co-drive a vocal bit — so
+                                # each of the (up to 8) active eye->vocal synapses moves 1/BITS_PER_BYTE
+                                # of a microstate per event, and their SUM is at most one microstate.
+                                # Recruiting a silent neuron across the rest->threshold gap (128) is then
+                                # graded over ~128*8 events (Rule 11 slow/distributed), never bang-bang.
+                                # Retires the tuned STDP_DIV knob: the step = register quantum / register
+                                # width, both hardware facts, no picked divisor.
+                                w += err / BITS_PER_BYTE / p_stdp_div
+                                if w > W_MAX:
+                                    w = W_MAX
+                                elif w < W_MIN:
+                                    w = W_MIN
+                                global_conn_weight[ts_ptr + tc] = w
+                                # ── Homeostatic anchoring (Exp 30 fix) ──
+                                if p_homeo > np.float32(0.0):
+                                    w_now = global_conn_weight[s_ptr + c]
+                                    w_now -= p_homeo * \
+                                        (w_now - g_conn_w_dna[s_ptr + c])
+                                    if w_now > W_MAX:
+                                        w_now = W_MAX
+                                    elif w_now < W_MIN:
+                                        w_now = W_MIN
+                                    global_conn_weight[s_ptr + c] = w_now
+                                total_atp += CYCLES_PER_STDP_UPDATE
             if net != 0:
                 if INCOME_FOOTPRINT:
                     if net > 0:
                         g_clear_count[nxt] += 1
                         if g_clear_count[nxt] >= CLEAR_THRESHOLD:
-                            ram_substrate[nxt] = np.uint8((ram_substrate[nxt] + 1) & 0xFF)  # Phase 4: clear cell
+                            ram_substrate[nxt] = np.uint8(
+                                # Phase 4: clear cell
+                                (ram_substrate[nxt] + 1) & 0xFF)
                             g_clear_count[nxt] = 0
                     if INCOME_RACE:
                         # Session 13: competitive racing reward (ratcheting best_cost).
@@ -2126,17 +2286,20 @@ def world_tick_numba(
                                 for _rqi in range(RACE_N_QUESTIONS):
                                     _pos = np.int32(g_race_state[_rqi, 2])
                                     if pos >= _pos and pos < _pos + RACE_K:
-                                        _rq = np.int32(_rqi); break
+                                        _rq = np.int32(_rqi)
+                                        break
                                 g_race_attempt_q[org] = _rq
                             if g_org_run[org] >= RACE_K:
                                 _rq = g_race_attempt_q[org]
                                 if _rq >= 0:
                                     _ac = g_lump_acc[org] - energy[org]
                                     if _ac <= 0.0:
-                                        _ac = np.float32(RACE_K) * CYCLES_PER_NEURON_UPDATE
+                                        _ac = np.float32(
+                                            RACE_K) * CYCLES_PER_NEURON_UPDATE
                                     _solved = np.int32(g_race_state[_rq, 1])
                                     if _solved == 0:
-                                        gain = _ac; g_race_state[_rq, 0] = _ac
+                                        gain = _ac
+                                        g_race_state[_rq, 0] = _ac
                                         g_race_state[_rq, 1] = np.float32(1.0)
                                     elif _ac < g_race_state[_rq, 0]:
                                         gain = g_race_state[_rq, 0]
@@ -2144,48 +2307,56 @@ def world_tick_numba(
                                     else:
                                         gain = g_race_state[_rq, 0]
                                 else:
-                                    gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
-                                g_org_run[org] = 0; g_race_attempt_q[org] = -1
+                                    gain = np.float32(
+                                        net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                                g_org_run[org] = 0
+                                g_race_attempt_q[org] = -1
                             else:
                                 gain = np.float32(0.0)
                         else:
-                            g_org_run[org] = 0; g_race_attempt_q[org] = -1
-                            gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                            g_org_run[org] = 0
+                            g_race_attempt_q[org] = -1
+                            gain = np.float32(
+                                net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                     elif INCOME_LUMP_SUM:
                         if net > 0:
                             g_org_run[org] += 1
                             if g_org_run[org] >= LUMPSUM_K:
-                                gain = np.float32(LUMPSUM_K) * FOOTPRINT_QUANTUM
+                                gain = np.float32(
+                                    LUMPSUM_K) * FOOTPRINT_QUANTUM
                                 g_org_run[org] = 0
                             else:
                                 gain = np.float32(0.0)
                         else:
                             g_org_run[org] = 0
-                            gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                            gain = np.float32(
+                                net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                     else:
-                        gain = np.float32(net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
+                        gain = np.float32(
+                            net) / BITS_PER_BYTE * FOOTPRINT_QUANTUM
                 else:
                     gain = np.float32(net) / BITS_PER_BYTE * CELL_STATES
                 if DELAY and curriculum_delay >= 2 and not DIGESTION:
                     # Scale reward to offset the metabolic tax of the SCRATCH addressing fabric
                     # (which costs 32 cycles/tick for 32 recall sensors).
                     gain *= np.float32(curriculum_delay * 8.0)
-                
+
                 if DIGESTION:
-                    # GROUNDED DIGESTION (Exp 48, Rule 15 physical conservation): 
-                    # The energy cannot be scaled by a magic multiplier. Instead, the organism extracts 
+                    # GROUNDED DIGESTION (Exp 48, Rule 15 physical conservation):
+                    # The energy cannot be scaled by a magic multiplier. Instead, the organism extracts
                     # the fuel it SWALLOWED DELAY_N ticks ago. If net > 0, it extracts the matching fraction.
                     dn = int(curriculum_delay)
                     swallowed_fuel = np.float32(0.0)
                     if dn < DELAY_BUF:
                         swallowed_fuel = org_stomach_fuel[org, dn]
-                    
+
                     if gain > np.float32(0.0):
                         # Extract the exact physical fuel swallowed
-                        gain = (np.float32(net) / BITS_PER_BYTE) * swallowed_fuel
+                        gain = (np.float32(net) / BITS_PER_BYTE) * \
+                            swallowed_fuel
                     else:
                         gain = np.float32(0.0)
-                
+
                 if DEPLETE and gain > np.float32(0.0) and not DIGESTION:
                     # Bound positive reading income by the target cell's finite fuel reservoir (Exp 24
                     # Wall-1): a cell pays out only what it holds, then that fuel is spent, so income is
@@ -2202,7 +2373,8 @@ def world_tick_numba(
                     # crowded behaviour pays less per capita. Penalty (net<0) is never split.
                     gain = gain / np.float32(1 + niche_same)
                 energy[org] += gain
-                read_gain_tick += gain   # Exp 32: accumulate the tick's reading reward (3rd factor)
+                # Exp 32: accumulate the tick's reading reward (3rd factor)
+                read_gain_tick += gain
                 if (STIGMERGY or CANVAS) and gain > np.float32(0.0):
                     # AUTHORSHIP ROYALTY (Exp 26: SUPER-LINEAR, traffic-scaled). Exp 25 paid a FLAT per-bit
                     # slice (gain/BITS_PER_BYTE ~= 4 vs the ~32 a read earns) — negligible, so authoring was
@@ -2221,7 +2393,8 @@ def world_tick_numba(
                     # authored cell (predictable by copying the eye, Exp-12 zero-information) earns the
                     # builder NOTHING, so trivial scribble cannot farm rent and only must-COMPUTE authored
                     # content pays. Uses two in-kernel bytes, no new state/constant.
-                    surprise_ok = (not CANVAS) or (next_byte != ram_substrate[pos])
+                    surprise_ok = (not CANVAS) or (
+                        next_byte != ram_substrate[pos])
                     owner = cell_owner[nxt]
                     if surprise_ok and owner != -1 and owner != org and alive[owner]:
                         read_hits[nxt] += 1
@@ -2229,7 +2402,8 @@ def world_tick_numba(
                         if slices > BITS_PER_BYTE - 1:
                             slices = BITS_PER_BYTE - 1
                         roy = gain * np.float32(slices) / BITS_PER_BYTE
-                        rfloor = (np.float32(org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
+                        rfloor = (np.float32(
+                            org_n_count[org]) + np.float32(org_s_count[org])) * CELL_STATES
                         surplus = energy[org] - rfloor
                         if roy > surplus:
                             roy = surplus
@@ -2260,9 +2434,10 @@ def world_tick_numba(
                         for _d in range(DELAY_BUF - 1, 0, -1):
                             org_delay_buf[org, _d] = org_delay_buf[org, _d - 1]
                             if DIGESTION:
-                                org_stomach_fuel[org, _d] = org_stomach_fuel[org, _d - 1]
+                                org_stomach_fuel[org,
+                                                 _d] = org_stomach_fuel[org, _d - 1]
                         org_delay_buf[org, 0] = ram_substrate[nxt]
-                        
+
                         if DIGESTION:
                             if DEPLETE:
                                 org_stomach_fuel[org, 0] = read_fuel[nxt]
@@ -2278,8 +2453,10 @@ def world_tick_numba(
                     read_log[0] = idx + 3
                 if CAM:
                     b0 = np.int64(ram_substrate[pos])
-                    b1 = np.int64(ram_substrate[pos-1]) if pos > 0 else np.int64(0)
-                    b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
+                    b1 = np.int64(
+                        ram_substrate[pos-1]) if pos > 0 else np.int64(0)
+                    b2 = np.int64(
+                        ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                     cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
                               org, b0, b1, b2, np.int64(next_byte),
                               global_time, p_cam_slots, p_cam_key_bits)
@@ -2295,11 +2472,15 @@ def world_tick_numba(
         if best_n > 0 and best_a >= 0:
             if (not grazed) and best_a in (OUT_JMP_FWD, OUT_JMP_BCK, OUT_JMP_FWD_10, OUT_JMP_BCK_10):
                 npos = pos
-                if best_a == OUT_JMP_FWD: npos = min(pos + 1, len(ram_substrate) - 1)
-                elif best_a == OUT_JMP_BCK: npos = max(pos - 1, 0)
-                elif best_a == OUT_JMP_FWD_10: npos = min(pos + LONG_JUMP_STRIDE, len(ram_substrate) - 1)
-                elif best_a == OUT_JMP_BCK_10: npos = max(pos - LONG_JUMP_STRIDE, 0)
-                
+                if best_a == OUT_JMP_FWD:
+                    npos = min(pos + 1, len(ram_substrate) - 1)
+                elif best_a == OUT_JMP_BCK:
+                    npos = max(pos - 1, 0)
+                elif best_a == OUT_JMP_FWD_10:
+                    npos = min(pos + LONG_JUMP_STRIDE, len(ram_substrate) - 1)
+                elif best_a == OUT_JMP_BCK_10:
+                    npos = max(pos - LONG_JUMP_STRIDE, 0)
+
                 energy[org] -= CYCLES_PER_MOVE
                 if org_grid[npos] == -1:
                     # PREDICTION reward (problem-solving, Rules 6/9). The organism vocalized
@@ -2319,7 +2500,8 @@ def world_tick_numba(
                             pv = np.int64(pval)
                             b0 = (pv >> REMAP_SB0) & np.int64(1)
                             b1 = (pv >> REMAP_SB1) & np.int64(1)
-                            pv = pv & ~((np.int64(1) << REMAP_SB0) | (np.int64(1) << REMAP_SB1))
+                            pv = pv & ~((np.int64(1) << REMAP_SB0)
+                                        | (np.int64(1) << REMAP_SB1))
                             pv = pv | (b1 << REMAP_SB0) | (b0 << REMAP_SB1)
                             ptgt = pv & np.int64(0xFF)
                         pc = 0
@@ -2340,7 +2522,8 @@ def world_tick_numba(
                                     org_elig[org, b] = np.float32(0.0)
                         pnet = pc - pw
                         if pnet != 0:
-                            pgain = np.float32(pnet) / BITS_PER_BYTE * CELL_STATES
+                            pgain = np.float32(pnet) / \
+                                BITS_PER_BYTE * CELL_STATES
                             if DEPLETE and pgain > np.float32(0.0):
                                 # Same fuel bound on the jump-predict payout; read_fuel indexes the
                                 # predicted cell npos.
@@ -2349,9 +2532,11 @@ def world_tick_numba(
                                     pgain = pavail
                                 read_fuel[npos] -= pgain
                             if NICHE_ECON and pgain > np.float32(0.0) and niche_same > 0:
-                                pgain = pgain / np.float32(1 + niche_same)   # niche split (Exp 39)
+                                # niche split (Exp 39)
+                                pgain = pgain / np.float32(1 + niche_same)
                             energy[org] += pgain
-                            read_gain_tick += pgain   # Exp 32: jump-predict reward (3rd factor)
+                            # Exp 32: jump-predict reward (3rd factor)
+                            read_gain_tick += pgain
                         if org_char_val == ptgt:
                             idx = read_log[0]
                             if idx < 996:
@@ -2361,8 +2546,10 @@ def world_tick_numba(
                                 read_log[0] = idx + 3
                             if CAM:
                                 b0 = np.int64(ram_substrate[pos])
-                                b1 = np.int64(ram_substrate[pos-1]) if pos > 0 else np.int64(0)
-                                b2 = np.int64(ram_substrate[pos-2]) if pos > 1 else np.int64(0)
+                                b1 = np.int64(
+                                    ram_substrate[pos-1]) if pos > 0 else np.int64(0)
+                                b2 = np.int64(
+                                    ram_substrate[pos-2]) if pos > 1 else np.int64(0)
                                 cam_write(g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
                                           org, b0, b1, b2, np.int64(pval),
                                           global_time, p_cam_slots, p_cam_key_bits)
@@ -2420,10 +2607,12 @@ def world_tick_numba(
                         ram_substrate[pos] = np.uint8(org_char_val)
                         was_mine = cell_owner[pos] == org
                         cell_owner[pos] = org
-                        read_fuel[pos] = CELL_STATES   # authored/refreshed cell starts fully fuelled
+                        # authored/refreshed cell starts fully fuelled
+                        read_fuel[pos] = CELL_STATES
                         if not was_mine:
-                            read_hits[pos] = 0         # fresh territory: traffic counter resets (a
-                                                       # refresh of one's OWN cell KEEPS its earned traffic)
+                            # fresh territory: traffic counter resets (a
+                            read_hits[pos] = 0
+                            # refresh of one's OWN cell KEEPS its earned traffic)
                         energy[org] -= CELL_STATES
 
             elif best_a == OUT_REPRODUCE:
@@ -2448,10 +2637,10 @@ def world_tick_numba(
                     energy[org] -= copy_cost
                     child_energy = energy[org] / 2.0
                     energy[org] -= child_energy
-                    b_pos[n_births]    = pos
+                    b_pos[n_births] = pos
                     b_parent[n_births] = org
                     b_energy[n_births] = child_energy
-                    
+
                     g_start = org_g_ptr[org]
                     b_g_start[n_births] = g_start
                     b_g_count[n_births] = g_count
@@ -2476,13 +2665,19 @@ def world_tick_numba(
                                 dst = b_genomes[n_births, xi + 2]
                                 if (dst % n_c_org) >= N_INPUT:
                                     if s_local < s_cap:
-                                        dna_w = np.float32(b_genomes[n_births, xi + 3])
-                                        learned_w = global_conn_weight[s_ptr_org + s_local] + np.float32(128.0)
-                                        blend = np.float32(0.5) * dna_w + np.float32(0.5) * learned_w
+                                        dna_w = np.float32(
+                                            b_genomes[n_births, xi + 3])
+                                        learned_w = global_conn_weight[s_ptr_org + s_local] + np.float32(
+                                            128.0)
+                                        blend = np.float32(
+                                            0.5) * dna_w + np.float32(0.5) * learned_w
                                         iw = int(blend + np.float32(0.5))
-                                        if iw < 0: iw = 0
-                                        elif iw > 255: iw = 255
-                                        b_genomes[n_births, xi + 3] = np.uint8(iw)
+                                        if iw < 0:
+                                            iw = 0
+                                        elif iw > 255:
+                                            iw = 255
+                                        b_genomes[n_births, xi +
+                                                  3] = np.uint8(iw)
                                     s_local += 1
                             xi += 4
                         elif m == NEURON_MARKER and xi + 4 < g_count:
@@ -2526,7 +2721,7 @@ def world_tick_numba(
                 energy[org] -= copy_cost
                 child_energy = energy[org] / np.float32(2.0)
                 energy[org] -= child_energy
-                b_pos[n_births]    = pos
+                b_pos[n_births] = pos
                 b_parent[n_births] = org
                 b_energy[n_births] = child_energy
                 g_start = org_g_ptr[org]
@@ -2539,7 +2734,8 @@ def world_tick_numba(
         if energy[org] <= np.float32(0.0):
             alive[org] = False
             org_grid[positions[org]] = -1
-            g_org_run[org] = 0   # Session 9: death clears the in-progress work-unit run
+            # Session 9: death clears the in-progress work-unit run
+            g_org_run[org] = 0
             free_block(org_n_ptr[org], org_n_count[org], neuron_map)
             free_block(org_s_ptr[org], org_s_count[org], synapse_map)
             free_block(org_g_ptr[org], org_g_count[org], genome_map)
