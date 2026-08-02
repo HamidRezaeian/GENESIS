@@ -96,11 +96,15 @@ another economy lever. This is the escape hatch the loop never had.
 >   advantage at mechanism resolution, the kill criterion is **fully executed**: the substrate is
 >   falsified as an AGI substrate and the project must pivot substrate hypotheses.
 >
-> **Exp 99 IMPLEMENTED** (2026-08-02, pre-registration + mechanism, fresh seeds 72–95 NOT YET RUN).
-> Flag `GENESIS_STDP_TWO_TIMESCALE` (default-OFF) with compile-fp transparency; signature change
-> `g_conn_w_slow` threaded through all engine kernel and 40 call sites; default-path regression
-> guard proves flag-OFF is byte-identical to the committed TF1 artifacts at resolution. **Findings
-> pending the seed-72..95 run — do NOT cite as measured outcome.**
+> **Exp 99 EXECUTED** (2026-08-02, 24 fresh seeds 72–95, 8000 ticks/arm). `GENESIS_STDP_TWO_TIMESCALE`
+> (default-OFF) passed compile-fp transparency; `g_conn_w_slow` threaded through all engine kernel and
+> 40 call sites; default-path regression guard proves flag-OFF byte-identical to committed TF1 artifacts.
+> Measured gate FAIL: mean static fidelity 92.34 < 95.0. Primary first positive signal: twoscale−nolearn
+> swap accuracy +5.34, paired permutation p=0.0015, but binding certification remains false because the
+> gate failed. Full results: `experiments/exp99_twoscale_results.json`; `Docs/Result.md` Exp 99 record.
+> **Rule-18 kill criterion FULLY EXECUTED: SNN-on-RAM substrate hypothesis formally falsified; pivot
+> substrate hypotheses. Exp 99's two-timescale learning signal is a design requirement for the next
+> substrate, not a rescue of this one.**
 >
 > This entry is the formal Rule-18 record. It does not end the project; it binds what happens next.
 

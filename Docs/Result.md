@@ -4519,3 +4519,26 @@ weights certified on swap-era delta + slow consolidating weights that must hold 
 static band ≥95 as a *certification gate*, not a subsequent statistic). Its pre-registration
 must also inherit the day's instrumentation lesson: any new env-flagged mechanism lands in
 fingerprint tuple + map + smoke-divergence proof BEFORE its first measured row.
+
+---
+
+## 🧪 Experiment 99 — PRE-REGISTERED EXECUTED: two-timescale consolidation (LAST substrate-hypothesis mechanism) (2026-08-02)
+
+Pre-registered `experiments/exp99_twoscale_consolidation.py` (2026-08-02, BEFORE any seed-72..95 datum), committed `eb9344c`. This was the LAST mechanistic attempt under the triggered Rule-18 kill criterion (Ascent.md 2026-08-01): if it falsifies, the SNN-on-RAM substrate hypothesis is falsified and Rule 18 executes the substrate pivot — no further mechanism levers.
+
+Mechanism implemented behind `GENESIS_STDP_TWO_TIMESCALE` (default-OFF): a slow consolidation weight `g_conn_w_slow` (threaded `world_tick_numba` arg; kernel-WRITTEN state cannot be a module global — numba reads globals read-only) initialized at `decode_genome` to the DNA birth weight. When the flag is ON: (1) the STDP homeostasis anchor retargets from the static `g_conn_w_dna` to the learned `g_conn_w_slow`; (2) at each REMAP-era boundary `(global_time % REMAP_PERIOD) < n_steps` the slow anchor integrates `w_slow += (w - w_slow) / BITS_PER_BYTE` (BITS_PER_BYTE=8 is a hardware fact of the 8-bit substrate, Rule 17 — rate DERIVED not tuned); (3) consolidation charged `CYCLES_PER_STDP_UPDATE` per consolidated synapse (Rule 21 honest accounting). Flag OFF = byte-identical default path, regression-guarded.
+
+Arms (24 seeds, 72..95, 8000 ticks, pinned geometry 512 orgs / 2 MiB RAM, fresh kernels — `EXP92_TF1_REUSE_CACHE=0`, no `NUMBA_CACHE_DIR` inheritance): `twoscale` (flag ON), `vanilla` (flag OFF namespace-isolated), `nolearn` (STDP3 ablation). Instrument rev `2026-08-02+twoscale`.
+
+**VERIFICATION (before any measured row):** compile_fingerprint 5/5 PASS (60 reads mapped, 0 uncovered); default-path regression PASS — flag-OFF byte-identical to the committed TF1 artifacts (tf1_nolearn, tf1_stdp3c, 3 windows each, float equality); smoke_test PASS; smoke-divergence proof (scratch): flag-OFF/OFF byte-identical, flag-ON diverges from flag-OFF on the weight hash at/after the era boundary (mechanism genuinely wired, not DCE'd).
+
+**RESULTS (24 seeds, complete):**
+- **GATE (certification, no α spent — pre-registered bar 95.0):** `twoscale` mean `unch_mix` = **92.34** vs bar 95.0 → **FAIL**. Static fidelity is NOT restored; slow-weight consolidation alone does not hold the static band ≥95.
+- **PRIMARY (twoscale − nolearn on swap-era accuracy, α=0.05, paired permutation 100k draws):** mean_delta = **+5.34**, median +4.84, **p = 0.0015**, n=24. This is the **first statistically significant, positive re-tracking advantage over the matched NOLEARN ablation in the entire learning-first programme** — the two-timescale anchor is the first mechanism to produce a real in-lifetime learning signal on this task. But CONFIRMED=false because the gate (the binding admission control) failed.
+- Per-seed deltas are high-variance (range −8.08 to +20.63): the signal is real but not stable across seeds; consolidation helps strongly on some runs and hurts on others — consistent with a substrate that can express but cannot reliably stabilize the capability.
+
+**VERDICT (binding, pre-registered): NOT CERTIFIED — CLOSED_AT_GATE.** The two-timescale mechanism is not inert: it produces the first confirmable re-tracking signal (p=0.0015), and the engineered slow-anchor consolidation works as designed (arm weight-trajectories diverge from tick 500, gate-DCE'd default path untouched). But that signal does NOT come with static-memory stability: the mean static fidelity 92.34 still sits below the 95.0 certification bar, and per-seed variance is high. Per the pre-registered clause, a gate FAIL closes the mechanism regardless of the primary statistic.
+
+**Binding interpretation (Rule 18):** the full mechanism-resolution programme is now exhausted: tuning the knobs (Exp 97), gating *when* plasticity fires (Exp 98), and changing *where* plasticity persists / the memory substrate (Exp 99) have each been pre-registered and each failed at the binding admission control. The first confirmable learning signal appeared only at the last step — but it appeared without the stability the certification gate demands. No further mechanism levers may be added to the SNN-on-RAM substrate in search of criterion B. **The Rule-18 kill criterion is fully executed: the SNN-on-RAM substrate hypothesis is formally falsified as an AGI substrate.** The project must pivot substrate hypotheses, carrying the Exp-99 signal (a two-timescale memory hierarchy produced the first learning advantage) as a design requirement for the next substrate, not as a rescue of this one.
+
+Artifacts: `experiments/exp99_twoscale_results.json`, 72 raw per-seed-per-arm JSONs in `experiments/leaderboard/raw/` (`tf1_stdp3c_learner_exp99_{twoscale,vanilla}_remap1_s{72..95}.json`, `tf1_nolearn_ablation_exp99_nolearn_remap1_s{72..95}.json`). Git commit <pending>.

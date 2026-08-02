@@ -1,0 +1,606 @@
+{
+ "experiment": "Exp 99 \u2014 CONFIRMATORY two-timescale consolidation vs NOLEARN ablation",
+ "date_utc": "2026-08-02T08:44:02Z",
+ "git_commit": "eb9344c",
+ "instrument": "tests/remap_sandbox_probe.py @ 2026-08-02+twoscale",
+ "seeds": [
+  72,
+  73,
+  74,
+  75,
+  76,
+  77,
+  78,
+  79,
+  80,
+  81,
+  82,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+  95
+ ],
+ "reuse_cache": false,
+ "gate": {
+  "kind": "certification_threshold_no_alpha",
+  "bar": 95.0,
+  "twoscale_mean_unch_mix": 92.33916519457097,
+  "PASS": false
+ },
+ "primary": {
+  "comparison": "twoscale - nolearn on swap-era accuracy (swap_mix)",
+  "alpha_two_sided": 0.05,
+  "n_pairs": 24,
+  "mean_delta": 5.34367482286774,
+  "median_delta": 4.836349534436351,
+  "per_seed_deltas": [
+   5.295646523716705,
+   2.212885154061624,
+   -3.703296703296701,
+   9.272689598010771,
+   -3.0098899048329883,
+   14.650776053215075,
+   0.8721833721833718,
+   -1.6915900672245883,
+   9.284385707293197,
+   3.0225839177804232,
+   20.63431023316062,
+   5.458333333333336,
+   9.693524939825082,
+   -0.5974607916355481,
+   11.598302687411604,
+   1.9046396165040207,
+   3.1207598371777507,
+   20.32258064516129,
+   -8.081992337164749,
+   11.04434314131786,
+   -4.40343208677352,
+   9.822017139090306,
+   7.148843195354829,
+   4.377052545155998
+  ],
+  "p_two_sided": 0.0014999850001499984,
+  "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+  "gate_G2b_swap_measured": true,
+  "CONFIRMED": false
+ },
+ "verdict": "CLOSED_AT_GATE",
+ "secondaries_recorded_only_no_alpha": {
+  "S1_twoscale_minus_vanilla_swap": {
+   "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
+   "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
+   "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
+   "n_pairs": 24,
+   "per_seed_deltas": [
+    0.0,
+    -1.284606866002214,
+    -6.487577639751549,
+    -7.159026598754949,
+    -0.6185855570069023,
+    0.0,
+    -3.8980463980463966,
+    0.0,
+    0.0,
+    0.0,
+    10.726247387856752,
+    0.0,
+    4.596933894043573,
+    4.614077669902912,
+    -10.956690368455078,
+    8.115070300999946,
+    0.0,
+    0.0,
+    -17.26770428015564,
+    0.0,
+    0.0,
+    9.891022314478455,
+    -0.1102058188672359,
+    3.552927927927932
+   ],
+   "mean_delta": -0.26192350132626646,
+   "median_delta": 0.0,
+   "min_delta": -17.26770428015564,
+   "max_delta": 10.726247387856752,
+   "p_two_sided": 0.8416815831841682,
+   "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+   "min_attainable_p": null
+  },
+  "S2_twoscale_minus_vanilla_unch": {
+   "test": "paired sign-flip permutation on seed-matched deltas (learner - ablation)",
+   "null_hypothesis": "within a seed pair the arm labels are exchangeable (no learning effect)",
+   "tail": "two-sided (sign of the effect NOT pre-assumed; Rule 16)",
+   "n_pairs": 24,
+   "per_seed_deltas": [
+    0.0,
+    0.03448342014138461,
+    0.0,
+    0.025557404639670267,
+    1.155055305227691,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -1.345046269332812,
+    0.0,
+    0.008847963038036255,
+    -1.0892594807284866,
+    0.48071352815878754,
+    -1.8022348627913374,
+    0.0,
+    0.0,
+    0.22855270209159073,
+    0.0,
+    0.0,
+    -0.9130084325396837,
+    -0.2788001472212045,
+    0.09019617937134683
+   ],
+   "mean_delta": -0.14187261208104238,
+   "median_delta": 0.0,
+   "min_delta": -1.8022348627913374,
+   "max_delta": 1.155055305227691,
+   "p_two_sided": 0.27604723952760474,
+   "method": "monte-carlo 100000 sign draws, rng pinned at seed 0",
+   "min_attainable_p": null
+  },
+  "static_fidelity_mean_unch_mix": {
+   "twoscale": 92.33916519457097,
+   "vanilla": 92.48103780665201,
+   "nolearn": 93.68140733911514
+  },
+  "fidelity_gate": {
+   "bar": 95.0,
+   "twoscale_mean_unch_mix": 92.33916519457097,
+   "PASS": false
+  }
+ },
+ "per_arm_per_seed_metrics": {
+  "twoscale|seed72": {
+   "swap_mix": 56.17283950617284,
+   "unch_mix": 93.57575757575758,
+   "swap_n": 324,
+   "unch_n": 3300
+  },
+  "twoscale|seed73": {
+   "swap_mix": 51.42857142857143,
+   "unch_mix": 96.35593220338983,
+   "swap_n": 490,
+   "unch_n": 3540
+  },
+  "twoscale|seed74": {
+   "swap_mix": 45.142857142857146,
+   "unch_mix": 91.98427102238354,
+   "swap_n": 350,
+   "unch_n": 3306
+  },
+  "twoscale|seed75": {
+   "swap_mix": 57.89473684210526,
+   "unch_mix": 90.1443816698054,
+   "swap_n": 342,
+   "unch_n": 3186
+  },
+  "twoscale|seed76": {
+   "swap_mix": 47.42489270386266,
+   "unch_mix": 96.33507853403141,
+   "swap_n": 466,
+   "unch_n": 3438
+  },
+  "twoscale|seed77": {
+   "swap_mix": 49.77272727272727,
+   "unch_mix": 91.13663133097762,
+   "swap_n": 440,
+   "unch_n": 3396
+  },
+  "twoscale|seed78": {
+   "swap_mix": 45.27777777777778,
+   "unch_mix": 88.8996138996139,
+   "swap_n": 360,
+   "unch_n": 3108
+  },
+  "twoscale|seed79": {
+   "swap_mix": 59.729729729729726,
+   "unch_mix": 91.50641025641026,
+   "swap_n": 370,
+   "unch_n": 3120
+  },
+  "twoscale|seed80": {
+   "swap_mix": 55.50660792951542,
+   "unch_mix": 92.60233918128655,
+   "swap_n": 454,
+   "unch_n": 3420
+  },
+  "twoscale|seed81": {
+   "swap_mix": 49.74747474747475,
+   "unch_mix": 90.29126213592232,
+   "swap_n": 396,
+   "unch_n": 3090
+  },
+  "twoscale|seed82": {
+   "swap_mix": 63.21243523316062,
+   "unch_mix": 89.18300653594771,
+   "swap_n": 386,
+   "unch_n": 3060
+  },
+  "twoscale|seed83": {
+   "swap_mix": 61.458333333333336,
+   "unch_mix": 90.89219330855019,
+   "swap_n": 384,
+   "unch_n": 3228
+  },
+  "twoscale|seed84": {
+   "swap_mix": 65.02347417840376,
+   "unch_mix": 95.07168458781362,
+   "swap_n": 426,
+   "unch_n": 3348
+  },
+  "twoscale|seed85": {
+   "swap_mix": 62.86407766990291,
+   "unch_mix": 88.4418901660281,
+   "swap_n": 412,
+   "unch_n": 3132
+  },
+  "twoscale|seed86": {
+   "swap_mix": 57.142857142857146,
+   "unch_mix": 93.76520681265207,
+   "swap_n": 420,
+   "unch_n": 3288
+  },
+  "twoscale|seed87": {
+   "swap_mix": 64.8989898989899,
+   "unch_mix": 88.03997421018697,
+   "swap_n": 396,
+   "unch_n": 3102
+  },
+  "twoscale|seed88": {
+   "swap_mix": 59.09090909090909,
+   "unch_mix": 92.81230382925298,
+   "swap_n": 286,
+   "unch_n": 3186
+  },
+  "twoscale|seed89": {
+   "swap_mix": 61.75115207373272,
+   "unch_mix": 92.98401420959148,
+   "swap_n": 434,
+   "unch_n": 3378
+  },
+  "twoscale|seed90": {
+   "swap_mix": 44.6,
+   "unch_mix": 94.68267581475129,
+   "swap_n": 500,
+   "unch_n": 3498
+  },
+  "twoscale|seed91": {
+   "swap_mix": 57.89473684210526,
+   "unch_mix": 92.6969696969697,
+   "swap_n": 304,
+   "unch_n": 3300
+  },
+  "twoscale|seed92": {
+   "swap_mix": 59.389671361502344,
+   "unch_mix": 95.59633027522936,
+   "swap_n": 426,
+   "unch_n": 3270
+  },
+  "twoscale|seed93": {
+   "swap_mix": 64.14634146341463,
+   "unch_mix": 89.48412698412699,
+   "swap_n": 410,
+   "unch_n": 3024
+  },
+  "twoscale|seed94": {
+   "swap_mix": 55.5984555984556,
+   "unch_mix": 95.26315789473684,
+   "swap_n": 518,
+   "unch_n": 3420
+  },
+  "twoscale|seed95": {
+   "swap_mix": 48.958333333333336,
+   "unch_mix": 94.39475253428742,
+   "swap_n": 384,
+   "unch_n": 3354
+  },
+  "vanilla|seed72": {
+   "swap_mix": 56.17283950617284,
+   "unch_mix": 93.57575757575758,
+   "swap_n": 324,
+   "unch_n": 3300
+  },
+  "vanilla|seed73": {
+   "swap_mix": 52.713178294573645,
+   "unch_mix": 96.32144878324844,
+   "swap_n": 516,
+   "unch_n": 3534
+  },
+  "vanilla|seed74": {
+   "swap_mix": 51.630434782608695,
+   "unch_mix": 91.98427102238354,
+   "swap_n": 368,
+   "unch_n": 3306
+  },
+  "vanilla|seed75": {
+   "swap_mix": 65.05376344086021,
+   "unch_mix": 90.11882426516573,
+   "swap_n": 372,
+   "unch_n": 3198
+  },
+  "vanilla|seed76": {
+   "swap_mix": 48.04347826086956,
+   "unch_mix": 95.18002322880372,
+   "swap_n": 460,
+   "unch_n": 3444
+  },
+  "vanilla|seed77": {
+   "swap_mix": 49.77272727272727,
+   "unch_mix": 91.13663133097762,
+   "swap_n": 440,
+   "unch_n": 3396
+  },
+  "vanilla|seed78": {
+   "swap_mix": 49.175824175824175,
+   "unch_mix": 88.8996138996139,
+   "swap_n": 364,
+   "unch_n": 3108
+  },
+  "vanilla|seed79": {
+   "swap_mix": 59.729729729729726,
+   "unch_mix": 91.50641025641026,
+   "swap_n": 370,
+   "unch_n": 3120
+  },
+  "vanilla|seed80": {
+   "swap_mix": 55.50660792951542,
+   "unch_mix": 92.60233918128655,
+   "swap_n": 454,
+   "unch_n": 3420
+  },
+  "vanilla|seed81": {
+   "swap_mix": 49.74747474747475,
+   "unch_mix": 90.29126213592232,
+   "swap_n": 396,
+   "unch_n": 3090
+  },
+  "vanilla|seed82": {
+   "swap_mix": 52.48618784530387,
+   "unch_mix": 90.52805280528052,
+   "swap_n": 362,
+   "unch_n": 3030
+  },
+  "vanilla|seed83": {
+   "swap_mix": 61.458333333333336,
+   "unch_mix": 90.89219330855019,
+   "swap_n": 384,
+   "unch_n": 3228
+  },
+  "vanilla|seed84": {
+   "swap_mix": 60.426540284360186,
+   "unch_mix": 95.06283662477558,
+   "swap_n": 422,
+   "unch_n": 3342
+  },
+  "vanilla|seed85": {
+   "swap_mix": 58.25,
+   "unch_mix": 89.53114964675659,
+   "swap_n": 400,
+   "unch_n": 3114
+  },
+  "vanilla|seed86": {
+   "swap_mix": 68.09954751131222,
+   "unch_mix": 93.28449328449328,
+   "swap_n": 442,
+   "unch_n": 3276
+  },
+  "vanilla|seed87": {
+   "swap_mix": 56.78391959798995,
+   "unch_mix": 89.8422090729783,
+   "swap_n": 398,
+   "unch_n": 3042
+  },
+  "vanilla|seed88": {
+   "swap_mix": 59.09090909090909,
+   "unch_mix": 92.81230382925298,
+   "swap_n": 286,
+   "unch_n": 3186
+  },
+  "vanilla|seed89": {
+   "swap_mix": 61.75115207373272,
+   "unch_mix": 92.98401420959148,
+   "swap_n": 434,
+   "unch_n": 3378
+  },
+  "vanilla|seed90": {
+   "swap_mix": 61.86770428015564,
+   "unch_mix": 94.4541231126597,
+   "swap_n": 514,
+   "unch_n": 3444
+  },
+  "vanilla|seed91": {
+   "swap_mix": 57.89473684210526,
+   "unch_mix": 92.6969696969697,
+   "swap_n": 304,
+   "unch_n": 3300
+  },
+  "vanilla|seed92": {
+   "swap_mix": 59.389671361502344,
+   "unch_mix": 95.59633027522936,
+   "swap_n": 426,
+   "unch_n": 3270
+  },
+  "vanilla|seed93": {
+   "swap_mix": 54.255319148936174,
+   "unch_mix": 90.39713541666667,
+   "swap_n": 376,
+   "unch_n": 3072
+  },
+  "vanilla|seed94": {
+   "swap_mix": 55.70866141732284,
+   "unch_mix": 95.54195804195804,
+   "swap_n": 508,
+   "unch_n": 3432
+  },
+  "vanilla|seed95": {
+   "swap_mix": 45.4054054054054,
+   "unch_mix": 94.30455635491607,
+   "swap_n": 370,
+   "unch_n": 3336
+  },
+  "nolearn|seed72": {
+   "swap_mix": 50.87719298245614,
+   "unch_mix": 92.7960927960928,
+   "swap_n": 342,
+   "unch_n": 3276
+  },
+  "nolearn|seed73": {
+   "swap_mix": 49.21568627450981,
+   "unch_mix": 95.66608493310063,
+   "swap_n": 510,
+   "unch_n": 3438
+  },
+  "nolearn|seed74": {
+   "swap_mix": 48.84615384615385,
+   "unch_mix": 93.42481417953115,
+   "swap_n": 520,
+   "unch_n": 3498
+  },
+  "nolearn|seed75": {
+   "swap_mix": 48.62204724409449,
+   "unch_mix": 94.91379310344827,
+   "swap_n": 508,
+   "unch_n": 3480
+  },
+  "nolearn|seed76": {
+   "swap_mix": 50.43478260869565,
+   "unch_mix": 95.31435349940688,
+   "swap_n": 460,
+   "unch_n": 3372
+  },
+  "nolearn|seed77": {
+   "swap_mix": 35.1219512195122,
+   "unch_mix": 92.75618374558304,
+   "swap_n": 410,
+   "unch_n": 3396
+  },
+  "nolearn|seed78": {
+   "swap_mix": 44.40559440559441,
+   "unch_mix": 92.58258258258259,
+   "swap_n": 286,
+   "unch_n": 3330
+  },
+  "nolearn|seed79": {
+   "swap_mix": 61.421319796954315,
+   "unch_mix": 91.87301587301587,
+   "swap_n": 394,
+   "unch_n": 3150
+  },
+  "nolearn|seed80": {
+   "swap_mix": 46.22222222222222,
+   "unch_mix": 92.05495818399044,
+   "swap_n": 450,
+   "unch_n": 3348
+  },
+  "nolearn|seed81": {
+   "swap_mix": 46.724890829694324,
+   "unch_mix": 91.1783238815375,
+   "swap_n": 458,
+   "unch_n": 3174
+  },
+  "nolearn|seed82": {
+   "swap_mix": 42.578125,
+   "unch_mix": 93.1320307874482,
+   "swap_n": 256,
+   "unch_n": 3378
+  },
+  "nolearn|seed83": {
+   "swap_mix": 56.0,
+   "unch_mix": 92.84859365649312,
+   "swap_n": 250,
+   "unch_n": 3342
+  },
+  "nolearn|seed84": {
+   "swap_mix": 55.32994923857868,
+   "unch_mix": 95.58558558558559,
+   "swap_n": 394,
+   "unch_n": 3330
+  },
+  "nolearn|seed85": {
+   "swap_mix": 63.46153846153846,
+   "unch_mix": 94.63226571767497,
+   "swap_n": 260,
+   "unch_n": 3372
+  },
+  "nolearn|seed86": {
+   "swap_mix": 45.54455445544554,
+   "unch_mix": 95.05952380952381,
+   "swap_n": 404,
+   "unch_n": 3360
+  },
+  "nolearn|seed87": {
+   "swap_mix": 62.994350282485875,
+   "unch_mix": 89.07407407407408,
+   "swap_n": 354,
+   "unch_n": 3240
+  },
+  "nolearn|seed88": {
+   "swap_mix": 55.97014925373134,
+   "unch_mix": 93.48230912476723,
+   "swap_n": 268,
+   "unch_n": 3222
+  },
+  "nolearn|seed89": {
+   "swap_mix": 41.42857142857143,
+   "unch_mix": 93.4052757793765,
+   "swap_n": 420,
+   "unch_n": 3336
+  },
+  "nolearn|seed90": {
+   "swap_mix": 52.68199233716475,
+   "unch_mix": 94.97991967871486,
+   "swap_n": 522,
+   "unch_n": 3486
+  },
+  "nolearn|seed91": {
+   "swap_mix": 46.8503937007874,
+   "unch_mix": 95.22522522522523,
+   "swap_n": 254,
+   "unch_n": 3330
+  },
+  "nolearn|seed92": {
+   "swap_mix": 63.793103448275865,
+   "unch_mix": 94.54600853138331,
+   "swap_n": 406,
+   "unch_n": 3282
+  },
+  "nolearn|seed93": {
+   "swap_mix": 54.32432432432432,
+   "unch_mix": 92.11026615969581,
+   "swap_n": 370,
+   "unch_n": 3156
+  },
+  "nolearn|seed94": {
+   "swap_mix": 48.44961240310077,
+   "unch_mix": 95.36384976525821,
+   "swap_n": 516,
+   "unch_n": 3408
+  },
+  "nolearn|seed95": {
+   "swap_mix": 44.58128078817734,
+   "unch_mix": 96.34864546525324,
+   "swap_n": 406,
+   "unch_n": 3396
+  }
+ },
+ "gates": {
+  "completeness_all_runs_ok": true
+ },
+ "wall_seconds": 702.9,
+ "energy_basis": "cycles MEASURED natively per Rule 21.1 (Docs/Architecture/ENERGY_ACCOUNTING.md)"
+}
