@@ -7,6 +7,7 @@ for n in ['00', '01', '02', '03', '04']:
         continue
     try:
         d = json.loads(p.read_text(encoding='utf-8'))
-        print('chunk ' + n + ': ' + str(len(d.get('nodes', []))) + ' nodes, ' + str(len(d.get('edges', []))) + ' edges, ' + str(len(d.get('hyperedges', []))) + ' hyperedges')
+        print('chunk ' + n + ': ' + str(len(d.get('nodes', []))) + ' nodes, ' +
+              str(len(d.get('edges', []))) + ' edges, ' + str(len(d.get('hyperedges', []))) + ' hyperedges')
     except Exception as e:
         print('chunk ' + n + ': INVALID JSON - ' + str(e))
