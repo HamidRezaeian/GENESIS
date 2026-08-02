@@ -85,7 +85,7 @@ KERNEL_STATE_VARS = (
     "DEPLETE", "STIGMERGY", "STIG_PERSIST", "STIG_LEASE", "CANVAS",
     # plasticity & homeostasis
     "NOLEARN", "STDP_COSTONLY", "STDP_DIV", "HOMEOSTATIC_LAMBDA",
-    "STDP3", "STDP3C", "STDP_SURPRISE_GATE", "STDP_TARGET", "MULTISCALE",
+    "STDP3", "STDP3C", "STDP_SURPRISE_GATE", "STDP_TWO_TIMESCALE", "STDP_TARGET", "MULTISCALE",
     # tasks / probes baked into reward
     "REMAP", "REMAP_PERIOD", "REMAP_STATES", "REMAP_SB0", "REMAP_SB1",
     "DELAY", "DELAY_N", "DIGESTION", "SCRATCH", "DELAY_BUF",
@@ -186,6 +186,7 @@ def _mirror_values_from_env():
         "STDP3": flag("GENESIS_STDP3", "0"),
         "STDP3C": flag("GENESIS_STDP3C", "0"),
         "STDP_SURPRISE_GATE": flag("GENESIS_STDP_SURPRISE_GATE", "0"),
+        "STDP_TWO_TIMESCALE": flag("GENESIS_STDP_TWO_TIMESCALE", "0"),
         "STDP_TARGET": flag("GENESIS_STDP_TARGET", "0"),
         "MULTISCALE": flag("GENESIS_MULTISCALE", "0"),
         "REMAP": flag("GENESIS_REMAP", "0"),
@@ -272,7 +273,8 @@ def verify_module_end(engine_globals, predicted_fp12):
 def engine_env_reads(engine_path):
     """AST-scan an engine source file for all GENESIS_* env reads (get/setdefault/[...])."""
     names = set()
-    tree = ast.parse(open(engine_path).read())
+    with open(engine_path, encoding="utf-8") as f:
+        tree = ast.parse(f.read())
     for node in ast.walk(tree):
         if isinstance(node, ast.Subscript):
             tgt = node.value
@@ -317,6 +319,7 @@ ENV_NAME_MAP = {
     "GENESIS_STDP3": "STDP3",
     "GENESIS_STDP3C": "STDP3C",
     "GENESIS_STDP_SURPRISE_GATE": "STDP_SURPRISE_GATE",
+    "GENESIS_STDP_TWO_TIMESCALE": "STDP_TWO_TIMESCALE",
     "GENESIS_MULTISCALE": "MULTISCALE",
     "GENESIS_REMAP": "REMAP",
     "GENESIS_REMAP_PERIOD": "REMAP_PERIOD",

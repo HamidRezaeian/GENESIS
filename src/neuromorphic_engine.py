@@ -295,6 +295,31 @@ STDP3C = os.environ.get("GENESIS_STDP3C", "0") == "1"
 # g_org_params — no kernel-signature change).
 STDP_SURPRISE_GATE = os.environ.get("GENESIS_STDP_SURPRISE_GATE", "0") == "1"
 
+# TWO-TIMESCALE CONSOLIDATION (Exp 99, default-OFF). Diagnosis from the repaired-instrument
+# record (Exp 92b/94b/96/97/98): vanilla STDP3C and surprise-gated STDP3C both use a STATIC
+# DNA birth-weight anchor g_conn_w_dna for homeostatic pull (engine :2193). The anchor never
+# consolidates — every fast-weight change is either kept (churn -> erosion) or pulled back to
+# a birth prior that knows nothing learned in-lifetime. The surprise gate (Exp 98) controls
+# WHEN plasticity fires but not WHERE it persists; the missing advantage is not restored by
+# gating alone (primary +2.22, p=0.219; static bar missed: 93.2 vs NOLEARN 94.0).
+# Mechanism: a slow weight g_conn_w_slow (threaded world_tick_numba arg; kernel-WRITTEN state
+# cannot be a module global — numba reads module globals by reference as read-only) initialized
+# to the DNA birth weight at decode_genome. When the flag is ON:
+#   1) HOMEOSTASIS RETARGETED: the pull w -= p_homeo * (w - anchor) uses anchor =
+#      g_conn_w_slow[s_idx] instead of g_conn_w_dna[s_idx]. (Flag off: byte-identical default
+#      path, regression-guarded by tests/engine_defaultpath_regression_test.py).
+#   2) ERA-BOUNDARY CONSOLIDATION: at each REMAP-era boundary ((global_time % REMAP_PERIOD) <
+#      n_steps, same test as Exp-98 gate baseline at engine :2145), the slow anchor integrates
+#      a quantum of the fast weight's evidence: w_slow += (w - w_slow) / BITS_PER_BYTE.
+#      BITS_PER_BYTE = 8 is a hardware fact of the 8-bit substrate (Rule 17 — no new tuned
+#      constant; the consolidation rate is DERIVED, not searched). One era of consistent
+#      fast-weight evidence moves the slow anchor 1/8 of the way; noise that does not survive
+#      an era never consolidates.
+#   3) ACTIVITY-GATED COST: charged CYCLES_PER_STDP_UPDATE per consolidated synapse (Rule 21
+#      honest accounting: real work happens only at era boundaries and only for live synapses).
+# Compile-time gated -> default kernel byte-identical.
+STDP_TWO_TIMESCALE = os.environ.get("GENESIS_STDP_TWO_TIMESCALE", "0") == "1"
+
 # MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
 MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 
@@ -950,6 +975,7 @@ def decode_genome(
     o_rec_v_rest, o_rec_tau_def, org_id,
     global_sense_type, global_sense_meta, global_act_drive,
     g_conn_w_dna,  # (N_SYN,) float32: DNA birth weight
+    g_conn_w_slow,  # (N_SYN,) float32: slow consolidation weight (Exp 99)
     # (N_NEU,) int8: Dale's-law E/I sign per neuron (+1 exc / -1 inh)
     global_neuron_sign,
 ):
@@ -989,6 +1015,11 @@ def decode_genome(
                     global_conn_weight[s_ptr +
                                        s_idx] = np.float32(w_raw) - 128.0
                     g_conn_w_dna[s_ptr + s_idx] = np.float32(w_raw) - 128.0
+                    # Exp 99: initialize the slow consolidation weight to the same DNA birth
+                    # weight, so the homeostasis anchor (and the first consolidation quantum)
+                    # both start from biology — not from zero. Flag-off path sets this array but
+                    # the kernel never reads it, so default behaviour stays byte-identical.
+                    g_conn_w_slow[s_ptr + s_idx] = np.float32(w_raw) - 128.0
                     s_idx += 1
             i += 4
         elif marker == NEURON_MARKER and i + 4 < g_count:
@@ -1295,6 +1326,7 @@ def world_tick_numba(
     ram_bank_access, ram_bank_access_next,
     curriculum_delay,
     g_conn_w_dna,            # (N_SYN,) float32: DNA birth weights
+    g_conn_w_slow,           # (N_SYN,) float32: slow consolidation weights (Exp 99)
     g_cam_keys,              # (MAX_ORG, CAM_SLOTS, 8) float32: CAM key bits
     g_cam_vals,              # (MAX_ORG, CAM_SLOTS) int64: CAM values
     g_cam_valid,             # (MAX_ORG, CAM_SLOTS) int64: CAM slot occupancy
@@ -2189,13 +2221,28 @@ def world_tick_numba(
 
                     w = global_conn_weight[s_idx]
                     w += e * D * learning_rate
-                    # Homeostatic anchoring: pull toward DNA birth weight
-                    w -= p_homeo * (w - g_conn_w_dna[s_idx])
+                    if STDP_TWO_TIMESCALE:
+                        # Exp 99: two-timescale homeostasis — pull toward the slow consolidation
+                        # weight (learned anchor), not the static DNA birth weight.
+                        w -= p_homeo * (w - g_conn_w_slow[s_idx])
+                    else:
+                        # Homeostatic anchoring: pull toward DNA birth weight
+                        w -= p_homeo * (w - g_conn_w_dna[s_idx])
                     if w > W_MAX:
                         w = W_MAX
                     elif w < W_MIN:
                         w = W_MIN
                     global_conn_weight[s_idx] = w
+
+                    if STDP_TWO_TIMESCALE:
+                        # Era-boundary consolidation (environment's own clock — same test as
+                        # the Exp-98 gate baseline). One REMAP era of consistent fast-weight
+                        # evidence moves the slow anchor 1/BITS_PER_BYTE of the way toward the
+                        # current fast weight. BITS_PER_BYTE = 8 is a hardware fact (Rule 17).
+                        # Charged like an STDP update per consolidated synapse (Rule 21).
+                        if (global_time % REMAP_PERIOD) < n_steps:
+                            g_conn_w_slow[s_idx] += (w - g_conn_w_slow[s_idx]) / BITS_PER_BYTE
+                            total_atp += CYCLES_PER_STDP_UPDATE
 
                     global_conn_elig[s_idx] = e
                     global_conn_elig_t[s_idx] = t_end

@@ -92,7 +92,7 @@ def main():
             gl.action_now, gl.action_prev, gl.g_read_log, gl.g_read_fuel, gl.g_cell_owner, gl.g_read_hits,
             gl.CANVAS_LO, gl.CANVAS_HI, gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive, gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch, gl.g_ram_bank_access, gl.g_ram_bank_access_next,
-            gl.g_curriculum_delay, gl.g_conn_w_dna,
+            gl.g_curriculum_delay, gl.g_conn_w_dna, gl.g_conn_w_slow,
             gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
             gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q)
 

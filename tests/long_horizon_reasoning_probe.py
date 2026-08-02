@@ -140,7 +140,7 @@ def run_probe(n_ticks=HORIZON):
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
             gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch,
             gl.g_ram_bank_access, gl.g_ram_bank_access_next,
-            gl.g_curriculum_delay, gl.g_conn_w_dna,
+            gl.g_curriculum_delay, gl.g_conn_w_dna, gl.g_conn_w_slow,
             gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
             gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q
         )

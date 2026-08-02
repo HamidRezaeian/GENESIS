@@ -222,7 +222,7 @@ def main():
             gl.CANVAS_LO, gl.CANVAS_HI, gl.g_org_reward, gl.g_org_elig,
             gl.g_global_sense_type, gl.g_global_sense_meta, gl.g_global_act_drive,
             gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch, gl.g_ram_bank_access, gl.g_ram_bank_access_next,
-            gl.g_curriculum_delay, gl.g_conn_w_dna,
+            gl.g_curriculum_delay, gl.g_conn_w_dna, gl.g_conn_w_slow,
             gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
             gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q)
 
@@ -263,7 +263,7 @@ def main():
         import json
         payload = {
             "instrument": "remap_sandbox_probe",
-            "instrument_rev": "2026-07-31+drift-pin+gate-diag",
+            "instrument_rev": "2026-08-02+twoscale",
             "seed": seed,
             "mode": mode, "remap": bool(ne.REMAP), "period": int(ne.REMAP_PERIOD),
             "states": int(ne.REMAP_STATES), "swapbits": [SB0, SB1],

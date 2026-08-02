@@ -137,7 +137,7 @@ from genesis_lab import (g_ram, g_org_grid, g_positions, g_alive, g_energy, g_ag
     g_read_log, g_read_fuel, g_cell_owner, g_read_hits, g_org_reward, g_org_elig,
     g_global_sense_type, g_global_sense_meta, g_global_act_drive,
     g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
-    g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna,
+    g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna, g_conn_w_slow,
     g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick, g_clear_count,
     world_tick_numba, spawn_organism, mutate_dna, create_intelligent_ancestor,
     remember_fossil, seed_refuge, free_block,
@@ -174,7 +174,7 @@ def _args():
         g_read_log, g_read_fuel, g_cell_owner, g_read_hits, CANVAS_LO, CANVAS_HI,
         g_org_reward, g_org_elig, g_global_sense_type, g_global_sense_meta, g_global_act_drive,
         g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
-        g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna,
+        g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay, g_conn_w_dna, g_conn_w_slow,
         g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick, g_clear_count)
 
 def idle_cost_estimate(n_count, s_count):

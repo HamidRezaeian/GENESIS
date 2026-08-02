@@ -271,7 +271,8 @@ g_global_tau = np.zeros(UNIVERSE_MAX_NEURONS, dtype=np.float32)
 g_global_conn_src = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_dst = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_weight = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
-g_conn_w_dna = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+g_conn_w_dna  = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+g_conn_w_slow = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)  # Exp 99 slow anchor
 
 # ── CAM arrays (Exp 30 fix) ──
 g_cam_keys  = np.zeros((MAX_ORGANISMS, CAM_SLOTS, CAM_KEY_BITS), dtype=np.float32)
@@ -1209,6 +1210,7 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0, birth_source=BIRTH
         o_rec_v_rest, o_rec_tau_def, org_id,
         g_global_sense_type, g_global_sense_meta, g_global_act_drive,
         g_conn_w_dna,
+        g_conn_w_slow,
         global_neuron_sign,
     )
 
@@ -1585,6 +1587,7 @@ def sim_loop():
         g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
             g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
         g_conn_w_dna,
+        g_conn_w_slow,
         g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
         g_clear_count,
         g_org_run, g_lump_acc,
@@ -1850,6 +1853,7 @@ def sim_loop():
             g_global_sense_type, g_global_sense_meta, g_global_act_drive, g_org_delay_buf, g_org_stomach_fuel, g_org_scratch,
             g_ram_bank_access, g_ram_bank_access_next, g_curriculum_delay,
             g_conn_w_dna,
+            g_conn_w_slow,
             g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
             g_clear_count,
             g_org_run, g_lump_acc,

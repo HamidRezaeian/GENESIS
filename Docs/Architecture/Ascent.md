@@ -91,10 +91,16 @@ another economy lever. This is the escape hatch the loop never had.
 > economy levers may be added** in search of criterion B. Exactly **one** pre-registered mechanistic
 > substrate change remains before the SNN-on-RAM substrate hypothesis is formally falsified:
 >
-> * **Exp 99 — two-timescale consolidation** (fast re-tracking weights + slow consolidating weights,
+> * **Exp 99 — two-timescale consolidation** (fast re-tracking seeds + slow consolidating weights,
 >   static band ≥95 as a *certification gate*). If Exp 99 also fails to produce a confirmable learning
 >   advantage at mechanism resolution, the kill criterion is **fully executed**: the substrate is
 >   falsified as an AGI substrate and the project must pivot substrate hypotheses.
+>
+> **Exp 99 IMPLEMENTED** (2026-08-02, pre-registration + mechanism, fresh seeds 72–95 NOT YET RUN).
+> Flag `GENESIS_STDP_TWO_TIMESCALE` (default-OFF) with compile-fp transparency; signature change
+> `g_conn_w_slow` threaded through all engine kernel and 40 call sites; default-path regression
+> guard proves flag-OFF is byte-identical to the committed TF1 artifacts at resolution. **Findings
+> pending the seed-72..95 run — do NOT cite as measured outcome.**
 >
 > This entry is the formal Rule-18 record. It does not end the project; it binds what happens next.
 

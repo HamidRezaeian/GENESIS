@@ -98,6 +98,7 @@ def tick():
         lab.g_global_sense_type, lab.g_global_sense_meta, lab.g_global_act_drive, lab.g_org_delay_buf, lab.g_org_stomach_fuel, lab.g_org_scratch,
         lab.g_ram_bank_access, lab.g_ram_bank_access_next, lab.g_curriculum_delay,
         lab.g_conn_w_dna,
+        lab.g_conn_w_slow,
         lab.g_cam_keys, lab.g_cam_vals, lab.g_cam_valid, lab.g_cam_tick,
         lab.g_clear_count,
         lab.g_org_run, lab.g_lump_acc,
