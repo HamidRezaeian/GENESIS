@@ -1,0 +1,135 @@
+{
+  "protocol": "EXP100_DIRECT_LEARNING_v1",
+  "pre_reg_date": "2026-08-04",
+  "hypothesis": "STDP3C improves per-pattern accuracy over repeated exposure vs NOLEARN ablation",
+  "arm": "learner",
+  "seed": 0,
+  "ticks": 20000,
+  "early_acc": 70.06293362586479,
+  "late_acc": 68.6038591216966,
+  "delta": -1.4590745041681856,
+  "verdict": "FLAT",
+  "elapsed_s": 7.269071102142334,
+  "samples": [
+    {
+      "tick": 1000,
+      "acc": 81.17725748384869,
+      "reads": 324432,
+      "correct": 263365
+    },
+    {
+      "tick": 2000,
+      "acc": 66.77447062123125,
+      "reads": 114096,
+      "correct": 76187
+    },
+    {
+      "tick": 3000,
+      "acc": 68.73560611347617,
+      "reads": 114632,
+      "correct": 78793
+    },
+    {
+      "tick": 4000,
+      "acc": 67.76660688418293,
+      "reads": 115976,
+      "correct": 78593
+    },
+    {
+      "tick": 5000,
+      "acc": 68.81353500573864,
+      "reads": 97584,
+      "correct": 67151
+    },
+    {
+      "tick": 6000,
+      "acc": 67.11012564671101,
+      "reads": 86592,
+      "correct": 58112
+    },
+    {
+      "tick": 7000,
+      "acc": 67.77273586689356,
+      "reads": 84624,
+      "correct": 57352
+    },
+    {
+      "tick": 8000,
+      "acc": 67.47176913425345,
+      "reads": 82888,
+      "correct": 55926
+    },
+    {
+      "tick": 9000,
+      "acc": 69.65130023640661,
+      "reads": 84600,
+      "correct": 58925
+    },
+    {
+      "tick": 10000,
+      "acc": 69.51383293043244,
+      "reads": 89352,
+      "correct": 62112
+    },
+    {
+      "tick": 11000,
+      "acc": 69.52350348879912,
+      "reads": 87136,
+      "correct": 60580
+    },
+    {
+      "tick": 12000,
+      "acc": 69.9105930285197,
+      "reads": 88360,
+      "correct": 61773
+    },
+    {
+      "tick": 13000,
+      "acc": 67.8197405004634,
+      "reads": 86320,
+      "correct": 58542
+    },
+    {
+      "tick": 14000,
+      "acc": 67.98582054858205,
+      "reads": 86040,
+      "correct": 58495
+    },
+    {
+      "tick": 15000,
+      "acc": 69.07767925983038,
+      "reads": 83008,
+      "correct": 57340
+    },
+    {
+      "tick": 16000,
+      "acc": 68.21735731039875,
+      "reads": 81856,
+      "correct": 55840
+    },
+    {
+      "tick": 17000,
+      "acc": 69.01983371731944,
+      "reads": 79864,
+      "correct": 55122
+    },
+    {
+      "tick": 18000,
+      "acc": 68.1968972582691,
+      "reads": 81992,
+      "correct": 55916
+    },
+    {
+      "tick": 19000,
+      "acc": 68.93817204301075,
+      "reads": 81840,
+      "correct": 56419
+    },
+    {
+      "tick": 20000,
+      "acc": 68.17321514135122,
+      "reads": 83480,
+      "correct": 56911
+    }
+  ]
+}
