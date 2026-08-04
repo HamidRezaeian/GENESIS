@@ -85,3 +85,27 @@ The energy/event-driven accounting, the LIF core, the autotelic reading economy,
 honest cycle measurement (Rule 21) are genuine matches to the brain-inspired low-power
 thesis. The 20 W goal is not blocked by these layers — it is blocked by the control and
 reproduction layers above.
+
+---
+
+## 6. Colony-for-training / elite-for-inference (user directive 2026-08-03)
+
+The system is NOT one brain — it is a POPULATION of brains whose competition is the
+engine of progress (fuel contention, niche split, death at zero energy). No single
+organism is "smart"; the COLONY finds the evolutionary path, exactly as in nature.
+
+The end-user interaction model is therefore asymmetric by design:
+
+- **Training/learning: population-level.** ~512 concurrent organisms compete; selection
+  over the population is the learning signal. This is the only known mechanism that
+  produces open-ended capability without a human curriculum (Rule 9).
+- **Inference/answering: individual elite.** When the user asks a question, the answer
+  comes from the BEST organism — the winner of survival competition, not a hand-picked
+  one. The Elite Ark / fossil pool (genesis_lab :1324-1345) already checkpoints the
+  longest-lived genomes; the inference artifact is that elite (e.g.
+  `Brain/Brain_Elite_AGI.npz`), run standalone.
+
+Rule-7 compliance note: "best" must remain defined by SUBSTRATE survival (age/energy
+under honest accounting), never by an authored IQ score — the current elite criterion
+(longest-lived) satisfies this; any future capability-ranked elite selection would
+violate Rule 7 unless the ranking is itself an emergent substrate quantity.
