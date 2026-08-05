@@ -63,6 +63,8 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
             gl.g_clear_count,
             gl.g_org_run, gl.g_lump_acc,
             gl.g_race_state, gl.g_race_attempt_q,
+            gl.g_eligibility, gl.g_baseline_acc, gl.g_spikes_used,
+            gl.g_reservoir_state, gl.g_readout_w,
         )
         # process births exactly like sim_loop
         for i in range(n_births):
