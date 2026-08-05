@@ -226,6 +226,7 @@ def main():
             gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
             gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q,
 
+            gl.g_eligibility, gl.g_baseline_acc, gl.g_spikes_used,
             gl.g_reservoir_state, gl.g_readout_w)
 
         # Ignore births entirely (frozen cohort): free any birth-buffer bodies were NOT allocated (the
