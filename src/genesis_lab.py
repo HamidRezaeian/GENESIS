@@ -274,6 +274,31 @@ g_global_conn_weight = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_conn_w_dna  = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_conn_w_slow = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)  # Exp 99 slow anchor
 
+# RESERVOIR + READOUT (Exp 103 / Phase 3) — fixed-random reservoir + linear LMS
+RESERVOIR_N = int(os.environ.get("GENESIS_RESERVOIR_SIZE", "256"))
+RESERVOIR_MAX_SYNAPSES = max(1, int(RESERVOIR_N * RESERVOIR_N * 0.1))
+g_reservoir_state = np.zeros(RESERVOIR_N, dtype=np.float32)
+g_reservoir_src = np.zeros(RESERVOIR_MAX_SYNAPSES, dtype=np.int32)
+g_reservoir_dst = np.zeros(RESERVOIR_MAX_SYNAPSES, dtype=np.int32)
+g_reservoir_weight = np.zeros(RESERVOIR_MAX_SYNAPSES, dtype=np.float32)
+g_readout_w = np.zeros((N_OUTPUT, RESERVOIR_N), dtype=np.float32)
+
+# Initialize fixed reservoir weights once (Dale's law 80/20 E/I, sparse ~10%, echo-state ~0.9)
+np.random.seed(42)
+n_syn = min(RESERVOIR_MAX_SYNAPSES, max(1, int(RESERVOIR_N * RESERVOIR_N * 0.1)))
+src_idx = np.random.randint(0, RESERVOIR_N, size=n_syn)
+dst_idx = np.random.randint(0, RESERVOIR_N, size=n_syn)
+weights = np.random.randn(n_syn).astype(np.float32) * 0.5
+exc_mask = np.random.rand(n_syn) < 0.8
+weights[exc_mask] = np.abs(weights[exc_mask])
+weights[~exc_mask] = -np.abs(weights[~exc_mask])
+max_w = np.max(np.abs(weights)) if np.max(np.abs(weights)) > 0 else 1.0
+weights *= (0.9 / max(0.9, max_w))
+g_reservoir_src[:n_syn] = src_idx
+g_reservoir_dst[:n_syn] = dst_idx
+g_reservoir_weight[:n_syn] = weights
+g_reservoir_state[:] = 0.0
+
 # ── CAM arrays (Exp 30 fix) ──
 g_cam_keys  = np.zeros((MAX_ORGANISMS, CAM_SLOTS, CAM_KEY_BITS), dtype=np.float32)
 g_cam_vals  = np.zeros((MAX_ORGANISMS, CAM_SLOTS), dtype=np.int64)
@@ -1858,6 +1883,7 @@ def sim_loop():
             g_clear_count,
             g_org_run, g_lump_acc,
             g_race_state, g_race_attempt_q,
+            g_reservoir_state, g_reservoir_src, g_reservoir_dst, g_reservoir_weight, g_readout_w,
         )
         g_run_natural_deaths += max(0, _pre_tick_alive - int(n_alive))
 

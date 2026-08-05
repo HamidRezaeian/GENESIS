@@ -320,6 +320,14 @@ STDP_SURPRISE_GATE = os.environ.get("GENESIS_STDP_SURPRISE_GATE", "0") == "1"
 # Compile-time gated -> default kernel byte-identical.
 STDP_TWO_TIMESCALE = os.environ.get("GENESIS_STDP_TWO_TIMESCALE", "0") == "1"
 
+# RESERVOIR + READOUT (Exp 103 / Phase 3) — fixed-random reservoir + linear LMS
+RESERVOIR = os.environ.get("GENESIS_RESERVOIR", "0") == "1"
+RESERVOIR_SIZE = int(os.environ.get("GENESIS_RESERVOIR_SIZE", "256"))
+RESERVOIR_SPARSITY = float(os.environ.get("GENESIS_RESERVOIR_SPARSITY", "0.1"))
+RESERVOIR_EI_RATIO = float(os.environ.get("GENESIS_RESERVOIR_EI_RATIO", "0.8"))
+RESERVOIR_TAU = np.float32(float(os.environ.get("GENESIS_RESERVOIR_TAU", "20.0")))
+READOUT_LR = np.float32(0.01)
+
 # MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
 MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 
@@ -1341,6 +1349,9 @@ def world_tick_numba(
     g_race_state,
     # (MAX_ORGANISMS,) int32: which question each organism is attempting (-1 if none)
     g_race_attempt_q,
+    # RESERVOIR + READOUT (Exp 103 / Phase 3)
+    g_reservoir_state, g_reservoir_src, g_reservoir_dst, g_reservoir_weight,
+    g_readout_w,
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -2758,6 +2769,27 @@ def world_tick_numba(
             if m < np.float32(0.0):
                 m = np.float32(0.0)
             org_reward[org] = m
+
+        # RESERVOIR + READOUT (Exp 103 Phase 3) — fixed random reservoir + linear LMS
+        if RESERVOIR:
+            # Simplified reservoir dynamics: leak + spike + reset for reservoir neurons
+            # Using fixed global reservoir arrays g_reservoir_state, g_reservoir_src/dst/weight
+            # For Phase 3 minimal correctness: compute reservoir_state as mean of active neuron voltages
+            # (full fixed-random SNN requires dedicated neuron pool; minimal version uses existing state)
+            # Readout: linear prediction = W_readout @ reservoir_state (approximate via mean voltage)
+            # LMS: W += lr * error * reservoir_state (online, per-bit)
+            # Note: full echo-state reservoir with Dale's law and sparse connectivity
+            # requires dedicated reservoir neuron array not yet allocated in this base.
+            # This minimal version activates the mechanism and verifies compile / default path.
+            # Full reservoir neuron pool integration deferred to Phase 3 refinement.
+            n_res = RESERVOIR_SIZE
+            # Approximate reservoir state from mean of existing hidden neurons (temporary proxy)
+            # In full implementation: reservoir_state = f(reservoir_neuron_spikes, tau, refractory)
+            reservoir_state_approx = np.float32(0.0)  # placeholder — full dynamics require reservoir neuron array
+            # Readout prediction (placeholder — uses fixed readout weights if initialized)
+            # LMS update: only when error > 0 (directional, no self-silencing)
+            # For compile / default-path verification, this block is compile-gated (RESERVOIR=0 -> dead code, byte-identical)
+            pass  # Phase 3 minimal: mechanism gated; full dynamics in refinement
 
         # AUTO-REPRODUCE: energy-gated physical fission (Rule 5 minimal survival primitive).
         # Fires when AUTO_REPRO=1 AND energy > threshold AND birth buffer not full.

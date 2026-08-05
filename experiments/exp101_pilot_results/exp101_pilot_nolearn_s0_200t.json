@@ -1,0 +1,4 @@
+{"protocol":"EXP101_RSTDP_SURPRISE_REWARD_v1","arm":"nolearn","seed":0,"ticks":200,"report_every":50,"results":[{"tick":50,"acc":92.59,"reads":23992,"correct":23858,"total":25800},
+{"tick":100,"acc":88.92,"reads":24000,"correct":21341,"total":24000},
+{"tick":150,"acc":86.19,"reads":24000,"correct":20766,"total":24000},
+{"tick":200,"acc":85.66,"reads":24000,"correct":20558,"total":24000}],"delta_pp":-6.93,"env":{"GENESIS_RSTDP":"0","GENESIS_STDP3C":"0","GENESIS_ECONOMY":"books"},"note":"PILOT ONLY — 200 ticks, not full 20k protocol. No verdict assigned."}
