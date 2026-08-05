@@ -1478,21 +1478,24 @@ def ne_reset_generation():
 
 def ne_seed_population(rng, n=None, birth_source=BIRTH_ARK):
     """Cold start: n founder genomes = the proven book ancestor PROJECTED onto the flat genome
-    (see ne_project_byte_genome) plus ONE Gaussian mutation round with the registered sigma, so
-    the founder population is a genuinely diverse initial GA population seeded AROUND the tested
-    evolutionary infrastructure (Option-3 design §4: '_leverages existing and tested evolutionary
-    infrastructure_') — not a monoculture clone, and not a from-scratch random genome (which
-    could not ignite the prediction economy inside a 100k-tick run; Exp 12/17 bootstrap evidence
-    carried by the ancestor's run-of-repeats reflex). Returns (placed, founder_vec)."""
+    (see ne_project_byte_genome) plus ONE registered-sigma Gaussian round on the loci the
+    ancestor EXPRESSES (|founder| > 0: its wired synapses + all plasticity params), so the
+    founder population is genuinely diverse ON THE PROVEN BODY PLAN. Jittering silent loci
+    would turn on ~800 weak synapses at once — MEASURED lethal within ~50 ticks (vocal drives
+    drown in noise, reads flip to penalty, burn ~x40; scratch/ne_diag.py arm B vs arm C,
+    2026-08-05). Design §4: 'leverages existing and tested evolutionary infrastructure'.
+    Returns (placed, founder_vec)."""
     n = int(n) if n is not None else NE_POP
     founder = ne_project_byte_genome(create_intelligent_ancestor(None))
+    expressed = (founder != 0.0)
     placed = 0
     for slot in range(MAX_ORGANISMS):
         if placed >= n:
             break
         if g_alive[slot]:
             continue
-        child = ne_mutate_gaussian(founder, NE_SIGMA, rng)
+        child = founder.copy()
+        child[expressed] += rng.normal(0.0, NE_SIGMA, size=int(expressed.sum())).astype(np.float32)
         if ne_spawn_genome(slot, child, birth_source=birth_source):
             placed += 1
     return placed, founder
@@ -1504,9 +1507,10 @@ def ne_evolve_step(rng, age_mark):
     1. Fitness = survival time + bytes read correctly, over the generation (ne_fitness).
     2. ELITES = top NE_ELITE_FRAC (default 50%) of the ALIVE population by fitness — they
        survive unchanged (their bodies, energy and ages are untouched).
-    3. Every other slot is killed and refilled with a CHILD: two parents drawn by tournament
-       (size NE_TOURNAMENT) from the elite pool, uniform crossover (per-gene 50%), then Gaussian
-       mutation (sigma). Population refills to NE_POP.
+    3. Every other slot is refilled with a CHILD: two parents drawn by tournament
+       (size NE_TOURNAMENT) from the elite pool, uniform crossover (per-gene 50%), then
+       Gaussian mutation (sigma step with the copy-fidelity rate below). Population refills
+       to NE_POP.
     4. Stats for the generation that just ENDED (scored BEFORE replacement): mean fitness (with
        survival/bytes decomposition), genome diversity (mean per-gene std across the alive
        population), population size, elite/offspring counts, extinction flag.
@@ -1537,13 +1541,17 @@ def ne_evolve_step(rng, age_mark):
     offspring = 0
     extinct = elite_ids.size == 0
     if not extinct:
+        # Copy-fidelity rate: p = 1/G per gene (ONE expected fault per genome replication),
+        # the derivation the legacy mutate_dna already uses for the byte genome. Applying
+        # sigma to all genes at once is measured lethal (scratch/ne_diag.py arm B).
+        p_fault = 1.0 / float(NE_GENOME_LEN)
         for i in victims:
             if n_elite + offspring >= NE_POP:
                 break
             pa = ne_tournament_select(elite_fits, elite_ids, NE_TOURNAMENT, rng)
             pb = ne_tournament_select(elite_fits, elite_ids, NE_TOURNAMENT, rng)
             child = ne_crossover_uniform(g_ne_genomes[pa], g_ne_genomes[pb], NE_XOVER_P, rng)
-            child = ne_mutate_gaussian(child, NE_SIGMA, rng)
+            child = ne_mutate_gaussian(child, NE_SIGMA, rng, rate=p_fault)
             if ne_spawn_genome(i, child, birth_source=BIRTH_NATURAL):
                 offspring += 1
     else:

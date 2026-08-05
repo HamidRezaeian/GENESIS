@@ -8,8 +8,11 @@ Population-level neuroevolution, NO in-lifetime learning:
     (engine: ne_body_layout / ne_encode_genome).
   - Fitness = survival time + bytes read correctly
     (survival = delta g_age accumulated by the kernel; bytes = g_ne_bytes kernel hooks).
-  - Selection: tournament (size 3). Mutation: Gaussian noise (sigma 0.1). Crossover: uniform
-    (per-gene 50% chance).
+  - Selection: tournament (size 3). Mutation: Gaussian noise (sigma 0.1 step) applied at the
+    substrate's own copy-fidelity rate (per-gene p = 1/G = one expected fault per genome
+    replication — the legacy mutate_dna derivation; applying sigma to all ~849 genes at once
+    is MEASURED lethal in ~50 ticks, scratch/ne_diag.py arm B vs arm C, 2026-08-05).
+    Crossover: uniform (per-gene 50% chance).
   - Task: evolving population of 200 organisms, 100,000 world-ticks, 4 seeds (0..3),
     reproduction every 10,000 ticks (top-50% fitness parents), death when energy <= 0
     (the kernel's own energy accounting, unmodified).
@@ -27,8 +30,10 @@ NO IN-LIFETIME LEARNING — physics composition (pinned BEFORE genesis_lab impor
 
 Environment: books economy on the 00_Graded scroll (the standard survival scaffold), RAM 2 MB,
 GENESIS_MAX_ORGANISMS=512, AUTO_REPRO=0, RESUME=0, LIVE_WEB=0, REMAP=0. Founders = the proven
-book ancestor projected onto the flat genome + ONE Gaussian mutation round (sigma), i.e. a
-diverse GA initial population around the tested prior (design §4).
+book ancestor projected onto the flat genome + ONE sigma=0.1 Gaussian round on the loci the
+ancestor EXPRESSES (its wired synapses + plasticity params, |founder| > 0) — a diverse GA
+initial population ON the tested prior's body plan (design §4); jittering silent loci is
+measured lethal (see mutation note above).
 
 PRE-REGISTERED SUCCESS CRITERIA (binding — evaluated per seed, and the MECHANISM is CONFIRMED
 only if ALL FOUR seeds pass ALL THREE):

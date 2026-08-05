@@ -182,6 +182,7 @@ def main():
     rng = np.random.default_rng(PROBE_SEED)
     age_mark = gl.ne_reset_generation() if flag else None
     offspring_total = 0
+    bytes_total = 0.0     # accumulated per-window totals (counters reset each generation)
     evolutions = 0
     global_time = 0
     next_repro = PROBE_REPRO
@@ -193,6 +194,7 @@ def main():
                 stats = gl.ne_evolve_step(rng, age_mark)
                 evolutions += 1
                 offspring_total += stats["n_offspring"]
+                bytes_total += stats["mean_bytes"] * stats["pop"]
                 assert np.isfinite(stats["mean_fitness"]), "fitness not finite"
                 print(f"  [t={global_time:>5}] pop={stats['pop']} fit={stats['mean_fitness']:.1f} "
                       f"(surv={stats['mean_survival']:.1f} bytes={stats['mean_bytes']:.1f}) "
@@ -204,7 +206,7 @@ def main():
         failures.append(f"run crashed at t={global_time}: {type(e).__name__}: {e}")
 
     alive = int(np.sum(gl.g_alive))
-    total_bytes = int(np.sum(gl.g_ne_bytes))
+    total_bytes = int(bytes_total) if flag else int(np.sum(gl.g_ne_bytes))
     print(f"[G3] run complete: ticks={global_time} alive={alive} "
           f"evolutions={evolutions} offspring={offspring_total} ne_bytes_total={total_bytes}")
 

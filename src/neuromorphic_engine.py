@@ -3049,11 +3049,26 @@ def ne_crossover_uniform(parent_a, parent_b, p_mix, rng):
     return child
 
 
-def ne_mutate_gaussian(genome, sigma, rng):
-    """Gaussian mutation: every gene is perturbed by N(0, sigma) (the pre-registered Option-3
-    operator; genome values are unbounded reals — the phenotype encode clips to the byte range,
-    so heritability stays linear even where the phenotype saturates)."""
-    return genome + rng.normal(0.0, float(sigma), size=len(genome)).astype(np.float32)
+def ne_mutate_gaussian(genome, sigma, rng, rate=None):
+    """Gaussian mutation (the pre-registered Option-3 operator; sigma = 0.1 step size).
+
+    rate=None  -> every gene is perturbed by N(0, sigma).
+    rate=p     -> each gene is perturbed with probability p. The Option-3 driver uses
+                p = 1/G (G = genome length): exactly ONE EXPECTED fault per genome
+                replication — the same per-copy fidelity derivation the legacy byte-genome
+                mutate_dna uses (per-byte fidelity 1/l, no new invented constant). This is
+                not a nicety: applying sigma=0.1 to all ~849 genes of an ancestor-class body
+                turns on ~800 weak synapses at once (vocal drives drown in noise, read income
+                flips to penalty, event-driven burn ~x40) — MEASURED lethal within ~50 ticks
+                (scratch/ne_diag.py arm B vs arm C, 2026-08-05), so an every-gene application
+                would reduce every offspring to noise before selection can act on it.
+    Genome values are unbounded reals — the phenotype encode clips to the byte range, so
+    heritability stays linear even where the phenotype saturates."""
+    step = rng.normal(0.0, float(sigma), size=len(genome)).astype(np.float32)
+    if rate is not None:
+        mask = rng.random(len(genome)) < float(rate)
+        step = step * mask
+    return (genome + step).astype(np.float32)
 
 
 # ── Rule 21.8 drift guard (audit 2026-07-31): the cache dir pinned at the TOP of this module
