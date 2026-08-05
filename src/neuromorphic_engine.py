@@ -348,6 +348,11 @@ READOUT_LR = np.float32(0.01)
 # hot tick loop — so they are plain Python, and the only kernel-visible change is the two hooks).
 NEUROEVOLUTION = os.environ.get("GENESIS_NEUROEVOLUTION", "0") == "1"
 
+# ── Free-Energy Oracle & Economy Isolation (Exp 4, 2026-08-05) ──
+FREE_ENERGY = os.environ.get("GENESIS_FREE_ENERGY", "0") == "1"
+NO_DEATH = os.environ.get("GENESIS_NO_DEATH", "0") == "1"
+SUPERVISED_TEACHER = os.environ.get("GENESIS_SUPERVISED_TEACHER", "0") == "1"
+
 # MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
 MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 
@@ -1885,7 +1890,8 @@ def world_tick_numba(
                                 elif w_now < W_MIN:
                                     w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
-                            total_atp += CYCLES_PER_STDP_UPDATE
+                            if not FREE_ENERGY:
+                                total_atp += CYCLES_PER_STDP_UPDATE
 
                     elif curr_spk_buf[src]:
                         t_post = global_t_last[n_ptr + dst]
@@ -1915,7 +1921,8 @@ def world_tick_numba(
                                 elif w_now < W_MIN:
                                     w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
-                            total_atp += CYCLES_PER_STDP_UPDATE
+                            if not FREE_ENERGY:
+                                total_atp += CYCLES_PER_STDP_UPDATE
 
             # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
             # fired this step, not per neuron present. On a 20W neuromorphic substrate the spike
@@ -2197,11 +2204,17 @@ def world_tick_numba(
                         org_elig[org, b] = np.float32(-1.0)
                 else:
                     if STDP3C:
-                        org_elig[org, b] = np.float32(0.0)
+                        if SUPERVISED_TEACHER and tgt_b == 1:
+                            org_elig[org, b] = np.float32(1.0)
+                        else:
+                            org_elig[org, b] = np.float32(0.0)
             net = correct_bits - wrong_bits
 
-            if STDP3C and (correct_bits > 0 or wrong_bits > 0):
-                dopamine = np.float32(net)
+            if STDP3C and (correct_bits > 0 or wrong_bits > 0 or SUPERVISED_TEACHER):
+                if SUPERVISED_TEACHER:
+                    dopamine = np.float32(1.0)
+                else:
+                    dopamine = np.float32(net)
                 if STDP_SURPRISE_GATE:
                     # Exp 98 advantage gate (rationale at the flag's module docstring). v2 after
                     # smoke-verification: gate BOTH credit channels, not only the global scalar —
@@ -2293,7 +2306,7 @@ def world_tick_numba(
             # small-step divisor as STDP). Reward-gated: only teach when actually reading (net!=0 already
             # gates the block). Charged like an STDP update (real work, activity-gated). Only the eye->
             # vocal fabric is taught (dst in vocal range, src in eye range); everything else untouched.
-            if STDP_TARGET and net != 0:
+            if (STDP_TARGET and net != 0) or SUPERVISED_TEACHER:
                 tn_ptr = org_n_ptr[org]
                 ts_ptr = org_s_ptr[org]
                 ts_count = org_s_count[org]
@@ -2834,14 +2847,18 @@ def world_tick_numba(
                     b_genomes[n_births, x] = global_genome[g_start + x]
                 n_births += 1
 
-        if energy[org] <= np.float32(0.0):
-            alive[org] = False
-            org_grid[positions[org]] = -1
-            # Session 9: death clears the in-progress work-unit run
-            g_org_run[org] = 0
-            free_block(org_n_ptr[org], org_n_count[org], neuron_map)
-            free_block(org_s_ptr[org], org_s_count[org], synapse_map)
-            free_block(org_g_ptr[org], org_g_count[org], genome_map)
+        if NO_DEATH:
+            if energy[org] < np.float32(0.0):
+                energy[org] = np.float32(0.0)
+        else:
+            if energy[org] <= np.float32(0.0):
+                alive[org] = False
+                org_grid[positions[org]] = -1
+                # Session 9: death clears the in-progress work-unit run
+                g_org_run[org] = 0
+                free_block(org_n_ptr[org], org_n_count[org], neuron_map)
+                free_block(org_s_ptr[org], org_s_count[org], synapse_map)
+                free_block(org_g_ptr[org], org_g_count[org], genome_map)
 
     n_alive_new = np.int32(0)
     for i in range(max_org):

@@ -49,6 +49,9 @@ def main():
         env.pop("GENESIS_STDP_SURPRISE_GATE", None)
         env.pop("GENESIS_STDP_TWO_TIMESCALE", None)
         env.pop("GENESIS_NEUROEVOLUTION", None)  # Option 3 (Exp 3): default-off, kernel-DCE'd
+        env.pop("GENESIS_FREE_ENERGY", None)
+        env.pop("GENESIS_NO_DEATH", None)
+        env.pop("GENESIS_SUPERVISED_TEACHER", None)
         # never inherit a user-explicit shared cache dir (e.g. the pytest suite's
         # /tmp/genesis_pytest_numba): it would disable the engine's per-flag fingerprint
         # pinning and let the NOLEARN/STDP3C arms collide on one kernel (Session-11 class).

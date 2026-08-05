@@ -7,13 +7,14 @@ physics state changes (fresh subprocess per arm — compile-time flags are proce
 
 Run: python tests/compile_fingerprint_test.py
 """
-import compile_fingerprint as cfp
 import os
-import subprocess
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))), "src"))
+
+import compile_fingerprint as cfp
+import subprocess
 
 
 ENGINE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
