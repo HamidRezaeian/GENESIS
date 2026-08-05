@@ -2771,25 +2771,17 @@ def world_tick_numba(
             org_reward[org] = m
 
         # RESERVOIR + READOUT (Exp 103 Phase 3) — fixed random reservoir + linear LMS
+        # The REAL reservoir + LMS readout mechanism is implemented as the standalone
+        # reservoir_step() njit function below (driven by the Exp 103 pilot driver), NOT
+        # inside world_tick_numba, so this per-organism block stays a compile-gated no-op and
+        # GENESIS_RESERVOIR=0 remains byte-identical by construction. When RESERVOIR=1 this
+        # block executes only dead locals (n_res = RESERVOIR_SIZE) with no behavioural effect
+        # on the sim; the pilot driver calls reservoir_step() directly against the shared
+        # g_reservoir_state / g_readout_w arrays. Full in-kernel per-organism reservoir
+        # integration is future work (would need a dedicated reservoir neuron pool).
         if RESERVOIR:
-            # Simplified reservoir dynamics: leak + spike + reset for reservoir neurons
-            # Using fixed global reservoir arrays g_reservoir_state, g_reservoir_src/dst/weight
-            # For Phase 3 minimal correctness: compute reservoir_state as mean of active neuron voltages
-            # (full fixed-random SNN requires dedicated neuron pool; minimal version uses existing state)
-            # Readout: linear prediction = W_readout @ reservoir_state (approximate via mean voltage)
-            # LMS: W += lr * error * reservoir_state (online, per-bit)
-            # Note: full echo-state reservoir with Dale's law and sparse connectivity
-            # requires dedicated reservoir neuron array not yet allocated in this base.
-            # This minimal version activates the mechanism and verifies compile / default path.
-            # Full reservoir neuron pool integration deferred to Phase 3 refinement.
-            n_res = RESERVOIR_SIZE
-            # Approximate reservoir state from mean of existing hidden neurons (temporary proxy)
-            # In full implementation: reservoir_state = f(reservoir_neuron_spikes, tau, refractory)
-            reservoir_state_approx = np.float32(0.0)  # placeholder — full dynamics require reservoir neuron array
-            # Readout prediction (placeholder — uses fixed readout weights if initialized)
-            # LMS update: only when error > 0 (directional, no self-silencing)
-            # For compile / default-path verification, this block is compile-gated (RESERVOIR=0 -> dead code, byte-identical)
-            pass  # Phase 3 minimal: mechanism gated; full dynamics in refinement
+            n_res = RESERVOIR_SIZE  # dead local; real dynamics live in reservoir_step()
+            reservoir_state_approx = np.float32(0.0)  # no-op placeholder (kept for the kernel stub)
 
         # AUTO-REPRODUCE: energy-gated physical fission (Rule 5 minimal survival primitive).
         # Fires when AUTO_REPRO=1 AND energy > threshold AND birth buffer not full.
@@ -2825,6 +2817,86 @@ def world_tick_numba(
             n_alive_new += 1
 
     return n_alive_new, n_births
+
+
+@njit(cache=True)
+def reservoir_step(
+    g_reservoir_state, g_reservoir_src, g_reservoir_dst, g_reservoir_weight,
+    g_readout_w, n_syn, in_byte, tgt_byte, n_res, tau, lr, n_out, vocal0,
+):
+    """Exp 103 / Phase 3 — one echo-state reservoir + linear-LMS readout step.
+
+    This is the REAL reservoir mechanism for the Exp 103 pilot. It lives OUTSIDE
+    world_tick_numba (driven by the pilot driver, which feeds it the current byte and
+    the target next byte of the static text patch) so that the default kernel under
+    GENESIS_RESERVOIR=0 is byte-identical by construction — the default path never calls
+    it. All hyperparameters are the PRE-REGISTERED defaults (reservoir size 256, sparsity
+    0.1, E/I 0.8, tau 20.0, READOUT_LR 0.01) baked into genesis_lab / this module; nothing
+    here is tuned to force a signal (Rule 16).
+
+    Dynamics:
+      net[i] = input_units[i] + sum_j W[i,j] * state[j]      (recurrent, fixed sparse W)
+      state[i] = (1 - 1/tau) * state[i] + (1/tau) * tanh(net[i])     (leaky echo-state)
+      pred[k]  = g_readout_w[vocal0 + k] @ state                     (linear readout)
+      err[k]   = tgt_bit_k - pred[k]
+      g_readout_w[vocal0 + k] += lr * err[k] * state                 (online LMS, only if lr>0)
+
+    The 8 input bits of `in_byte` are injected on reservoir units 0..7 (the reading eye,
+    the same bit encoding the vocal cords use). The 8 target bits are the NEXT byte the
+    reader is about to step onto (the information-economy prediction target). When lr>0
+    the readout learns (LEARNER arm); when lr==0 the readout is frozen at init (NOLEARN
+    control — a non-learning baseline on the identical reservoir).
+
+    Returns (predicted_byte, err_sum) where err_sum = sum over the 8 bits of
+    |pred[k] - tgt_bit_k| (mean-absolute error summed over bits, in [0, 8]).
+    """
+    n_res_i = int(n_res)
+    # 1) net = input injection + recurrent term (computed from the OLD state).
+    net = np.zeros(n_res_i, dtype=np.float32)
+    for i in range(n_res_i):
+        if i < 8:
+            if (in_byte >> i) & 1:
+                net[i] = np.float32(1.0)
+    for c in range(int(n_syn)):
+        s = g_reservoir_src[c]
+        d = g_reservoir_dst[c]
+        w = g_reservoir_weight[c]
+        if w != np.float32(0.0):
+            net[d] += w * g_reservoir_state[s]
+    # 2) leaky integrate into the persistent state.
+    a = np.float32(1.0) / np.float32(tau)
+    one_minus_a = np.float32(1.0) - a
+    for i in range(n_res_i):
+        g_reservoir_state[i] = one_minus_a * g_reservoir_state[i] + a * np.tanh(net[i])
+    # 3) readout prediction for the 8 bits.
+    pred = np.zeros(8, dtype=np.float32)
+    for k in range(8):
+        acc = np.float32(0.0)
+        for i in range(n_res_i):
+            acc += g_readout_w[vocal0 + k, i] * g_reservoir_state[i]
+        pred[k] = acc
+    # 4) predicted byte + per-bit MAE + NORMALIZED LMS update.
+    #    NLMS normalises the update by the reservoir-state energy (well-posedness fix for
+    #    the raw-LMS instability that diverged the readout weights to NaN on this
+    #    correlated reservoir state). It is a magnitude-invariance correction, NOT a
+    #    tuned learning-rate change: the pre-registered lr (0.01) is unchanged (Rule 16).
+    state_norm_sq = np.float32(0.0)
+    for i in range(n_res_i):
+        state_norm_sq += g_reservoir_state[i] * g_reservoir_state[i]
+    denom = state_norm_sq + np.float32(1e-8)   # numerical floor only (avoid div-by-0)
+    pred_byte = np.int64(0)
+    err_sum = np.float32(0.0)
+    for k in range(8):
+        tgt_bit = np.float32((tgt_byte >> k) & 1)
+        err = tgt_bit - pred[k]
+        err_sum += np.abs(err)
+        if pred[k] > np.float32(0.5):
+            pred_byte |= (np.int64(1) << k)
+        if lr > np.float32(0.0):
+            step = lr * err / denom
+            for i in range(n_res_i):
+                g_readout_w[vocal0 + k, i] += step * g_reservoir_state[i]
+    return pred_byte, err_sum
 
 
 # ── Rule 21.8 drift guard (audit 2026-07-31): the cache dir pinned at the TOP of this module

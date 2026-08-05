@@ -1,0 +1,85 @@
+{
+  "protocol": "EXP103_RESERVOIR_READOUT_v1",
+  "pre_reg_date": "2026-08-05",
+  "arm": "learner",
+  "seed": 0,
+  "ticks": 1000,
+  "report_every": 100,
+  "reservoir_size": 256,
+  "reservoir_sparsity": 0.1,
+  "reservoir_ei_ratio": 0.8,
+  "reservoir_tau": 20.0,
+  "readout_lr_applied": 0.01,
+  "patch_bytes": 500,
+  "early_acc": 77.5,
+  "late_acc": 78.2083,
+  "acc_delta_pp": 0.7083,
+  "early_mean_err": 0.298104,
+  "late_mean_err": 0.2352,
+  "err_delta": -0.062904,
+  "final_norm_readout_w": 2.756767,
+  "verdict": "LEARNING_SIGNAL_RECOMMEND_FULL_RUN",
+  "elapsed_s": 0.637,
+  "samples": [
+    {
+      "tick": 100,
+      "acc": 74.875,
+      "mean_readout_err": 0.315376,
+      "norm_readout_w": 2.759827
+    },
+    {
+      "tick": 200,
+      "acc": 76.25,
+      "mean_readout_err": 0.324836,
+      "norm_readout_w": 2.757695
+    },
+    {
+      "tick": 300,
+      "acc": 81.375,
+      "mean_readout_err": 0.254101,
+      "norm_readout_w": 2.757224
+    },
+    {
+      "tick": 400,
+      "acc": 74.5,
+      "mean_readout_err": 0.260791,
+      "norm_readout_w": 2.756964
+    },
+    {
+      "tick": 500,
+      "acc": 77.375,
+      "mean_readout_err": 0.237006,
+      "norm_readout_w": 2.756794
+    },
+    {
+      "tick": 600,
+      "acc": 78.75,
+      "mean_readout_err": 0.230548,
+      "norm_readout_w": 2.75683
+    },
+    {
+      "tick": 700,
+      "acc": 76.625,
+      "mean_readout_err": 0.239173,
+      "norm_readout_w": 2.756836
+    },
+    {
+      "tick": 800,
+      "acc": 79.875,
+      "mean_readout_err": 0.224573,
+      "norm_readout_w": 2.756927
+    },
+    {
+      "tick": 900,
+      "acc": 75.625,
+      "mean_readout_err": 0.248583,
+      "norm_readout_w": 2.756869
+    },
+    {
+      "tick": 1000,
+      "acc": 79.125,
+      "mean_readout_err": 0.232444,
+      "norm_readout_w": 2.756767
+    }
+  ]
+}
