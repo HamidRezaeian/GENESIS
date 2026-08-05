@@ -273,6 +273,9 @@ g_global_conn_dst = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.int32)
 g_global_conn_weight = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_conn_w_dna  = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
 g_conn_w_slow = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)  # Exp 99 slow anchor
+g_eligibility = np.zeros(UNIVERSE_MAX_SYNAPSES, dtype=np.float32)
+g_baseline_acc = np.zeros(MAX_ORGANISMS, dtype=np.float32)
+g_spikes_used = np.zeros(MAX_ORGANISMS, dtype=np.int32)
 
 # RESERVOIR + READOUT (Exp 103 / Phase 3) — fixed-random reservoir + linear LMS
 RESERVOIR_N = int(os.environ.get("GENESIS_RESERVOIR_SIZE", "256"))
