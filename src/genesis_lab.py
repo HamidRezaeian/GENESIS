@@ -209,6 +209,16 @@ from neuromorphic_engine import (
     seed_kernel_rng as _seed_kernel_rng,
 )
 
+# Option 3 (population-level NEUROEVOLUTION, 2026-08-05): the compile-gated flag + the host-side
+# genome machinery (decode, tournament/crossover/mutation operators). Engine-side docstring at
+# NEUROEVOLUTION; population management lives below (ne_* functions) and is exercised by
+# experiments/exp3_neuroevolution_full_run.py. Flag OFF -> everything NE is dormant and the
+# default path is byte-identical.
+from neuromorphic_engine import (
+    NEUROEVOLUTION, ne_body_layout, ne_encode_genome, ne_byte_to_gene, ne_weight_to_gene,
+    ne_tournament_select, ne_crossover_uniform, ne_mutate_gaussian,
+)
+
 # Complete the GENESIS_SEED hook now that the engine is importable: also pin the KERNEL's
 # internal RNG (numba in-JIT `random` draws), which python-level seeds cannot reach.
 if _seed is not None:
@@ -1290,8 +1300,293 @@ def spawn_organism(org_id, pos, dna, initial_energy=250000.0, birth_source=BIRTH
     # allowed genome), not a hand-set 1000. Kept identical to the kernel so the spawn-time seed matches
     # the per-tick recompute.
     g_viscosity[org_id] = footprint / np.float32(MAX_DNA_PER_ORG / 2)
-    
+
     return True
+
+# ==============================================================================
+# OPTION 3 — POPULATION-LEVEL NEUROEVOLUTION (2026-08-05)
+# Design: Docs/Architecture/Option3_Neuroevolution_Design.md (approved via PR #15).
+# ==============================================================================
+# Population-level neuroevolution, NO in-lifetime learning: the experiment driver (experiments/
+# exp3_neuroevolution_full_run.py) composes GENESIS_NOLEARN=1 / GENESIS_CAM=0 /
+# GENESIS_STRUCTURAL_PLASTICITY=0 with GENESIS_NEUROEVOLUTION=1, so a phenotype = its genome for
+# its whole life and selection acts purely across generations. Genome: flat float32 vector ->
+# synaptic weights + plasticity params (engine ne_body_layout/ne_encode_genome). Fitness =
+# survival time + bytes read correctly (delta g_age over the generation + g_ne_bytes from the
+# kernel hooks). Selection: tournament (size 3). Mutation: Gaussian noise (sigma 0.1). Crossover:
+# uniform (50%). Reproduction every NE_REPRO_PERIOD world-ticks (top-50% fitness parents);
+# death when energy <= 0 is handled by the kernel's own energy accounting, unmodified.
+# Everything below is DORMANT when GENESIS_NEUROEVOLUTION is off: only g_ne_bytes is always
+# allocated (it is the threaded kernel arg, incremented solely behind the engine's compile gate),
+# so the flag-OFF default path is untouched and byte-identical.
+NE_POP          = int(os.environ.get("GENESIS_NE_POP", "200"))
+NE_HIDDEN       = int(os.environ.get("GENESIS_NE_HIDDEN", "5"))
+NE_REPRO_PERIOD = int(os.environ.get("GENESIS_NE_REPRO_PERIOD", "10000"))
+NE_TOURNAMENT   = int(os.environ.get("GENESIS_NE_TOURNAMENT", "3"))
+NE_SIGMA        = float(os.environ.get("GENESIS_NE_SIGMA", "0.1"))
+NE_XOVER_P      = float(os.environ.get("GENESIS_NE_XOVER_P", "0.5"))
+NE_ELITE_FRAC   = float(os.environ.get("GENESIS_NE_ELITE_FRAC", "0.5"))
+
+# Threaded world_tick_numba arg (int32): per-organism count of bytes read correctly. Incremented
+# ONLY behind the NEUROEVOLUTION compile gate in the kernel (DCE when off).
+g_ne_bytes = np.zeros(MAX_ORGANISMS, dtype=np.int32)
+
+
+def _ne_ancestor_dup_pairs(anc, n_c):
+    """The proven book ancestor deliberately DOUBLE-WIRES some synapses (two GENE records per
+    (src,dst): the 8 echo copies + the seek wiring) because a single max-weight synapse (127)
+    sits below the I/O firing threshold (rest+128) while two sum above it (254). A flat-genome
+    slot list holds exactly one slot per (src,dst) pair, so without duplicate slots the founder
+    projection would halve that drive and the echo bootstrap would break. Return the list of
+    extra duplicate slots needed to express the ancestor losslessly (one extra per extra copy)."""
+    from collections import Counter as _Counter
+    cnt = _Counter()
+    i = 0
+    n = len(anc)
+    while i < n - 3:
+        m = int(anc[i])
+        if m == GENE_MARKER:
+            s = int(anc[i + 1]) % n_c
+            d = int(anc[i + 2]) % n_c
+            if d >= N_INPUT:
+                cnt[(s, d)] += 1
+            i += 4
+        elif m == NEURON_MARKER and i + 4 < n:
+            i += 5
+        elif m == RECEPTOR_MARKER and i + 9 < n:
+            i += 10
+        else:
+            i += 1
+    return [pair for pair, c in cnt.items() for _ in range(c - 1)]
+
+
+if NEUROEVOLUTION:
+    (NE_N_C, NE_SLOTS, NE_DUP_SLOTS, NE_SLOT_INDEX,
+     NE_N_SYN_BASE, NE_N_PARAM, NE_GENOME_LEN) = ne_body_layout(
+         NE_HIDDEN, _ne_ancestor_dup_pairs(create_intelligent_ancestor(None), N_IO + NE_HIDDEN))
+    # Flat genome store: row = organism slot. Hereditary material for crossover/mutation.
+    g_ne_genomes = np.zeros((MAX_ORGANISMS, NE_GENOME_LEN), dtype=np.float32)
+else:
+    (NE_N_C, NE_SLOTS, NE_DUP_SLOTS, NE_SLOT_INDEX,
+     NE_N_SYN_BASE, NE_N_PARAM, NE_GENOME_LEN) = (N_IO + NE_HIDDEN, None, None, None, 0, 0, 0)
+    g_ne_genomes = None
+
+
+def ne_project_byte_genome(anc):
+    """Project an existing marker-genome (e.g. create_intelligent_ancestor's output) onto the
+    flat Option-3 genome vector, LOSSLESSLY: doubled wires fill the duplicate slots, neuron
+    threshold/tau bytes and receptor-0 param bytes fill the plasticity-param segment. Slots the
+    byte-genome leaves silent stay at gene 0 (unexpressed). Requires NEUROEVOLUTION on."""
+    pst = NE_N_SYN_BASE + len(NE_DUP_SLOTS)
+    vec = np.zeros(NE_GENOME_LEN, dtype=np.float32)
+    from collections import Counter as _Counter
+    seen = _Counter()
+    h = 0
+    i = 0
+    n = len(anc)
+    while i < n - 3:
+        m = int(anc[i])
+        if m == GENE_MARKER:
+            s = int(anc[i + 1]) % NE_N_C
+            d = int(anc[i + 2]) % NE_N_C
+            w = int(anc[i + 3])
+            if d >= N_INPUT:
+                seen[(s, d)] += 1
+                if seen[(s, d)] == 1:
+                    vec[NE_SLOT_INDEX[(s, d)]] = ne_weight_to_gene(w)
+                else:
+                    dup_pos = [j for j, p in enumerate(NE_DUP_SLOTS) if p == (s, d)]
+                    k = seen[(s, d)] - 2
+                    if k < len(dup_pos):
+                        vec[NE_N_SYN_BASE + dup_pos[k]] = ne_weight_to_gene(w)
+            i += 4
+        elif m == NEURON_MARKER and i + 4 < n:
+            if h < NE_HIDDEN:
+                vec[pst + 2 * h] = ne_byte_to_gene(int(anc[i + 3]))
+                vec[pst + 2 * h + 1] = ne_byte_to_gene(int(anc[i + 4]))
+            h += 1
+            i += 5
+        elif m == RECEPTOR_MARKER and i + 9 < n:
+            vec[pst + 2 * NE_HIDDEN] = ne_byte_to_gene(int(anc[i + 6]))
+            vec[pst + 2 * NE_HIDDEN + 1] = ne_byte_to_gene(int(anc[i + 8]))
+            vec[pst + 2 * NE_HIDDEN + 2] = ne_byte_to_gene(int(anc[i + 9]))
+            i += 10
+        else:
+            i += 1
+    return vec
+
+
+def ne_find_spawn_pos():
+    """Place a founder/offspring ON the reading scroll (same placement rules as the books arm of
+    seed_universe): a free text cell, falling back to empty vacuum, then any free cell."""
+    for _ in range(2000):
+        p = random.randint(0, RAM_SIZE - 1)
+        if g_org_grid[p] == -1 and 32 <= g_ram[p] <= 126 and g_ram[p] != 0x55:
+            return p
+    for _ in range(1000):
+        p = random.randint(0, RAM_SIZE - 1)
+        if g_org_grid[p] == -1 and g_ram[p] == 0x00:
+            return p
+    for _ in range(1000):
+        p = random.randint(0, RAM_SIZE - 1)
+        if g_org_grid[p] == -1:
+            return p
+    return -1
+
+
+def ne_spawn_genome(slot, genome, birth_source=BIRTH_NATURAL):
+    """Encode a flat Option-3 genome into the marker-byte phenotype (engine ne_encode_genome) and
+    spawn it through the UNCHANGED spawn_organism path. The genome row is the hereditary record."""
+    pos = ne_find_spawn_pos()
+    if pos < 0:
+        return False
+    dna = ne_encode_genome(genome, NE_HIDDEN, NE_DUP_SLOTS)
+    if spawn_organism(slot, pos, dna, initial_energy=SEED_ENERGY, birth_source=birth_source):
+        g_ne_genomes[slot, :] = genome
+        return True
+    return False
+
+
+def ne_kill(slot):
+    """Host-side death bookkeeping mirroring the kernel's exact teardown (alive flag, occupancy
+    grid, free the three arena blocks)."""
+    if not g_alive[slot]:
+        return
+    g_alive[slot] = False
+    g_org_grid[g_positions[slot]] = -1
+    free_block(g_org_n_ptr[slot], g_org_n_count[slot], g_neuron_map)
+    free_block(g_org_s_ptr[slot], g_org_s_count[slot], g_synapse_map)
+    free_block(g_org_g_ptr[slot], g_org_g_count[slot], g_genome_map)
+
+
+def ne_fitness(age_mark):
+    """Option-3 fitness = survival time + bytes read correctly, measured over the CURRENT
+    generation: (g_age - age_mark) counts the LIF sub-steps survived this generation (g_age is
+    accumulated by the kernel every tick; age_mark snapshots it at generation start), and
+    g_ne_bytes counts full-byte-correct reads (kernel hooks). An organism that died mid-
+    generation keeps its frozen counters — its partial survival and partial reads score as-is."""
+    return (g_age.astype(np.int64) - age_mark).astype(np.float32) + g_ne_bytes.astype(np.float32)
+
+
+def ne_reset_generation():
+    """Snapshot the age counters as the new generation's baseline and zero the byte counters.
+    Returns the age_mark the driver holds for fitness deltas."""
+    age_mark = g_age.astype(np.int64).copy()
+    g_ne_bytes[:] = 0
+    return age_mark
+
+
+def ne_seed_population(rng, n=None, birth_source=BIRTH_ARK):
+    """Cold start: n founder genomes = the proven book ancestor PROJECTED onto the flat genome
+    (see ne_project_byte_genome) plus ONE registered-sigma Gaussian round on the loci the
+    ancestor EXPRESSES (|founder| > 0: its wired synapses + all plasticity params), so the
+    founder population is genuinely diverse ON THE PROVEN BODY PLAN. Jittering silent loci
+    would turn on ~800 weak synapses at once — MEASURED lethal within ~50 ticks (vocal drives
+    drown in noise, reads flip to penalty, burn ~x40; scratch/ne_diag.py arm B vs arm C,
+    2026-08-05). Design §4: 'leverages existing and tested evolutionary infrastructure'.
+    Returns (placed, founder_vec)."""
+    n = int(n) if n is not None else NE_POP
+    founder = ne_project_byte_genome(create_intelligent_ancestor(None))
+    expressed = (founder != 0.0)
+    placed = 0
+    for slot in range(MAX_ORGANISMS):
+        if placed >= n:
+            break
+        if g_alive[slot]:
+            continue
+        child = founder.copy()
+        child[expressed] += rng.normal(0.0, NE_SIGMA, size=int(expressed.sum())).astype(np.float32)
+        if ne_spawn_genome(slot, child, birth_source=birth_source):
+            placed += 1
+    return placed, founder
+
+
+def ne_evolve_step(rng, age_mark):
+    """One generational reproduction, called by the driver every NE_REPRO_PERIOD world-ticks.
+
+    1. Fitness = survival time + bytes read correctly, over the generation (ne_fitness).
+    2. ELITES = top NE_ELITE_FRAC (default 50%) of the ALIVE population by fitness — they
+       survive unchanged (their bodies, energy and ages are untouched).
+    3. Every other slot is refilled with a CHILD: two parents drawn by tournament
+       (size NE_TOURNAMENT) from the elite pool, uniform crossover (per-gene 50%), then
+       Gaussian mutation (sigma step with the copy-fidelity rate below). Population refills
+       to NE_POP.
+    4. Stats for the generation that just ENDED (scored BEFORE replacement): mean fitness (with
+       survival/bytes decomposition), genome diversity (mean per-gene std across the alive
+       population), population size, elite/offspring counts, extinction flag.
+    5. If NO elite survives (extinction), reseed founders honestly (counted as extinct=True).
+
+    The caller then resets the generation counters with ne_reset_generation().
+    """
+    fitness = ne_fitness(age_mark)
+    alive_ids = [i for i in range(MAX_ORGANISMS) if g_alive[i]]
+    scored = sorted(((float(fitness[i]), i) for i in alive_ids), reverse=True)
+    pop = len(alive_ids)
+    mean_fit = float(np.mean([f for f, _ in scored])) if scored else 0.0
+    max_fit = float(scored[0][0]) if scored else 0.0
+    mean_surv = float(np.mean([float(g_age[i] - age_mark[i]) for _, i in scored])) if scored else 0.0
+    mean_bytes = float(np.mean([float(g_ne_bytes[i]) for _, i in scored])) if scored else 0.0
+    diversity = float(np.mean(np.std(np.stack([g_ne_genomes[i] for i in alive_ids]), axis=0))) \
+        if alive_ids else 0.0
+
+    n_elite = int(pop * NE_ELITE_FRAC)   # top-50% fitness parents (registered default)
+    elites = [i for _, i in scored[:n_elite]]
+    elite_fits = np.array([fitness[i] for i in elites], dtype=np.float32)
+    elite_ids = np.array(elites, dtype=np.int64)
+    elite_set = set(elites)
+    victims = [i for i in range(MAX_ORGANISMS) if i not in elite_set]
+    for i in victims:
+        ne_kill(i)
+
+    offspring = 0
+    extinct = elite_ids.size == 0
+    if not extinct:
+        # Copy-fidelity rate: p = 1/G per gene (ONE expected fault per genome replication),
+        # the derivation the legacy mutate_dna already uses for the byte genome. Applying
+        # sigma to all genes at once is measured lethal (scratch/ne_diag.py arm B).
+        p_fault = 1.0 / float(NE_GENOME_LEN)
+        for i in victims:
+            if n_elite + offspring >= NE_POP:
+                break
+            pa = ne_tournament_select(elite_fits, elite_ids, NE_TOURNAMENT, rng)
+            pb = ne_tournament_select(elite_fits, elite_ids, NE_TOURNAMENT, rng)
+            child = ne_crossover_uniform(g_ne_genomes[pa], g_ne_genomes[pb], NE_XOVER_P, rng)
+            child = ne_mutate_gaussian(child, NE_SIGMA, rng, rate=p_fault)
+            if ne_spawn_genome(i, child, birth_source=BIRTH_NATURAL):
+                offspring += 1
+    else:
+        # Honest extinction accounting: reseed a fresh founder population (reported, counted).
+        reseeded, _ = ne_seed_population(rng)
+        offspring = reseeded
+
+    return {
+        "pop": pop,
+        "mean_fitness": mean_fit,
+        "max_fitness": max_fit,
+        "mean_survival": mean_surv,
+        "mean_bytes": mean_bytes,
+        "diversity": diversity,
+        "n_elites": n_elite,
+        "n_offspring": offspring,
+        "extinct": bool(extinct),
+    }
+
+
+def ne_world_maintenance(global_time, dynamic_lif_steps):
+    """Book-economy world upkeep for the NE driver loop, mirroring sim_loop's own driver lines
+    verbatim so the experiment runs the SAME physical economy as the live loop (Live-Loop-Test-
+    Gap rule): restock the contiguous curriculum scroll on the restock cadence, and regrow the
+    per-cell reading-fuel reservoir every world-tick when DEPLETE is on. Non-books economies need
+    no upkeep here (the NE protocol runs books)."""
+    if GENESIS_ECONOMY == "books" and g_auto_inject and (
+            (global_time // max(1, dynamic_lif_steps)) % BOOK_RESTOCK_EVERY) == 0:
+        printable = np.count_nonzero((g_ram >= 32) & (g_ram <= 126))
+        if printable < BOOK_TARGET_BYTES:
+            _lay_library()
+    if DEPLETE:
+        np.minimum(g_read_fuel + np.float32(DEPLETE_REGROW), np.float32(CELL_STATES),
+                   out=g_read_fuel)
+
 
 def mutate_dna(parent_dna):
     dna = bytearray(parent_dna)
@@ -1620,6 +1915,12 @@ def sim_loop():
         g_clear_count,
         g_org_run, g_lump_acc,
         g_race_state, g_race_attempt_q,
+        # FIX (2026-08-05): the warmup call stopped short at g_race_attempt_q when the Exp-103
+        # reservoir args were added to the signature (80 passed vs 85 required) — the live
+        # sim_loop would TypeError on its first warmup tick. Completed to the full signature
+        # (matches the main-loop call below) + the Option-3 g_ne_bytes arg.
+        g_reservoir_state, g_reservoir_src, g_reservoir_dst, g_reservoir_weight, g_readout_w,
+        g_ne_bytes,
     )
     for i in range(MAX_ORGANISMS):
         if g_alive[i]:
@@ -1887,6 +2188,7 @@ def sim_loop():
             g_org_run, g_lump_acc,
             g_race_state, g_race_attempt_q,
             g_reservoir_state, g_reservoir_src, g_reservoir_dst, g_reservoir_weight, g_readout_w,
+            g_ne_bytes,
         )
         g_run_natural_deaths += max(0, _pre_tick_alive - int(n_alive))
 

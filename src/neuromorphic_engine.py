@@ -328,6 +328,26 @@ RESERVOIR_EI_RATIO = float(os.environ.get("GENESIS_RESERVOIR_EI_RATIO", "0.8"))
 RESERVOIR_TAU = np.float32(float(os.environ.get("GENESIS_RESERVOIR_TAU", "20.0")))
 READOUT_LR = np.float32(0.01)
 
+# POPULATION-LEVEL NEUROEVOLUTION (Option 3 / Exp 3, default-OFF). Design: Docs/Architecture/
+# Option3_Neuroevolution_Design.md (approved, PR #15). Selection ACROSS generations optimizes a
+# static SNN; there is NO in-lifetime weight learning in this arm (the experiment driver composes
+# GENESIS_NOLEARN=1 / GENESIS_CAM=0 / GENESIS_STRUCTURAL_PLASTICITY=0 with this flag — see
+# experiments/exp3_neuroevolution_full_run.py). Genome: flat float32 vector -> synaptic weights +
+# plasticity params (per-hidden-neuron threshold/tau + receptor-0 v_rest/tau_def/spk_max). Fitness
+# = survival time + bytes read correctly. Selection: tournament (size 3). Mutation: Gaussian noise.
+# Crossover: uniform. Reproduction every NE_REPRO_PERIOD world-ticks (top 50% parents), death when
+# energy <= 0 — all population management is HOST-SIDE (genesis_lab), NOT in the kernel.
+# Kernel integration is deliberately minimal and mirrors the RESERVOIR discipline: two compile-gated
+# counter hooks (bytes read correctly) that are DEAD-CODE-ELIMINATED when this flag is off, so the
+# verified default path stays byte-identical (regression-guarded by
+# tests/engine_defaultpath_regression_test.py). The survival-time component needs no new state
+# (g_age already accumulates it every tick: fitness = delta-age + bytes, genesis_lab.ne_fitness).
+# A numba njit cannot WRITE a module-global array (Exp-98 note), so the byte counter is threaded
+# as the g_ne_bytes argument. The genome->body decoder + selection/mutation/crossover operators are
+# the host-side helpers at the bottom of this module (they run once per generation — never in the
+# hot tick loop — so they are plain Python, and the only kernel-visible change is the two hooks).
+NEUROEVOLUTION = os.environ.get("GENESIS_NEUROEVOLUTION", "0") == "1"
+
 # MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
 MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
 
@@ -1352,6 +1372,10 @@ def world_tick_numba(
     # RESERVOIR + READOUT (Exp 103 / Phase 3)
     g_reservoir_state, g_reservoir_src, g_reservoir_dst, g_reservoir_weight,
     g_readout_w,
+    # OPTION 3 NEUROEVOLUTION (2026-08-05): (MAX_ORG,) int32 per-organism counter of
+    # full-byte-correct reads — the bytes-read component of NE fitness. Incremented ONLY
+    # behind `if NEUROEVOLUTION:` (DCE'd when the flag is off -> default kernel byte-identical).
+    g_ne_bytes,
 ):
     max_org = alive.shape[0]
     sense_buf = np.zeros(N_INPUT, dtype=np.float32)
@@ -2503,6 +2527,10 @@ def world_tick_numba(
                             else:
                                 org_stomach_fuel[org, 0] = CELL_STATES
             if org_char_val == tgt_byte:
+                if NEUROEVOLUTION:
+                    # Option 3 fitness hook (bytes-read component): this organism read the
+                    # target byte correctly. DCE'd when the flag is off (byte-identical).
+                    g_ne_bytes[org] += 1
                 idx = read_log[0]
                 if idx < 996:
                     read_log[idx] = 1
@@ -2596,6 +2624,10 @@ def world_tick_numba(
                             # Exp 32: jump-predict reward (3rd factor)
                             read_gain_tick += pgain
                         if org_char_val == ptgt:
+                            if NEUROEVOLUTION:
+                                # Option 3 fitness hook (bytes-read component): jump-predict
+                                # read the target byte correctly. DCE'd when flag is off.
+                                g_ne_bytes[org] += 1
                             idx = read_log[0]
                             if idx < 996:
                                 read_log[idx] = 3
@@ -2897,6 +2929,146 @@ def reservoir_step(
             for i in range(n_res_i):
                 g_readout_w[vocal0 + k, i] += step * g_reservoir_state[i]
     return pred_byte, err_sum
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# OPTION 3 NEUROEVOLUTION — host-side genome machinery (Design: Docs/Architecture/
+# Option3_Neuroevolution_Design.md). These are PLAIN PYTHON helpers (not @njit): they run once
+# per generation at reproduction time, never in the world-tick hot loop, so they cost nothing
+# when GENESIS_NEUROEVOLUTION is off and never touch the compiled kernel. The only kernel-side
+# code for Option 3 is the two compile-gated g_ne_bytes hooks inside world_tick_numba above.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Base receptor record for an NE body (same values as the book ancestor's physics header, so a
+# founder genome reproduces the proven ancestor's receptor table exactly): single receptor
+# (index 0), STDP amplitudes raw 1/1, taus 1/1, v_rest 0, v_reset 0, tau_def 20, spk_max 255.
+# The receptor-0 v_rest / tau_def / spk_max bytes are OVERWRITTEN from the genome's plasticity-
+# param segment at encode time (they are live phenotype parameters even without STDP: v_rest
+# shifts every neuron's threshold, spk_max scales input firing probability, tau_def sets the
+# default membrane time constant).
+NE_BASE_RECEPTOR = [RECEPTOR_MARKER, 0, 1, 1, 1, 1, 0, 0, 20, 255]
+
+
+def ne_body_layout(n_hidden, extra_dup_pairs=()):
+    """Fixed body template for Option 3: N_IO fixed I/O neurons + n_hidden hidden neurons.
+
+    Synapse-gene segment: ALL (src, dst) pairs with dst >= N_INPUT (the decode keeps synapses
+    only onto output/hidden neurons) and src in [0, n_c) — inputs, hidden and (recurrently)
+    outputs are all legal sources, exactly like the marker-genome decode allows. `extra_dup_pairs`
+    lets the founder projection express the ancestor's deliberately DOUBLED wires (e.g. the two
+    max-weight echo copy synapses per bit): each duplicate pair gets one additional slot so the
+    founder's effective drive (e.g. 254 > threshold 128) survives the projection losslessly.
+
+    Plasticity-param segment (2*n_hidden + 3 genes): for each hidden neuron a (threshold, tau)
+    pair, then receptor-0 (v_rest, tau_def, spk_max).
+
+    Returns (n_c, slots, dup_slots, slot_index, n_syn_base, n_param, genome_len).
+    """
+    n_c = N_IO + int(n_hidden)
+    slots = [(s, d) for d in range(N_INPUT, n_c) for s in range(n_c)]
+    slot_index = {sd: i for i, sd in enumerate(slots)}
+    dup_slots = list(extra_dup_pairs)
+    n_syn_base = len(slots)
+    n_param = 2 * int(n_hidden) + 3
+    return n_c, slots, dup_slots, slot_index, n_syn_base, n_param, n_syn_base + len(dup_slots) + n_param
+
+
+def _ne_gene_to_byte(g):
+    """Map a real-valued gene in roughly [-1, 1] to a byte [0, 255] (linear, endpoint-exact)."""
+    x = float(g)
+    if x < -1.0:
+        x = -1.0
+    elif x > 1.0:
+        x = 1.0
+    return int(round((x + 1.0) * 127.5))
+
+
+def ne_byte_to_gene(b):
+    """Inverse of _ne_gene_to_byte (used to project byte-genomes onto the flat vector)."""
+    return float(int(b)) / 127.5 - 1.0
+
+
+def ne_weight_to_gene(w_byte):
+    """Weight byte [0,255] (decode maps it to w = byte - 128) -> gene in [-1, 1]."""
+    return (float(int(w_byte)) - 128.0) / 127.0
+
+
+def ne_encode_genome(genome, n_hidden, extra_dup_pairs=()):
+    """Decode a flat float32 Option-3 genome into the phenotype body, expressed in the existing
+    marker-genome byte format so spawn_organism / decode_genome consume it UNCHANGED (no new
+    decode path in the kernel). Zero-weight slots round to byte 128 and are NOT emitted, so the
+    phenotype stays sparse (a synapse physically exists only if its gene reaches a nonzero byte).
+    Returns a uint8 marker-genome array."""
+    n_c, slots, dup_slots, _idx, n_syn_base, _n_param, g_len = ne_body_layout(n_hidden, extra_dup_pairs)
+    if len(genome) != g_len:
+        raise ValueError(f"NE genome length {len(genome)} != layout {g_len}")
+    p0 = n_syn_base + len(dup_slots)  # plasticity-param segment start
+    dna = list(NE_BASE_RECEPTOR)
+    for h in range(int(n_hidden)):
+        th = _ne_gene_to_byte(genome[p0 + 2 * h])
+        ta = _ne_gene_to_byte(genome[p0 + 2 * h + 1])
+        # sign byte = N_IO + h (excitatory, ancestor-equal; Dale off in the Option-3 arm)
+        dna.extend([NEURON_MARKER, (N_IO + h) % 256, 128, th, ta])
+    # receptor-0 plasticity params (v_rest / tau_def / spk_max bytes of the base record)
+    dna[6] = _ne_gene_to_byte(genome[p0 + 2 * int(n_hidden)])
+    dna[8] = _ne_gene_to_byte(genome[p0 + 2 * int(n_hidden) + 1])
+    dna[9] = _ne_gene_to_byte(genome[p0 + 2 * int(n_hidden) + 2])
+    n_syn_total = n_syn_base + len(dup_slots)
+    for gi in range(n_syn_total):
+        w_byte = 128 + int(round(max(-1.0, min(1.0, float(genome[gi]))) * 127.0))
+        if w_byte == 128:
+            continue  # silent slot: no synapse expressed
+        s, d = slots[gi] if gi < n_syn_base else dup_slots[gi - n_syn_base]
+        dna.extend([GENE_MARKER, s % 256, d % 256, w_byte])
+    return np.array(dna, dtype=np.uint8)
+
+
+def ne_tournament_select(fitness, parent_ids, k, rng):
+    """Tournament selection (k draws WITH replacement from parent_ids; highest fitness wins).
+    fitness/ parent_ids are parallel arrays of the ELIGIBLE (elite) pool."""
+    best = -1
+    best_fit = None
+    n = len(parent_ids)
+    if n == 0:
+        return -1
+    for _ in range(int(k)):
+        i = int(rng.integers(0, n))
+        f = float(fitness[i])
+        if best < 0 or f > best_fit:
+            best = i
+            best_fit = f
+    return int(parent_ids[best])
+
+
+def ne_crossover_uniform(parent_a, parent_b, p_mix, rng):
+    """Uniform crossover: each gene is taken from parent_b with probability p_mix (0.5 = 50%
+    chance per gene), else from parent_a. parent_a == parent_b degenerates to a copy (then
+    mutation supplies the variation)."""
+    mask = rng.random(len(parent_a)) < float(p_mix)
+    child = np.where(mask, parent_b, parent_a).astype(np.float32)
+    return child
+
+
+def ne_mutate_gaussian(genome, sigma, rng, rate=None):
+    """Gaussian mutation (the pre-registered Option-3 operator; sigma = 0.1 step size).
+
+    rate=None  -> every gene is perturbed by N(0, sigma).
+    rate=p     -> each gene is perturbed with probability p. The Option-3 driver uses
+                p = 1/G (G = genome length): exactly ONE EXPECTED fault per genome
+                replication — the same per-copy fidelity derivation the legacy byte-genome
+                mutate_dna uses (per-byte fidelity 1/l, no new invented constant). This is
+                not a nicety: applying sigma=0.1 to all ~849 genes of an ancestor-class body
+                turns on ~800 weak synapses at once (vocal drives drown in noise, read income
+                flips to penalty, event-driven burn ~x40) — MEASURED lethal within ~50 ticks
+                (scratch/ne_diag.py arm B vs arm C, 2026-08-05), so an every-gene application
+                would reduce every offspring to noise before selection can act on it.
+    Genome values are unbounded reals — the phenotype encode clips to the byte range, so
+    heritability stays linear even where the phenotype saturates."""
+    step = rng.normal(0.0, float(sigma), size=len(genome)).astype(np.float32)
+    if rate is not None:
+        mask = rng.random(len(genome)) < float(rate)
+        step = step * mask
+    return (genome + step).astype(np.float32)
 
 
 # ── Rule 21.8 drift guard (audit 2026-07-31): the cache dir pinned at the TOP of this module

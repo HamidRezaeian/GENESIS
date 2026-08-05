@@ -103,6 +103,10 @@ KERNEL_STATE_VARS = (
     "INCOME_FOOTPRINT", "FOOTPRINT_QUANTUM", "CLEAR_THRESHOLD",
     "INCOME_LUMP_SUM", "LUMPSUM_K",
     "INCOME_RACE", "RACE_N_QUESTIONS", "RACE_STRIDE", "RACE_K",
+    # population-level neuroevolution (Option 3 / Exp 3): compile-gates the two g_ne_bytes
+    # fitness hooks inside world_tick_numba -> the NE and non-NE kernels must never share a
+    # cache (Session-11 stale-kernel class). Appended (never reordered) 2026-08-05.
+    "NEUROEVOLUTION",
 )
 
 
@@ -231,6 +235,7 @@ def _mirror_values_from_env():
         "RACE_N_QUESTIONS": max(1, i("GENESIS_RACE_N_QUESTIONS", "8")),
         "RACE_STRIDE": max(1, i("GENESIS_RACE_STRIDE", "256")),
         "RACE_K": max(1, int(g("GENESIS_RACE_K", g("GENESIS_LUMPSUM_K", "8")))),
+        "NEUROEVOLUTION": flag("GENESIS_NEUROEVOLUTION", "0"),   # engine reads it verbatim
     }
     return values
 
@@ -365,6 +370,7 @@ ENV_NAME_MAP = {
     "GENESIS_RACE_N_QUESTIONS": "RACE_N_QUESTIONS",
     "GENESIS_RACE_STRIDE": "RACE_STRIDE",
     "GENESIS_RACE_K": "RACE_K",
+    "GENESIS_NEUROEVOLUTION": "NEUROEVOLUTION",
 }
 
 # GENESIS_* engine reads that are HOST-SIDE only (never frozen into the kernel) — exempt from

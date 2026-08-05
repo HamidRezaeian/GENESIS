@@ -66,6 +66,7 @@ def run(n_ticks=200, seed_pop=300, food_rate=0.1):
 
             gl.g_eligibility, gl.g_baseline_acc, gl.g_spikes_used,
             gl.g_reservoir_state, gl.g_readout_w,
+            gl.g_ne_bytes,  # Option 3 fitness counter (DCE'd when GENESIS_NEUROEVOLUTION=0)
         )
         # process births exactly like sim_loop
         for i in range(n_births):
