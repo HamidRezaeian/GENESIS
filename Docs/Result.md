@@ -4542,3 +4542,17 @@ Arms (24 seeds, 72..95, 8000 ticks, pinned geometry 512 orgs / 2 MiB RAM, fresh 
 **Binding interpretation (Rule 18):** the full mechanism-resolution programme is now exhausted: tuning the knobs (Exp 97), gating *when* plasticity fires (Exp 98), and changing *where* plasticity persists / the memory substrate (Exp 99) have each been pre-registered and each failed at the binding admission control. The first confirmable learning signal appeared only at the last step — but it appeared without the stability the certification gate demands. No further mechanism levers may be added to the SNN-on-RAM substrate in search of criterion B. **The Rule-18 kill criterion is fully executed: the SNN-on-RAM substrate hypothesis is formally falsified as an AGI substrate.** The project must pivot substrate hypotheses, carrying the Exp-99 signal (a two-timescale memory hierarchy produced the first learning advantage) as a design requirement for the next substrate, not as a rescue of this one.
 
 Artifacts: `experiments/exp99_twoscale_results.json`, 72 raw per-seed-per-arm JSONs in `experiments/leaderboard/raw/` (`tf1_stdp3c_learner_exp99_{twoscale,vanilla}_remap1_s{72..95}.json`, `tf1_nolearn_ablation_exp99_nolearn_remap1_s{72..95}.json`). Git commit <pending>.
+
+---
+
+## 🧪 Experiment 103 — Reservoir + Readout Probe & NLMS Disclosure (2026-08-05)
+
+Pre-registered protocol `EXP103_RESERVOIR_READOUT_v1` (`Docs/Exp103_Protocol.md`, branch `feature/reservoir-readout`). Investigates whether a persistent echo-state reservoir (`size=256, sparsity=0.1, EI=0.8, tau=20.0`) with linear readout trained online by LMS (`lr=0.01`) overcomes the silent-synapse and self-silencing barriers of the SNN-on-RAM Hebbian substrate on a static text-reading task.
+
+**Rule 16 / Rule 17 Algorithmic Disclosure (NLMS substitution):**
+During initial pilot testing, raw LMS (`Δw = lr * err * x`) diverged to NaN on correlated reservoir state activations (`x`). To restore well-posed numerical stability without tuning or introducing new hyperparameters, **Normalized LMS (NLMS)** was substituted:
+
+$$\Delta w = \text{lr} \frac{\text{err} \cdot x}{\|x\|^2 + \epsilon}$$
+
+where $\epsilon = 10^{-8}$ is a numerical safety floor. This is a magnitude-invariant update correction required by correlated echo-state reservoir features, **NOT** parameter tuning: the pre-registered learning rate remains unchanged at `lr = 0.01` (Rule 16 / Rule 17).
+

@@ -1,0 +1,72 @@
+{
+  "protocol": "EXP103_RESERVOIR_READOUT_v1",
+  "pre_reg_date": "2026-08-05",
+  "ticks": 20000,
+  "report_every": 1000,
+  "seeds": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "mean_learner_late_acc": 78.0755,
+  "mean_learner_early_acc": 78.0198,
+  "mean_learner_delta_pp": 0.0557,
+  "mean_nolearn_late_acc": 67.725,
+  "mean_nolearn_early_acc": 67.7292,
+  "gap_late_pp": 10.3505,
+  "no_monotonic_decline": true,
+  "verdict": "RESERVOIR_HELPS_STATICALLY_BUT_INRUN_LEARNING_WEAK",
+  "per_seed_learner": [
+    {
+      "seed": 0,
+      "early_acc": 78.0083,
+      "late_acc": 78.125,
+      "delta_pp": 0.1167
+    },
+    {
+      "seed": 1,
+      "early_acc": 77.8833,
+      "late_acc": 77.8771,
+      "delta_pp": -0.0063
+    },
+    {
+      "seed": 2,
+      "early_acc": 77.8958,
+      "late_acc": 78.0,
+      "delta_pp": 0.1042
+    },
+    {
+      "seed": 3,
+      "early_acc": 78.2917,
+      "late_acc": 78.3,
+      "delta_pp": 0.0083
+    }
+  ],
+  "per_seed_nolearn": [
+    {
+      "seed": 0,
+      "early_acc": 63.9271,
+      "late_acc": 63.9,
+      "delta_pp": -0.0271
+    },
+    {
+      "seed": 1,
+      "early_acc": 66.6937,
+      "late_acc": 66.7,
+      "delta_pp": 0.0063
+    },
+    {
+      "seed": 2,
+      "early_acc": 61.1979,
+      "late_acc": 61.1,
+      "delta_pp": -0.0979
+    },
+    {
+      "seed": 3,
+      "early_acc": 79.0979,
+      "late_acc": 79.2,
+      "delta_pp": 0.1021
+    }
+  ]
+}

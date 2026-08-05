@@ -1,0 +1,144 @@
+{
+  "protocol": "EXP103_RESERVOIR_READOUT_v1",
+  "pre_reg_date": "2026-08-05",
+  "arm": "nolearn",
+  "seed": 1,
+  "ticks": 20000,
+  "report_every": 1000,
+  "reservoir_size": 256,
+  "reservoir_sparsity": 0.1,
+  "reservoir_ei_ratio": 0.8,
+  "reservoir_tau": 20.0,
+  "readout_lr_applied": 0.0,
+  "patch_bytes": 500,
+  "early_acc": 66.6937,
+  "late_acc": 66.7,
+  "acc_delta_pp": 0.0063,
+  "early_mean_err": 0.896629,
+  "late_mean_err": 0.902849,
+  "err_delta": 0.00622,
+  "final_norm_readout_w": 2.588822,
+  "elapsed_s": 0.362,
+  "samples": [
+    {
+      "tick": 1000,
+      "acc": 66.6625,
+      "mean_readout_err": 0.865528,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 2000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 3000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 4000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 5000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 6000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 7000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 8000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 9000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 10000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 11000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 12000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 13000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 14000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 15000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 16000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 17000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 18000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 19000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    },
+    {
+      "tick": 20000,
+      "acc": 66.7,
+      "mean_readout_err": 0.902849,
+      "norm_readout_w": 2.588822
+    }
+  ]
+}
