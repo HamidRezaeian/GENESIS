@@ -105,6 +105,7 @@ def tick():
         lab.g_race_state, lab.g_race_attempt_q,
         lab.g_eligibility, lab.g_baseline_acc, lab.g_spikes_used,
         lab.g_reservoir_state, lab.g_readout_w,
+        lab.g_ne_bytes,  # Option 3 fitness counter (DCE'd when GENESIS_NEUROEVOLUTION=0)
     )
     lab.global_time += 1
 
