@@ -103,6 +103,8 @@ def tick():
         lab.g_clear_count,
         lab.g_org_run, lab.g_lump_acc,
         lab.g_race_state, lab.g_race_attempt_q,
+        lab.g_eligibility, lab.g_baseline_acc, lab.g_spikes_used,
+        lab.g_reservoir_state, lab.g_readout_w,
     )
     lab.global_time += 1
 

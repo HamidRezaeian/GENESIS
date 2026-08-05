@@ -158,7 +158,9 @@ def tick_world(global_time: int):
         gl.g_org_delay_buf, gl.g_org_stomach_fuel, gl.g_org_scratch, gl.g_ram_bank_access, gl.g_ram_bank_access_next,
         gl.g_curriculum_delay, gl.g_conn_w_dna, gl.g_conn_w_slow,
         gl.g_cam_keys, gl.g_cam_vals, gl.g_cam_valid, gl.g_cam_tick,
-        gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q)
+        gl.g_clear_count, gl.g_org_run, gl.g_lump_acc, gl.g_race_state, gl.g_race_attempt_q,
+        g_eligibility, g_baseline_acc, g_spikes_used,
+        g_reservoir_state, g_readout_w)
 
 
 def run_arm(arm_name: str) -> list:

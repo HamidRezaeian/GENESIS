@@ -190,7 +190,9 @@ try:
                 lab.g_conn_w_slow,
                 lab.g_cam_keys, lab.g_cam_vals, lab.g_cam_valid, lab.g_cam_tick,
                 lab.g_clear_count,
-                lab.g_org_run, lab.g_lump_acc, lab.g_race_state, lab.g_race_attempt_q,  # Session 15: sync probe to current 79-arg engine signature
+                lab.g_org_run, lab.g_lump_acc, lab.g_race_state, lab.g_race_attempt_q,
+        lab.g_eligibility, lab.g_baseline_acc, lab.g_spikes_used,
+        lab.g_reservoir_state, lab.g_readout_w,  # Session 15: sync probe to current 79-arg engine signature
             )
             lab.global_time += 1
             alive_per_tick.append(sum(1 for i in range(MAX_ORG) if lab.g_alive[i]))

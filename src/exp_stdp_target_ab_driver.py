@@ -62,7 +62,9 @@ def tick(gt):
         g_org_reward, g_org_elig, g_global_sense_type, g_global_sense_meta, g_global_act_drive,
         g_org_delay_buf, g_org_stomach_fuel, g_org_scratch, g_ram_bank_access, g_ram_bank_access_next,
         g_curriculum_delay, g_conn_w_dna, g_conn_w_slow, g_conn_w_slow, g_cam_keys, g_cam_vals, g_cam_valid, g_cam_tick,
-        g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q)
+        g_clear_count, g_org_run, g_lump_acc, g_race_state, g_race_attempt_q,
+        g_eligibility, g_baseline_acc, g_spikes_used,
+        g_reservoir_state, g_readout_w)
 
 def main(n_ticks=2000, seed=42):
     K = 8; NOISE = ord('a'); rng = np.random.RandomState(seed)
