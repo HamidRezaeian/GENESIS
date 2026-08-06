@@ -1865,9 +1865,10 @@ def _stock_shelter_patches(target_shelter=1500, offset=0):
 
 
 def _lay_library(at=None):
-    """Lay the live curriculum. Demo mode (GENESIS_LIVE_WEB=1, default): when live-web
-    streaming yields text, tile it across the RAM substrate (engine-sized). Benchmark mode
-    (GENESIS_LIVE_WEB=0): ALWAYS lay the deterministic graded book scroll instead.
+    """Lay the live curriculum. Demo mode (NETWORK_ACCESS_ENABLED=1, opt-in per Rule 24-R.2,
+    and GENESIS_LIVE_WEB unset/1): when live-web streaming yields text, tile it across the
+    RAM substrate (engine-sized). Default/benchmark mode (network denied or
+    GENESIS_LIVE_WEB=0): ALWAYS lay the deterministic graded book scroll instead.
 
     NOTE (audit 2026-07-31, deep review P1-9): the live-web path replaces the 00_Graded
     bootstrap — repeat-free text is a cold-cliff for the prediction economy (Exp 12/17) and
@@ -2214,7 +2215,8 @@ def sim_loop():
         
         now = time.time()
         
-        # Live-web curriculum injection (demo mode). GENESIS_LIVE_WEB=0 disables it entirely —
+        # Live-web curriculum injection (demo mode; requires NETWORK_ACCESS_ENABLED=1 opt-in per
+        # Rule 24-R.2 — network is deny-by-default). GENESIS_LIVE_WEB=0 disables it entirely —
         # reproducible benchmark runs must not be fed a non-reproducible live input (deep review
         # P1-9: live-demo vs benchmark separation). The streamer is non-blocking (background
         # thread, cache + honest status since 2026-07-31), so this never stalls the loop; any
