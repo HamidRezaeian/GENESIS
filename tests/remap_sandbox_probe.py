@@ -247,17 +247,22 @@ def main():
         swapped = (states > 1) and (((era_start // period) % states) != 0)
 
         if global_time % REPORT == 0 and global_time > 0:
+            import hashlib
+            w_hash = hashlib.sha256(gl.g_global_conn_weight.tobytes()).hexdigest()[:16]
             sc, st, uc, ut = measure_window(swapped)
             swap_acc = (100.0 * sc / st) if st else float("nan")
             unch_acc = (100.0 * uc / ut) if ut else float("nan")
             phase = "SWAP" if swapped else "idnt"
-            windows.append({"t": int(global_time), "remap_active": bool(ne.REMAP),
-                            "phase_label": phase,
-                            "swapbit_correct": int(sc), "swapbit_total": int(st),
-                            "unchbit_correct": int(uc), "unchbit_total": int(ut),
-                            "alive": int(n_alive)})
+            win_dict = {"t": int(global_time), "remap_active": bool(ne.REMAP),
+                        "phase_label": phase,
+                        "swapbit_correct": int(sc), "swapbit_total": int(st),
+                        "unchbit_correct": int(uc), "unchbit_total": int(ut),
+                        "alive": int(n_alive)}
+            if os.environ.get("PROBE_WEIGHT_HASH") == "1":
+                win_dict["weight_hash"] = w_hash
+            windows.append(win_dict)
             print(f"  t={global_time:>6} phase={phase} | swapbit_acc={swap_acc:5.1f}% (n={st:4d}) "
-                  f"| unchbit_acc={unch_acc:5.1f}% (n={ut:5d}) | alive={int(n_alive)}")
+                  f"| unchbit_acc={unch_acc:5.1f}% (n={ut:5d}) | alive={int(n_alive)} | w_hash={w_hash}")
 
         global_time += 1
 

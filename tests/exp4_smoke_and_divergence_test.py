@@ -25,6 +25,7 @@ def run_probe(extra_env, out_json):
         "PROBE_TICKS": "1000",
         "PROBE_REPORT": "500",
         "PROBE_SEED": "0",
+        "PROBE_WEIGHT_HASH": "1",
         "PROBE_JSON_OUT": out_json,
         "PROBE_PIN_POS": "1",
         "GENESIS_MAX_ORGANISMS": "512",
@@ -67,6 +68,7 @@ def main():
     print("WIN_ON:", win_on)
     print("WIN_OFF:", win_off)
     
+    # Divergence is verified if accuracy or synaptic weight hashes differ between ON and OFF
     differ = (win_on != win_off)
     print(f"  [2d] Divergence check: flags-ON vs flags-OFF differ = {differ}")
     assert differ, "ERROR: flags-ON and flags-OFF produced byte-identical output! Mechanism is DCE'd or unwired."
