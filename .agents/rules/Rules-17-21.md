@@ -16,8 +16,21 @@ Record all CAM configuration in every dependent experiment; CAM parameters must 
 ## Rule 20: Shortcut accountability
 For every positive cognitive claim: identify possible shortcuts (echo, bigrams, position, skewed marginals, authored/oracle logic), run format- and marginal-matched NULL controls, replicate under Rule 3, and report claim-control delta. A non-positive or insignificant delta does not support the claim. Oracle probes and theoretical key counts are diagnostics, never organism capability; the substrate must learn the capability without hand-set solution weights.
 
-## Rule 21: Physical grounding—no game mechanics
+## Rule 21: Physical Grounding and Brain-Inspired Efficiency—no game mechanics
 GENESIS is a physical substrate, not a tuned game.
+
+All computational costs must be measured in actual hardware cycles (no virtual 
+shortcuts). The system must strive for **brain-like computational efficiency**: 
+achieving high intelligence with minimal energy consumption, inspired by 
+biological neural systems.
+
+Biological reference: Human brains achieve complex cognition (reasoning, 
+generalization, adaptation) with approximately 20W power consumption. This 
+demonstrates that powerful intelligence does not require massive energy budgets.
+
+Design principle: Efficiency is not just measurement — it is a core objective. 
+Architectures should be evaluated on **capability per unit of computational cost**, 
+not just raw capability.
 
 1. **Costs:** charge measured host work—CPU/GPU cycles, RAM traffic, storage I/O, time, and where available joules—not invented points.
 2. **Parameters:** every tunable threshold, rate, gain, radius, capacity, or time constant must be H-derived or E-encoded. Otherwise derive, evolve, or delete it.

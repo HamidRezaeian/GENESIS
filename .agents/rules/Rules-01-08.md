@@ -21,8 +21,11 @@ Actively test biological and physical assumptions, arbitrary constants, bottlene
 ## Rule 5: Proto-cognitive ancestor boundary
 The ancestor may contain minimal general survival primitives: sensing, energy acquisition, homeostasis, plasticity, replication, and failure response. It must not contain authored reasoning, planning, domain solutions, human knowledge/language, target computation, or general intelligence. Diagnostic oracle code is not organism capability. Review and document any ambiguous primitive.
 
-## Rule 6: Prime directive
-Evolve open-ended, efficient intelligence with genuine in-lifetime learning, memory, adaptation, generalization, reasoning, and goal-directed behavior. Human biology and ~20 W efficiency are references, not mandatory architecture. Never adopt a short-term fix that permanently blocks open-endedness.
+## Rule 6 — Prime Directive
+Evolve **open-ended intelligence progressing from AGI toward AXI** with genuine 
+in-lifetime learning, memory, adaptation, generalization, reasoning, and 
+goal-directed behavior. The system must be executable on commodity home computer 
+hardware (single consumer CPU/GPU, reasonable memory footprint).
 
 ## Rule 7: Emergent efficiency
 Selection must arise from honest substrate resource accounting, never an authored IQ/efficiency score. Charge actual computation, memory, traffic, communication, neural activity, and plasticity costs where applicable. Observation metrics must not control survival, reproduction, inheritance, ranking, or reseeding. Repair weak pressure through physical accounting/economy, not penalties by fiat.
