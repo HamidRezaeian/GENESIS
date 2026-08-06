@@ -47,3 +47,59 @@ not just raw capability.
 - Deep working memory uses addressable external/CAM-like storage and learned routing, not only leaky voltage or passive latches.
 - Fixed per-byte income and immediate clearing do not solve the metabolic ceiling; real clearing must preserve learnable structure, and complex work requires measured multi-byte work-unit accounting.
 - Compact RAM and hardware-aware capacity changes require executable invariant probes, not assertion-only validation.
+
+
+## Rule 22 — Brain-Inspired Efficiency Principle
+Brain-like efficiency is a design objective, not a hard disqualification gate.
+
+GENESIS should prefer architectures that improve capability per unit of measured 
+physical cost. The biological brain's high capability at low power is treated as 
+an existence proof and regulative ideal, not an implementation specification.
+
+Architectures are ranked higher when they:
+1. increase capability without proportional growth in footprint
+2. reduce cost per learned behavior
+3. exploit sparsity, locality, reuse, event-driven computation
+4. preserve or improve Rule-18 capability under matched ablation controls
+
+Failure to match biological efficiency does not invalidate a prototype.
+
+## Rule 23 — Substrate Falsification and Pivot Protocol
+
+When a substrate hypothesis is formally falsified by a pre-registered Rule-18 
+kill criterion, no further mechanism, economy, reward, or tuning lever may be 
+added to rescue that substrate as an AGI path.
+
+After falsification, work on that substrate is allowed only for:
+1. artifact analysis
+2. reproducibility  
+3. extracting design requirements for next substrate
+4. historical documentation
+
+A new AGI-path experiment must declare a new substrate hypothesis.
+
+Current binding status: SNN-on-RAM with local/Hebbian/STDP-style in-lifetime 
+learning is falsified as the primary AGI substrate after Rule-18 Exp-99 verdict.
+
+## Rule 24 — Containment and Corrigibility (Safety)
+Every prototype must be corrigible, interruptible, and contained by default.
+
+1. Human-controlled halt switch must stop learning/inference/reproduction 
+   within one scheduler tick
+2. No network access unless explicitly approved
+3. File-system write access restricted to declared sandbox
+4. No subprocess spawning, self-modification, or persistence outside sandbox
+5. Self-preservation/deception behavior triggers immediate pause + incident report
+
+## Rule 25 — Capability Thresholds and Pause Conditions
+GENESIS must maintain early-warning evaluations for:
+1. autonomous long-horizon planning
+2. self-modification or code generation
+3. tool use beyond sandbox
+4. deception or hidden-state manipulation
+5. replication or resource-seeking
+6. rapid capability gain without interpretability
+
+If prototype crosses threshold on 2+ risk-relevant capabilities, scaling 
+pauses until written safety review completed.
+
