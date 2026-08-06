@@ -22,10 +22,14 @@ Actively test biological and physical assumptions, arbitrary constants, bottlene
 The ancestor may contain minimal general survival primitives: sensing, energy acquisition, homeostasis, plasticity, replication, and failure response. It must not contain authored reasoning, planning, domain solutions, human knowledge/language, target computation, or general intelligence. Diagnostic oracle code is not organism capability. Review and document any ambiguous primitive.
 
 ## Rule 6 — Prime Directive
-Evolve **open-ended intelligence progressing from AGI toward AXI** with genuine 
-in-lifetime learning, memory, adaptation, generalization, reasoning, and 
-goal-directed behavior. The system must be executable on commodity home computer 
-hardware (single consumer CPU/GPU, reasonable memory footprint).
+
+GENESIS pursues open-ended intelligence progressing from AGI toward AXI: genuine in-lifetime learning, memory, adaptation, generalization, reasoning, and goal-directed behavior across novel situations.
+
+The long-horizon deployment target is execution on commodity home-computer hardware: a single consumer workstation-class CPU/GPU with a reasonable memory footprint.
+
+This hardware target is a design objective and reporting envelope, not an early-research disqualification criterion. Research prototypes may exceed the target only when explicitly labelled as diagnostic or substrate-comparison runs, with measured cost, memory, and wall-time reported under Rule 21.
+
+A claim of AGI/AXI progress is invalid unless it passes the Rule 18 capability, learning-ablation, generality, and efficiency gates.
 
 ## Rule 7: Emergent efficiency
 Selection must arise from honest substrate resource accounting, never an authored IQ/efficiency score. Charge actual computation, memory, traffic, communication, neural activity, and plasticity costs where applicable. Observation metrics must not control survival, reproduction, inheritance, ranking, or reseeding. Repair weak pressure through physical accounting/economy, not penalties by fiat.
