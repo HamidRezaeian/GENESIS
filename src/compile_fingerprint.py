@@ -107,6 +107,8 @@ KERNEL_STATE_VARS = (
     # fitness hooks inside world_tick_numba -> the NE and non-NE kernels must never share a
     # cache (Session-11 stale-kernel class). Appended (never reordered) 2026-08-05.
     "NEUROEVOLUTION",
+    # Free-Energy Oracle & Economy Isolation (Exp 4 & Exp 5, 2026-08-06)
+    "FREE_ENERGY", "NO_DEATH", "SUPERVISED_TEACHER", "COST_FACTOR",
 )
 
 
@@ -236,6 +238,10 @@ def _mirror_values_from_env():
         "RACE_STRIDE": max(1, i("GENESIS_RACE_STRIDE", "256")),
         "RACE_K": max(1, int(g("GENESIS_RACE_K", g("GENESIS_LUMPSUM_K", "8")))),
         "NEUROEVOLUTION": flag("GENESIS_NEUROEVOLUTION", "0"),   # engine reads it verbatim
+        "FREE_ENERGY": flag("GENESIS_FREE_ENERGY", "0"),
+        "NO_DEATH": flag("GENESIS_NO_DEATH", "0"),
+        "SUPERVISED_TEACHER": flag("GENESIS_SUPERVISED_TEACHER", "0"),
+        "COST_FACTOR": float(g("GENESIS_COST_FACTOR", "1.0")),
     }
     return values
 
@@ -371,6 +377,10 @@ ENV_NAME_MAP = {
     "GENESIS_RACE_STRIDE": "RACE_STRIDE",
     "GENESIS_RACE_K": "RACE_K",
     "GENESIS_NEUROEVOLUTION": "NEUROEVOLUTION",
+    "GENESIS_FREE_ENERGY": "FREE_ENERGY",
+    "GENESIS_NO_DEATH": "NO_DEATH",
+    "GENESIS_SUPERVISED_TEACHER": "SUPERVISED_TEACHER",
+    "GENESIS_COST_FACTOR": "COST_FACTOR",
 }
 
 # GENESIS_* engine reads that are HOST-SIDE only (never frozen into the kernel) — exempt from

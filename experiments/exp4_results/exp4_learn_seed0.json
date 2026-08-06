@@ -1,0 +1,120 @@
+{
+ "instrument": "remap_sandbox_probe",
+ "instrument_rev": "2026-08-02+twoscale",
+ "seed": 0,
+ "mode": "STDP3C",
+ "remap": true,
+ "period": 4000,
+ "states": 2,
+ "swapbits": [
+  0,
+  1
+ ],
+ "stdp_div": 1.0,
+ "n_orgs": 120,
+ "ticks": 1000,
+ "patch": 2000,
+ "report": 100,
+ "pin_pos": true,
+ "windows": [
+  {
+   "t": 100,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 494,
+   "swapbit_total": 612,
+   "unchbit_correct": 1807,
+   "unchbit_total": 1836,
+   "alive": 120,
+   "weight_hash": "03c016b22ef69a09"
+  },
+  {
+   "t": 200,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 317,
+   "swapbit_total": 548,
+   "unchbit_correct": 1541,
+   "unchbit_total": 1644,
+   "alive": 120,
+   "weight_hash": "336badd7baa8c527"
+  },
+  {
+   "t": 300,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 289,
+   "swapbit_total": 530,
+   "unchbit_correct": 1453,
+   "unchbit_total": 1590,
+   "alive": 120,
+   "weight_hash": "ad4d0a95b5d885e4"
+  },
+  {
+   "t": 400,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 340,
+   "swapbit_total": 540,
+   "unchbit_correct": 1523,
+   "unchbit_total": 1620,
+   "alive": 120,
+   "weight_hash": "9ff8d8fd45fd7e09"
+  },
+  {
+   "t": 500,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 272,
+   "swapbit_total": 520,
+   "unchbit_correct": 1413,
+   "unchbit_total": 1560,
+   "alive": 120,
+   "weight_hash": "8ede033a2c703d1f"
+  },
+  {
+   "t": 600,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 294,
+   "swapbit_total": 534,
+   "unchbit_correct": 1474,
+   "unchbit_total": 1602,
+   "alive": 120,
+   "weight_hash": "8900f391f1764ec3"
+  },
+  {
+   "t": 700,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 317,
+   "swapbit_total": 546,
+   "unchbit_correct": 1529,
+   "unchbit_total": 1638,
+   "alive": 120,
+   "weight_hash": "2b799a4cd8bb7f57"
+  },
+  {
+   "t": 800,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 311,
+   "swapbit_total": 532,
+   "unchbit_correct": 1474,
+   "unchbit_total": 1596,
+   "alive": 120,
+   "weight_hash": "8ba0b6cfdbb991e3"
+  },
+  {
+   "t": 900,
+   "remap_active": true,
+   "phase_label": "idnt",
+   "swapbit_correct": 305,
+   "swapbit_total": 536,
+   "unchbit_correct": 1487,
+   "unchbit_total": 1608,
+   "alive": 120,
+   "weight_hash": "25c182120dae5c81"
+  }
+ ]
+}
