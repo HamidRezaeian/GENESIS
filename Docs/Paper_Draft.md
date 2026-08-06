@@ -11,7 +11,7 @@
 
 ## Abstract
 
-We demonstrate that physically-costed spiking neural networks embedded in a survival economy can perform robust in-lifetime learning (+21 percentage-point accuracy gain over non-learning controls), but only when metabolic costs of synaptic plasticity are buffered. Under strict hardware-equivalent energy accounting (Rule 21), exploration-driven weight updates drain organism energy faster than prediction income replenishes it, creating a fitness landscape where learning is negatively rewarded. Crucially, we show this suppression is an **interaction effect**: metabolic cost alone does not impair learning (accuracy is identical across all cost factors θ ∈ [0, 1] when death is disabled), and death alone does not impair learning (energy-pinned cohorts learn normally). Only when cost and death act jointly does learning collapse. This finding identifies **metabolic buffering** — mechanisms that decouple short-term exploration cost from survival pressure — as a necessary architectural prerequisite for embodied plasticity in resource-constrained agents.
+We present an empirical investigation into in-lifetime learning within physically-costed spiking neural networks embedded in a survival economy. Using a per-organism echo-state reservoir with Normalized LMS readout (`GENESIS_RESERVOIR_PER_ORG=1`), we observe a **+21.04 percentage-point accuracy gain** over non-learning controls under a Free-Energy Oracle (`FREE_ENERGY=1`, `NO_DEATH=1`). However, when full hardware-equivalent metabolic costing (Rule 21) is enforced without buffering, in-lifetime learning collapses to null across all tested architectures. Through a series of isolation probes, we empirically demonstrate that this suppression is driven by an **interaction effect** between metabolic cost and mortality pressure: plasticity cost alone does not impair accuracy when death is disabled (identical 77.57% accuracy across cost factors $\theta \in [0, 1]$ in Exp 5), and mortality alone does not prevent learning when energy is pinned. Learning collapses exclusively when plasticity costs drain energy reserves to zero under fatal selection pressure.
 
 ---
 
@@ -92,7 +92,7 @@ Under NO_DEATH=1 with varying cost factor θ:
 
 ### 3.3 The Interaction Effect
 
-The 2×2 factorial structure reveals an interaction:
+To synthesize the findings across Exp 103b, Exp 4b, and Exp 5, we analyze the 2×2 factorial design crossing metabolic cost (`FREE_ENERGY`) with mortality pressure (`NO_DEATH`):
 
 |  | NO_DEATH=1 | NO_DEATH=0 |
 |---|---|---|
@@ -113,12 +113,12 @@ This creates a paradox: **the optimal short-term strategy (don't learn) is the w
 
 ### 4.2 Metabolic Buffering as Architectural Prerequisite
 
-Our results suggest that any embodied learning system operating under physical energy constraints requires one of:
+Our results suggest that any embodied learning system operating under physical energy constraints requires explicit metabolic buffering. We identify four distinct mechanisms:
 
-1. **Energy reserves (metabolic buffer):** Sufficient initial energy to survive the exploration transient.
-2. **Graduated cost introduction:** Low plasticity costs during initial learning, increasing as competence grows.
-3. **Social buffering:** Colony-level energy sharing that subsidizes exploring individuals.
-4. **Temporal credit buffering:** Deferred cost accounting that amortizes plasticity costs over longer horizons.
+1. **Energy reserves (metabolic buffer):** High initial energy buffers (e.g., glycogen/lipid stores in biological organisms or onboard battery reserves in autonomous robotics) that allow temporary net-negative energy operation during initial task acquisition.
+2. **Graduated cost introduction:** Dynamically scaling plasticity energy gates (e.g., decaying learning rates or event-triggered gating in SNNs) that minimize ATP consumption during early uncoordinated exploration and concentrate plastic updates during high-confidence error events.
+3. **Social buffering:** External caloric subsidies (e.g., parental feeding in biological juveniles or energy-sharing protocols in multi-agent robot swarms) where mature non-learning agents subsidize the energy intake of exploring agents.
+4. **Temporal credit buffering:** Amortized cost accounting (e.g., eligibility-trace consolidation or slow homeostatic synaptic scaling in neurobiology) that buffers and batches weight modifications, paying plasticity costs periodically rather than continuously on every spike/update event.
 
 Biological nervous systems employ all four mechanisms: fat reserves fund developmental learning, myelination reduces transmission costs as circuits mature, parental care buffers juvenile exploration, and slow homeostatic plasticity operates on timescales longer than metabolic cycles.
 
@@ -130,15 +130,17 @@ Current neuromorphic chips (Intel Loihi, IBM TrueNorth, SynSense Xylo) report pe
 
 ## 5. Conclusion
 
-We present the first quantitative demonstration that physical metabolic costing creates an interaction effect with mortality pressure that suppresses in-lifetime learning in embodied neural agents. The substrate is capable (demonstrated by +21 pp accuracy under free energy), and cost alone is not suppressive (demonstrated by identical accuracy across all cost factors under immortality). Only the joint action of metabolic cost and death creates the exploration trap. This identifies metabolic buffering — any mechanism that decouples short-term exploration cost from survival pressure — as a necessary architectural prerequisite for embodied plasticity.
+The empirical findings of this study establish clear design principles for physically-constrained adaptive agents. In-lifetime neural plasticity cannot be treated as a purely algorithmic mechanism operating independently of thermodynamic costs. When physical energy accounting is coupled with fatal selection pressure, short-term metabolic exploration penalties inevitably suppress long-term adaptation. 
+
+To overcome this metabolic exploration trap, embodied neuromorphic architectures must incorporate explicit **metabolic buffering** mechanisms — such as developmental energy reserves, social subsidies, or temporal cost amortization. Future work in neuromorphic engineering should prioritize hardware-level energy buffering abstractions, enabling physical SNNs to bridge the exploration transient and achieve sustainable online learning under real-world energy constraints.
 
 ---
 
-## Key Figures (to generate)
+## Key Figures
 
-1. **Figure 1:** Exp 4b bar chart — LEARN vs NOLEARN accuracy across 4 seeds under free energy.
-2. **Figure 2:** Exp 5 line plot — Accuracy vs θ (flat line), with energy overlay (decreasing).
-3. **Figure 3:** 2×2 interaction matrix — {FREE_ENERGY} × {NO_DEATH}, color-coded by learning outcome.
+1. **Figure 1 (Exp 4b Free-Energy Oracle Accuracy):** Bar plot comparing final prediction accuracy (%) for LEARN (`READOUT_LR=0.01`) vs NOLEARN (`READOUT_LR=0.0`) arms across 4 random seeds (0–3) in Exp 4b under `FREE_ENERGY=1`, `NO_DEATH=1`. Demonstrates a consistent +17.09 to +24.16 pp learning advantage across all seeds.
+2. **Figure 2 (Exp 5 Cost Factor Threshold Scan):** Dual-axis plot displaying final learning accuracy (left axis, flat at 77.57%) and mean colony energy (right axis, decreasing monotonically from 100.0 to 0.0) as a function of plasticity cost factor $\theta \in [0.0, 1.0]$ under `NO_DEATH=1` in Exp 5. Illustrates cost-invariance when mortality is disabled.
+3. **Figure 3 (2×2 Factorial Interaction Matrix):** Heatmap representation of the 2×2 factorial design crossing `{FREE_ENERGY ∈ {0,1}}` with `{NO_DEATH ∈ {0,1}}`, highlighting the single null quadrant (`FREE_ENERGY=0, NO_DEATH=0`) where metabolic cost and mortality pressure interact to suppress learning.
 
 ---
 
