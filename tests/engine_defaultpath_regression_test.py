@@ -52,6 +52,7 @@ def main():
         env.pop("GENESIS_FREE_ENERGY", None)
         env.pop("GENESIS_NO_DEATH", None)
         env.pop("GENESIS_SUPERVISED_TEACHER", None)
+        env.pop("GENESIS_COST_FACTOR", None)
         # never inherit a user-explicit shared cache dir (e.g. the pytest suite's
         # /tmp/genesis_pytest_numba): it would disable the engine's per-flag fingerprint
         # pinning and let the NOLEARN/STDP3C arms collide on one kernel (Session-11 class).

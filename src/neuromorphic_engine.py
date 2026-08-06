@@ -352,6 +352,7 @@ NEUROEVOLUTION = os.environ.get("GENESIS_NEUROEVOLUTION", "0") == "1"
 FREE_ENERGY = os.environ.get("GENESIS_FREE_ENERGY", "0") == "1"
 NO_DEATH = os.environ.get("GENESIS_NO_DEATH", "0") == "1"
 SUPERVISED_TEACHER = os.environ.get("GENESIS_SUPERVISED_TEACHER", "0") == "1"
+COST_FACTOR = np.float32(os.environ.get("GENESIS_COST_FACTOR", "1.0"))
 
 # MULTI-TIMESCALE SNN DYNAMICS (Exp 82, default-OFF) — heterogeneous membrane decay constants (tau_slow = 25.0)
 MULTISCALE = os.environ.get("GENESIS_MULTISCALE", "0") == "1"
@@ -1891,7 +1892,7 @@ def world_tick_numba(
                                     w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
                             if not FREE_ENERGY:
-                                total_atp += CYCLES_PER_STDP_UPDATE
+                                total_atp += CYCLES_PER_STDP_UPDATE * COST_FACTOR
 
                     elif curr_spk_buf[src]:
                         t_post = global_t_last[n_ptr + dst]
@@ -1922,7 +1923,7 @@ def world_tick_numba(
                                     w_now = W_MIN
                                 global_conn_weight[s_ptr + c] = w_now
                             if not FREE_ENERGY:
-                                total_atp += CYCLES_PER_STDP_UPDATE
+                                total_atp += CYCLES_PER_STDP_UPDATE * COST_FACTOR
 
             # Membrane metabolism is EVENT-DRIVEN (Rule 11): charge 1 cycle per action potential
             # fired this step, not per neuron present. On a 20W neuromorphic substrate the spike
@@ -2361,7 +2362,8 @@ def world_tick_numba(
                                     elif w_now < W_MIN:
                                         w_now = W_MIN
                                     global_conn_weight[s_ptr + c] = w_now
-                                total_atp += CYCLES_PER_STDP_UPDATE
+                                if not FREE_ENERGY:
+                                    total_atp += CYCLES_PER_STDP_UPDATE * COST_FACTOR
             if net != 0:
                 if INCOME_FOOTPRINT:
                     if net > 0:
