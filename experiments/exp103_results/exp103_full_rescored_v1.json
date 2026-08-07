@@ -1,0 +1,257 @@
+{
+  "protocol": "SUBSTRATE_4_LEARNING_CURVE_v1",
+  "rescored_by": "experiments/rescore_learning_curve_v1.py",
+  "git_sha": "e4c4db77eaa2ffac7322375658283315bc287a98",
+  "artifact": "exp103_full",
+  "source_files": [
+    "experiments/exp103_results/exp103_full_learner_s0_20000t.json",
+    "experiments/exp103_results/exp103_full_learner_s1_20000t.json",
+    "experiments/exp103_results/exp103_full_learner_s2_20000t.json",
+    "experiments/exp103_results/exp103_full_learner_s3_20000t.json",
+    "experiments/exp103_results/exp103_full_nolearn_s0_20000t.json",
+    "experiments/exp103_results/exp103_full_nolearn_s1_20000t.json",
+    "experiments/exp103_results/exp103_full_nolearn_s2_20000t.json",
+    "experiments/exp103_results/exp103_full_nolearn_s3_20000t.json",
+    "experiments/exp103_results/exp103_full_summary.json"
+  ],
+  "originals_untouched": true,
+  "task_type": "static",
+  "substrate": "EXP103_RESERVOIR_READOUT_v1",
+  "source_protocol": "EXP103_RESERVOIR_READOUT_v1",
+  "ticks": 20000,
+  "n_windows": 20,
+  "window_ticks": 1000,
+  "seeds": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "historical_verdict_fields": {
+    "verdict": "RESERVOIR_HELPS_STATICALLY_BUT_INRUN_LEARNING_WEAK"
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "C0_first3": 77.8958,
+      "C1_last3": 78.125,
+      "E0": 22.1042,
+      "E1": 21.875,
+      "delta_pp": 0.2292,
+      "rho": 0.0104,
+      "slope_pp_per_window": 0.0099,
+      "slope_pp_per_1000ticks": 0.0099,
+      "rho_trajectory_per_window": [
+        -0.0207,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0098,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104,
+        0.0104
+      ],
+      "nolearn_C1_last3": 63.9,
+      "paired_gap_late_pp": 14.225
+    },
+    {
+      "seed": 1,
+      "C0_first3": 77.8917,
+      "C1_last3": 77.8792,
+      "E0": 22.1083,
+      "E1": 22.1208,
+      "delta_pp": -0.0125,
+      "rho": -0.0006,
+      "slope_pp_per_window": -0.0005,
+      "slope_pp_per_1000ticks": -0.0005,
+      "rho_trajectory_per_window": [
+        0.0015,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0008,
+        -0.0002
+      ],
+      "nolearn_C1_last3": 66.7,
+      "paired_gap_late_pp": 11.1792
+    },
+    {
+      "seed": 2,
+      "C0_first3": 77.7917,
+      "C1_last3": 78.0,
+      "E0": 22.2083,
+      "E1": 22.0,
+      "delta_pp": 0.2083,
+      "rho": 0.0094,
+      "slope_pp_per_window": 0.0089,
+      "slope_pp_per_1000ticks": 0.0089,
+      "rho_trajectory_per_window": [
+        -0.0188,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094,
+        0.0094
+      ],
+      "nolearn_C1_last3": 61.1,
+      "paired_gap_late_pp": 16.9
+    },
+    {
+      "seed": 3,
+      "C0_first3": 78.3083,
+      "C1_last3": 78.3,
+      "E0": 21.6917,
+      "E1": 21.7,
+      "delta_pp": -0.0083,
+      "rho": -0.0004,
+      "slope_pp_per_window": 0.0002,
+      "slope_pp_per_1000ticks": 0.0002,
+      "rho_trajectory_per_window": [
+        0.0025,
+        -0.001,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0015,
+        -0.0004,
+        -0.0004,
+        -0.0004,
+        -0.0004,
+        -0.0004,
+        -0.0004
+      ],
+      "nolearn_C1_last3": 79.2,
+      "paired_gap_late_pp": -0.9
+    }
+  ],
+  "across_seeds": {
+    "delta_pp": {
+      "n": 4,
+      "mean": 0.1042,
+      "sd": 0.1326,
+      "ci95": [
+        -0.1068,
+        0.3151
+      ],
+      "t_vs_0": 1.5712,
+      "df": 3,
+      "perm_p_mc": 0.5044,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "rho": {
+      "n": 4,
+      "mean": 0.0047,
+      "sd": 0.006,
+      "ci95": [
+        -0.0048,
+        0.0142
+      ],
+      "t_vs_0": 1.5694,
+      "df": 3,
+      "perm_p_mc": 0.5044,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "slope_pp_per_window": {
+      "n": 4,
+      "mean": 0.0046,
+      "sd": 0.0056,
+      "ci95": [
+        -0.0042,
+        0.0135
+      ],
+      "t_vs_0": 1.6593,
+      "df": 3,
+      "perm_p_mc": 0.377,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "gate_b_gap_pp": {
+      "n": 4,
+      "mean": 10.351,
+      "sd": 7.8564,
+      "ci95": [
+        -2.15,
+        22.8521
+      ],
+      "t_vs_0": 2.6351,
+      "df": 3,
+      "perm_p_mc": 0.2518,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    }
+  },
+  "D5_within_phase_relearning": null,
+  "D6_transfer": null,
+  "gate_tests": {
+    "T_slope_positive": false,
+    "M_magnitude": false,
+    "M_statistic_used": "D4 rho (global endpoints)",
+    "B_gate_gap": false,
+    "B_state": "indeterminate",
+    "F1_learning_real_falsified": true,
+    "F2_nonnegligible_falsified": true,
+    "F3_static_only": false,
+    "F4_instrument_alarm": true
+  },
+  "verdict": "NULL",
+  "confirmatory_run_required": false,
+  "confirmatory_protocol": null,
+  "aggregate_crosscheck": {
+    "published_early": 78.0198,
+    "published_late": 78.0755,
+    "rho_from_published_aggregates": 0.0025,
+    "rho_per_seed_mean": 0.0047,
+    "abs_discrepancy": 0.0022,
+    "note": "aggregate rho is arithmetic on already-published metrics; per-seed mean is the binding D7 quantity"
+  },
+  "notes": [
+    "F4: Gate B paired gap CI not decisively positive -> Rule 20 audit before any claim (see amendment \u00a74)",
+    "re-analysis of n=4 existing seeds; confirmatory claims require fresh seeds 100-107 to n>=8 (amendment D8)"
+  ]
+}

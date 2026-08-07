@@ -1,4 +1,4 @@
-"""Live web curriculum streamer (hardened 2026-07-31 audit).
+"""Live web curriculum streamer (hardened 2026-07-31 audit; Rule 24-R network opt-in 2026-08-06).
 
 BEFORE: `get_latest_live_text()` called `urllib.request.urlopen(..., timeout=4)` DIRECTLY —
 from inside the hot `sim_loop` every 20 s and from `_lay_library()`. A slow/absent network
@@ -6,7 +6,7 @@ therefore froze the whole evolutionary loop (and the dashboard) for up to 4 s pe
 every failure vanished into a bare `except Exception: pass` — violating the project's own
 telemetry-honesty rules (deep review P1-9/P1-10).
 
-NOW:
+2026-07-31 hardening:
   * fetching happens ONLY on a background daemon thread (`_refresher`);
   * `get_latest_live_text()` NEVER blocks — it serves the in-memory cache (or the built-in
     topic fallback when the cache is still empty/offline);
@@ -16,6 +16,18 @@ NOW:
     Rule: live demo vs reproducible benchmark separation);
   * an on-disk cache (`Brain/live_web_cache.json`, best-effort) lets an offline cold start
     still serve previously fetched text instead of the fixed fallback.
+
+2026-08-06 (Rule 24-R.2 — network deny-by-default):
+  * NETWORK ACCESS IS NOW OPT-IN, NOT OPT-OUT. The master switch is the environment variable
+    `NETWORK_ACCESS_ENABLED` (default: disabled). When unset/False, NO socket is ever opened:
+    the refresher thread is never started and only the deterministic offline topic pool is served.
+  * `GENESIS_LIVE_WEB=0` remains as an additional per-feature kill switch: it disables this
+    streamer even when the master switch is on (benchmark reproducibility separation).
+  * Enabling live web therefore requires NETWORK_ACCESS_ENABLED=1 (and GENESIS_LIVE_WEB unset/1).
+    Per Rule 24-R.2, enabling it is a documented, time-boxed diagnostic with an approval record
+    in the run manifest — not a default operating mode.
+  * The first disabled call prints a one-time loud notice so the operator can tell the
+    difference between "network down" and "network denied by policy".
 """
 import json
 import os
@@ -36,11 +48,17 @@ _state = {
     "errors": 0,
     "last_error": None,
     "offline_announced": False,
+    "disabled_announced": False,
     "started": False,
 }
 _lock = threading.Lock()
 
-LIVE_WEB_ENABLED = os.environ.get("GENESIS_LIVE_WEB", "1") == "1"
+# Rule 24-R.2: network access is deny-by-default (opt-in). The master switch is
+# NETWORK_ACCESS_ENABLED (default OFF); GENESIS_LIVE_WEB=0 remains a per-feature
+# kill switch for benchmark reproducibility. Both must permit access before any
+# socket is opened.
+NETWORK_ACCESS_ENABLED = os.environ.get("NETWORK_ACCESS_ENABLED", "0") == "1"
+LIVE_WEB_ENABLED = NETWORK_ACCESS_ENABLED and os.environ.get("GENESIS_LIVE_WEB", "1") == "1"
 
 _TOPICS = [
     "Artificial General Intelligence and neuromorphic SNN architectures represent the frontier of continuous learning.",
@@ -134,9 +152,17 @@ def get_latest_live_text():
     """Return a clean printable text string — ALWAYS non-blocking.
 
     Serves the freshest cached Wikipedia/news item; falls back to the disk cache and finally
-    to the built-in topic pool when the network is down. Never raises.
+    to the built-in topic pool when the network is down. Never raises. When network access is
+    disabled by policy (Rule 24-R.2, the default), only the deterministic offline pool is
+    served and no socket is ever opened.
     """
     if not LIVE_WEB_ENABLED:
+        with _lock:
+            if not _state["disabled_announced"]:
+                _state["disabled_announced"] = True
+                print("[LIVE WEB] network access disabled by policy (Rule 24-R.2, default deny). "
+                      "Set NETWORK_ACCESS_ENABLED=1 to opt in for a documented diagnostic.",
+                      flush=True)
         return fetch_tech_news()
     _ensure_started()
     with _lock:
@@ -151,6 +177,7 @@ def status():
     with _lock:
         ok = _state["last_success"] > 0 and (time.time() - _state["last_success"]) < 3 * _FETCH_INTERVAL
         return {
+            "network_access_enabled": NETWORK_ACCESS_ENABLED,
             "enabled": LIVE_WEB_ENABLED,
             "healthy": bool(ok),
             "cache_size": len(_state["cache"]),

@@ -1,0 +1,317 @@
+{
+  "protocol": "SUBSTRATE_4_LEARNING_CURVE_v1",
+  "rescored_by": "experiments/rescore_learning_curve_v1.py",
+  "git_sha": "e4c4db77eaa2ffac7322375658283315bc287a98",
+  "artifact": "sub4_nonstationary_summary",
+  "source_files": [
+    "experiments/sub4_results/sub4_nonstationary_summary.json"
+  ],
+  "originals_untouched": true,
+  "task_type": "nonstationary",
+  "substrate": "Substrate4_Nonstationary_Task",
+  "source_protocol": "SUBSTRATE_4_NONSTATIONARY_TASK_v1",
+  "ticks": 20000,
+  "n_windows": 20,
+  "window_ticks": 1000,
+  "seeds": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "historical_verdict_fields": {
+    "gate_a_pass": false,
+    "gate_b_pass": true,
+    "verdict": "SUBSTRATE_NULL_OR_DEGRADED"
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "C0_first3": 69.5139,
+      "C1_last3": 70.5556,
+      "E0": 30.4861,
+      "E1": 29.4444,
+      "delta_pp": 1.0417,
+      "rho": 0.0342,
+      "slope_pp_per_window": 0.0047,
+      "slope_pp_per_1000ticks": 0.0047,
+      "rho_trajectory_per_window": [
+        -0.0319,
+        -0.0182,
+        0.0501,
+        -0.0592,
+        0.0638,
+        0.0774,
+        0.2688,
+        0.1595,
+        0.3508,
+        0.344,
+        0.0501,
+        -0.0524,
+        -0.0046,
+        0.2825,
+        0.2278,
+        -0.0319,
+        -0.0661,
+        -0.0456,
+        0.0364,
+        0.1116
+      ],
+      "nolearn_C1_last3": 52.7083,
+      "paired_gap_late_pp": 17.8473
+    },
+    {
+      "seed": 1,
+      "C0_first3": 66.3889,
+      "C1_last3": 68.4722,
+      "E0": 33.6111,
+      "E1": 31.5278,
+      "delta_pp": 2.0833,
+      "rho": 0.062,
+      "slope_pp_per_window": 0.0542,
+      "slope_pp_per_1000ticks": 0.0542,
+      "rho_trajectory_per_window": [
+        0.0331,
+        -0.0351,
+        0.0021,
+        0.0393,
+        0.1694,
+        0.2438,
+        0.2996,
+        0.3182,
+        0.3368,
+        0.3678,
+        -0.0847,
+        -0.0041,
+        0.1074,
+        0.2624,
+        0.3244,
+        0.1322,
+        0.1198,
+        -0.0723,
+        0.095,
+        0.1632
+      ],
+      "nolearn_C1_last3": 48.0556,
+      "paired_gap_late_pp": 20.4166
+    },
+    {
+      "seed": 2,
+      "C0_first3": 67.1528,
+      "C1_last3": 70.9722,
+      "E0": 32.8472,
+      "E1": 29.0278,
+      "delta_pp": 3.8194,
+      "rho": 0.1163,
+      "slope_pp_per_window": 0.0478,
+      "slope_pp_per_1000ticks": 0.0478,
+      "rho_trajectory_per_window": [
+        -0.0529,
+        0.0486,
+        0.0042,
+        0.1438,
+        0.0423,
+        0.0994,
+        0.3023,
+        0.4482,
+        0.2452,
+        0.3594,
+        0.074,
+        0.1057,
+        0.1628,
+        0.2579,
+        0.1691,
+        -0.0148,
+        0.0359,
+        0.2008,
+        0.0803,
+        0.0677
+      ],
+      "nolearn_C1_last3": 48.5417,
+      "paired_gap_late_pp": 22.4306
+    },
+    {
+      "seed": 3,
+      "C0_first3": 67.2222,
+      "C1_last3": 72.7778,
+      "E0": 32.7778,
+      "E1": 27.2222,
+      "delta_pp": 5.5556,
+      "rho": 0.1695,
+      "slope_pp_per_window": 0.276,
+      "slope_pp_per_1000ticks": 0.276,
+      "rho_trajectory_per_window": [
+        -0.0233,
+        0.053,
+        -0.0297,
+        0.0021,
+        0.0021,
+        0.161,
+        0.1229,
+        0.161,
+        0.3326,
+        0.2754,
+        -0.0297,
+        -0.0233,
+        0.1674,
+        0.2945,
+        0.2564,
+        -0.0042,
+        0.1419,
+        0.1674,
+        0.1229,
+        0.2182
+      ],
+      "nolearn_C1_last3": 47.5695,
+      "paired_gap_late_pp": 25.2083
+    }
+  ],
+  "across_seeds": {
+    "delta_pp": {
+      "n": 4,
+      "mean": 3.125,
+      "sd": 1.9845,
+      "ci95": [
+        -0.0328,
+        6.2828
+      ],
+      "t_vs_0": 3.1493,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "rho": {
+      "n": 4,
+      "mean": 0.0955,
+      "sd": 0.06,
+      "ci95": [
+        0.0,
+        0.1909
+      ],
+      "t_vs_0": 3.184,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "slope_pp_per_window": {
+      "n": 4,
+      "mean": 0.0957,
+      "sd": 0.1222,
+      "ci95": [
+        -0.0988,
+        0.2901
+      ],
+      "t_vs_0": 1.5656,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "gate_b_gap_pp": {
+      "n": 4,
+      "mean": 21.4757,
+      "sd": 3.1162,
+      "ci95": [
+        16.5173,
+        26.4341
+      ],
+      "t_vs_0": 13.7835,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    }
+  },
+  "D5_within_phase_relearning": {
+    "definition": "post-switch phases only; delta_p = mean(last 2 windows of phase) - first window of phase; per-seed mean over phases",
+    "learn_per_seed": {
+      "0": 5.9027,
+      "1": 5.4167,
+      "2": 4.7222,
+      "3": 6.8056
+    },
+    "learn_across_seeds": {
+      "n": 4,
+      "mean": 5.7118,
+      "sd": 0.8754,
+      "ci95": [
+        4.3188,
+        7.1048
+      ],
+      "t_vs_0": 13.0489,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "nolearn_per_seed": {
+      "0": 1.3195,
+      "1": -1.3541,
+      "2": 1.1805,
+      "3": 0.2084
+    },
+    "nolearn_across_seeds": {
+      "n": 4,
+      "mean": 0.3386,
+      "sd": 1.232,
+      "ci95": [
+        -1.6218,
+        2.2989
+      ],
+      "t_vs_0": 0.5496,
+      "df": 3,
+      "perm_p_mc": 0.6312,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "robustness_all_phases": {
+      "n": 4,
+      "mean": 4.8502,
+      "sd": 0.3099,
+      "ci95": [
+        4.3572,
+        5.3433
+      ],
+      "t_vs_0": 31.3031,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "robustness_last_window_only": {
+      "n": 4,
+      "mean": 5.9722,
+      "sd": 0.8581,
+      "ci95": [
+        4.6069,
+        7.3376
+      ],
+      "t_vs_0": 13.9202,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    }
+  },
+  "D6_transfer": null,
+  "gate_tests": {
+    "T_slope_positive": false,
+    "M_magnitude": false,
+    "M_statistic_used": "D4 rho (global endpoints)",
+    "B_gate_gap": true,
+    "B_state": "pass",
+    "F1_learning_real_falsified": true,
+    "F2_nonnegligible_falsified": true,
+    "F3_static_only": true,
+    "F4_instrument_alarm": false
+  },
+  "verdict": "STATIC_ONLY_F3",
+  "confirmatory_run_required": false,
+  "confirmatory_protocol": null,
+  "aggregate_crosscheck": {
+    "published_early": 67.5694,
+    "published_late": 70.6944,
+    "rho_from_published_aggregates": 0.0964,
+    "rho_per_seed_mean": 0.0955,
+    "abs_discrepancy": 0.0009,
+    "note": "aggregate rho is arithmetic on already-published metrics; per-seed mean is the binding D7 quantity"
+  },
+  "notes": [
+    "global slope/rho on a reset curve are conservative; see D5 within-phase re-learning",
+    "re-analysis of n=4 existing seeds; confirmatory claims require fresh seeds 100-107 to n>=8 (amendment D8)"
+  ]
+}

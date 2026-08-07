@@ -1,0 +1,41 @@
+# GENESIS Tier-0 containment monitor — see scripts/README.md before enabling.
+# Implements Docs/Safety/Measurement_Protocol_T0.md. The monitor must start
+# BEFORE the lab (T0 §0.2) and must outlive it (Restart=always).
+[Unit]
+Description=GENESIS Tier-0 structural containment monitor (Measurement_Protocol_T0)
+Documentation=file:/opt/genesis/Docs/Safety/Measurement_Protocol_T0.md
+After=local-fs.target
+# Order any lab unit After=genesis-monitor.service so the observer always
+# starts before the observed.
+
+[Service]
+Type=simple
+User=genesismon
+Group=genesismon
+# CAP_SYS_PTRACE — enumerate the lab user's processes/sockets via /proc.
+# CAP_KILL       — guaranteed halt path (SIGKILL across UIDs, T0 §3.1).
+# Without these the monitor's preflight refuses to start (fail loud, not blind).
+AmbientCapabilities=CAP_SYS_PTRACE CAP_KILL
+CapabilityBoundingSet=CAP_SYS_PTRACE CAP_KILL
+NoNewPrivileges=true
+
+Environment=GENESIS_LAB_USER=genesislab
+Environment=GENESIS_REPO_DIR=/opt/genesis
+Environment=GENESIS_LOG_DIR=/var/log/genesis
+Environment=GENESIS_STATE_DIR=/var/lib/genesis
+Environment=GENESIS_HONEYPOT_DIR=/var/lib/genesis/honeypot
+# Environment=GENESIS_SANDBOX_DIRS=/home/genesislab/Brain /home/genesislab/runs
+
+ExecStart=/usr/local/bin/genesis-monitor.sh
+Restart=always
+RestartSec=5
+SyslogIdentifier=genesis-monitor
+
+# Hardening. NOTE: deliberately no PrivateTmp — the C4 canary watches the lab's
+# numba kernel cache under /tmp (genesis_numba_*), which a private /tmp would hide.
+ProtectSystem=strict
+ReadWritePaths=/var/log/genesis /var/lib/genesis
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

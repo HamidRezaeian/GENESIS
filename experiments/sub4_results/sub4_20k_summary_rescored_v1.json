@@ -1,0 +1,264 @@
+{
+  "protocol": "SUBSTRATE_4_LEARNING_CURVE_v1",
+  "rescored_by": "experiments/rescore_learning_curve_v1.py",
+  "git_sha": "e4c4db77eaa2ffac7322375658283315bc287a98",
+  "artifact": "sub4_20k_summary",
+  "source_files": [
+    "experiments/sub4_results/sub4_20k_summary.json"
+  ],
+  "originals_untouched": true,
+  "task_type": "static",
+  "substrate": "Substrate4_Small_Transformer_Extended_20k",
+  "source_protocol": "SUBSTRATE_4_EXTENDED_20K_v1",
+  "ticks": 20000,
+  "n_windows": 20,
+  "window_ticks": 1000,
+  "seeds": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "historical_verdict_fields": {
+    "gate_a_pass": false,
+    "gate_b_pass": true,
+    "verdict": "SUBSTRATE_NULL_OR_DEGRADED"
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "C0_first3": 85.8333,
+      "C1_last3": 89.2361,
+      "E0": 14.1667,
+      "E1": 10.7639,
+      "delta_pp": 3.4028,
+      "rho": 0.2402,
+      "slope_pp_per_window": 0.0387,
+      "slope_pp_per_1000ticks": 0.0387,
+      "rho_trajectory_per_window": [
+        -0.1471,
+        0.1324,
+        0.0147,
+        0.5588,
+        0.5,
+        0.5,
+        0.2794,
+        0.3824,
+        0.3088,
+        0.3235,
+        0.3088,
+        0.3529,
+        0.3971,
+        0.2941,
+        0.3382,
+        0.1176,
+        0.2794,
+        0.2353,
+        0.2206,
+        0.2647
+      ],
+      "nolearn_C1_last3": 52.0139,
+      "paired_gap_late_pp": 37.2222
+    },
+    {
+      "seed": 1,
+      "C0_first3": 86.875,
+      "C1_last3": 90.3472,
+      "E0": 13.125,
+      "E1": 9.6528,
+      "delta_pp": 3.4722,
+      "rho": 0.2646,
+      "slope_pp_per_window": 0.1397,
+      "slope_pp_per_1000ticks": 0.1397,
+      "rho_trajectory_per_window": [
+        -0.254,
+        0.1429,
+        0.1111,
+        0.619,
+        0.3492,
+        0.3016,
+        0.381,
+        0.2857,
+        0.3175,
+        0.2381,
+        0.2381,
+        0.2381,
+        0.2222,
+        0.4603,
+        0.3333,
+        0.4603,
+        0.4762,
+        0.2698,
+        0.1111,
+        0.4127
+      ],
+      "nolearn_C1_last3": 47.9861,
+      "paired_gap_late_pp": 42.3611
+    },
+    {
+      "seed": 2,
+      "C0_first3": 85.1389,
+      "C1_last3": 89.4444,
+      "E0": 14.8611,
+      "E1": 10.5556,
+      "delta_pp": 4.3056,
+      "rho": 0.2897,
+      "slope_pp_per_window": 0.094,
+      "slope_pp_per_1000ticks": 0.094,
+      "rho_trajectory_per_window": [
+        0.1308,
+        -0.2196,
+        0.0888,
+        0.5093,
+        0.4393,
+        0.5374,
+        0.4953,
+        0.4813,
+        0.215,
+        0.285,
+        0.271,
+        0.271,
+        0.3411,
+        0.3692,
+        0.5935,
+        0.243,
+        0.229,
+        0.1168,
+        0.4112,
+        0.3411
+      ],
+      "nolearn_C1_last3": 48.5417,
+      "paired_gap_late_pp": 40.9028
+    },
+    {
+      "seed": 3,
+      "C0_first3": 86.9444,
+      "C1_last3": 90.5556,
+      "E0": 13.0556,
+      "E1": 9.4444,
+      "delta_pp": 3.6111,
+      "rho": 0.2766,
+      "slope_pp_per_window": 0.0896,
+      "slope_pp_per_1000ticks": 0.0896,
+      "rho_trajectory_per_window": [
+        -0.0372,
+        -0.0691,
+        0.1064,
+        0.4096,
+        0.5691,
+        0.4734,
+        0.4894,
+        0.3298,
+        0.1862,
+        0.234,
+        0.3138,
+        0.1064,
+        0.2021,
+        0.2979,
+        0.5532,
+        0.3936,
+        0.2181,
+        0.1702,
+        0.2021,
+        0.4574
+      ],
+      "nolearn_C1_last3": 51.1806,
+      "paired_gap_late_pp": 39.375
+    }
+  ],
+  "across_seeds": {
+    "delta_pp": {
+      "n": 4,
+      "mean": 3.6979,
+      "sd": 0.4143,
+      "ci95": [
+        3.0388,
+        4.3571
+      ],
+      "t_vs_0": 17.8535,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "rho": {
+      "n": 4,
+      "mean": 0.2678,
+      "sd": 0.0211,
+      "ci95": [
+        0.2343,
+        0.3013
+      ],
+      "t_vs_0": 25.4301,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "slope_pp_per_window": {
+      "n": 4,
+      "mean": 0.0905,
+      "sd": 0.0413,
+      "ci95": [
+        0.0248,
+        0.1562
+      ],
+      "t_vs_0": 4.3811,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "gate_b_gap_pp": {
+      "n": 4,
+      "mean": 39.9653,
+      "sd": 2.1979,
+      "ci95": [
+        36.468,
+        43.4625
+      ],
+      "t_vs_0": 36.3675,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    }
+  },
+  "D5_within_phase_relearning": null,
+  "D6_transfer": null,
+  "gate_tests": {
+    "T_slope_positive": true,
+    "M_magnitude": true,
+    "M_statistic_used": "D4 rho (global endpoints)",
+    "B_gate_gap": true,
+    "B_state": "pass",
+    "F1_learning_real_falsified": false,
+    "F2_nonnegligible_falsified": false,
+    "F3_static_only": false,
+    "F4_instrument_alarm": false
+  },
+  "verdict": "GATE_A_SCREEN_PASS_CORRECTED",
+  "confirmatory_run_required": true,
+  "confirmatory_protocol": {
+    "fresh_seeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107
+    ],
+    "min_total_n": 8,
+    "driver": "original protocol ID, unchanged",
+    "reference": "amendment D8; Exp 96->97 anti-winner's-curse precedent"
+  },
+  "aggregate_crosscheck": {
+    "published_early": 86.1979,
+    "published_late": 89.8958,
+    "rho_from_published_aggregates": 0.2679,
+    "rho_per_seed_mean": 0.2678,
+    "abs_discrepancy": 0.0002,
+    "note": "aggregate rho is arithmetic on already-published metrics; per-seed mean is the binding D7 quantity"
+  },
+  "notes": [
+    "re-analysis of n=4 existing seeds; confirmatory claims require fresh seeds 100-107 to n>=8 (amendment D8)"
+  ]
+}

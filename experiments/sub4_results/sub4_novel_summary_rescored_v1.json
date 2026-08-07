@@ -1,0 +1,319 @@
+{
+  "protocol": "SUBSTRATE_4_LEARNING_CURVE_v1",
+  "rescored_by": "experiments/rescore_learning_curve_v1.py",
+  "git_sha": "e4c4db77eaa2ffac7322375658283315bc287a98",
+  "artifact": "sub4_novel_summary",
+  "source_files": [
+    "experiments/sub4_results/sub4_novel_summary.json"
+  ],
+  "originals_untouched": true,
+  "task_type": "novel_switch",
+  "substrate": "Substrate4_Novel_Sequence_Task",
+  "source_protocol": "SUBSTRATE_4_NOVEL_SEQUENCE_v1",
+  "ticks": 20000,
+  "n_windows": 20,
+  "window_ticks": 1000,
+  "seeds": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "historical_verdict_fields": {
+    "gate_a_pass": false,
+    "gate_b_pass": true,
+    "verdict": "SUBSTRATE_NULL_OR_DEGRADED"
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "C0_first3": 69.5139,
+      "C1_last3": 75.2778,
+      "E0": 30.4861,
+      "E1": 24.7222,
+      "delta_pp": 5.7639,
+      "rho": 0.1891,
+      "slope_pp_per_window": 0.2583,
+      "slope_pp_per_1000ticks": 0.2583,
+      "rho_trajectory_per_window": [
+        -0.0319,
+        -0.0182,
+        0.0501,
+        -0.0592,
+        0.0638,
+        -0.0182,
+        0.2141,
+        0.2141,
+        0.2005,
+        0.2756,
+        0.0023,
+        0.0774,
+        0.1868,
+        0.1663,
+        -0.0251,
+        0.1526,
+        0.1253,
+        0.4123,
+        0.1116,
+        0.0433
+      ],
+      "nolearn_C1_last3": 51.25,
+      "paired_gap_late_pp": 24.0278
+    },
+    {
+      "seed": 1,
+      "C0_first3": 66.3889,
+      "C1_last3": 74.4444,
+      "E0": 33.6111,
+      "E1": 25.5556,
+      "delta_pp": 8.0556,
+      "rho": 0.2397,
+      "slope_pp_per_window": 0.3814,
+      "slope_pp_per_1000ticks": 0.3814,
+      "rho_trajectory_per_window": [
+        0.0331,
+        -0.0351,
+        0.0021,
+        0.0393,
+        0.1694,
+        0.219,
+        0.0888,
+        0.1322,
+        0.343,
+        0.281,
+        0.3244,
+        0.2438,
+        0.1508,
+        0.1508,
+        0.2624,
+        0.2438,
+        0.1632,
+        0.3058,
+        0.188,
+        0.2252
+      ],
+      "nolearn_C1_last3": 48.6806,
+      "paired_gap_late_pp": 25.7639
+    },
+    {
+      "seed": 2,
+      "C0_first3": 67.1528,
+      "C1_last3": 76.0417,
+      "E0": 32.8472,
+      "E1": 23.9583,
+      "delta_pp": 8.8889,
+      "rho": 0.2706,
+      "slope_pp_per_window": 0.4289,
+      "slope_pp_per_1000ticks": 0.4289,
+      "rho_trajectory_per_window": [
+        -0.0529,
+        0.0486,
+        0.0042,
+        0.1438,
+        0.0423,
+        0.1374,
+        0.2135,
+        0.2262,
+        0.1882,
+        0.1628,
+        0.1311,
+        0.0042,
+        0.1882,
+        0.1691,
+        0.2579,
+        0.2706,
+        0.2579,
+        0.3848,
+        0.315,
+        0.112
+      ],
+      "nolearn_C1_last3": 48.1944,
+      "paired_gap_late_pp": 27.8472
+    },
+    {
+      "seed": 3,
+      "C0_first3": 67.2222,
+      "C1_last3": 73.1944,
+      "E0": 32.7778,
+      "E1": 26.8056,
+      "delta_pp": 5.9722,
+      "rho": 0.1822,
+      "slope_pp_per_window": 0.3963,
+      "slope_pp_per_1000ticks": 0.3963,
+      "rho_trajectory_per_window": [
+        -0.0233,
+        0.053,
+        -0.0297,
+        0.0021,
+        0.0021,
+        0.2055,
+        0.0657,
+        0.1992,
+        0.2945,
+        0.0847,
+        0.1674,
+        0.053,
+        0.25,
+        0.1292,
+        0.2182,
+        0.339,
+        0.2182,
+        0.1674,
+        0.1547,
+        0.2246
+      ],
+      "nolearn_C1_last3": 47.9167,
+      "paired_gap_late_pp": 25.2778
+    }
+  ],
+  "across_seeds": {
+    "delta_pp": {
+      "n": 4,
+      "mean": 7.1701,
+      "sd": 1.5439,
+      "ci95": [
+        4.7135,
+        9.6267
+      ],
+      "t_vs_0": 9.2885,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "rho": {
+      "n": 4,
+      "mean": 0.2204,
+      "sd": 0.0422,
+      "ci95": [
+        0.1533,
+        0.2875
+      ],
+      "t_vs_0": 10.4538,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "slope_pp_per_window": {
+      "n": 4,
+      "mean": 0.3662,
+      "sd": 0.0746,
+      "ci95": [
+        0.2475,
+        0.485
+      ],
+      "t_vs_0": 9.8144,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "gate_b_gap_pp": {
+      "n": 4,
+      "mean": 25.7292,
+      "sd": 1.5902,
+      "ci95": [
+        23.1989,
+        28.2594
+      ],
+      "t_vs_0": 32.3602,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    }
+  },
+  "D5_within_phase_relearning": null,
+  "D6_transfer": {
+    "definition": "A_late = mean last 3 A-windows; B0 = first B window; B_late = mean last 3 B-windows; rho_B under the D4 bar",
+    "per_seed": {
+      "0": {
+        "A_late": 76.5278,
+        "B0_first_window": 69.5833,
+        "B_late": 75.2778,
+        "retention_pp": -6.9445,
+        "rho_B": 0.1872,
+        "gap_B_pp": 24.0278
+      },
+      "1": {
+        "A_late": 74.8611,
+        "B0_first_window": 77.2917,
+        "B_late": 74.4444,
+        "retention_pp": 2.4306,
+        "rho_B": -0.1254,
+        "gap_B_pp": 25.7639
+      },
+      "2": {
+        "A_late": 73.4722,
+        "B0_first_window": 71.4583,
+        "B_late": 76.0417,
+        "retention_pp": -2.0139,
+        "rho_B": 0.1606,
+        "gap_B_pp": 27.8472
+      },
+      "3": {
+        "A_late": 73.5417,
+        "B0_first_window": 72.7083,
+        "B_late": 73.1944,
+        "retention_pp": -0.8334,
+        "rho_B": 0.0178,
+        "gap_B_pp": 25.2778
+      }
+    },
+    "retention_across_seeds": {
+      "n": 4,
+      "mean": -1.8403,
+      "sd": 3.8875,
+      "ci95": [
+        -8.026,
+        4.3455
+      ],
+      "t_vs_0": -0.9468,
+      "df": 3,
+      "perm_p_mc": 0.511,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "rho_B_across_seeds": {
+      "n": 4,
+      "mean": 0.0601,
+      "sd": 0.1443,
+      "ci95": [
+        -0.1695,
+        0.2896
+      ],
+      "t_vs_0": 0.8325,
+      "df": 3,
+      "perm_p_mc": 0.377,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    },
+    "gap_B_across_seeds": {
+      "n": 4,
+      "mean": 25.7292,
+      "sd": 1.5902,
+      "ci95": [
+        23.1989,
+        28.2594
+      ],
+      "t_vs_0": 32.3602,
+      "df": 3,
+      "perm_p_mc": 0.1243,
+      "perm_note": "paired sign-flip Monte-Carlo, 10000 draws, rng seed 0; MC estimate, not exact"
+    }
+  },
+  "gate_tests": {
+    "T_slope_positive": true,
+    "M_magnitude": false,
+    "M_statistic_used": "D6 rho_B under D4 bar",
+    "B_gate_gap": true,
+    "B_state": "pass",
+    "F1_learning_real_falsified": false,
+    "F2_nonnegligible_falsified": false,
+    "F3_static_only": false,
+    "F4_instrument_alarm": false
+  },
+  "verdict": "REAL_BUT_NEGLIGIBLE_F2",
+  "confirmatory_run_required": false,
+  "confirmatory_protocol": null,
+  "aggregate_crosscheck": null,
+  "notes": [
+    "global slope/rho on a reset curve are conservative; see D6 transfer statistics",
+    "re-analysis of n=4 existing seeds; confirmatory claims require fresh seeds 100-107 to n>=8 (amendment D8)"
+  ]
+}
