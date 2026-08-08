@@ -1,0 +1,167 @@
+{
+  "timestamp": "20260808_203040",
+  "version": "v25 (Noise Sweep)",
+  "config": {
+    "trial_length": 10,
+    "n_trials": 500,
+    "T_A": 3,
+    "T_B": 6,
+    "T_target": 9,
+    "n_input": 10,
+    "n_hidden": 50,
+    "n_output": 2,
+    "theta": 1.0,
+    "tau_mem": 20.0,
+    "tau_syn": 20.0,
+    "tau_e": 15.0,
+    "beta": 1.0,
+    "eta": 0.01,
+    "w_scale": 0.5,
+    "plasticity_pool_capacity": 50.0,
+    "refill_rate": 1.0,
+    "update_cost": 1.0,
+    "arms": [
+      "A1_buffered",
+      "A2_nolearn",
+      "A3_coupled"
+    ],
+    "n_seeds": 5,
+    "random_seed": 42,
+    "noise_levels": [
+      0.0,
+      0.05,
+      0.1,
+      0.2,
+      0.3,
+      0.5
+    ],
+    "failure_threshold": 0.7
+  },
+  "sweep_data": {
+    "0.0": {
+      "A1_buffered": {
+        "mean_accuracy": 0.9071999999999999,
+        "mean_loss": 0.17303353401007546,
+        "mean_updates": 141.4,
+        "mean_blocked": 358.6
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.6148000000000001,
+        "mean_loss": 4.88054940525267,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.9252,
+        "mean_loss": 0.16281864793794995,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.05": {
+      "A1_buffered": {
+        "mean_accuracy": 0.6676,
+        "mean_loss": 2.38700302245135,
+        "mean_updates": 233.0,
+        "mean_blocked": 267.0
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5436000000000001,
+        "mean_loss": 5.7562706608446845,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.674,
+        "mean_loss": 2.0579883788460895,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.1": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5896,
+        "mean_loss": 2.1472850550335165,
+        "mean_updates": 253.8,
+        "mean_blocked": 246.2
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.48,
+        "mean_loss": 5.674926272448078,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.5948,
+        "mean_loss": 2.410215899687411,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.2": {
+      "A1_buffered": {
+        "mean_accuracy": 0.526,
+        "mean_loss": 2.28760720444582,
+        "mean_updates": 268.8,
+        "mean_blocked": 231.2
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5028,
+        "mean_loss": 7.066556057453266,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.5332000000000001,
+        "mean_loss": 2.501799971039076,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.3": {
+      "A1_buffered": {
+        "mean_accuracy": 0.524,
+        "mean_loss": 2.314551806359021,
+        "mean_updates": 264.0,
+        "mean_blocked": 236.0
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5151999999999999,
+        "mean_loss": 7.512866870383396,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.5168,
+        "mean_loss": 2.1270407338546535,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.5": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5068,
+        "mean_loss": 1.426605208659994,
+        "mean_updates": 273.0,
+        "mean_blocked": 227.0
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.492,
+        "mean_loss": 7.371416288502671,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.512,
+        "mean_loss": 1.9912516068521042,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    }
+  },
+  "failure_points": {
+    "A1_buffered": 0.05,
+    "A2_nolearn": 0.0,
+    "A3_coupled": 0.05
+  }
+}
