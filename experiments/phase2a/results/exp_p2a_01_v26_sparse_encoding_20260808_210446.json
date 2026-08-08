@@ -1,0 +1,199 @@
+{
+  "timestamp": "20260808_210446",
+  "version": "v26 (Sparse Input Encoding)",
+  "pre_registration": {
+    "H1": "noise=5% accuracy > 0.768",
+    "H2": "noise=0% accuracy > 0.887",
+    "H1_result": 0.5424,
+    "H2_result": 0.7652,
+    "H1_pass": false,
+    "H2_pass": false,
+    "overall_success": false
+  },
+  "config": {
+    "trial_length": 10,
+    "n_trials": 500,
+    "T_A": 3,
+    "T_B": 6,
+    "T_target": 9,
+    "n_input": 20,
+    "neurons_per_bit": 3,
+    "A_zero_range": [
+      0,
+      3
+    ],
+    "A_one_range": [
+      3,
+      6
+    ],
+    "B_zero_range": [
+      10,
+      13
+    ],
+    "B_one_range": [
+      13,
+      16
+    ],
+    "noise_range": [
+      16,
+      20
+    ],
+    "n_hidden": 50,
+    "n_output": 2,
+    "theta": 1.0,
+    "tau_mem": 20.0,
+    "tau_syn": 20.0,
+    "tau_e": 15.0,
+    "beta": 1.0,
+    "eta": 0.01,
+    "w_scale": 0.5,
+    "plasticity_pool_capacity": 50.0,
+    "refill_rate": 1.0,
+    "update_cost": 1.0,
+    "arms": [
+      "A1_buffered",
+      "A2_nolearn",
+      "A3_coupled"
+    ],
+    "n_seeds": 5,
+    "random_seed": 42,
+    "noise_levels": [
+      0.0,
+      0.05,
+      0.1,
+      0.2,
+      0.3,
+      0.5
+    ],
+    "failure_threshold": 0.7,
+    "H1_threshold": 0.768,
+    "H2_threshold": 0.887
+  },
+  "sweep_data": {
+    "0.0": {
+      "A1_buffered": {
+        "mean_accuracy": 0.7652,
+        "mean_loss": 0.715066684475272,
+        "mean_updates": 144.8,
+        "mean_blocked": 355.2
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.4488,
+        "mean_loss": 6.070916378410625,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.7896,
+        "mean_loss": 0.20327471204582048,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.05": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5424,
+        "mean_loss": 1.7709409461557262,
+        "mean_updates": 255.2,
+        "mean_blocked": 244.8
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5004,
+        "mean_loss": 8.07604417240025,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.5436,
+        "mean_loss": 1.960361589257475,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.1": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5224,
+        "mean_loss": 1.4250818611811158,
+        "mean_updates": 264.4,
+        "mean_blocked": 235.6
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.4784,
+        "mean_loss": 8.984786682839992,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.534,
+        "mean_loss": 1.5069458311668023,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.2": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5236000000000001,
+        "mean_loss": 1.2841693182454559,
+        "mean_updates": 265.4,
+        "mean_blocked": 234.6
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5040000000000001,
+        "mean_loss": 8.608634944043095,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.5092000000000001,
+        "mean_loss": 1.4951312578694842,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.3": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5092000000000001,
+        "mean_loss": 0.8606801422225943,
+        "mean_updates": 271.0,
+        "mean_blocked": 229.0
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5076,
+        "mean_loss": 8.689159595247563,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.4968,
+        "mean_loss": 1.2855230524977612,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    },
+    "0.5": {
+      "A1_buffered": {
+        "mean_accuracy": 0.5012000000000001,
+        "mean_loss": 1.1786766658066137,
+        "mean_updates": 270.8,
+        "mean_blocked": 229.2
+      },
+      "A2_nolearn": {
+        "mean_accuracy": 0.5084,
+        "mean_loss": 8.615716801955513,
+        "mean_updates": 0.0,
+        "mean_blocked": 0.0
+      },
+      "A3_coupled": {
+        "mean_accuracy": 0.5128,
+        "mean_loss": 0.8471705282513062,
+        "mean_updates": 500.0,
+        "mean_blocked": 0.0
+      }
+    }
+  },
+  "failure_points": {
+    "A1_buffered": 0.05,
+    "A2_nolearn": 0.0,
+    "A3_coupled": 0.05
+  }
+}
