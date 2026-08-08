@@ -1,0 +1,213 @@
+{
+  "timestamp": "20260808_142415",
+  "version": "v11 (pre-reset voltage fix)",
+  "config": {
+    "n_ticks": 1000,
+    "T1": 3,
+    "T2": 6,
+    "pulse_prob": 0.3,
+    "n_input": 10,
+    "n_hidden": 100,
+    "n_output": 10,
+    "vth": 1.0,
+    "dv": 0.2,
+    "du": 0.2,
+    "w_scale": 1.5,
+    "connectivity": 0.15,
+    "recurrent_connectivity": 0.2,
+    "eta": 0.01,
+    "tau_e": 15,
+    "surrogate_margin": 1.0,
+    "arms": [
+      "A1_eprop",
+      "A2_nolearn",
+      "A3_stdp3c"
+    ],
+    "n_seeds": 4,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "arm": "A1_eprop",
+      "mean_acc": 0.41373239436619713,
+      "std_acc": 0.018085931980228166,
+      "mean_trace": 1.3577234507486793,
+      "mean_f_prime": 0.9710482550968647,
+      "mean_hidden_rate": 61.867000000000004,
+      "mean_output_rate": 7.643,
+      "seeds": [
+        {
+          "arm": "A1_eprop",
+          "seed": 42,
+          "accuracy": 0.4416498993963783,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 1.9123956024924174,
+          "trace_mean": 3.6004976870659676e-25,
+          "hidden_spike_rate": 57.844,
+          "output_spike_rate": 7.877,
+          "f_prime_max": 0.9899653177683273
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 43,
+          "accuracy": 0.39235412474849096,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 0.9669240015761372,
+          "trace_mean": 3.2772421786462204e-26,
+          "hidden_spike_rate": 56.112,
+          "output_spike_rate": 8.924,
+          "f_prime_max": 0.9860455008012038
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 44,
+          "accuracy": 0.40543259557344064,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 0.4980254870429546,
+          "trace_mean": 3.6871843544624567e-26,
+          "hidden_spike_rate": 70.048,
+          "output_spike_rate": 5.931,
+          "f_prime_max": 0.9378976950475022
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 45,
+          "accuracy": 0.4154929577464789,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 2.0535487118832085,
+          "trace_mean": 6.796218354964063e-24,
+          "hidden_spike_rate": 63.464,
+          "output_spike_rate": 7.84,
+          "f_prime_max": 0.9702845067704249
+        }
+      ]
+    },
+    {
+      "arm": "A2_nolearn",
+      "mean_acc": 0.4225352112676056,
+      "std_acc": 0.013534833045345793,
+      "mean_trace": 0.0,
+      "mean_f_prime": 0.9875872319132566,
+      "mean_hidden_rate": 45.96625,
+      "mean_output_rate": 6.3315,
+      "seeds": [
+        {
+          "arm": "A2_nolearn",
+          "seed": 42,
+          "accuracy": 0.4416498993963783,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0,
+          "trace_mean": 0.0,
+          "hidden_spike_rate": 37.34,
+          "output_spike_rate": 6.581,
+          "f_prime_max": 0.9899653177683273
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 43,
+          "accuracy": 0.4275653923541248,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0,
+          "trace_mean": 0.0,
+          "hidden_spike_rate": 44.902,
+          "output_spike_rate": 6.566,
+          "f_prime_max": 0.9756001063650038
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 44,
+          "accuracy": 0.40543259557344064,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0,
+          "trace_mean": 0.0,
+          "hidden_spike_rate": 54.159,
+          "output_spike_rate": 5.285,
+          "f_prime_max": 0.9887474898763753
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 45,
+          "accuracy": 0.4154929577464789,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0,
+          "trace_mean": 0.0,
+          "hidden_spike_rate": 47.464,
+          "output_spike_rate": 6.894,
+          "f_prime_max": 0.9960360136433202
+        }
+      ]
+    },
+    {
+      "arm": "A3_stdp3c",
+      "mean_acc": 0.41373239436619713,
+      "std_acc": 0.018085931980228166,
+      "mean_trace": 1.3577234507486793,
+      "mean_f_prime": 0.9710482550968647,
+      "mean_hidden_rate": 61.867000000000004,
+      "mean_output_rate": 7.643,
+      "seeds": [
+        {
+          "arm": "A3_stdp3c",
+          "seed": 42,
+          "accuracy": 0.4416498993963783,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 1.9123956024924174,
+          "trace_mean": 3.6004976870659676e-25,
+          "hidden_spike_rate": 57.844,
+          "output_spike_rate": 7.877,
+          "f_prime_max": 0.9899653177683273
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 43,
+          "accuracy": 0.39235412474849096,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 0.9669240015761372,
+          "trace_mean": 3.2772421786462204e-26,
+          "hidden_spike_rate": 56.112,
+          "output_spike_rate": 8.924,
+          "f_prime_max": 0.9860455008012038
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 44,
+          "accuracy": 0.40543259557344064,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 0.4980254870429546,
+          "trace_mean": 3.6871843544624567e-26,
+          "hidden_spike_rate": 70.048,
+          "output_spike_rate": 5.931,
+          "f_prime_max": 0.9378976950475022
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 45,
+          "accuracy": 0.4154929577464789,
+          "updates": 994,
+          "total": 994,
+          "trace_max": 2.0535487118832085,
+          "trace_mean": 6.796218354964063e-24,
+          "hidden_spike_rate": 63.464,
+          "output_spike_rate": 7.84,
+          "f_prime_max": 0.9702845067704249
+        }
+      ]
+    }
+  ],
+  "delta_a1_a2": -0.8802816901408494,
+  "delta_a1_a3": 0.0,
+  "p_value": 0.504,
+  "h1_confirmed": false,
+  "key_fix": "pre_reset_voltage tracking for surrogate derivative"
+}

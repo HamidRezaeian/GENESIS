@@ -1,0 +1,249 @@
+{
+  "timestamp": "20260808_140825",
+  "version": "v7 (delayed copy + recurrent)",
+  "config": {
+    "n_ticks": 500,
+    "delay_k": 2,
+    "n_input": 20,
+    "n_hidden": 50,
+    "n_output": 2,
+    "vth": 0.5,
+    "dv": 0.3,
+    "du": 0.3,
+    "w_scale": 2.0,
+    "connectivity": 0.3,
+    "recurrent_connectivity": 0.2,
+    "eta": 0.01,
+    "tau_e": 10,
+    "arms": [
+      "A1_eprop",
+      "A2_nolearn",
+      "A3_stdp3c"
+    ],
+    "n_seeds": 4,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "arm": "A1_eprop",
+      "mean_acc": 0.5035140562248996,
+      "std_acc": 0.024649565657009882,
+      "seeds": [
+        {
+          "arm": "A1_eprop",
+          "seed": 42,
+          "accuracy": 0.4879518072289157,
+          "updates": 255,
+          "total": 498,
+          "spikes": 14982,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 43,
+          "accuracy": 0.4899598393574297,
+          "updates": 254,
+          "total": 498,
+          "spikes": 12484,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 44,
+          "accuracy": 0.4899598393574297,
+          "updates": 497,
+          "total": 498,
+          "spikes": 10657,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 45,
+          "accuracy": 0.5461847389558233,
+          "updates": 441,
+          "total": 498,
+          "spikes": 12773,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "A2_nolearn",
+      "mean_acc": 0.5035140562248996,
+      "std_acc": 0.024649565657009882,
+      "seeds": [
+        {
+          "arm": "A2_nolearn",
+          "seed": 42,
+          "accuracy": 0.4879518072289157,
+          "updates": 0,
+          "total": 498,
+          "spikes": 14982,
+          "early_trace_magnitudes": []
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 43,
+          "accuracy": 0.4899598393574297,
+          "updates": 0,
+          "total": 498,
+          "spikes": 12484,
+          "early_trace_magnitudes": []
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 44,
+          "accuracy": 0.4899598393574297,
+          "updates": 0,
+          "total": 498,
+          "spikes": 10657,
+          "early_trace_magnitudes": []
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 45,
+          "accuracy": 0.5461847389558233,
+          "updates": 0,
+          "total": 498,
+          "spikes": 12773,
+          "early_trace_magnitudes": []
+        }
+      ]
+    },
+    {
+      "arm": "A3_stdp3c",
+      "mean_acc": 0.5035140562248996,
+      "std_acc": 0.024649565657009882,
+      "seeds": [
+        {
+          "arm": "A3_stdp3c",
+          "seed": 42,
+          "accuracy": 0.4879518072289157,
+          "updates": 255,
+          "total": 498,
+          "spikes": 14982,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 43,
+          "accuracy": 0.4899598393574297,
+          "updates": 254,
+          "total": 498,
+          "spikes": 12484,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 44,
+          "accuracy": 0.4899598393574297,
+          "updates": 497,
+          "total": 498,
+          "spikes": 10657,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 45,
+          "accuracy": 0.5461847389558233,
+          "updates": 441,
+          "total": 498,
+          "spikes": 12773,
+          "early_trace_magnitudes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    }
+  ],
+  "delta_a1_a2": 0.0,
+  "delta_a1_a3": 0.0,
+  "p_value": 1.0,
+  "h1_confirmed": false
+}

@@ -1,0 +1,156 @@
+{
+  "timestamp": "20260808_141730",
+  "version": "v9 (Temporal XOR benchmark)",
+  "config": {
+    "n_ticks": 1000,
+    "T1": 3,
+    "T2": 6,
+    "pulse_prob": 0.3,
+    "n_input": 1,
+    "n_hidden": 100,
+    "n_output": 1,
+    "vth": 1.0,
+    "dv": 0.2,
+    "du": 0.2,
+    "w_scale": 1.0,
+    "connectivity": 0.1,
+    "recurrent_connectivity": 0.2,
+    "eta": 0.005,
+    "tau_e": 15,
+    "surrogate_margin": 0.5,
+    "arms": [
+      "A1_eprop",
+      "A2_nolearn",
+      "A3_stdp3c"
+    ],
+    "n_seeds": 4,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "arm": "A1_eprop",
+      "mean_acc": 0.5862676056338028,
+      "std_acc": 0.018085931980228134,
+      "mean_trace": 0.0,
+      "seeds": [
+        {
+          "arm": "A1_eprop",
+          "seed": 42,
+          "accuracy": 0.5583501006036218,
+          "updates": 471,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 43,
+          "accuracy": 0.607645875251509,
+          "updates": 596,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 44,
+          "accuracy": 0.5945674044265593,
+          "updates": 591,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 45,
+          "accuracy": 0.5845070422535211,
+          "updates": 581,
+          "total": 994,
+          "trace_max": 0.0
+        }
+      ]
+    },
+    {
+      "arm": "A2_nolearn",
+      "mean_acc": 0.5862676056338028,
+      "std_acc": 0.018085931980228134,
+      "mean_trace": 0.0,
+      "seeds": [
+        {
+          "arm": "A2_nolearn",
+          "seed": 42,
+          "accuracy": 0.5583501006036218,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 43,
+          "accuracy": 0.607645875251509,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 44,
+          "accuracy": 0.5945674044265593,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 45,
+          "accuracy": 0.5845070422535211,
+          "updates": 0,
+          "total": 994,
+          "trace_max": 0.0
+        }
+      ]
+    },
+    {
+      "arm": "A3_stdp3c",
+      "mean_acc": 0.5862676056338028,
+      "std_acc": 0.018085931980228134,
+      "mean_trace": 0.0,
+      "seeds": [
+        {
+          "arm": "A3_stdp3c",
+          "seed": 42,
+          "accuracy": 0.5583501006036218,
+          "updates": 471,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 43,
+          "accuracy": 0.607645875251509,
+          "updates": 596,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 44,
+          "accuracy": 0.5945674044265593,
+          "updates": 591,
+          "total": 994,
+          "trace_max": 0.0
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 45,
+          "accuracy": 0.5845070422535211,
+          "updates": 581,
+          "total": 994,
+          "trace_max": 0.0
+        }
+      ]
+    }
+  ],
+  "delta_a1_a2": 0.0,
+  "delta_a1_a3": 0.0,
+  "p_value": 1.0,
+  "h1_confirmed": false,
+  "bellec_reference": "~80% (Bellec et al. 2020)"
+}
