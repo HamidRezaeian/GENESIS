@@ -1,0 +1,168 @@
+{
+  "timestamp": "20260808_221614",
+  "experiment": "Exp-P2B-01",
+  "version": "Hierarchical SNN - Depth vs Metabolic Tolerance",
+  "pre_registration": {
+    "H1": "3-layer threshold > 80%",
+    "H2": "3-layer > 2-layer at 50% block",
+    "thresholds": {
+      "2-layer": 75,
+      "3-layer": null
+    },
+    "acc_2layer_50": 0.8532,
+    "acc_3layer_50": 0.9708,
+    "H1_pass": true,
+    "H2_pass": true,
+    "success": true
+  },
+  "config": {
+    "trial_length": 10,
+    "n_trials": 500,
+    "T_A": 3,
+    "T_B": 6,
+    "T_target": 9,
+    "n_input": 2,
+    "n_output": 2,
+    "theta": 1.0,
+    "tau_mem": 20.0,
+    "tau_syn": 20.0,
+    "tau_e": 15.0,
+    "beta": 1.0,
+    "eta": 0.01,
+    "w_scale": 0.5,
+    "architectures": [
+      {
+        "label": "2-layer",
+        "hidden_sizes": [
+          50
+        ],
+        "update_budget": 500
+      },
+      {
+        "label": "3-layer",
+        "hidden_sizes": [
+          100,
+          50
+        ],
+        "update_budget": 500
+      }
+    ],
+    "conditions": [
+      {
+        "label": "unconstrained",
+        "T_block_pct": 0,
+        "budget_fraction": 1.0
+      },
+      {
+        "label": "light",
+        "T_block_pct": 25,
+        "budget_fraction": 0.75
+      },
+      {
+        "label": "moderate",
+        "T_block_pct": 50,
+        "budget_fraction": 0.5
+      },
+      {
+        "label": "heavy",
+        "T_block_pct": 75,
+        "budget_fraction": 0.25
+      },
+      {
+        "label": "extreme",
+        "T_block_pct": 90,
+        "budget_fraction": 0.1
+      }
+    ],
+    "n_seeds": 5,
+    "random_seed": 42,
+    "H1_threshold": 0.8,
+    "H2_threshold": 0.0
+  },
+  "results": {
+    "2-layer": {
+      "unconstrained": {
+        "T_block_pct": 0,
+        "update_budget": 500,
+        "mean_accuracy": 0.8648,
+        "std_accuracy": 0.06457987302557974,
+        "mean_updates_used": 500.0,
+        "mean_updates_blocked": 0.0
+      },
+      "light": {
+        "T_block_pct": 25,
+        "update_budget": 375,
+        "mean_accuracy": 0.8700000000000001,
+        "std_accuracy": 0.06571453416102105,
+        "mean_updates_used": 375.0,
+        "mean_updates_blocked": 125.0
+      },
+      "moderate": {
+        "T_block_pct": 50,
+        "update_budget": 250,
+        "mean_accuracy": 0.8532,
+        "std_accuracy": 0.0679835274165735,
+        "mean_updates_used": 250.0,
+        "mean_updates_blocked": 250.0
+      },
+      "heavy": {
+        "T_block_pct": 75,
+        "update_budget": 125,
+        "mean_accuracy": 0.6916,
+        "std_accuracy": 0.1677636432603918,
+        "mean_updates_used": 125.0,
+        "mean_updates_blocked": 375.0
+      },
+      "extreme": {
+        "T_block_pct": 90,
+        "update_budget": 50,
+        "mean_accuracy": 0.5544,
+        "std_accuracy": 0.24001133306575334,
+        "mean_updates_used": 50.0,
+        "mean_updates_blocked": 450.0
+      }
+    },
+    "3-layer": {
+      "unconstrained": {
+        "T_block_pct": 0,
+        "update_budget": 500,
+        "mean_accuracy": 0.9708,
+        "std_accuracy": 0.00917387595294378,
+        "mean_updates_used": 500.0,
+        "mean_updates_blocked": 0.0
+      },
+      "light": {
+        "T_block_pct": 25,
+        "update_budget": 375,
+        "mean_accuracy": 0.9708,
+        "std_accuracy": 0.00917387595294378,
+        "mean_updates_used": 375.0,
+        "mean_updates_blocked": 125.0
+      },
+      "moderate": {
+        "T_block_pct": 50,
+        "update_budget": 250,
+        "mean_accuracy": 0.9708,
+        "std_accuracy": 0.00917387595294378,
+        "mean_updates_used": 250.0,
+        "mean_updates_blocked": 250.0
+      },
+      "heavy": {
+        "T_block_pct": 75,
+        "update_budget": 125,
+        "mean_accuracy": 0.9715999999999999,
+        "std_accuracy": 0.008333066662399871,
+        "mean_updates_used": 125.0,
+        "mean_updates_blocked": 375.0
+      },
+      "extreme": {
+        "T_block_pct": 90,
+        "update_budget": 50,
+        "mean_accuracy": 0.8392,
+        "std_accuracy": 0.19545475179693125,
+        "mean_updates_used": 50.0,
+        "mean_updates_blocked": 450.0
+      }
+    }
+  }
+}
