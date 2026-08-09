@@ -99,30 +99,40 @@ class PhysicalConstants:
 class MembraneConstants:
     """Passive membrane parameters for a human L5 pyramidal neuron.
 
-    Human-specific values
-    ----------------------
-    Cm_dend = 2.0 µF/cm²  [ref 3, Eyal 2016]: human cortical dendrites have
-        a higher specific capacitance than rodent due to greater myelin sheath
-        geometry and membrane composition differences.
-    Rm = 15 000 Ω·cm²     [ref 3, Eyal 2016, Table 1]: passive resistivity
-        derived from human L2/3 and L5 recordings.
-    Ra = 100 Ω·cm          [ref 5, Stuart & Spruston 1998]: cytoplasmic
-        axial resistivity from sharp-electrode recordings in L5 pyramidals.
-    E_leak = −70 mV         [ref 4, Beaulieu-Laroche 2018]: human neocortical
-        resting membrane potential measured via whole-cell patch clamp.
+    Phase 0a parameter set  (FIX#1)
+    -------------------------------
+    Cm = 1.0 µF/cm² in every region            [ref 1, ref 3]
+        The canonical Hodgkin/Katz specific capacitance.  Earlier revisions of
+        this file used Cm_dend = 2.0 µF/cm²; that value compensates for an
+        under-estimated dendritic membrane area and is not needed once Rm and
+        Ra are set from the human recordings below.  A uniform Cm also makes
+        the slowest cable eigenmode exactly tau_m = Rm * Cm, which is the
+        quantity the Rall relaxation protocol measures.
+    Rm = 30 000 Ω·cm²  (3.0 Ω·m²)              [ref 3, ref 4]
+        High-Rm end of the range fitted to human pyramidal recordings.  With
+        the Phase 0a morphology it gives R_in(soma) ≈ 72 MΩ, inside the
+        50–200 MΩ measured range [ref 4]; 15 000 Ω·cm² gave ≈ 36 MΩ.
+    Ra = 200 Ω·cm  (2.0 Ω·m)                   [ref 2, ref 5]
+        Axial resistivity used by the Hay L5PC model.  Doubling Rm and Ra
+        together leaves λ = sqrt(Rm·d / 4Ra) unchanged (1369 µm at d = 5 µm)
+        while doubling R_in ∝ sqrt(Rm·Ra).
+    E_leak = −70 mV                            [ref 4]
+        Human neocortical resting membrane potential (whole-cell patch clamp).
+
+    Resulting targets: tau_m = 30 ms, λ(d = 5 µm) = 1369 µm, V_rest = −70 mV.
 
     All SI values (units: F m⁻², Ω m², Ω m, V)
     """
     # Specific capacitance  [F m⁻²]
-    Cm_soma_SI:  float = 1.0e-2   # 1.0 µF/cm²  soma and axon  [ref 1]
-    Cm_dend_SI:  float = 2.0e-2   # 2.0 µF/cm²  dendrites       [ref 3]
-    Cm_axon_SI:  float = 1.0e-2   # 1.0 µF/cm²  axon            [ref 1]
+    Cm_soma_SI:  float = 1.0e-2   # 1.0 µF/cm²  soma                  [ref 1]
+    Cm_dend_SI:  float = 1.0e-2   # 1.0 µF/cm²  dendrites (FIX#1)     [ref 1, 3]
+    Cm_axon_SI:  float = 1.0e-2   # 1.0 µF/cm²  axon                  [ref 1]
 
-    # Specific membrane resistance  [omega m²]  (= 15 000 Ω·cm²)
-    Rm_SI:       float = 1.5      # 15 000 Ω·cm²                 [ref 3]
+    # Specific membrane resistance  [omega m²]  (= 30 000 Ω·cm²)
+    Rm_SI:       float = 3.0      # 30 000 Ω·cm²  (FIX#1)          [ref 3, 4]
 
-    # Cytoplasmic axial resistivity  [Ω m]  (= 100 Ω·cm)
-    Ra_SI:       float = 1.0      # 100 Ω·cm                      [ref 5]
+    # Cytoplasmic axial resistivity  [Ω m]  (= 200 Ω·cm)
+    Ra_SI:       float = 2.0      # 200 Ω·cm      (FIX#1)          [ref 2, 5]
 
     # Leak / resting reversal potential  [V]
     E_leak_V:    float = -0.070   # −70 mV                         [ref 4]
@@ -142,7 +152,7 @@ class MembraneConstants:
 
     @property
     def Cm_dend_uF_cm2(self) -> float:
-        """Dendritic specific capacitance in µF/cm² (Eyal 2016)."""
+        """Dendritic specific capacitance in µF/cm² (1.0 after FIX#1)."""
         return self.Cm_dend_SI * 1e2
 
     @property
@@ -159,7 +169,7 @@ class MembraneConstants:
     def tau_m_dend_ms(self) -> float:
         """Dendritic membrane time constant τ_m = R_m * C_m (ms).
 
-        τ_m = 1.5 Ω·m² x 2e-2 F/m² = 0.030 s = 30 ms
+        τ_m = 3.0 Ω·m² x 1e-2 F/m² = 0.030 s = 30 ms
         Target range: 10–30 ms (Beaulieu-Laroche 2018, Table 1).
         """
         return self.Rm_SI * self.Cm_dend_SI * 1e3  # s → ms
