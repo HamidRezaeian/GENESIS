@@ -7,9 +7,14 @@ Phase 0a concrete implementations
                               -> membrane.nak_pump.NaKPump
     AbstractSolver            -> simulation.crank_nicolson.CrankNicolsonSolver
 
+Phase 0b concrete implementations
+----------------------------------
+    AbstractVoltageGatedChannel -> channels.base_channel.VoltageGatedChannel
+                                -> channels.sodium_channel.NaV16Channel
+                                -> channels.potassium_channel.KvChannel
+
 Future phase implementations (ABCs are already defined here)
 -------------------------------------------------------------
-    Phase 0b : HHNaChannel, HHKChannel, Kv1Channel, CaLChannel, HCNChannel
     Phase 0c : AMPAReceptor, NMDAReceptor, GABAaReceptor, GABAbReceptor
     Phase 0d : CaMKII, Calcineurin, IP3Receptor, SERCA, PMCA
     Phase 0e : GeneExpressionEngine (DNA->mRNA->Protein)
@@ -207,6 +212,68 @@ class AbstractMembraneMechanism(BiophysComponent):
     def reversal_potential(self) -> float:
         """Reversal potential E (V) for linear mechanisms. 0.0 otherwise."""
         return 0.0
+
+
+# ===========================================================================
+# Voltage-gated channel  (Phase 0b+)
+# ===========================================================================
+
+class AbstractVoltageGatedChannel(AbstractMembraneMechanism):
+    """ABC for voltage-gated ion channels (Phase 0b+).
+
+    Extends AbstractMembraneMechanism with maximum conductance, reversal
+    potential, gate introspection, and steady-state initialisation.
+
+    Non-linearity
+    -------------
+    is_linear must return False for all subclasses.  The solver uses
+    Hines (1984) operator-splitting:
+      1. update_state(V^n) advances gates at the OLD voltage V^n.
+      2. current(V^{n+1}) evaluates I at the NEW voltage V^{n+1}.
+    This staggering gives first-order accuracy in the channel coupling
+    and preserves unconditional stability for any gbar value.
+
+    Phase 0e hook
+    -------------
+    gbar_SI provides the conductance density for this channel instance.
+    In Phase 0e, a DensityProvider will compute gbar from
+    mRNA → protein → conductance density and pass it to the constructor
+    at neuron build time.  Subclasses require no modification for Phase 0e.
+
+    Sign convention
+    ---------------
+    Follows AbstractMembraneMechanism: positive I = inward = depolarising.
+    I = −gbar × open_fraction × (V − E_rev)
+
+    For Na⁺ (E_Na ≈ +72 mV) at V < E_Na:  (V − E_Na) < 0  → I > 0  (inward)  ✓
+    For K⁺  (E_K  ≈ −95 mV) at V > E_K:   (V − E_K)  > 0  → I < 0  (outward) ✓
+    """
+
+    @property
+    @abstractmethod
+    def gbar_SI(self) -> float:
+        """Maximum conductance density [S m⁻²] for this channel instance."""
+
+    @property
+    @abstractmethod
+    def E_rev_V(self) -> float:
+        """Reversal (Nernst) potential [V]."""
+
+    @property
+    @abstractmethod
+    def gate_state(self) -> Dict[str, float]:
+        """Current gating variable values keyed by gate name.
+
+        Example: {'m': 0.050, 'h': 0.600} for NaV16Channel.
+        """
+
+    @abstractmethod
+    def set_steady_state(self, V: float) -> None:
+        """Initialise all gates to their steady-state values at voltage V [V].
+
+        Must be called before the first simulation step to avoid an initial
+        transient caused by gates starting at arbitrary initial conditions.
+        """
 
 
 # ===========================================================================

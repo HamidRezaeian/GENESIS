@@ -14,6 +14,8 @@ References
 [6]  Koch C (1999) Biophysics of Computation. OUP
 [7]  Hille B (2001) Ion Channels of Excitable Membranes. 3rd ed. Sinauer
 [8]  CODATA 2018 recommended values
+[MS96] Mainen ZF, Sejnowski TJ (1996) J Neurophysiol 76:1329–1338
+[H11]  Hay E et al. (2011) PLoS Comput Biol 7:e1002107; ModelDB #139653
 """
 
 from __future__ import annotations
@@ -194,3 +196,108 @@ class MembraneConstants:
 # Module-level singleton instances
 PHYS = PhysicalConstants()
 MEM  = MembraneConstants()
+
+
+# ===========================================================================
+# Phase 0b: Voltage-gated channel constants
+# ===========================================================================
+
+@dataclass(frozen=True)
+class ChannelConstants:
+    """Voltage-gated ion channel constants — Project GENESIS Phase 0b.
+
+    All conductance densities in SI (S m⁻²).
+    Unit conversion: 1 pS µm⁻² = 1 S m⁻²
+    (1 pS = 10⁻¹² S; 1 µm² = 10⁻¹² m²  →  ratio = 1 S m⁻²)
+
+    Conductance densities from Hay et al. (2011) ModelDB #139653 [H11].
+    Kinetic formulations from Mainen & Sejnowski (1996) [MS96].
+    Temperature scaling assumes T_ref = 23 °C (recording temperature in [MS96]).
+
+    References
+    ----------
+    [MS96] Mainen ZF, Sejnowski TJ (1996) J Neurophysiol 76:1329–1338
+    [H11]  Hay E et al. (2011) PLoS Comput Biol 7:e1002107; ModelDB #139653
+    """
+
+    # ------------------------------------------------------------------ #
+    # Reversal potentials [V] — Nernst at 37 °C  (see E_NA_MV, E_K_MV)  #
+    # ------------------------------------------------------------------ #
+    E_Na_V: float = E_NA_MV * 1e-3    # ≈ +0.0714 V  (+71.4 mV)  [ref 7, H11]
+    E_K_V:  float = E_K_MV  * 1e-3    # ≈ −0.0985 V  (−98.5 mV)  [ref 7, H11]
+
+    # ------------------------------------------------------------------ #
+    # Maximum conductance densities [S m⁻²] = [pS µm⁻²]  [ref H11]     #
+    # ------------------------------------------------------------------ #
+
+    # Axon Initial Segment (AIS) — highest density; AP initiation site
+    gbar_Na_AIS:  float = 31_370.0    # S m⁻²  NaTa_t (Nav1.6)  [H11 Table S1]
+    gbar_K_AIS:   float = 19_100.0    # S m⁻²  SKv3.1           [H11 Table S1]
+
+    # Soma — intermediate density
+    gbar_Na_soma: float = 9_830.0     # S m⁻²  NaTa_t           [H11 Table S1]
+    gbar_K_soma:  float = 3_030.0     # S m⁻²  SKv3.1           [H11 Table S1]
+
+    # Apical dendrites — low density with distal gradient
+    gbar_Na_apical: float = 213.0     # S m⁻²  NaTa_t           [H11 Table S1]
+    gbar_K_apical:  float = 2.6       # S m⁻²  SKv3.1           [H11 Table S1]
+
+    # Basal dendrites — passive only (no voltage-gated channels in Phase 0b)
+    gbar_Na_basal: float = 0.0        # S m⁻²  (pas only)
+    gbar_K_basal:  float = 0.0        # S m⁻²  (pas only)
+
+    # Myelin sheaths — passive only (insulating, no active channels)
+    gbar_Na_myelin: float = 0.0       # S m⁻²
+    gbar_K_myelin:  float = 0.0       # S m⁻²
+
+    # Nodes of Ranvier — AIS-level density for saltatory conduction
+    gbar_Na_node: float = 31_370.0    # S m⁻²  same as AIS  [H11]
+    gbar_K_node:  float = 19_100.0    # S m⁻²  same as AIS  [H11]
+
+    # ------------------------------------------------------------------ #
+    # Kinetics reference temperature [°C]  [ref MS96]                    #
+    # ------------------------------------------------------------------ #
+    T_ref_celsius: float = 23.0       # °C — patch-clamp recording temp in [MS96]
+
+    # ------------------------------------------------------------------ #
+    # Q10 temperature-scaling factors  [ref MS96]                        #
+    # ------------------------------------------------------------------ #
+    Q10_Na: float = 2.3   # NaTa_t: activation gate m, inactivation gate h
+    Q10_K:  float = 3.0   # SKv3.1: activation gate n
+
+    # ------------------------------------------------------------------ #
+    # Derived Q10 multipliers at simulation temperature (37 °C)          #
+    # Properties are used as convenience accessors; use q10_factor() in  #
+    # channels/gating.py for the underlying calculation.                 #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def qt_Na(self) -> float:
+        """Speed-up factor for NaTa_t kinetics at T_CELSIUS (37 °C).
+
+        qt_Na = Q10_Na ^ ((T_CELSIUS − T_ref) / 10)
+              = 2.3 ^ ((37 − 23) / 10)
+              = 2.3 ^ 1.4
+              ≈ 3.21
+
+        Divide reference-temperature tau by qt_Na to obtain tau at 37 °C.
+        τ_m(37°C) = τ_m(23°C) / qt_Na  ≈ 0.363 ms / 3.21 ≈ 0.113 ms  [MS96]
+        """
+        return self.Q10_Na ** ((T_CELSIUS - self.T_ref_celsius) / 10.0)
+
+    @property
+    def qt_K(self) -> float:
+        """Speed-up factor for SKv3.1 kinetics at T_CELSIUS (37 °C).
+
+        qt_K = Q10_K ^ ((T_CELSIUS − T_ref) / 10)
+             = 3.0 ^ ((37 − 23) / 10)
+             = 3.0 ^ 1.4
+             ≈ 4.65
+
+        Divide reference-temperature tau_n by qt_K to obtain tau_n at 37 °C.
+        """
+        return self.Q10_K ** ((T_CELSIUS - self.T_ref_celsius) / 10.0)
+
+
+# Module-level singleton
+CHAN = ChannelConstants()
