@@ -112,16 +112,16 @@ def build_l5_pyramidal(
 
         # ---- Section geometry ----
         ux, uy, uz = _normalise(spec.dir_x, spec.dir_y, spec.dir_z)
-        L_m   = spec.length_um * 1e-6          # total section length (m)
-        L_comp = L_m / spec.n_comps            # per-compartment length (m)
+        L_m    = spec.length_um * 1e-6          # total section length (m)
+        L_comp = L_m / spec.n_comps             # per-compartment length (m)
         comp_type = CompartmentType[spec.comp_type]
 
         # ---- Create compartments sequentially within this section ----
         for i in range(spec.n_comps):
             # Midpoint fraction along section (for diameter interpolation)
             frac = (i + 0.5) / spec.n_comps
-            d_m = ((spec.diam_start_um +
-                    (spec.diam_end_um - spec.diam_start_um) * frac) * 1e-6)
+            d_m  = ((spec.diam_start_um +
+                     (spec.diam_end_um - spec.diam_start_um) * frac) * 1e-6)
 
             # Compartment centre position
             offset = (i + 0.5) * L_comp
@@ -129,16 +129,20 @@ def build_l5_pyramidal(
             cy = py + uy * offset
             cz = pz + uz * offset
 
-            this_idx    = len(compartments)
+            this_idx   = len(compartments)
             comp_parent = parent_idx if i == 0 else this_idx - 1
 
+            # FIX BUG#1: Compartment dataclass uses private field names _idx
+            # and _parent_idx in __init__.  Pass them with the underscore prefix.
             comp = Compartment(
-                idx       = this_idx,
-                comp_type = comp_type,
-                diameter_m = d_m,
-                length_m   = L_comp,
-                x = cx, y = cy, z = cz,
-                parent_idx = comp_parent,
+                _idx        = this_idx,
+                comp_type   = comp_type,
+                diameter_m  = d_m,
+                length_m    = L_comp,
+                x           = cx,
+                y           = cy,
+                z           = cz,
+                _parent_idx = comp_parent,
             )
             comp.V = MEM.E_leak_V
 
@@ -171,8 +175,8 @@ def build_l5_pyramidal(
 
     # ---- Summary statistics ----
     total_area_m2 = sum(c.surface_area_m2 for c in compartments)
-    meta['n_compartments']  = len(compartments)
-    meta['total_area_m2']   = total_area_m2
-    meta['total_area_um2']  = total_area_m2 * 1e12
+    meta['n_compartments'] = len(compartments)
+    meta['total_area_m2']  = total_area_m2
+    meta['total_area_um2'] = total_area_m2 * 1e12
 
     return compartments, meta
