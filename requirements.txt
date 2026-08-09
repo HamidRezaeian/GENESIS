@@ -1,0 +1,21 @@
+# PROJECT GENESIS — Phase 0a requirements
+# Passive cable biophysical neuron simulation.
+#
+# Install: pip install -r requirements.txt
+# Dev:     pip install -r requirements.txt -r requirements-dev.txt
+
+# ---- Core numerics ----------------------------------------------------------
+numpy>=1.24          # Array operations, linear algebra
+scipy>=1.11          # Sparse matrices (scipy.sparse), SuperLU solver
+                     # (scipy.sparse.linalg.splu for CN factorisation)
+
+# ---- Optional (plotting) ----------------------------------------------------
+# matplotlib>=3.7    # Uncomment for voltage trace plots
+# seaborn>=0.12      # Uncomment for styled plots
+
+# ---- Phase 0b+ (planned) ----------------------------------------------------
+# h5py>=3.9          # Phase 0b: SWC loader, HDF5 output
+# pandas>=2.0        # Phase 0e: gene-expression tables (RNA-seq data)
+# biopython>=1.81    # Phase 0e: DNA sequence parsing (NCBI genome access)
+# sympy>=1.12        # Phase 0e: symbolic rate-equation solver for gene network
+# numba>=0.57        # Phase 0c+: JIT-compiled Hodgkin-Huxley gate kinetics
