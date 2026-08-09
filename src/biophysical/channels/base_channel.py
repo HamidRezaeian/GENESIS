@@ -8,19 +8,19 @@ VoltageGatedChannel inherits from AbstractVoltageGatedChannel and provides:
   - reversal_potential from E_rev_V
 
 Subclasses (NaV16Channel, KvChannel, ...) must implement:
-  _open_fraction()      product of all gate contributions
-  update_state()        advance gating variables one timestep
-  gate_state            property: {gate_name: current_value}
-  set_steady_state()    initialise gates to V steady-state values
-  name                  str identifier
-  state_dict()          JSON-serialisable state snapshot
-  reset()               restore to t=0 initial conditions
+  _open_fraction()      product of all gate contributions  [abstract]
+  update_state()        advance gating variables one timestep  [abstract]
+  gate_state            property: {gate_name: current_value}  [abstract]
+  set_steady_state()    initialise gates to V steady-state values  [abstract]
+  name                  str identifier  [abstract]
+  state_dict()          JSON-serialisable state snapshot  [abstract]
+  reset()               restore to t=0 initial conditions  [abstract]
 
 Phase 0e hook
 -------------
 Subclasses receive gbar_SI at construction time.  In Phase 0e, a
 DensityProvider (mRNA → protein → gbar) will compute gbar per compartment
-and inject it at build time.  No changes to VoltageGatedChannel needed.
+and inject it at neuron build time.  No changes to VoltageGatedChannel needed.
 
 Sign convention
 ---------------
@@ -33,7 +33,7 @@ Sign checks:
     I = −gbar × p × (−0.142) > 0  (inward, depolarising) ✓
   K repolarisation (V ≈ +30 mV, E_K ≈ −95 mV): V − E_K = +0.125 V
     I = −gbar × p × (+0.125) < 0  (outward, repolarising) ✓
-  At Nernst: V = E_rev → I = 0 ✓
+  At Nernst potential: V = E_rev → I = 0 ✓
 
 References
 ----------
@@ -53,7 +53,8 @@ class VoltageGatedChannel(AbstractVoltageGatedChannel):
     """Partial concrete ABC for voltage-gated ion channels.
 
     Provides the universal current formula and property storage.
-    Subclasses must implement the gate-specific methods listed below.
+    Subclasses must implement the gate-specific methods listed in the
+    module docstring.
 
     Parameters
     ----------
@@ -148,16 +149,13 @@ class VoltageGatedChannel(AbstractVoltageGatedChannel):
         """Current gating variable values keyed by gate name.
 
         Example: {'m': 0.050, 'h': 0.600} for NaV16Channel.
-        Used by state_dict() and for debugging.
         """
 
     @abstractmethod
     def set_steady_state(self, V: float) -> None:
         """Initialise all gates to steady-state values at voltage V [V].
 
-        Must be called once before the first simulation step.  Initialising
-        to steady state avoids an initial transient from arbitrary gate
-        starting conditions.
+        Must be called once before the first simulation step.
         """
 
     @abstractmethod
@@ -166,7 +164,9 @@ class VoltageGatedChannel(AbstractVoltageGatedChannel):
 
     @abstractmethod
     def reset(self) -> None:
-        """Restore to t=0 initial conditions."""
+        """Restore to t=0 initial conditions (before set_steady_state())."""
 
     @property
-    @
+    @abstractmethod
+    def name(self) -> str:
+        """Human-readable channel identifier (e.g. 'NaV16Channel')."""
