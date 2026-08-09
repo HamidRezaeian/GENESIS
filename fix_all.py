@@ -1,4 +1,29 @@
-"""report.py - Validation report generation."""
+import os
+
+# Fix 1: simulation/__init__.py
+path = 'src/biophysical/simulation/__init__.py'
+with open(path, 'r') as f:
+    content = f.read()
+content = content.replace('from biophysical.simulation.recorder import StateRecorder',
+                         'from biophysical.simulation.recorder import Recorder')
+content = content.replace('from biophysical.simulation.current_clamp import CurrentClamp',
+                         'from biophysical.simulation.current_clamp import CurrentClampProtocol as CurrentClamp')
+content = content.replace('"StateRecorder"', '"Recorder"')
+with open(path, 'w') as f:
+    f.write(content)
+print(f"Fixed: {path}")
+
+# Fix 2: neuron_cell.py
+path = 'src/biophysical/neuron_cell.py'
+with open(path, 'r') as f:
+    content = f.read()
+content = content.replace('StateRecorder', 'Recorder')
+with open(path, 'w') as f:
+    f.write(content)
+print(f"Fixed: {path}")
+
+# Fix 3: report.py - complete rewrite
+report_content = '''"""report.py - Validation report generation."""
 
 from __future__ import annotations
 from dataclasses import dataclass, field
@@ -36,19 +61,35 @@ class ValidationReport:
     def all_passed(self) -> bool:
         return self.n_failed == 0 and self.n_total > 0
 
-    def add(self, result) -> None:
+    def add(self, result: ValidationResult) -> None:
         self.results.append(result)
+
+    def add_check(self, name, passed, actual=None, expected="", unit="", message=""):
+        self.add(ValidationResult(name=name, passed=passed, actual_value=actual,
+                                  expected_range=expected, unit=unit, message=message))
 
     def summary_line(self) -> str:
         return f"{self.n_passed}/{self.n_total} checks passed"
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "title": self.title,
+            "n_total": self.n_total,
+            "n_passed": self.n_passed,
+            "n_failed": self.n_failed,
+            "all_passed": self.all_passed,
+            "results": [
+                {"name": r.name, "passed": r.passed, "actual": r.actual_value,
+                 "expected": r.expected_range, "unit": r.unit, "message": r.message}
+                for r in self.results
+            ],
+        }
+
     def __str__(self) -> str:
         return generate_text_report(self)
 
-
-def _get_val(obj, attr, default=None):
-    """Safely get attribute from any object."""
-    return getattr(obj, attr, default)
+    def print_report(self) -> None:
+        print(generate_text_report(self))
 
 
 def generate_text_report(report_or_results, benchmark=None, meta=None) -> str:
@@ -65,7 +106,7 @@ def generate_text_report(report_or_results, benchmark=None, meta=None) -> str:
         title = "Validation Report"
 
     n_total = len(results)
-    n_passed = sum(1 for r in results if _get_val(r, 'passed', False))
+    n_passed = sum(1 for r in results if r.passed)
     n_failed = n_total - n_passed
 
     lines.append("=" * 60)
@@ -78,19 +119,12 @@ def generate_text_report(report_or_results, benchmark=None, meta=None) -> str:
     lines.append("  " + "-" * 56)
 
     for r in results:
-        name = _get_val(r, 'name', 'unknown')
-        passed = _get_val(r, 'passed', False)
-        mark = "[PASS]" if passed else "[FAIL]"
-        lines.append(f"  {mark} {name}")
-
-        actual = _get_val(r, 'actual_value', _get_val(r, 'actual', _get_val(r, 'value', None)))
-        unit = _get_val(r, 'unit', '')
-        expected = _get_val(r, 'expected_range', _get_val(r, 'expected', _get_val(r, 'target', '')))
-
-        if actual is not None:
-            lines.append(f"      Value: {actual} {unit}")
-        if expected:
-            lines.append(f"      Expected: {expected}")
+        mark = "[PASS]" if r.passed else "[FAIL]"
+        lines.append(f"  {mark} {r.name}")
+        if r.actual_value is not None:
+            lines.append(f"      Value: {r.actual_value} {r.unit}")
+        if r.expected_range:
+            lines.append(f"      Expected: {r.expected_range}")
 
     lines.append("")
 
@@ -117,11 +151,10 @@ def generate_text_report(report_or_results, benchmark=None, meta=None) -> str:
         lines.append(f"  Failures ({n_failed}):")
         lines.append("  " + "-" * 56)
         for r in results:
-            if not _get_val(r, 'passed', False):
-                lines.append(f"  X {_get_val(r, 'name', 'unknown')}")
-                msg = _get_val(r, 'message', '')
-                if msg:
-                    lines.append(f"      {msg}")
+            if not r.passed:
+                lines.append(f"  X {r.name}")
+                if r.message:
+                    lines.append(f"      {r.message}")
         lines.append("")
 
     lines.append("=" * 60)
@@ -129,4 +162,12 @@ def generate_text_report(report_or_results, benchmark=None, meta=None) -> str:
     lines.append(f"  Status: {status}")
     lines.append("=" * 60)
 
-    return "\n".join(lines)
+    return "\\n".join(lines)
+'''
+
+path = 'src/biophysical/validation/report.py'
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(report_content)
+print(f"Fixed: {path}")
+
+print("\nAll fixes applied!")
