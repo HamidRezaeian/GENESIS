@@ -22,6 +22,7 @@ References
 [2] Koch C (1999) Biophysics of Computation. OUP Ch. 6
 [3] Hines M, Carnevale NT (1997) Neural Comput 9:1179-1209
 [4] Press WH et al. (2007) Numerical Recipes 3rd ed. Ch. 20
+[5] Rall W (1969) Biophys J 9:1483-1508  (membrane time-constant protocol)
 """
 
 from __future__ import annotations
@@ -45,7 +46,7 @@ class CrankNicolsonSolver:
     dt_s  : float
         Simulation timestep in seconds.  Default 25 µs (0.025 ms).
     Ra_SI : float
-        Specific axial resistance (Ohm m).  Default = MEM.Ra_SI = 1.0.
+        Specific axial resistance (Ohm m).  Default = MEM.Ra_SI = 2.0.
 
     Notes
     -----
@@ -254,47 +255,112 @@ class CrankNicolsonSolver:
         dV_init: float = 10e-3,
         dt_fine_s: float = 100e-6,
         t_max_s: float = 0.3,
+        fit_lo: float = 0.05,
+        fit_hi: float = 0.70,
+        I_amp: Optional[float] = None,
+        dt_settle_s: float = 5e-3,
+        t_settle_s: float = 1.0,
     ) -> float:
-        """Estimate membrane time constant by voltage relaxation (seconds).
+        """Measure the membrane time constant tau_m in seconds (Rall protocol).
 
-        Displaces target compartment by dV_init Volts, measures time for
-        voltage to decay to (1/e) of the initial displacement.
+        FIX#2 — measurement-protocol bug
+        --------------------------------
+        The previous implementation displaced a single compartment by dV_init
+        and returned the first 1/e crossing of that displacement.  A local
+        voltage step excites the fast *equalizing* eigenmodes of the cable
+        (tau_1, tau_2, ... << tau_0), so the value it returned (~0.1 ms) was
+        an equalizing time constant and not the membrane time constant.
+
+        Rall (1969) protocol — what electrophysiologists actually do:
+          1. Inject a constant current at target_idx until the whole tree is
+             at DC steady state (all equalizing modes have died out).
+          2. Switch the current off and record the relaxation to V_rest.
+          3. Regress ln(dV) on t over the window dV/dV0 in [fit_lo, fit_hi].
+             The tail is dominated by the slowest eigenmode tau_0, which for a
+             sealed-end tree with uniform Rm and Cm equals tau_m = Rm * Cm.
 
         Parameters
         ----------
-        target_idx : int    compartment to perturb and record.
-        dV_init    : float  initial perturbation (V).  Default 10 mV.
-        dt_fine_s  : float  fine timestep for accurate trace (s).
-        t_max_s    : float  maximum measurement time (s).
+        target_idx  : int    compartment to stimulate and record from.
+        dV_init     : float  desired DC displacement at t=0 (V), default 10 mV.
+                             Only used to choose I_amp when I_amp is None.
+        dt_fine_s   : float  timestep for the relaxation trace (s).
+        t_max_s     : float  maximum relaxation time simulated (s).
+        fit_lo      : float  lower edge of the fit window, as dV/dV0.
+        fit_hi      : float  upper edge of the fit window, as dV/dV0.
+        I_amp       : float  explicit charging current (A); overrides dV_init.
+        dt_settle_s : float  coarse timestep used while charging to DC (s).
+        t_settle_s  : float  charging duration (s).
 
         Returns
         -------
-        float  time constant (s).  Returns t_max_s if not crossed.
+        float  membrane time constant tau_m in seconds.
         """
-        V_rest = self.steady_state()
-        V = V_rest.copy()
-        V[target_idx] += dV_init
+        V_rest = self.steady_state(dt_settle_s=dt_settle_s, t_settle_s=t_settle_s)
+
+        # --- 1. pick a charging current giving ~dV_init at DC --------------
+        if I_amp is None:
+            Rin = self.measure_input_resistance(
+                target_idx  = target_idx,
+                I_amp       = 1e-10,
+                dt_settle_s = dt_settle_s,
+                t_settle_s  = t_settle_s,
+            )
+            I_amp = (dV_init / Rin) if abs(Rin) > 1e-30 else 1e-10
+
+        # --- 2. charge the tree to DC steady state -------------------------
+        I_ext = np.zeros(self.N)
+        I_ext[target_idx] = I_amp
 
         saved_dt = self.dt_s
-        self.reset_dt(dt_fine_s)
-        I_zero = np.zeros(self.N)
+        self.reset_dt(dt_settle_s)
 
-        V0 = float(V[target_idx])
+        V = V_rest.copy()
+        n_settle = max(1, int(round(t_settle_s / dt_settle_s)))
+        for _ in range(n_settle):
+            V_new = self.step(V, 0.0, I_ext)
+            if np.max(np.abs(V_new - V)) < 1e-15:
+                V = V_new
+                break
+            V = V_new
+
         V_inf = float(V_rest[target_idx])
-        target_V = V_inf + (V0 - V_inf) / np.e
+        dV0   = float(V[target_idx]) - V_inf
+        if abs(dV0) < 1e-12:
+            self.reset_dt(saved_dt)
+            return float(t_max_s)
 
-        n_steps = int(round(t_max_s / dt_fine_s))
-        t_cross = t_max_s  # default: not found
+        # --- 3. release the current, record the normalised relaxation ------
+        self.reset_dt(dt_fine_s)
+        I_zero  = np.zeros(self.N)
+        n_steps = max(1, int(round(t_max_s / dt_fine_s)))
+        t_rel:  List[float] = []
+        y_rel:  List[float] = []      # dV(t) / dV0, decays 1 -> 0
 
         for k in range(n_steps):
             V = self.step(V, k * dt_fine_s, I_zero)
-            t_k = (k + 1) * dt_fine_s
-            if float(V[target_idx]) <= target_V:
-                t_cross = t_k
+            y = (float(V[target_idx]) - V_inf) / dV0
+            t_rel.append((k + 1) * dt_fine_s)
+            y_rel.append(y)
+            if y < 0.5 * fit_lo:      # decayed well past the fit window
                 break
 
         self.reset_dt(saved_dt)
-        return t_cross
+
+        # --- 4. log-linear regression over the fit window ------------------
+        t_arr = np.asarray(t_rel, dtype=np.float64)
+        y_arr = np.asarray(y_rel, dtype=np.float64)
+
+        mask = (y_arr >= fit_lo) & (y_arr <= fit_hi)
+        if int(np.count_nonzero(mask)) < 2:
+            mask = y_arr > 0.0        # fallback: fit the whole decay
+        if int(np.count_nonzero(mask)) < 2:
+            return float(t_max_s)
+
+        slope = float(np.polyfit(t_arr[mask], np.log(y_arr[mask]), 1)[0])
+        if slope >= 0.0:
+            return float(t_max_s)
+        return -1.0 / slope
 
     def measure_voltage_attenuation(
         self,
