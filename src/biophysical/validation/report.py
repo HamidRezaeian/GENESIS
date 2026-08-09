@@ -208,20 +208,22 @@ def generate_text_report(
         (True,  'membrane/nak_pump.py: NaKPump Phase-0a constant model + Phase-0g spec'),
         (True,  'membrane/resting_state.py: analytical + numerical V_rest solvers'),
         (True,  'simulation/cable_matrix.py: build_cable_matrix(C, G, b)'),
-        (True,  'simulation/crank_nicolson.py: CrankNicolsonSolver + measurement helpers'),
+        (True,  'simulation/crank_nicolson.py: theta-method solver (Rannacher startup) + measurement helpers'),
         (True,  'simulation/current_clamp.py: CurrentClampProtocol + MultiProtocol'),
         (True,  'simulation/recorder.py: Recorder with mV traces'),
-        (True,  'validation/passive_validation.py: PassiveValidator (6 checks)'),
+        (True,  'validation/passive_validation.py: PassiveValidator (8 checks)'),
         (True,  'validation/report.py: generate_text_report()'),
         (True,  'neuron_cell.py: NeuronCell facade API'),
         (True,  'tests/: 5 test modules covering all Phase-0a modules'),
         (True,  'All documented approximations tagged APPROX-1 through APPROX-7'),
         (True,  'Phase 0e (DNA→RNA→Protein) marked CRITICAL in project notes'),
-        (True,  'NO commits pushed (per user instruction #4)'),
+        (True,  'Phase 0a fixes committed on biophysical/whole-neuron-cell-v0'),
         (all_ok, f'All validation checks passed ({n_pass}/{n_total})'),
     ]
+    check_mark = '\u2611'
+    box_mark   = '\u2610'
     for done, desc in items:
-        A(f'  {"\u2611" if done else "\u2610"} {desc}')
+        A(f'  {check_mark if done else box_mark} {desc}')
 
     A('')
     A(SEP2)
