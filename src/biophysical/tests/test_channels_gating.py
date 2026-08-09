@@ -82,7 +82,7 @@ class TestVtrap:
 
     def test_negative_x_negative_y_gives_positive(self):
         """vtrap(x<0, y<0) > 0: both numerator and denominator negative."""
-        assert vtrap(-5.0, -9.0) > 0.0
+        assert vtrap(-5.0, -9.0) < 0.0  # x/y > 0, exp > 1, denominator positive, x negative
 
     def test_positive_x_negative_y_gives_negative(self):
         """vtrap(x>0, y<0) < 0: numerator>0, exp(x/y)<1 → denominator<0."""
@@ -90,7 +90,7 @@ class TestVtrap:
 
     def test_negative_x_positive_y_gives_negative(self):
         """vtrap(x<0, y>0) < 0: numerator<0, exp(x/y)<1 → denominator<0."""
-        assert vtrap(-5.0, 9.0) < 0.0
+        assert vtrap(-5.0, 9.0) > 0.0  # x/y < 0, exp < 1, denominator negative, x negative
 
     def test_continuity_through_zero(self):
         """vtrap is continuous at x=0: values at ±ε should be close to the limit."""
