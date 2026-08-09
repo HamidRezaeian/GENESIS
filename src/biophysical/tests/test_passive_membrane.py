@@ -56,13 +56,23 @@ class TestLeakChannel:
         assert abs(I2 / I1 - 2.0) < 1e-10, f'I(2dV)/I(dV) = {I2/I1:.6f}, expected 2.0'
 
     def test_current_magnitude(self):
-        """I at V=EL+10mV should equal -gL * 10mV."""
-        lc   = LeakChannel()
-        gL   = 1.0 / MEM.Rm_SI
-        dV   = 10e-3
-        I    = lc.current(MEM.E_leak_V + dV, t=0.0)
+        """I at V=EL+10mV should equal -gL * 10mV.
+
+        BUG#4 FIX: tolerance was 1e-30, which is unreachable for IEEE 754
+        float64 multiplication at the ~1e-8 A/m^2 scale (machine epsilon is
+        ~2.2e-16, giving rounding ~1e-8 * 1e-16 = 1e-24, but accumulated ops
+        can reach 1e-18).  Relaxed to 1e-15 which is still 7 orders of
+        magnitude tighter than the signal.
+        """
+        lc       = LeakChannel()
+        gL       = 1.0 / MEM.Rm_SI
+        dV       = 10e-3
+        I        = lc.current(MEM.E_leak_V + dV, t=0.0)
         expected = -gL * dV
-        assert abs(I - expected) < 1e-30, f'I={I:.6g}, expected {expected:.6g}'
+        assert abs(I - expected) < 1e-15, (
+            f'I={I:.6g} A/m², expected={expected:.6g} A/m², '
+            f'delta={abs(I-expected):.3e} A/m²'
+        )
 
     def test_time_independent(self):
         """LeakChannel current must not depend on time."""
