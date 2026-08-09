@@ -62,8 +62,8 @@ def compute_resting_potential(
 ) -> np.ndarray:
     """Numerically integrate to steady state and return V_rest per compartment.
 
-    Runs the CN solver for t_settle_s seconds with I_ext = 0 starting from
-    V = EL everywhere.  For Phase 0a with uniform EL, this converges in 0
+    Runs the theta-method solver for t_settle_s seconds with I_ext = 0 starting
+    from V = EL everywhere.  For Phase 0a with uniform EL, this converges in 0
     steps (all compartments already at equilibrium).
 
     Parameters
@@ -89,7 +89,8 @@ def compute_resting_potential(
     n_steps = int(round(t_settle_s / dt_s))
 
     for _ in range(n_steps):
-        V_new = solver.step(V, 0.0, dt_s, I_ext)
+        # FIX#6: signature is step(V, t, I_ext, dt_s=None) — I_ext before dt_s.
+        V_new = solver.step(V, 0.0, I_ext, dt_s)
         max_dV = float(np.max(np.abs(V_new - V)))
         V = V_new
         if max_dV < tol_V:
