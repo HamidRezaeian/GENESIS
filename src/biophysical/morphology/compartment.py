@@ -11,6 +11,13 @@ Axial coupling  (half-compartment convention)
     Ra_half_i = Ra * L_i / (2 * A_cross_i)    [Koch 1999 eq 2.6]
     R_ij      = Ra_half_i + Ra_half_j
 
+Naming convention
+-----------------
+Private state fields use the single-underscore convention (_idx, _parent_idx,
+_children_idxs, _V, _mechanisms).  The dataclass __init__ therefore requires
+these underscore-prefixed names (e.g. Compartment(_idx=0, ...)).  Public
+read-only access is provided by matching properties (idx, parent_idx, etc.).
+
 References
 ----------
 [1] Koch C (1999) Biophysics of Computation. OUP  Ch. 2
@@ -63,17 +70,17 @@ class Compartment(AbstractCompartment):
 
     All geometric values in SI (metres, Farads, Ohms, Volts).
 
-    Parameters
-    ----------
+    Constructor parameters (note underscore prefix on private fields)
+    -----------------------------------------------------------------
     _idx           : unique 0-based integer index assigned by builder
     comp_type      : CompartmentType  biological region
     diameter_m     : cylinder diameter in metres
     length_m       : cylinder length in metres
-    x, y, z        : 3-D centre position in metres
-    _parent_idx    : index of parent; None for the root (soma)
-    _children_idxs : indices of direct child compartments
-    _V             : membrane voltage in Volts (initialised to E_leak)
-    _mechanisms    : attached AbstractMembraneMechanism objects
+    x, y, z        : 3-D centre position in metres (default 0.0)
+    _parent_idx    : index of parent compartment; None for root (soma)
+    _children_idxs : mutable list of child indices (default [])
+    _V             : membrane voltage in Volts (default = E_leak)
+    _mechanisms    : attached membrane mechanisms (default [])
     """
 
     _idx:           int                              = field(repr=True)
@@ -119,6 +126,7 @@ class Compartment(AbstractCompartment):
 
     @property
     def idx(self) -> int:
+        """Public read-only index."""
         return self._idx
 
     @property
@@ -153,8 +161,18 @@ class Compartment(AbstractCompartment):
 
     @property
     def capacitance_F(self) -> float:
-        """Total capacitance Cm*A (Farads)."""
+        """Total capacitance Cm * A (Farads)."""
         return self.Cm_SI * self.surface_area_m2
+
+    @property
+    def total_capacitance_F(self) -> float:
+        """Alias for capacitance_F — total membrane capacitance Cm * A (Farads).
+
+        Provided for compatibility with simulation.cable_matrix which accesses
+        comp.total_capacitance_F when building the C_vec diagonal of the
+        Crank-Nicolson linear system.  Equivalent to capacitance_F.
+        """
+        return self.capacitance_F
 
     # ------------------------------------------------------------------ #
     # Tree connectivity
@@ -162,10 +180,16 @@ class Compartment(AbstractCompartment):
 
     @property
     def parent_idx(self) -> Optional[int]:
+        """Public read-only parent index."""
         return self._parent_idx
 
     @property
     def children_idxs(self) -> List[int]:
+        """Public mutable list of child compartment indices.
+
+        Callers may call .append() on the returned list; the mutation is
+        reflected on the underlying _children_idxs field.
+        """
         return self._children_idxs
 
     # ------------------------------------------------------------------ #
@@ -191,9 +215,9 @@ class Compartment(AbstractCompartment):
     def half_axial_resistance(self) -> float:
         """Ra * L / (2 * A_cross)  [Ohms].  Koch (1999) eq 2.6.
 
-        This is the resistance contribution from the proximal half of this
-        compartment's axial path to its coupling point with the parent.
-        Full coupling resistance = self.half_axial_resistance() + parent.half_axial_resistance()
+        Resistance from the proximal half of this compartment to its coupling
+        point.  Full coupling resistance between adjacent compartments i and j
+        is:  half_axial_resistance(i) + half_axial_resistance(j).
         """
         return MEM.Ra_SI * self.length_m / (2.0 * self.cross_section_m2)
 
