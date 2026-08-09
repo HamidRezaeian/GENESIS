@@ -7,7 +7,7 @@ All numerical targets are from peer-reviewed literature:
   Rin      : 50–200 MΩ    Beaulieu-Laroche et al. (2018) Cell 175:643
   tau_m    : 10–40 ms      Eyal et al. (2016) eLife 5:e16553
   V_rest   : −75 – −65 mV  Construction target
-  DC_att   : < 0.10        Hay et al. (2011) PLoS Comput Biol 7:e1002107
+  DC_att   : < 0.10        tuft → soma; Hay et al. (2011) PLoS Comput Biol 7:e1002107
   lambda   : 600–1400 µm   Koch (1999) Biophysics of Computation Ch. 6
   N_comps  : 150–500       APPROX-6 accepted range
 """
@@ -76,7 +76,7 @@ class TestAnalyticalTargets:
 
     def test_tau_m_dend_is_30ms(self):
         tau_ms = MEM.Rm_SI * MEM.Cm_dend_SI * 1e3
-        # Rm=1.5 Om^2, Cm=0.02 F/m^2 => 30 ms
+        # Rm=3.0 Ohm.m^2, Cm=0.01 F/m^2 => 30 ms  (FIX#1)
         assert abs(tau_ms - 30.0) < 0.01, (
             f'tau_m = {tau_ms:.3f} ms, expected 30.0 ms'
         )
@@ -145,7 +145,40 @@ class TestNumericalTargets:
             f'Somatic tau = {tau_ms:.1f} ms outside [5, 40] ms'
         )
 
-    def test_dc_voltage_attenuation_soma_to_tuft(self, cell):
+    def test_dc_voltage_attenuation_tuft_to_soma(self, cell):
+        """PRIMARY target: distal tuft input is attenuated > 10× at the soma.
+
+        FIX#4 — this test previously asserted the soma → tuft ratio ≤ 0.10,
+        which is the wrong direction.  Attenuation is asymmetric: the transfer
+        resistance is symmetric by reciprocity, so
+            att(soma → tuft) = R_transfer / R_soma
+            att(tuft → soma) = R_transfer / R_tuft
+        and because R_tuft >> R_soma only the inward direction attenuates
+        strongly.  > 10× attenuation of distal input at the soma is the
+        published L5 pyramidal property (Hay et al. 2011).
+        """
+        tuft_idxs = cell.meta.get('apical_tuft_idxs', [])
+        if not tuft_idxs:
+            pytest.skip('No apical tuft compartments in this build')
+        att = cell.solver.measure_voltage_attenuation_to_soma(
+            soma_idx   = cell.soma_idx,
+            distal_idx = tuft_idxs[-1],
+            I_amp      = 1e-10,
+        )
+        assert abs(att) <= 0.10, (
+            f'DC attenuation (tuft → soma) = {att:.4f} '
+            f'(need ≤ 0.10, i.e. ≥ 10× attenuation)'
+        )
+
+    def test_dc_voltage_attenuation_soma_to_tuft_diagnostic(self, cell):
+        """DIAGNOSTIC: somatic input still spreads well into the tuft.
+
+        The apical path is ~1.1 λ long, so a somatic DC displacement should
+        reach the tuft at roughly half its amplitude (~0.59 measured).  This is
+        not a literature pass/fail target — the bounds only catch gross
+        topology or coupling errors (a disconnected tree gives ~0, a tree with
+        no axial resistance gives ~1).
+        """
         tuft_idxs = cell.meta.get('apical_tuft_idxs', [])
         if not tuft_idxs:
             pytest.skip('No apical tuft compartments in this build')
@@ -154,9 +187,9 @@ class TestNumericalTargets:
             distal_idx = tuft_idxs[-1],
             I_amp      = 1e-10,
         )
-        assert abs(att) <= 0.10, (
+        assert 0.20 <= abs(att) <= 0.95, (
             f'DC attenuation (soma → tuft) = {att:.4f} '
-            f'(need ≤ 0.10, i.e. ≥ 10× attenuation)'
+            f'(expected ~0.59 for a ~1.1 λ apical path)'
         )
 
 

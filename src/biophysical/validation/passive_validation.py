@@ -7,7 +7,7 @@ All targets are from peer-reviewed literature on human L5 pyramidal neurons:
   Rin      50 – 200 MΩ   Beaulieu-Laroche et al. (2018) Table S1
   tau_m_dend 10 – 40 ms  Rm * Cm_dend (analytical); Eyal et al. (2016) Table 1
   V_rest   -75 – -65 mV  EL = -70 mV by construction
-  Att_DC   < 0.1 (>10x)  DC attenuation soma → distal tuft
+  Att_DC   < 0.1 (>10x)  DC attenuation distal tuft → soma (FIX#4)
   lambda   600 – 1400 µm  sqrt(Rm*d/(4*Ra)); apical trunk d = 5 µm
   N_comps  150 – 500      APPROX-6: parametric tree gives 224 (plan was 350–410)
 
@@ -16,6 +16,7 @@ References
 [1] Beaulieu-Laroche L et al. (2018) Cell 175:643-651.e14
 [2] Hay E et al. (2011) PLoS Comput Biol 7:e1002107
 [3] Eyal G et al. (2016) eLife 5:e16553
+[4] Rall W (1969) Biophys J 9:1483-1508
 """
 
 from __future__ import annotations
@@ -140,7 +141,7 @@ class PassiveValidator:
 
     def _check_tau_m_analytical(self) -> None:
         """Analytical tau_m = Rm * Cm_dend for dendritic compartments."""
-        tau_ms = MEM.Rm_SI * MEM.Cm_dend_SI * 1e3   # 1.5 * 0.02 * 1000 = 30 ms
+        tau_ms = MEM.Rm_SI * MEM.Cm_dend_SI * 1e3   # 3.0 * 0.01 * 1000 = 30 ms
         result = ValidationResult(
             name        = 'tau_m_dend_analytical_ms',
             value       = tau_ms,
@@ -149,12 +150,12 @@ class PassiveValidator:
             target_high = 40.0,
             passed      = 10.0 <= tau_ms <= 40.0,
             analytical  = tau_ms,
-            notes       = 'tau = Rm_SI * Cm_dend_SI = 1.5 * 0.02 = 30 ms',
+            notes       = 'tau = Rm_SI * Cm_dend_SI = 3.0 * 0.01 = 30 ms',
         )
         self.results.append(result)
 
     def _check_tau_m_numerical(self) -> None:
-        """Numerical somatic time constant (voltage decay at soma)."""
+        """Numerical somatic time constant (Rall charge / release protocol)."""
         t0 = time.perf_counter()
         tau_s = self.solver.measure_time_constant(
             target_idx = self.meta['soma_idx'],
@@ -174,7 +175,8 @@ class PassiveValidator:
             target_high = 40.0,
             passed      = 5.0 <= tau_ms <= 40.0,
             analytical  = analytical_ms,
-            notes       = f'Soma 1/e decay. analytical tau_m={analytical_ms:.1f} ms. '
+            notes       = f'Rall protocol: ln(dV) fit over dV/dV0 in [0.05, 0.70]. '
+                          f'analytical tau_m={analytical_ms:.1f} ms. '
                           f'Measured in {elapsed:.2f} s',
         )
         self.results.append(result)
@@ -206,30 +208,56 @@ class PassiveValidator:
         self.results.append(result)
 
     def _check_voltage_attenuation(self) -> None:
-        """DC voltage attenuation from soma to distal apical tuft."""
+        """DC voltage attenuation between the soma and the distal apical tuft.
+
+        FIX#4 — the > 10x target belongs to the tuft → soma direction.  DC
+        attenuation is asymmetric: with R_ij symmetric by reciprocity,
+        att(i → j) = R_ij / R_ii, so the direction that terminates on the
+        low-resistance soma is the strongly attenuating one.  The soma → tuft
+        ratio (~0.59 for a ~1.1 lambda path) is kept as a diagnostic.
+        """
         tuft_idxs = self.meta.get('apical_tuft_idxs', [])
         if not tuft_idxs:
             return
         distal_idx = tuft_idxs[-1]
+        soma_idx   = self.meta['soma_idx']
 
-        att = self.solver.measure_voltage_attenuation(
-            soma_idx    = self.meta['soma_idx'],
+        att_in = self.solver.measure_voltage_attenuation_to_soma(
+            soma_idx    = soma_idx,
             distal_idx  = distal_idx,
             I_amp       = 1e-10,
             dt_settle_s = 5e-3,
             t_settle_s  = 1.0,
         )
-        result = ValidationResult(
-            name        = 'DC_attenuation_soma_to_tuft',
-            value       = abs(att),
+        self.results.append(ValidationResult(
+            name        = 'DC_attenuation_tuft_to_soma',
+            value       = abs(att_in),
             unit        = 'fraction',
             target_low  = 0.0,
             target_high = 0.10,  # < 0.10 = more than 10x attenuation
-            passed      = abs(att) <= 0.10,
+            passed      = abs(att_in) <= 0.10,
             analytical  = None,
-            notes       = 'ΔV_tuft / ΔV_soma at DC. < 0.10 = >10× attenuation',
+            notes       = 'ΔV_soma / ΔV_tuft at DC (distal input). < 0.10 = >10× attenuation',
+        ))
+
+        att_out = self.solver.measure_voltage_attenuation(
+            soma_idx    = soma_idx,
+            distal_idx  = distal_idx,
+            I_amp       = 1e-10,
+            dt_settle_s = 5e-3,
+            t_settle_s  = 1.0,
         )
-        self.results.append(result)
+        self.results.append(ValidationResult(
+            name        = 'DC_attenuation_soma_to_tuft',
+            value       = abs(att_out),
+            unit        = 'fraction',
+            target_low  = 0.20,
+            target_high = 0.95,
+            passed      = 0.20 <= abs(att_out) <= 0.95,
+            analytical  = None,
+            notes       = 'Diagnostic: ΔV_tuft / ΔV_soma at DC (somatic input); '
+                          'weak direction, ~0.59 for a ~1.1 lambda apical path',
+        ))
 
     def _check_lambda(self) -> None:
         """Electrotonic space constant at apical trunk average diameter."""

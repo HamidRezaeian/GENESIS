@@ -455,6 +455,60 @@ class CrankNicolsonSolver:
             return float(t_max_s)
         return -1.0 / slope
 
+    def measure_dc_attenuation(
+        self,
+        inject_idx: int,
+        record_idx: int,
+        I_amp: float = 1e-10,
+        dt_settle_s: float = 5e-3,
+        t_settle_s: float = 1.0,
+    ) -> float:
+        """DC voltage attenuation for current injected at `inject_idx`.
+
+        Returns dV(record_idx) / dV(inject_idx) at DC steady state.
+
+        FIX#4 — attenuation in a dendritic tree is asymmetric.  The transfer
+        resistance R_ij is symmetric (reciprocity), so
+            att(i -> j) = R_ij / R_ii        att(j -> i) = R_ij / R_jj
+        i.e. the two directions differ by the ratio of the local input
+        resistances.  The soma is a large current sink (R_in ~ 70 MOhm) while a
+        thin distal tuft compartment has a much larger input resistance, so
+        somatic input spreads well into the tuft (weak attenuation) whereas
+        distal input is heavily attenuated on the way to the soma.
+
+        Parameters
+        ----------
+        inject_idx  : int    compartment receiving the DC current.
+        record_idx  : int    compartment where the response is recorded.
+        I_amp       : float  test current (A). Default 100 pA.
+        dt_settle_s : float  coarse dt for settling (s).
+        t_settle_s  : float  settling duration (s).
+        """
+        V_rest = self.steady_state(dt_settle_s=dt_settle_s, t_settle_s=t_settle_s)
+
+        I_ext = np.zeros(self.N)
+        I_ext[inject_idx] = I_amp
+        saved_dt = self.dt_s
+        self.reset_dt(dt_settle_s)
+
+        V = V_rest.copy()
+        n_steps = max(1, int(round(t_settle_s / dt_settle_s)))
+        for _ in range(n_steps):
+            V_new = self.step(V, 0.0, I_ext)
+            if np.max(np.abs(V_new - V)) < 1e-15:
+                V = V_new
+                break
+            V = V_new
+
+        self.reset_dt(saved_dt)
+
+        dV_inject = float(V[inject_idx]) - float(V_rest[inject_idx])
+        dV_record = float(V[record_idx]) - float(V_rest[record_idx])
+
+        if abs(dV_inject) < 1e-30:
+            return 0.0
+        return dV_record / dV_inject
+
     def measure_voltage_attenuation(
         self,
         soma_idx: int,
@@ -463,28 +517,38 @@ class CrankNicolsonSolver:
         dt_settle_s: float = 5e-3,
         t_settle_s: float = 1.0,
     ) -> float:
-        """DC voltage attenuation from soma to distal compartment.
+        """DC attenuation soma -> distal: inject at soma, record distal.
 
-        Returns V_distal / V_soma (DC, with I_amp injected at soma).
-        For the Hay L5PC model, attenuation to apical tuft > 10x expected.
+        Returns dV_distal / dV_soma.  This is the WEAK direction (~0.59 for a
+        1.1 lambda apical path); see measure_voltage_attenuation_to_soma() for
+        the > 10x direction used as the Phase 0a validation target.
         """
-        V_rest = self.steady_state(dt_settle_s=dt_settle_s, t_settle_s=t_settle_s)
+        return self.measure_dc_attenuation(
+            inject_idx  = soma_idx,
+            record_idx  = distal_idx,
+            I_amp       = I_amp,
+            dt_settle_s = dt_settle_s,
+            t_settle_s  = t_settle_s,
+        )
 
-        I_ext = np.zeros(self.N)
-        I_ext[soma_idx] = I_amp
-        saved_dt = self.dt_s
-        self.reset_dt(dt_settle_s)
+    def measure_voltage_attenuation_to_soma(
+        self,
+        soma_idx: int,
+        distal_idx: int,
+        I_amp: float = 1e-10,
+        dt_settle_s: float = 5e-3,
+        t_settle_s: float = 1.0,
+    ) -> float:
+        """DC attenuation distal -> soma: inject at distal, record soma.
 
-        V = V_rest.copy()
-        n_steps = int(round(t_settle_s / dt_settle_s))
-        for _ in range(n_steps):
-            V = self.step(V, 0.0, I_ext)
-
-        self.reset_dt(saved_dt)
-
-        dV_soma    = float(V[soma_idx])    - float(V_rest[soma_idx])
-        dV_distal  = float(V[distal_idx]) - float(V_rest[distal_idx])
-
-        if abs(dV_soma) < 1e-30:
-            return 0.0
-        return dV_distal / dV_soma
+        Returns dV_soma / dV_distal.  This is the strongly attenuating
+        direction; for a human L5 pyramidal tuft it should be < 0.10
+        (> 10x attenuation of distal input at the soma).
+        """
+        return self.measure_dc_attenuation(
+            inject_idx  = distal_idx,
+            record_idx  = soma_idx,
+            I_amp       = I_amp,
+            dt_settle_s = dt_settle_s,
+            t_settle_s  = t_settle_s,
+        )
