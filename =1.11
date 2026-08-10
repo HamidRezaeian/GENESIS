@@ -1,0 +1,2 @@
+Requirement already satisfied: scipy in C:\Users\h.rezaeian\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages (1.17.1)
+Requirement already satisfied: numpy<2.7,>=1.26.4 in C:\Users\h.rezaeian\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages (from scipy) (2.4.3)

@@ -8,7 +8,7 @@ CrankNicolsonSolver
     Phase 0a: fully implicit (all mechanisms are linear leak).
     Phase 0b+: operator-split for nonlinear HH channels.
 
-StateRecorder
+Recorder
     Stores V(t) for all compartments. Supports soma-only and full-neuron
     recording modes. Provides exponential-fit utilities for tau_m extraction.
 
@@ -18,7 +18,7 @@ CurrentClamp
 """
 
 from biophysical.simulation.crank_nicolson import CrankNicolsonSolver
-from biophysical.simulation.recorder import StateRecorder
-from biophysical.simulation.current_clamp import CurrentClamp
+from biophysical.simulation.recorder import Recorder
+from biophysical.simulation.current_clamp import CurrentClampProtocol as CurrentClamp
 
-__all__ = ["CrankNicolsonSolver", "StateRecorder", "CurrentClamp"]
+__all__ = ["CrankNicolsonSolver", "Recorder", "CurrentClamp"]
