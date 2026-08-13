@@ -48,7 +48,7 @@ from biophysical.morphology.compartment import Compartment
 from biophysical.morphology.l5_pyramidal import build_l5_pyramidal
 from biophysical.simulation.crank_nicolson import CrankNicolsonSolver
 from biophysical.simulation.recorder import Recorder
-from biophysical.simulation.current_clamp import CurrentClampProtocol, MultiProtocol
+from biophysical.simulation.current_clamp import CurrentClampProtocol as CurrentClamp, MultiProtocol
 
 
 class NeuronCell:

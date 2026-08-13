@@ -39,8 +39,27 @@ class ValidationReport:
     def add(self, result) -> None:
         self.results.append(result)
 
+    def add_check(self, name, passed, actual=None, expected="", unit="", message=""):
+        self.add(ValidationResult(name=name, passed=passed, actual_value=actual,
+                                  expected_range=expected, unit=unit, message=message))
+
     def summary_line(self) -> str:
         return f"{self.n_passed}/{self.n_total} checks passed"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "title": self.title,
+            "n_total": self.n_total,
+            "n_passed": self.n_passed,
+            "n_failed": self.n_failed,
+            "all_passed": self.all_passed,
+            "results": [
+                {"name": r.name, "passed": r.passed, "actual": getattr(r, 'actual_value', None),
+                 "expected": getattr(r, 'expected_range', ''), "unit": getattr(r, 'unit', ''),
+                 "message": getattr(r, 'message', '')}
+                for r in self.results
+            ],
+        }
 
     def __str__(self) -> str:
         return generate_text_report(self)
