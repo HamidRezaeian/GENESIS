@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>GENESIS - L5 pyramidal neuron, live</title>
+<meta name="description" content="Real-time 3D visualiser streaming actual ActiveSolver state from a 224-compartment human L5 pyramidal neuron." />
+<link rel="stylesheet" href="/static/css/style.css" />
+<link rel="icon" href="data:," />
+
+<!--
+  three.js is loaded as ES modules through an import map.
+
+  To run fully offline, download the two files described in
+  static/js/vendor/README.md and replace the two URLs below with:
+      "three":         "/static/js/vendor/three.module.js"
+      "three/addons/": "/static/js/vendor/addons/"
+  Nothing else changes - the app code imports the bare specifiers.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<div id="viewport"></div>
+
+<!-- ================= top status bar ================= -->
+<header class="panel" id="topbar">
+  <div class="stat" id="stat-title">
+    <span class="stat-value">GENESIS &middot; L5 pyramidal</span>
+    <span id="conn">connecting</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">sim time</span>
+    <span class="stat-value" id="val-time">0.00 ms</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">V soma</span>
+    <span class="stat-value cold" id="val-vsoma">-70.0 mV</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">spikes</span>
+    <span class="stat-value" id="val-spikes">0</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">speed</span>
+    <span class="stat-value" id="val-speed">1x</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">fps view / stream</span>
+    <span class="stat-value" id="val-fps">0 / 0</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">state</span>
+    <span class="stat-value" id="val-state">idle</span>
+  </div>
+</header>
+
+<!-- ================= left control rail ================= -->
+<aside class="panel" id="controls">
+  <h2>Simulation</h2>
+  <div class="panel-body">
+
+    <div class="transport">
+      <button class="primary" id="btn-run">Run</button>
+      <button id="btn-reset">Reset</button>
+      <button id="btn-fit">Fit view</button>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Playback speed</span>
+      <input type="range" id="in-speed" min="-1" max="2" step="0.01" value="0" />
+      <div class="field" style="margin-bottom:0">
+        <label>0.1x &mdash; 100x</label>
+        <span class="value" id="speed-value">1x</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-faint);margin-top:5px" id="rate-note"></div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Current clamp</span>
+      <div class="field">
+        <label>amplitude (pA)</label>
+        <input type="number" id="in-amp" value="1500" step="50" />
+      </div>
+      <div class="field">
+        <label>onset (ms)</label>
+        <input type="number" id="in-onset" value="1" step="0.5" min="0" />
+      </div>
+      <div class="field">
+        <label>duration (ms)</label>
+        <input type="number" id="in-dur" value="5" step="0.5" min="0" />
+      </div>
+      <div class="field">
+        <label>target compartment</label>
+        <input type="number" id="in-target" value="0" step="1" min="0" max="223" />
+      </div>
+      <div class="field">
+        <label>run length (ms)</label>
+        <input type="number" id="in-duration" value="30" step="5" min="1" />
+      </div>
+      <button id="btn-apply" style="width:100%">Apply to running sim</button>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Colour by</span>
+      <select id="in-mode">
+        <option value="0">Membrane potential</option>
+        <option value="1">Sodium conductance (live)</option>
+        <option value="2">Potassium conductance (live)</option>
+        <option value="3">Channel density (static)</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Highlight regions</span>
+      <div class="chips" id="regions"></div>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Layers</span>
+      <label class="checkbox"><input type="checkbox" id="chk-spines" checked /> Dendritic spines</label>
+      <label class="checkbox"><input type="checkbox" id="chk-dots" /> Channel-density dots</label>
+      <label class="checkbox"><input type="checkbox" id="chk-particles" checked /> Axonal current flow</label>
+      <label class="checkbox"><input type="checkbox" id="chk-myelin" checked /> Myelin sheath</label>
+      <label class="checkbox"><input type="checkbox" id="chk-bloom" checked /> Bloom glow</label>
+    </div>
+
+    <div class="group">
+      <span class="group-label">Cutaway</span>
+      <label class="checkbox"><input type="checkbox" id="chk-cutaway" /> Clip front half</label>
+      <input type="range" id="in-cut" min="-1" max="1" step="0.01" value="0" disabled />
+    </div>
+
+    <div class="warn-note">
+      Every value shown is raw <code>ActiveSolver</code> output. Two known model
+      issues are <em>not</em> hidden here: the h-gate rate functions in
+      <code>channels/gating.py</code> are swapped, so spikes may not repolarise
+      normally, and &minus;70&nbsp;mV is not an exact equilibrium of the active
+      model, so the cell drifts slightly before any stimulus.
+    </div>
+
+    <div id="model-line" style="margin-top:10px;font-size:10px;color:var(--text-faint);line-height:1.5"></div>
+  </div>
+</aside>
+
+<!-- ================= right voltage trace ================= -->
+<aside class="panel" id="trace-panel">
+  <h2>Voltage trace</h2>
+  <div class="panel-body">
+    <canvas id="trace-canvas"></canvas>
+    <div class="trace-legend">
+      <span><i class="swatch" style="background:#7fd4ff"></i> soma</span>
+      <span><i class="swatch" style="background:#ffb066"></i> selected compartment</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ================= legend ================= -->
+<aside class="panel" id="legend">
+  <div id="legend-title">Membrane potential</div>
+  <div class="colorbar" id="colorbar"></div>
+  <div class="colorbar-ticks">
+    <span id="legend-min">-90 mV</span>
+    <span>-25 mV</span>
+    <span id="legend-max">+40 mV</span>
+  </div>
+</aside>
+
+<!-- ================= bottom inspector ================= -->
+<section class="panel" id="inspector">
+  <div class="inspector-head">
+    <div class="inspector-title">
+      <span id="insp-title">compartment</span>
+      <span class="badge" id="insp-badge">-</span>
+    </div>
+    <button class="close-btn" id="insp-close" title="Close (Esc)">&times;</button>
+  </div>
+  <div class="metrics" id="insp-metrics"></div>
+  <div id="insp-channels"></div>
+</section>
+
+<!-- ================= overlays ================= -->
+<div id="hint">
+  drag to orbit &middot; scroll to zoom &middot; click a compartment to inspect &middot;
+  <kbd>space</kbd> play/pause &middot; <kbd>r</kbd> reset &middot; <kbd>f</kbd> fit
+</div>
+
+<div id="toast"></div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div id="loading-text">Starting</div>
+</div>
+
+<noscript>
+  <div style="position:fixed;inset:0;display:grid;place-items:center;background:#05070c;color:#dce6f4;z-index:99">
+    This visualiser needs JavaScript and WebGL2.
+  </div>
+</noscript>
+
+<script type="module" src="/static/js/visualizer.js"></script>
+</body>
+</html>
