@@ -1,0 +1,4058 @@
+{
+  "n_compartments": 224,
+  "compartments": [
+    {
+      "idx": 0,
+      "type": "SOMA",
+      "color": "#E74C3C",
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "geometry": {
+        "diameter_um": 20.0,
+        "length_um": 20.0,
+        "surface_area_um2": 1256.6370614359168
+      },
+      "parent": -1,
+      "has_channels": true
+    },
+    {
+      "idx": 1,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -8.4,
+        "y": 15.0,
+        "z": 1.0809443321850567
+      },
+      "geometry": {
+        "diameter_um": 7.75,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 1460.8405839192537
+      },
+      "parent": 0,
+      "has_channels": true
+    },
+    {
+      "idx": 2,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -8.4,
+        "y": 30.0,
+        "z": -0.5129671847617363
+      },
+      "geometry": {
+        "diameter_um": 7.25,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 1366.59280431156
+      },
+      "parent": 1,
+      "has_channels": true
+    },
+    {
+      "idx": 3,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -8.4,
+        "y": 45.0,
+        "z": 0.75639815970424
+      },
+      "geometry": {
+        "diameter_um": 6.75,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 1272.345024703866
+      },
+      "parent": 2,
+      "has_channels": true
+    },
+    {
+      "idx": 4,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -10.8,
+        "y": 60.0,
+        "z": 0.4785610754371512
+      },
+      "geometry": {
+        "diameter_um": 6.249999999999999,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 1178.0972450961722
+      },
+      "parent": 3,
+      "has_channels": true
+    },
+    {
+      "idx": 5,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -10.8,
+        "y": 75.0,
+        "z": -0.38111829791776763
+      },
+      "geometry": {
+        "diameter_um": 5.75,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 1083.8494654884785
+      },
+      "parent": 4,
+      "has_channels": true
+    },
+    {
+      "idx": 6,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -10.8,
+        "y": 90.0,
+        "z": 1.1643630241447418
+      },
+      "geometry": {
+        "diameter_um": 5.25,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 989.6016858807848
+      },
+      "parent": 5,
+      "has_channels": true
+    },
+    {
+      "idx": 7,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -10.8,
+        "y": 105.0,
+        "z": -0.2548543089404127
+      },
+      "geometry": {
+        "diameter_um": 4.749999999999999,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 895.3539062730908
+      },
+      "parent": 6,
+      "has_channels": true
+    },
+    {
+      "idx": 8,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -10.8,
+        "y": 120.0,
+        "z": 0.29237792038065724
+      },
+      "geometry": {
+        "diameter_um": 4.25,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 801.1061266653971
+      },
+      "parent": 7,
+      "has_channels": true
+    },
+    {
+      "idx": 9,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -10.8,
+        "y": 135.0,
+        "z": 0.9046714121648011
+      },
+      "geometry": {
+        "diameter_um": 3.7499999999999996,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 706.8583470577033
+      },
+      "parent": 8,
+      "has_channels": true
+    },
+    {
+      "idx": 10,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -13.200000000000001,
+        "y": 150.0,
+        "z": -0.5454210470938387
+      },
+      "geometry": {
+        "diameter_um": 3.3333333333333335,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 628.3185307179585
+      },
+      "parent": 9,
+      "has_channels": true
+    },
+    {
+      "idx": 11,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -13.200000000000001,
+        "y": 165.0,
+        "z": 0.9805260741033245
+      },
+      "geometry": {
+        "diameter_um": 3.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 565.4866776461628
+      },
+      "parent": 10,
+      "has_channels": true
+    },
+    {
+      "idx": 12,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -13.200000000000001,
+        "y": 180.0,
+        "z": 0.18052607410332422
+      },
+      "geometry": {
+        "diameter_um": 2.6666666666666665,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 502.6548245743668
+      },
+      "parent": 11,
+      "has_channels": true
+    },
+    {
+      "idx": 13,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -14.4,
+        "y": 195.0,
+        "z": -0.16577730819764042
+      },
+      "geometry": {
+        "diameter_um": 2.416666666666666,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 455.5309347705198
+      },
+      "parent": 12,
+      "has_channels": true
+    },
+    {
+      "idx": 14,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -14.4,
+        "y": 210.0,
+        "z": 1.1448659626647464
+      },
+      "geometry": {
+        "diameter_um": 2.25,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 424.115008234622
+      },
+      "parent": 13,
+      "has_channels": true
+    },
+    {
+      "idx": 15,
+      "type": "APICAL_TRUNK",
+      "color": "#3498DB",
+      "position": {
+        "x": -14.4,
+        "y": 225.0,
+        "z": -0.44144581553335027
+      },
+      "geometry": {
+        "diameter_um": 2.0833333333333335,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 392.69908169872417
+      },
+      "parent": 14,
+      "has_channels": true
+    },
+    {
+      "idx": 16,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -2.2716444550481762,
+        "y": 60.0,
+        "z": 5.898699037196554
+      },
+      "geometry": {
+        "diameter_um": 2.25,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 424.115008234622
+      },
+      "parent": 3,
+      "has_channels": true
+    },
+    {
+      "idx": 17,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -10.264030227703039,
+        "y": 75.0,
+        "z": 6.247654136119243
+      },
+      "geometry": {
+        "diameter_um": 1.75,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 329.86722862692824
+      },
+      "parent": 16,
+      "has_channels": true
+    },
+    {
+      "idx": 18,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -10.607175978210659,
+        "y": 90.0,
+        "z": 0.5907998866268613
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 40.0,
+        "surface_area_um2": 172.7875959474386
+      },
+      "parent": 17,
+      "has_channels": true
+    },
+    {
+      "idx": 19,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -10.956131077133346,
+        "y": 105.0,
+        "z": 8.583185659281725
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 40.0,
+        "surface_area_um2": 141.3716694115407
+      },
+      "parent": 18,
+      "has_channels": true
+    },
+    {
+      "idx": 20,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -9.406331105195354,
+        "y": 90.0,
+        "z": 0.11929859116741959
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 40.0,
+        "surface_area_um2": 172.7875959474386
+      },
+      "parent": 17,
+      "has_channels": true
+    },
+    {
+      "idx": 21,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -1.4747722142048714,
+        "y": 105.0,
+        "z": 1.1635081289278322
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 40.0,
+        "surface_area_um2": 141.3716694115407
+      },
+      "parent": 20,
+      "has_channels": true
+    },
+    {
+      "idx": 22,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -2.9532163543119356,
+        "y": 60.0,
+        "z": 5.3450096505126075
+      },
+      "geometry": {
+        "diameter_um": 2.25,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 424.115008234622
+      },
+      "parent": 3,
+      "has_channels": true
+    },
+    {
+      "idx": 23,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -1.221699442807116,
+        "y": 75.0,
+        "z": -2.4653584064468603
+      },
+      "geometry": {
+        "diameter_um": 1.75,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 329.86722862692824
+      },
+      "parent": 22,
+      "has_channels": true
+    },
+    {
+      "idx": 24,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -3.2216994428071155,
+        "y": 90.0,
+        "z": 4.462844823828648
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 40.0,
+        "surface_area_um2": 172.7875959474386
+      },
+      "parent": 23,
+      "has_channels": true
+    },
+    {
+      "idx": 25,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -10.851435048792931,
+        "y": 105.0,
+        "z": 2.057198427794464
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 40.0,
+        "surface_area_um2": 141.3716694115407
+      },
+      "parent": 24,
+      "has_channels": true
+    },
+    {
+      "idx": 26,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 12.028762853486084,
+        "y": 90.0,
+        "z": -5.8463045003724545
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 40.0,
+        "surface_area_um2": 172.7875959474386
+      },
+      "parent": 23,
+      "has_channels": true
+    },
+    {
+      "idx": 27,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 8.967295394565365,
+        "y": 105.0,
+        "z": 1.5447317597178394
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 40.0,
+        "surface_area_um2": 141.3716694115407
+      },
+      "parent": 26,
+      "has_channels": true
+    },
+    {
+      "idx": 28,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -13.536161146605348,
+        "y": 150.0,
+        "z": -6.612869554122466
+      },
+      "geometry": {
+        "diameter_um": 1.825,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 344.0043955680823
+      },
+      "parent": 9,
+      "has_channels": true
+    },
+    {
+      "idx": 29,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -6.4400744811795745,
+        "y": 165.0,
+        "z": -2.9188806482421947
+      },
+      "geometry": {
+        "diameter_um": 1.475,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 278.03094984269666
+      },
+      "parent": 28,
+      "has_channels": true
+    },
+    {
+      "idx": 30,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -20.16748109149212,
+        "y": 180.0,
+        "z": -0.8483282874220266
+      },
+      "geometry": {
+        "diameter_um": 1.175,
+        "length_um": 40.0,
+        "surface_area_um2": 147.6548547187203
+      },
+      "parent": 29,
+      "has_channels": true
+    },
+    {
+      "idx": 31,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -15.869084224717529,
+        "y": 195.0,
+        "z": -7.595459853925112
+      },
+      "geometry": {
+        "diameter_um": 0.925,
+        "length_um": 40.0,
+        "surface_area_um2": 116.23892818282233
+      },
+      "parent": 30,
+      "has_channels": true
+    },
+    {
+      "idx": 32,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 0.9491109401558688,
+        "y": 180.0,
+        "z": 4.959581375855469
+      },
+      "geometry": {
+        "diameter_um": 1.175,
+        "length_um": 40.0,
+        "surface_area_um2": 147.6548547187203
+      },
+      "parent": 29,
+      "has_channels": true
+    },
+    {
+      "idx": 33,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -5.3977157821740125,
+        "y": 195.0,
+        "z": 0.08948994378570418
+      },
+      "geometry": {
+        "diameter_um": 0.925,
+        "length_um": 40.0,
+        "surface_area_um2": 116.23892818282233
+      },
+      "parent": 32,
+      "has_channels": true
+    },
+    {
+      "idx": 34,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 9.169557584733964,
+        "y": 150.0,
+        "z": 0.20742547018353452
+      },
+      "geometry": {
+        "diameter_um": 1.825,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 344.0043955680823
+      },
+      "parent": 9,
+      "has_channels": true
+    },
+    {
+      "idx": 35,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 3.7648359238086817,
+        "y": 165.0,
+        "z": 6.105644164664527
+      },
+      "geometry": {
+        "diameter_um": 1.475,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 278.03094984269666
+      },
+      "parent": 34,
+      "has_channels": true
+    },
+    {
+      "idx": 36,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -2.2351640761913196,
+        "y": 180.0,
+        "z": -1.8943558353354728
+      },
+      "geometry": {
+        "diameter_um": 1.175,
+        "length_um": 40.0,
+        "surface_area_um2": 147.6548547187203
+      },
+      "parent": 35,
+      "has_channels": true
+    },
+    {
+      "idx": 37,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 3.1695575847339623,
+        "y": 195.0,
+        "z": 4.00386285914552
+      },
+      "geometry": {
+        "diameter_um": 0.925,
+        "length_um": 40.0,
+        "surface_area_um2": 116.23892818282233
+      },
+      "parent": 36,
+      "has_channels": true
+    },
+    {
+      "idx": 38,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 1.7952783390747182,
+        "y": 180.0,
+        "z": 5.408398222683264
+      },
+      "geometry": {
+        "diameter_um": 1.175,
+        "length_um": 40.0,
+        "surface_area_um2": 147.6548547187203
+      },
+      "parent": 35,
+      "has_channels": true
+    },
+    {
+      "idx": 39,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": 8.142105061404598,
+        "y": 195.0,
+        "z": 0.538306790613496
+      },
+      "geometry": {
+        "diameter_um": 0.925,
+        "length_um": 40.0,
+        "surface_area_um2": 116.23892818282233
+      },
+      "parent": 38,
+      "has_channels": true
+    },
+    {
+      "idx": 40,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -8.589185421335443,
+        "y": 195.0,
+        "z": 8.058988098200988
+      },
+      "geometry": {
+        "diameter_um": 1.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 259.1813939211579
+      },
+      "parent": 12,
+      "has_channels": true
+    },
+    {
+      "idx": 41,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -12.887582288110037,
+        "y": 210.0,
+        "z": 1.311856531697904
+      },
+      "geometry": {
+        "diameter_um": 1.35,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 212.057504117311
+      },
+      "parent": 40,
+      "has_channels": true
+    },
+    {
+      "idx": 42,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -11.160175677797493,
+        "y": 225.0,
+        "z": 3.38240889251807
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 41,
+      "has_channels": true
+    },
+    {
+      "idx": 43,
+      "type": "APICAL_OBLIQUE",
+      "color": "#5DADE2",
+      "position": {
+        "x": -13.983668953535812,
+        "y": 225.0,
+        "z": 5.005845437578175
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 41,
+      "has_channels": true
+    },
+    {
+      "idx": 44,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -16.927677706789297,
+        "y": 240.0,
+        "z": -15.476527748107884
+      },
+      "geometry": {
+        "diameter_um": 1.9166666666666667,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 301.0692959690218
+      },
+      "parent": 15,
+      "has_channels": true
+    },
+    {
+      "idx": 45,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -10.804742788947859,
+        "y": 255.0,
+        "z": -0.6944552279272962
+      },
+      "geometry": {
+        "diameter_um": 1.75,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 274.8893571891069
+      },
+      "parent": 44,
+      "has_channels": true
+    },
+    {
+      "idx": 46,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -25.30566738153426,
+        "y": 270.0,
+        "z": -7.456347415778485
+      },
+      "geometry": {
+        "diameter_um": 1.583333333333333,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 248.7094184091919
+      },
+      "parent": 45,
+      "has_channels": true
+    },
+    {
+      "idx": 47,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -18.046196169562634,
+        "y": 285.0,
+        "z": -12.267640207846853
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 215.98449493429823
+      },
+      "parent": 46,
+      "has_channels": true
+    },
+    {
+      "idx": 48,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -26.04619616956263,
+        "y": 300.0,
+        "z": 1.5887662527041666
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 176.71458676442583
+      },
+      "parent": 47,
+      "has_channels": true
+    },
+    {
+      "idx": 49,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -37.50922999257228,
+        "y": 315.0,
+        "z": -14.031969861214767
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 48,
+      "has_channels": true
+    },
+    {
+      "idx": 50,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -24.40279728394841,
+        "y": 330.0,
+        "z": -4.85474687959803
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 49,
+      "has_channels": true
+    },
+    {
+      "idx": 51,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -33.909313951543595,
+        "y": 315.0,
+        "z": 3.677185328224992
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 48,
+      "has_channels": true
+    },
+    {
+      "idx": 52,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -23.624712196558967,
+        "y": 330.0,
+        "z": -8.579525761678658
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 51,
+      "has_channels": true
+    },
+    {
+      "idx": 53,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -16.607757183688882,
+        "y": 285.0,
+        "z": 8.52842412953124
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 215.98449493429823
+      },
+      "parent": 46,
+      "has_channels": true
+    },
+    {
+      "idx": 54,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -27.921465682673645,
+        "y": 300.0,
+        "z": -2.785284369453519
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 176.71458676442583
+      },
+      "parent": 53,
+      "has_channels": true
+    },
+    {
+      "idx": 55,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -19.936694137363915,
+        "y": 315.0,
+        "z": -2.0873741716081433
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 54,
+      "has_channels": true
+    },
+    {
+      "idx": 56,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -32.19340522726756,
+        "y": 330.0,
+        "z": 8.197227583376488
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 55,
+      "has_channels": true
+    },
+    {
+      "idx": 57,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -17.833046607152824,
+        "y": 315.0,
+        "z": -18.64840215143449
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 54,
+      "has_channels": true
+    },
+    {
+      "idx": 58,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -8.655823625536087,
+        "y": 330.0,
+        "z": -5.54196944281062
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 57,
+      "has_channels": true
+    },
+    {
+      "idx": 59,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -22.020736113918936,
+        "y": 240.0,
+        "z": -3.9044796385429974
+      },
+      "geometry": {
+        "diameter_um": 1.9166666666666667,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 301.0692959690218
+      },
+      "parent": 15,
+      "has_channels": true
+    },
+    {
+      "idx": 60,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -8.164329653367922,
+        "y": 255.0,
+        "z": -11.904479638543005
+      },
+      "geometry": {
+        "diameter_um": 1.75,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 274.8893571891069
+      },
+      "parent": 59,
+      "has_channels": true
+    },
+    {
+      "idx": 61,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -12.975622445436292,
+        "y": 270.0,
+        "z": 3.3549915734286255
+      },
+      "geometry": {
+        "diameter_um": 1.583333333333333,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 248.7094184091919
+      },
+      "parent": 60,
+      "has_channels": true
+    },
+    {
+      "idx": 62,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -27.737514633287482,
+        "y": 285.0,
+        "z": -11.145933019157777
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 215.98449493429823
+      },
+      "parent": 61,
+      "has_channels": true
+    },
+    {
+      "idx": 63,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -12.955442113106894,
+        "y": 300.0,
+        "z": -5.0229981013163405
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 176.71458676442583
+      },
+      "parent": 62,
+      "has_channels": true
+    },
+    {
+      "idx": 64,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -35.990524045681425,
+        "y": 315.0,
+        "z": 0.44932419189436157
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 63,
+      "has_channels": true
+    },
+    {
+      "idx": 65,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -28.60254623392088,
+        "y": 330.0,
+        "z": -13.742849138957183
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 64,
+      "has_channels": true
+    },
+    {
+      "idx": 66,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -0.8143373914665624,
+        "y": 315.0,
+        "z": 10.431815119308752
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 63,
+      "has_channels": true
+    },
+    {
+      "idx": 67,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -14.308600524472732,
+        "y": 330.0,
+        "z": 1.8350213857595694
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 66,
+      "has_channels": true
+    },
+    {
+      "idx": 68,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": 10.781301602759036,
+        "y": 285.0,
+        "z": 0.5766207307577393
+      },
+      "geometry": {
+        "diameter_um": 1.375,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 215.98449493429823
+      },
+      "parent": 61,
+      "has_channels": true
+    },
+    {
+      "idx": 69,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": 1.041118738619506,
+        "y": 300.0,
+        "z": 13.270274175417502
+      },
+      "geometry": {
+        "diameter_um": 1.125,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 176.71458676442583
+      },
+      "parent": 68,
+      "has_channels": true
+    },
+    {
+      "idx": 70,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -8.353373145343026,
+        "y": 315.0,
+        "z": -2.668840994050427
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 69,
+      "has_channels": true
+    },
+    {
+      "idx": 71,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": 3.4430642436189594,
+        "y": 330.0,
+        "z": 8.140602327800137
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 70,
+      "has_channels": true
+    },
+    {
+      "idx": 72,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": -6.958881261380494,
+        "y": 315.0,
+        "z": 13.270274175417503
+      },
+      "geometry": {
+        "diameter_um": 0.8999999999999999,
+        "length_um": 40.0,
+        "surface_area_um2": 113.09733552923254
+      },
+      "parent": 69,
+      "has_channels": true
+    },
+    {
+      "idx": 73,
+      "type": "APICAL_TUFT",
+      "color": "#85C1E9",
+      "position": {
+        "x": 4.837556127581488,
+        "y": 330.0,
+        "z": 2.460830853566936
+      },
+      "geometry": {
+        "diameter_um": 0.7,
+        "length_um": 40.0,
+        "surface_area_um2": 87.9645943005142
+      },
+      "parent": 72,
+      "has_channels": true
+    },
+    {
+      "idx": 74,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -37.0458689129719,
+        "y": -15.0,
+        "z": 11.954336377100947
+      },
+      "geometry": {
+        "diameter_um": 3.1249999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 490.8738521234052
+      },
+      "parent": 0,
+      "has_channels": false
+    },
+    {
+      "idx": 75,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -44.351006061076546,
+        "y": -30.0,
+        "z": 2.434096293606128
+      },
+      "geometry": {
+        "diameter_um": 2.3749999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 373.0641276137879
+      },
+      "parent": 74,
+      "has_channels": false
+    },
+    {
+      "idx": 76,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -39.733313024930055,
+        "y": -45.0,
+        "z": 4.517874425609293
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 75,
+      "has_channels": false
+    },
+    {
+      "idx": 77,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -49.854010374684684,
+        "y": -60.0,
+        "z": 10.965469725771179
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 76,
+      "has_channels": false
+    },
+    {
+      "idx": 78,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -53.94818183345444,
+        "y": -75.0,
+        "z": -0.6256401896976413
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 77,
+      "has_channels": false
+    },
+    {
+      "idx": 79,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -55.60719847463404,
+        "y": -90.0,
+        "z": 10.01848980844102
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 78,
+      "has_channels": false
+    },
+    {
+      "idx": 80,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -58.02449328288534,
+        "y": -90.0,
+        "z": -4.729881909605665
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 78,
+      "has_channels": false
+    },
+    {
+      "idx": 81,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -31.56745598454924,
+        "y": -75.0,
+        "z": 6.373268537390104
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 77,
+      "has_channels": false
+    },
+    {
+      "idx": 82,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -43.83887512543764,
+        "y": -90.0,
+        "z": 17.248961981829904
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 81,
+      "has_channels": false
+    },
+    {
+      "idx": 83,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -27.975925578600517,
+        "y": -90.0,
+        "z": -5.071334871588619
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 81,
+      "has_channels": false
+    },
+    {
+      "idx": 84,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -26.75870121566328,
+        "y": -45.0,
+        "z": 8.434096293606128
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 75,
+      "has_channels": false
+    },
+    {
+      "idx": 85,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -38.47425330110248,
+        "y": -60.0,
+        "z": 11.03137166086336
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 84,
+      "has_channels": false
+    },
+    {
+      "idx": 86,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -38.79133606488993,
+        "y": -75.0,
+        "z": 1.2015471293954594
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 85,
+      "has_channels": false
+    },
+    {
+      "idx": 87,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -44.425021758249315,
+        "y": -90.0,
+        "z": 13.098885465881184
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 86,
+      "has_channels": false
+    },
+    {
+      "idx": 88,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -40.78386938231767,
+        "y": -90.0,
+        "z": -6.511904186843012
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 86,
+      "has_channels": false
+    },
+    {
+      "idx": 89,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -19.285674642120185,
+        "y": -75.0,
+        "z": 10.507939012479326
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 85,
+      "has_channels": false
+    },
+    {
+      "idx": 90,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -34.970956016358755,
+        "y": -90.0,
+        "z": 18.993220386717898
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 89,
+      "has_channels": false
+    },
+    {
+      "idx": 91,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -11.562241993736157,
+        "y": -90.0,
+        "z": -1.4806396465029668
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 89,
+      "has_channels": false
+    },
+    {
+      "idx": 92,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -13.886548683761529,
+        "y": -15.0,
+        "z": 9.192533317427737
+      },
+      "geometry": {
+        "diameter_um": 3.1249999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 490.8738521234052
+      },
+      "parent": 0,
+      "has_channels": false
+    },
+    {
+      "idx": 93,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -25.783887020247256,
+        "y": -30.0,
+        "z": 7.626219010787121
+      },
+      "geometry": {
+        "diameter_um": 2.3749999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 373.0641276137879
+      },
+      "parent": 92,
+      "has_channels": false
+    },
+    {
+      "idx": 94,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -23.15406248877936,
+        "y": -45.0,
+        "z": 0.7433017745745634
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 93,
+      "has_channels": false
+    },
+    {
+      "idx": 95,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -25.751337856036592,
+        "y": -60.0,
+        "z": 12.458853860013763
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 94,
+      "has_channels": false
+    },
+    {
+      "idx": 96,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -38.9513378560366,
+        "y": -75.0,
+        "z": 2.0665490146005006
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 95,
+      "has_channels": false
+    },
+    {
+      "idx": 97,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -34.70673444705788,
+        "y": -90.0,
+        "z": 5.6750186086517775
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 96,
+      "has_channels": false
+    },
+    {
+      "idx": 98,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -42.6270313004764,
+        "y": -90.0,
+        "z": 7.1379681554888945
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 96,
+      "has_channels": false
+    },
+    {
+      "idx": 99,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -13.959136667655514,
+        "y": -75.0,
+        "z": 1.3722994698783229
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 95,
+      "has_channels": false
+    },
+    {
+      "idx": 100,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -17.05489494774749,
+        "y": -90.0,
+        "z": 12.648610919309222
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 99,
+      "has_channels": false
+    },
+    {
+      "idx": 101,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -17.403266665794177,
+        "y": -90.0,
+        "z": -4.168683888942081
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 99,
+      "has_channels": false
+    },
+    {
+      "idx": 102,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -6.992777104778437,
+        "y": -45.0,
+        "z": 4.520390469556873
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 93,
+      "has_channels": false
+    },
+    {
+      "idx": 103,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -13.440372404940325,
+        "y": -60.0,
+        "z": 14.641087819311501
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 102,
+      "has_channels": false
+    },
+    {
+      "idx": 104,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -22.72415053694349,
+        "y": -75.0,
+        "z": 2.8233947831650053
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 103,
+      "has_channels": false
+    },
+    {
+      "idx": 105,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -20.403910453448667,
+        "y": -90.0,
+        "z": 10.128531931269652
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 104,
+      "has_channels": false
+    },
+    {
+      "idx": 106,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -27.47848691404444,
+        "y": -90.0,
+        "z": 3.869263696136904
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 104,
+      "has_channels": false
+    },
+    {
+      "idx": 107,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 1.866710086447596,
+        "y": -75.0,
+        "z": 5.793759777590012
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 103,
+      "has_channels": false
+    },
+    {
+      "idx": 108,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -5.333289913552403,
+        "y": -90.0,
+        "z": 17.79375977759001
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 107,
+      "has_channels": false
+    },
+    {
+      "idx": 109,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 0.959627595059672,
+        "y": -90.0,
+        "z": -3.0535682641314743
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 107,
+      "has_channels": false
+    },
+    {
+      "idx": 110,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 4.754336377100947,
+        "y": -15.0,
+        "z": 1.045868912971898
+      },
+      "geometry": {
+        "diameter_um": 3.1249999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 490.8738521234052
+      },
+      "parent": 0,
+      "has_channels": false
+    },
+    {
+      "idx": 111,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -4.765903706393874,
+        "y": -30.0,
+        "z": 8.351006061076548
+      },
+      "geometry": {
+        "diameter_um": 2.3749999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 373.0641276137879
+      },
+      "parent": 110,
+      "has_channels": false
+    },
+    {
+      "idx": 112,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -9.882125574390715,
+        "y": -45.0,
+        "z": -3.4666869750699494
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 111,
+      "has_channels": false
+    },
+    {
+      "idx": 113,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -3.4345302742288286,
+        "y": -60.0,
+        "z": 6.6540103746846775
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 112,
+      "has_channels": false
+    },
+    {
+      "idx": 114,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -22.22564018969765,
+        "y": -75.0,
+        "z": 3.5481818334544277
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 113,
+      "has_channels": false
+    },
+    {
+      "idx": 115,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -18.781510191558986,
+        "y": -90.0,
+        "z": -1.9928015253659757
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 114,
+      "has_channels": false
+    },
+    {
+      "idx": 116,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -19.129881909605675,
+        "y": -90.0,
+        "z": 14.824493282885328
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 114,
+      "has_channels": false
+    },
+    {
+      "idx": 117,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -0.826731462609902,
+        "y": -75.0,
+        "z": -4.432544015450764
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 113,
+      "has_channels": false
+    },
+    {
+      "idx": 118,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 2.8489619818298966,
+        "y": -90.0,
+        "z": 0.6388751254376288
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 117,
+      "has_channels": false
+    },
+    {
+      "idx": 119,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -5.071334871588624,
+        "y": -90.0,
+        "z": -0.8240744213994842
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 117,
+      "has_channels": false
+    },
+    {
+      "idx": 120,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 8.434096293606128,
+        "y": -45.0,
+        "z": -2.041298784336716
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 111,
+      "has_channels": false
+    },
+    {
+      "idx": 121,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 11.031371660863364,
+        "y": -60.0,
+        "z": 9.674253301102484
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 120,
+      "has_channels": false
+    },
+    {
+      "idx": 122,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -5.998452870604537,
+        "y": -75.0,
+        "z": 2.7913360648899292
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 121,
+      "has_channels": false
+    },
+    {
+      "idx": 123,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -1.3011145341188133,
+        "y": -90.0,
+        "z": 1.225021758249309
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 122,
+      "has_channels": false
+    },
+    {
+      "idx": 124,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -6.51190418684301,
+        "y": -90.0,
+        "z": 11.983869382317666
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 122,
+      "has_channels": false
+    },
+    {
+      "idx": 125,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 17.70793901247933,
+        "y": -75.0,
+        "z": -2.3143253578798095
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 121,
+      "has_channels": false
+    },
+    {
+      "idx": 126,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 18.9932203867179,
+        "y": -90.0,
+        "z": 6.170956016358762
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 125,
+      "has_channels": false
+    },
+    {
+      "idx": 127,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 12.919360353497035,
+        "y": -90.0,
+        "z": -2.8377580062638392
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 125,
+      "has_channels": false
+    },
+    {
+      "idx": 128,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 16.392533317427734,
+        "y": -15.0,
+        "z": -7.713451316238475
+      },
+      "geometry": {
+        "diameter_um": 3.1249999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 490.8738521234052
+      },
+      "parent": 0,
+      "has_channels": false
+    },
+    {
+      "idx": 129,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 14.826219010787115,
+        "y": -30.0,
+        "z": 4.18388702024725
+      },
+      "geometry": {
+        "diameter_um": 2.3749999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 373.0641276137879
+      },
+      "parent": 128,
+      "has_channels": false
+    },
+    {
+      "idx": 130,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 0.7433017745745589,
+        "y": -45.0,
+        "z": -5.64593751122065
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 129,
+      "has_channels": false
+    },
+    {
+      "idx": 131,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 12.458853860013757,
+        "y": -60.0,
+        "z": -3.048662143963415
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 130,
+      "has_channels": false
+    },
+    {
+      "idx": 132,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -5.133450985399507,
+        "y": -75.0,
+        "z": 2.951337856036584
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 131,
+      "has_channels": false
+    },
+    {
+      "idx": 133,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -8.724981391348226,
+        "y": -90.0,
+        "z": -8.493265552942137
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 132,
+      "has_channels": false
+    },
+    {
+      "idx": 134,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 7.1379681554888865,
+        "y": -90.0,
+        "z": 13.827031300476383
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 132,
+      "has_channels": false
+    },
+    {
+      "idx": 135,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 8.572299469878315,
+        "y": -75.0,
+        "z": -7.640863332344491
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 131,
+      "has_channels": false
+    },
+    {
+      "idx": 136,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 12.648610919309217,
+        "y": -90.0,
+        "z": -11.745105052252514
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 135,
+      "has_channels": false
+    },
+    {
+      "idx": 137,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 10.231316111057911,
+        "y": -90.0,
+        "z": 3.003266665794172
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 135,
+      "has_channels": false
+    },
+    {
+      "idx": 138,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 18.920390469556867,
+        "y": -45.0,
+        "z": -7.407222895221571
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 129,
+      "has_channels": false
+    },
+    {
+      "idx": 139,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 29.041087819311496,
+        "y": -60.0,
+        "z": -0.9596275950596853
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 138,
+      "has_channels": false
+    },
+    {
+      "idx": 140,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 10.023394783165001,
+        "y": -75.0,
+        "z": 1.1241505369434779
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 139,
+      "has_channels": false
+    },
+    {
+      "idx": 141,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 10.128531931269649,
+        "y": -90.0,
+        "z": -8.396089546551345
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 140,
+      "has_channels": false
+    },
+    {
+      "idx": 142,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 18.2692636961369,
+        "y": -90.0,
+        "z": 13.078486914044426
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 140,
+      "has_channels": false
+    },
+    {
+      "idx": 143,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 27.393759777590006,
+        "y": -75.0,
+        "z": -9.066710086447607
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 139,
+      "has_channels": false
+    },
+    {
+      "idx": 144,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 32.19375977759,
+        "y": -90.0,
+        "z": -9.066710086447607
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 143,
+      "has_channels": false
+    },
+    {
+      "idx": 145,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 25.74643173586852,
+        "y": -90.0,
+        "z": -0.9596275950596826
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 143,
+      "has_channels": false
+    },
+    {
+      "idx": 146,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 22.645868912971896,
+        "y": -15.0,
+        "z": -11.954336377100947
+      },
+      "geometry": {
+        "diameter_um": 3.1249999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 490.8738521234052
+      },
+      "parent": 0,
+      "has_channels": false
+    },
+    {
+      "idx": 147,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 29.951006061076544,
+        "y": -30.0,
+        "z": -2.4340962936061246
+      },
+      "geometry": {
+        "diameter_um": 2.3749999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 373.0641276137879
+      },
+      "parent": 146,
+      "has_channels": false
+    },
+    {
+      "idx": 148,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 10.93331302493005,
+        "y": -45.0,
+        "z": -4.51787442560929
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 147,
+      "has_channels": false
+    },
+    {
+      "idx": 149,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 21.054010374684673,
+        "y": -60.0,
+        "z": -10.96546972577118
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 148,
+      "has_channels": false
+    },
+    {
+      "idx": 150,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 10.748181833454423,
+        "y": -75.0,
+        "z": 0.6256401896976396
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 149,
+      "has_channels": false
+    },
+    {
+      "idx": 151,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": -1.9928015253659899,
+        "y": -90.0,
+        "z": -10.018489808441018
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 150,
+      "has_channels": false
+    },
+    {
+      "idx": 152,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 29.224493282885327,
+        "y": -90.0,
+        "z": 4.729881909605664
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 150,
+      "has_channels": false
+    },
+    {
+      "idx": 153,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 17.167455984549232,
+        "y": -75.0,
+        "z": -6.373268537390102
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 149,
+      "has_channels": false
+    },
+    {
+      "idx": 154,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 15.038875125437627,
+        "y": -90.0,
+        "z": -17.2489619818299
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 153,
+      "has_channels": false
+    },
+    {
+      "idx": 155,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 27.97592557860051,
+        "y": -90.0,
+        "z": 5.071334871588622
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 153,
+      "has_channels": false
+    },
+    {
+      "idx": 156,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 26.75870121566328,
+        "y": -45.0,
+        "z": -8.434096293606126
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 147,
+      "has_channels": false
+    },
+    {
+      "idx": 157,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 38.47425330110248,
+        "y": -60.0,
+        "z": -11.03137166086336
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 156,
+      "has_channels": false
+    },
+    {
+      "idx": 158,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 24.391336064889927,
+        "y": -75.0,
+        "z": -1.2015471293954612
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 157,
+      "has_channels": false
+    },
+    {
+      "idx": 159,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 15.625021758249309,
+        "y": -90.0,
+        "z": -13.098885465881185
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 158,
+      "has_channels": false
+    },
+    {
+      "idx": 160,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 40.78386938231766,
+        "y": -90.0,
+        "z": 6.51190418684301
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 158,
+      "has_channels": false
+    },
+    {
+      "idx": 161,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 33.68567464212019,
+        "y": -75.0,
+        "z": -10.507939012479328
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 157,
+      "has_channels": false
+    },
+    {
+      "idx": 162,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 34.970956016358755,
+        "y": -90.0,
+        "z": -18.9932203867179
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 161,
+      "has_channels": false
+    },
+    {
+      "idx": 163,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 40.36224199373616,
+        "y": -90.0,
+        "z": 1.480639646502965
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 161,
+      "has_channels": false
+    },
+    {
+      "idx": 164,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 28.286548683761527,
+        "y": -15.0,
+        "z": -9.192533317427735
+      },
+      "geometry": {
+        "diameter_um": 3.1249999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 490.8738521234052
+      },
+      "parent": 0,
+      "has_channels": false
+    },
+    {
+      "idx": 165,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 40.183887020247255,
+        "y": -30.0,
+        "z": -7.626219010787116
+      },
+      "geometry": {
+        "diameter_um": 2.3749999999999996,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 373.0641276137879
+      },
+      "parent": 164,
+      "has_channels": false
+    },
+    {
+      "idx": 166,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 23.15406248877935,
+        "y": -45.0,
+        "z": -0.7433017745745651
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 165,
+      "has_channels": false
+    },
+    {
+      "idx": 167,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 25.751337856036578,
+        "y": -60.0,
+        "z": -12.458853860013766
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 166,
+      "has_channels": false
+    },
+    {
+      "idx": 168,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 24.551337856036582,
+        "y": -75.0,
+        "z": -2.0665490146005023
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 167,
+      "has_channels": false
+    },
+    {
+      "idx": 169,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 5.906734447057859,
+        "y": -90.0,
+        "z": -5.675018608651779
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 168,
+      "has_channels": false
+    },
+    {
+      "idx": 170,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 42.62703130047638,
+        "y": -90.0,
+        "z": -7.137968155488893
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 168,
+      "has_channels": false
+    },
+    {
+      "idx": 171,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 28.359136667655505,
+        "y": -75.0,
+        "z": -1.3722994698783264
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 167,
+      "has_channels": false
+    },
+    {
+      "idx": 172,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 17.054894947747485,
+        "y": -90.0,
+        "z": -12.648610919309228
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 171,
+      "has_channels": false
+    },
+    {
+      "idx": 173,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 46.20326666579417,
+        "y": -90.0,
+        "z": 4.1686838889420805
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 171,
+      "has_channels": false
+    },
+    {
+      "idx": 174,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 35.79277710477844,
+        "y": -45.0,
+        "z": -4.5203904695568635
+      },
+      "geometry": {
+        "diameter_um": 1.7999999999999998,
+        "length_um": 40.0,
+        "surface_area_um2": 226.19467105846508
+      },
+      "parent": 165,
+      "has_channels": false
+    },
+    {
+      "idx": 175,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 42.240372404940324,
+        "y": -60.0,
+        "z": -14.641087819311492
+      },
+      "geometry": {
+        "diameter_um": 1.4,
+        "length_um": 40.0,
+        "surface_area_um2": 175.9291886010284
+      },
+      "parent": 174,
+      "has_channels": false
+    },
+    {
+      "idx": 176,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 37.12415053694349,
+        "y": -75.0,
+        "z": -2.8233947831649964
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 175,
+      "has_channels": false
+    },
+    {
+      "idx": 177,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 20.403910453448667,
+        "y": -90.0,
+        "z": -10.128531931269645
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 176,
+      "has_channels": false
+    },
+    {
+      "idx": 178,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 56.278486914044436,
+        "y": -90.0,
+        "z": -3.8692636961368962
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 176,
+      "has_channels": false
+    },
+    {
+      "idx": 179,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 41.333289913552406,
+        "y": -75.0,
+        "z": -5.793759777590003
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 59.99999999999999,
+        "surface_area_um2": 188.49555921538757
+      },
+      "parent": 175,
+      "has_channels": false
+    },
+    {
+      "idx": 180,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 34.1332899135524,
+        "y": -90.0,
+        "z": -17.793759777590004
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 179,
+      "has_channels": false
+    },
+    {
+      "idx": 181,
+      "type": "BASAL",
+      "color": "#27AE60",
+      "position": {
+        "x": 56.64037240494033,
+        "y": -90.0,
+        "z": 3.0535682641314867
+      },
+      "geometry": {
+        "diameter_um": 0.65,
+        "length_um": 49.99999999999999,
+        "surface_area_um2": 102.10176124166827
+      },
+      "parent": 179,
+      "has_channels": false
+    },
+    {
+      "idx": 182,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -15.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 0,
+      "has_channels": true
+    },
+    {
+      "idx": 183,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -30.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 182,
+      "has_channels": true
+    },
+    {
+      "idx": 184,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -45.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 183,
+      "has_channels": true
+    },
+    {
+      "idx": 185,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -60.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 184,
+      "has_channels": true
+    },
+    {
+      "idx": 186,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -75.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 185,
+      "has_channels": true
+    },
+    {
+      "idx": 187,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -90.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 186,
+      "has_channels": true
+    },
+    {
+      "idx": 188,
+      "type": "AIS",
+      "color": "#F39C12",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -105.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.2,
+        "length_um": 5.0,
+        "surface_area_um2": 18.849555921538755
+      },
+      "parent": 187,
+      "has_channels": true
+    },
+    {
+      "idx": 189,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -120.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 188,
+      "has_channels": false
+    },
+    {
+      "idx": 190,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -135.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 189,
+      "has_channels": false
+    },
+    {
+      "idx": 191,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -150.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 190,
+      "has_channels": false
+    },
+    {
+      "idx": 192,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -165.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 191,
+      "has_channels": false
+    },
+    {
+      "idx": 193,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -180.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 192,
+      "has_channels": false
+    },
+    {
+      "idx": 194,
+      "type": "NODE",
+      "color": "#E67E22",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -195.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 1.5,
+        "surface_area_um2": 7.0685834705770345
+      },
+      "parent": 193,
+      "has_channels": true
+    },
+    {
+      "idx": 195,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -210.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 194,
+      "has_channels": false
+    },
+    {
+      "idx": 196,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -225.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 195,
+      "has_channels": false
+    },
+    {
+      "idx": 197,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -240.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 196,
+      "has_channels": false
+    },
+    {
+      "idx": 198,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -255.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 197,
+      "has_channels": false
+    },
+    {
+      "idx": 199,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -270.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 198,
+      "has_channels": false
+    },
+    {
+      "idx": 200,
+      "type": "NODE",
+      "color": "#E67E22",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -285.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 1.5,
+        "surface_area_um2": 7.0685834705770345
+      },
+      "parent": 199,
+      "has_channels": true
+    },
+    {
+      "idx": 201,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -300.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 200,
+      "has_channels": false
+    },
+    {
+      "idx": 202,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -315.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 201,
+      "has_channels": false
+    },
+    {
+      "idx": 203,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -330.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 202,
+      "has_channels": false
+    },
+    {
+      "idx": 204,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -345.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 203,
+      "has_channels": false
+    },
+    {
+      "idx": 205,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -360.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 204,
+      "has_channels": false
+    },
+    {
+      "idx": 206,
+      "type": "NODE",
+      "color": "#E67E22",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -375.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 1.5,
+        "surface_area_um2": 7.0685834705770345
+      },
+      "parent": 205,
+      "has_channels": true
+    },
+    {
+      "idx": 207,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.6000000000000005,
+        "y": -390.0,
+        "z": 1.6000000000000005
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 206,
+      "has_channels": false
+    },
+    {
+      "idx": 208,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.6000000000000005,
+        "y": -405.0,
+        "z": 1.6000000000000005
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 207,
+      "has_channels": false
+    },
+    {
+      "idx": 209,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.6000000000000005,
+        "y": -420.0,
+        "z": 1.6000000000000005
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 208,
+      "has_channels": false
+    },
+    {
+      "idx": 210,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.6000000000000005,
+        "y": -435.0,
+        "z": 1.6000000000000005
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 209,
+      "has_channels": false
+    },
+    {
+      "idx": 211,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.6000000000000005,
+        "y": -450.0,
+        "z": 1.6000000000000005
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 210,
+      "has_channels": false
+    },
+    {
+      "idx": 212,
+      "type": "NODE",
+      "color": "#E67E22",
+      "position": {
+        "x": 1.6000000000000005,
+        "y": -465.0,
+        "z": 1.6000000000000005
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 1.5,
+        "surface_area_um2": 7.0685834705770345
+      },
+      "parent": 211,
+      "has_channels": true
+    },
+    {
+      "idx": 213,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -480.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 212,
+      "has_channels": false
+    },
+    {
+      "idx": 214,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -495.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 213,
+      "has_channels": false
+    },
+    {
+      "idx": 215,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -510.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 214,
+      "has_channels": false
+    },
+    {
+      "idx": 216,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -525.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 215,
+      "has_channels": false
+    },
+    {
+      "idx": 217,
+      "type": "MYELIN",
+      "color": "#F5E6CC",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -540.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 20.0,
+        "surface_area_um2": 94.24777960769379
+      },
+      "parent": 216,
+      "has_channels": false
+    },
+    {
+      "idx": 218,
+      "type": "NODE",
+      "color": "#E67E22",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -555.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.5,
+        "length_um": 1.5,
+        "surface_area_um2": 7.0685834705770345
+      },
+      "parent": 217,
+      "has_channels": true
+    },
+    {
+      "idx": 219,
+      "type": "AXON_TERMINAL",
+      "color": "#D35400",
+      "position": {
+        "x": 3.2,
+        "y": -210.0,
+        "z": 3.2
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 3.0,
+        "surface_area_um2": 9.42477796076938
+      },
+      "parent": 194,
+      "has_channels": false
+    },
+    {
+      "idx": 220,
+      "type": "AXON_TERMINAL",
+      "color": "#D35400",
+      "position": {
+        "x": 2.8000000000000003,
+        "y": -300.0,
+        "z": 2.8000000000000003
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 3.0,
+        "surface_area_um2": 9.42477796076938
+      },
+      "parent": 200,
+      "has_channels": false
+    },
+    {
+      "idx": 221,
+      "type": "AXON_TERMINAL",
+      "color": "#D35400",
+      "position": {
+        "x": 2.4000000000000004,
+        "y": -390.0,
+        "z": 2.4000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 3.0,
+        "surface_area_um2": 9.42477796076938
+      },
+      "parent": 206,
+      "has_channels": false
+    },
+    {
+      "idx": 222,
+      "type": "AXON_TERMINAL",
+      "color": "#D35400",
+      "position": {
+        "x": 2.0000000000000004,
+        "y": -480.0,
+        "z": 2.0000000000000004
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 3.0,
+        "surface_area_um2": 9.42477796076938
+      },
+      "parent": 212,
+      "has_channels": false
+    },
+    {
+      "idx": 223,
+      "type": "AXON_TERMINAL",
+      "color": "#D35400",
+      "position": {
+        "x": 1.2000000000000006,
+        "y": -570.0,
+        "z": 1.2000000000000006
+      },
+      "geometry": {
+        "diameter_um": 1.0,
+        "length_um": 3.0,
+        "surface_area_um2": 9.42477796076938
+      },
+      "parent": 218,
+      "has_channels": false
+    }
+  ],
+  "meta": {
+    "soma_idx": 0,
+    "apical_trunk_idxs": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "apical_oblique_idxs": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43
+    ],
+    "apical_tuft_idxs": [
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73
+    ],
+    "basal_idxs": [
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181
+    ],
+    "ais_idxs": [
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188
+    ],
+    "myelin_idxs": [
+      189,
+      190,
+      191,
+      192,
+      193,
+      195,
+      196,
+      197,
+      198,
+      199,
+      201,
+      202,
+      203,
+      204,
+      205,
+      207,
+      208,
+      209,
+      210,
+      211,
+      213,
+      214,
+      215,
+      216,
+      217
+    ],
+    "node_idxs": [
+      194,
+      200,
+      206,
+      212,
+      218
+    ],
+    "terminal_idxs": [
+      219,
+      220,
+      221,
+      222,
+      223
+    ],
+    "n_compartments": 224,
+    "total_area_m2": 4.6725692935004385e-08,
+    "total_area_um2": 46725.69293500439
+  }
+}
