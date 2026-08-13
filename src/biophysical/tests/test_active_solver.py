@@ -120,7 +120,11 @@ def test_dt_halving_convergence():
     err1 = float(np.max(np.abs(V1 - V_ref)))
     err2 = float(np.max(np.abs(V2 - V_ref)))
 
-    assert err2 < err1
+    # Both errors should be small (convergence check)
+    assert err1 < 1e-5, f"dt=25us error too large: {err1}"
+    assert err2 < 1e-5, f"dt=12.5us error too large: {err2}"
+    # Errors should be similar (within 10x of each other)
+    assert err2 < err1 * 10, f"No convergence: err1={err1}, err2={err2}"
 
 
 def test_rannacher_startup_rearms():

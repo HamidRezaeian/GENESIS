@@ -178,7 +178,9 @@ class ActiveSolver(CrankNicolsonSolver):
         tol = self.refactor_rel_tol * np.abs(self._g_ref)
         return bool(np.any(np.abs(g_new - self._g_ref) > tol))
 
-    def _build_operators(
+    # CHANGED: Renamed from _build_operators to _build_active_operators
+    # to avoid collision with parent class CrankNicolsonSolver._build_operators(dt_s)
+    def _build_active_operators(
         self,
         g_use: np.ndarray,
         dt: float,
@@ -243,7 +245,8 @@ class ActiveSolver(CrankNicolsonSolver):
         theta = 1.0 if self._steps_taken < self.rannacher_steps else self.theta
         cache_key = (dt, theta)
         if cache_key not in self._active_cache:
-            self._active_cache[cache_key] = self._build_operators(g_use, dt, theta)
+            # CHANGED: Call _build_active_operators instead of _build_operators
+            self._active_cache[cache_key] = self._build_active_operators(g_use, dt, theta)
         A, M, lu = self._active_cache[cache_key]
 
         # 5) Solve
