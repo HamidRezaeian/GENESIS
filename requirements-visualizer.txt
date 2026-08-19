@@ -1,0 +1,24 @@
+# ---------------------------------------------------------------------------
+# GENESIS - real-time visualiser (optional)
+# ---------------------------------------------------------------------------
+# The biophysical model itself needs nothing beyond requirements.txt
+# (numpy + scipy). These extras are only required to serve the live 3-D
+# visualiser in src/biophysical/visualizer/.
+#
+#     pip install -r requirements-visualizer.txt
+#     python -m biophysical.visualizer.server --port 8000
+#
+# Then open http://127.0.0.1:8000/ and press Run.
+#
+# The front end has no build step and no npm dependencies: three.js is loaded
+# as ES modules through the import map in visualizer/templates/index.html.
+# See visualizer/static/js/vendor/README.md to run it fully offline.
+# ---------------------------------------------------------------------------
+
+fastapi>=0.110
+uvicorn[standard]>=0.27
+
+# uvicorn[standard] already brings this in; pinned explicitly because the
+# ASGI WebSocket upgrade on /ws fails at runtime without a websocket
+# implementation, and server.py emits a warning when one is missing.
+websockets>=12.0
