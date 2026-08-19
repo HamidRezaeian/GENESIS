@@ -1,0 +1,446 @@
+#!/usr/bin/env python
+"""
+Exp-P2A-01 v18: SIGN INVERT (FINAL)
+====================================
+مشکل v17: Sign error در weight updates
+Fix: ΔW = -η × L × ε (نه +η × L × ε)
+"""
+
+import numpy as np
+import json
+from datetime import datetime
+from pathlib import Path
+
+CONFIG = {
+    # Task
+    'n_ticks': 3000,
+    'T1': 3,
+    'T2': 6,
+    'T_out': 9,
+    'pulse_prob': 0.3,
+    
+    # Network
+    'n_input': 30,
+    'n_hidden': 100,
+    'n_output': 2,
+    
+    # LIF dynamics
+    'theta': 0.3,
+    'tau_m': 20.0,
+    'dv': 1.0 / 20.0,
+    'du': 1.0 / 20.0,
+    
+    # Output
+    'tau_out': 20.0,
+    'readout_window': 5,
+    
+    # Synaptic
+    'w_scale': 1.0,
+    'connectivity': 0.3,
+    'recurrent_connectivity': 0.2,
+    
+    # Learning
+    'eta': 0.01,
+    'tau_e': 20.0,
+    'beta': 5.0,
+    
+    # Stability
+    'max_weight': 5.0,
+    'max_grad': 1.0,
+    
+    # Experiment
+    'arms': ['A1_eprop', 'A2_nolearn', 'A3_stdp3c'],
+    'n_seeds': 4,
+    'random_seed': 42,
+}
+
+RESULTS_DIR = Path(__file__).parent.parent / 'results'
+RESULTS_DIR.mkdir(exist_ok=True)
+
+
+class LIFPool:
+    def __init__(self, n, theta=0.3, dv=0.05, du=0.05):
+        self.n = n
+        self.theta = theta
+        self.dv = dv
+        self.du = du
+        self.v = np.zeros(n)
+        self.u = np.zeros(n)
+        self.last_spikes = np.zeros(n)
+        self.pre_reset_v = np.zeros(n)
+        
+    def step(self, input_current):
+        input_current = np.clip(input_current, -10, 10)
+        self.u = self.u * (1 - self.du) + input_current
+        self.v = self.v * (1 - self.dv) + self.u
+        self.v = np.clip(self.v, -5, 5)
+        self.pre_reset_v = self.v.copy()
+        
+        spiked = self.v >= self.theta
+        self.v[spiked] = 0.0
+        self.last_spikes = spiked.astype(float)
+        
+        return self.last_spikes
+    
+    def reset(self):
+        self.v[:] = 0.0
+        self.u[:] = 0.0
+        self.last_spikes[:] = 0.0
+        self.pre_reset_v[:] = 0.0
+    
+    def surrogate_derivative(self):
+        beta = CONFIG['beta']
+        diff = np.abs(self.pre_reset_v - self.theta)
+        diff = np.clip(diff, 0, 10)
+        denominator = 1.0 + beta * diff
+        f_prime = 1.0 / (denominator ** 2)
+        f_prime = np.clip(f_prime, 0, 1)
+        return f_prime
+
+
+class OutputLayer:
+    def __init__(self, n, tau_out=20.0):
+        self.n = n
+        self.tau_out = tau_out
+        self.r = np.zeros(n)
+        
+    def step(self, spikes):
+        self.r = self.r * (1 - 1/self.tau_out) + spikes
+        self.r = np.clip(self.r, 0, 5)
+        return self.r
+    
+    def reset(self):
+        self.r[:] = 0.0
+
+
+class SynapticLayer:
+    def __init__(self, n_in, n_out, connectivity=0.3, w_scale=1.0, seed=None):
+        rng = np.random.RandomState(seed)
+        self.n_in = n_in
+        self.n_out = n_out
+        
+        mask = rng.rand(n_out, n_in) < connectivity
+        self.weights = (rng.randn(n_out, n_in) * w_scale) * mask
+        self.eligibility = np.zeros((n_out, n_in))
+        
+    def forward(self, pre_spikes):
+        result = self.weights @ pre_spikes
+        return np.clip(result, -10, 10)
+    
+    def update_eligibility(self, pre_spikes, post_f_prime, tau_e):
+        self.eligibility *= np.exp(-1.0 / tau_e)
+        post_f_prime = np.clip(post_f_prime, 0, 1)
+        delta_e = np.outer(post_f_prime, pre_spikes)
+        self.eligibility += delta_e
+        self.eligibility = np.clip(self.eligibility, -5, 5)
+    
+    def reset_eligibility(self):
+        self.eligibility[:] = 0.0
+        
+    def apply_update(self, learning_signal, eta, max_weight=5.0, max_grad=1.0):
+        """Weight update: ΔW = η × L × ε
+        
+        Note: learning_signal should already have correct sign.
+        For gradient descent: L = -(W_out^T @ error)
+        """
+        learning_signal = np.clip(learning_signal, -max_grad, max_grad)
+        delta_w = eta * np.outer(learning_signal, np.ones(self.n_in)) * self.eligibility
+        delta_w = np.clip(delta_w, -max_grad, max_grad)
+        self.weights += delta_w
+        self.weights = np.clip(self.weights, -max_weight, max_weight)
+        return delta_w
+
+
+def softmax(x):
+    e = np.exp(x - x.max())
+    return e / e.sum()
+
+
+def generate_temporal_xor(n_ticks, T1, T2, T_out, pulse_prob, seed):
+    rng = np.random.RandomState(seed)
+    input_pulses = (rng.rand(n_ticks) < pulse_prob).astype(int)
+    
+    targets = np.full(n_ticks, -1, dtype=int)
+    for t in range(T_out, n_ticks):
+        if t % T_out == 0:
+            if t - T1 >= 0 and t - T2 >= 0:
+                targets[t] = input_pulses[t - T1] ^ input_pulses[t - T2]
+    
+    return input_pulses, targets
+
+
+def encode_input(pulse, input_t3, n_input):
+    x = np.zeros(n_input)
+    if pulse == 1:
+        x[:10] = 1.0
+    if input_t3 == 1:
+        x[10:20] = 1.0
+    return x
+
+
+def balanced_accuracy(predictions, targets):
+    valid = targets != -1
+    preds = predictions[valid]
+    tgts = targets[valid]
+    
+    pos_mask = (tgts == 1)
+    neg_mask = (tgts == 0)
+    
+    tpr = np.mean(preds[pos_mask] == 1) if np.sum(pos_mask) > 0 else 0.0
+    tnr = np.mean(preds[neg_mask] == 0) if np.sum(neg_mask) > 0 else 0.0
+    
+    return (tpr + tnr) / 2
+
+
+def run_organism(arm, input_pulses, targets, config, seed):
+    """Run with SIGN INVERT."""
+    
+    T1 = config['T1']
+    T2 = config['T2']
+    T_out = config['T_out']
+    readout_window = config['readout_window']
+    n_hidden = config['n_hidden']
+    n_output = config['n_output']
+    tau_e = config['tau_e']
+    eta = config['eta']
+    
+    # Network
+    hidden = LIFPool(n_hidden, theta=config['theta'], dv=config['dv'], du=config['du'])
+    output_layer = OutputLayer(n_output, tau_out=config['tau_out'])
+    
+    # Synapses
+    syn_in = SynapticLayer(config['n_input'], n_hidden,
+                           connectivity=config['connectivity'],
+                           w_scale=config['w_scale'], seed=seed)
+    syn_rec = SynapticLayer(n_hidden, n_hidden,
+                            connectivity=config['recurrent_connectivity'],
+                            w_scale=config['w_scale'], seed=seed+1)
+    syn_out = SynapticLayer(n_hidden, n_output,
+                            connectivity=config['connectivity'],
+                            w_scale=config['w_scale'], seed=seed+2)
+    
+    # State
+    all_predictions = []
+    all_targets = []
+    total_updates = 0
+    loss_history = []
+    hidden_spike_history = []
+    
+    for t in range(len(input_pulses)):
+        pulse = input_pulses[t]
+        input_t3 = input_pulses[t - T1] if t >= T1 else 0
+        
+        x = encode_input(pulse, input_t3, config['n_input'])
+        
+        # Forward
+        u_in = syn_in.forward(x)
+        u_rec = syn_rec.forward(hidden.last_spikes)
+        s_hidden = hidden.step(u_in + u_rec)
+        
+        # Track hidden spikes
+        hidden_spike_history.append(s_hidden.copy())
+        if len(hidden_spike_history) > readout_window:
+            hidden_spike_history.pop(0)
+        
+        u_out = syn_out.forward(s_hidden)
+        r_out = output_layer.step(u_out)
+        
+        # Eligibility update in EVERY tick
+        if arm in ['A1_eprop', 'A3_stdp3c']:
+            f_prime_hidden = hidden.surrogate_derivative()
+            syn_in.update_eligibility(x, f_prime_hidden, tau_e)
+            syn_rec.update_eligibility(hidden.last_spikes, f_prime_hidden, tau_e)
+        
+        # Error and weight update ONLY at T_out
+        if targets[t] != -1:
+            target = targets[t]
+            
+            y = softmax(r_out)
+            pred = int(y.argmax())
+            
+            all_predictions.append(pred)
+            all_targets.append(target)
+            
+            # Track loss for ALL arms (including A2)
+            loss = -np.log(y[target] + 1e-8)
+            loss_history.append(loss)
+            
+            if arm in ['A1_eprop', 'A3_stdp3c']:
+                target_vec = np.zeros(n_output)
+                target_vec[target] = 1.0
+                error = y - target_vec
+                
+                # ← FIX: SIGN INVERT for gradient descent
+                # L = -(W_out^T @ error) for gradient descent
+                L_hidden = -(syn_out.weights.T @ error)  # ← NEGATIVE!
+                L_hidden = np.clip(L_hidden, -config['max_grad'], config['max_grad'])
+                
+                # Hidden layer updates
+                syn_in.apply_update(L_hidden, eta, config['max_weight'], config['max_grad'])
+                syn_rec.apply_update(L_hidden, eta, config['max_weight'], config['max_grad'])
+                
+                # Output layer update with readout window
+                if len(hidden_spike_history) > 0:
+                    s_hidden_avg = np.mean(hidden_spike_history, axis=0)
+                else:
+                    s_hidden_avg = s_hidden
+                
+                # ← FIX: SIGN INVERT for output layer
+                delta_out = -eta * np.outer(error, s_hidden_avg)  # ← NEGATIVE!
+                delta_out = np.clip(delta_out, -config['max_grad'], config['max_grad'])
+                syn_out.weights += delta_out
+                syn_out.weights = np.clip(syn_out.weights, -config['max_weight'], config['max_weight'])
+                
+                total_updates += 1
+                
+                # Reset state after trial
+                hidden.reset()
+                output_layer.reset()
+                syn_in.reset_eligibility()
+                syn_rec.reset_eligibility()
+                hidden_spike_history = []
+    
+    predictions = np.array(all_predictions)
+    targets_arr = np.array(all_targets)
+    
+    bal_acc = balanced_accuracy(predictions, targets_arr)
+    reg_acc = np.mean(predictions == targets_arr) if len(predictions) > 0 else 0.0
+    
+    mean_loss = np.mean(loss_history[-100:]) if loss_history else 0.0
+    
+    return {
+        'arm': arm,
+        'seed': seed,
+        'balanced_accuracy': float(bal_acc),
+        'regular_accuracy': float(reg_acc),
+        'updates': int(total_updates),
+        'mean_loss': float(mean_loss),
+        'n_trials': len(all_predictions),
+    }
+
+
+def main():
+    print("=" * 70)
+    print("Exp-P2A-01 v18: SIGN INVERT")
+    print("=" * 70)
+    print(f"Task: Temporal XOR with trial structure")
+    print(f"Key fix: ΔW = -η × L × ε (gradient descent)")
+    print(f"Network: {CONFIG['n_hidden']} hidden LIF")
+    print(f"Seeds: {CONFIG['n_seeds']} per arm")
+    print()
+    
+    results = []
+    
+    for arm in CONFIG['arms']:
+        print(f"Running {arm}...")
+        arm_results = []
+        
+        for seed_idx in range(CONFIG['n_seeds']):
+            seed = CONFIG['random_seed'] + seed_idx
+            input_pulses, targets = generate_temporal_xor(
+                CONFIG['n_ticks'], CONFIG['T1'], CONFIG['T2'], CONFIG['T_out'],
+                CONFIG['pulse_prob'], seed
+            )
+            
+            result = run_organism(arm, input_pulses, targets, CONFIG, seed)
+            arm_results.append(result)
+            
+            print(f"  seed {seed}: bal_acc={result['balanced_accuracy']:.3f}, "
+                  f"reg_acc={result['regular_accuracy']:.3f}, "
+                  f"loss={result['mean_loss']:.3f}, "
+                  f"trials={result['n_trials']}")
+        
+        results.append({
+            'arm': arm,
+            'mean_bal_acc': float(np.mean([r['balanced_accuracy'] for r in arm_results])),
+            'mean_reg_acc': float(np.mean([r['regular_accuracy'] for r in arm_results])),
+            'mean_loss': float(np.mean([r['mean_loss'] for r in arm_results])),
+            'seeds': arm_results,
+        })
+    
+    # Analysis
+    print()
+    print("=" * 70)
+    print("Results Analysis")
+    print("=" * 70)
+    
+    a1 = next(r for r in results if r['arm'] == 'A1_eprop')
+    a2 = next(r for r in results if r['arm'] == 'A2_nolearn')
+    a3 = next(r for r in results if r['arm'] == 'A3_stdp3c')
+    
+    print()
+    print(f"{'Arm':<20} {'Bal Acc':<12} {'Reg Acc':<12} {'Loss':<12}")
+    print("-" * 60)
+    for r in results:
+        print(f"{r['arm']:<20} {r['mean_bal_acc']:<12.3f} "
+              f"{r['mean_reg_acc']:<12.3f} {r['mean_loss']:<12.3f}")
+    
+    print()
+    print("Learning check:")
+    if a1['mean_loss'] < 0.69:
+        print(f"  ✅ Loss decreased: {a1['mean_loss']:.3f} < 0.69 (random)")
+        print(f"     → Learning is happening!")
+    else:
+        print(f"  ❌ Loss ≈ random: {a1['mean_loss']:.3f} ≈ 0.69")
+    
+    print()
+    print("Gate A (delta >= +5pp):")
+    delta = (a1['mean_bal_acc'] - a2['mean_bal_acc']) * 100
+    print(f"  A1 vs A2 = {delta:+.2f} pp")
+    print(f"  Result: {'✅ PASS' if delta >= 5.0 else '❌ FAIL'}")
+    
+    print()
+    print("D5 prediction check:")
+    delta3 = (a1['mean_bal_acc'] - a3['mean_bal_acc']) * 100
+    print(f"  A1 vs A3 = {delta3:+.2f} pp")
+    
+    # Permutation test
+    print()
+    print("Permutation test (A1 vs A2):")
+    a1_accs = [r['balanced_accuracy'] for r in a1['seeds']]
+    a2_accs = [r['balanced_accuracy'] for r in a2['seeds']]
+    observed_diff = np.mean(a1_accs) - np.mean(a2_accs)
+    combined = a1_accs + a2_accs
+    rng = np.random.RandomState(42)
+    perm_diffs = []
+    for _ in range(1000):
+        rng.shuffle(combined)
+        perm_diffs.append(np.mean(combined[:len(a1_accs)]) - np.mean(combined[len(a1_accs):]))
+    p_value = float(np.mean(np.abs(perm_diffs) >= np.abs(observed_diff)))
+    print(f"  p-value: {p_value:.4f}")
+    
+    # Hypothesis
+    print()
+    print("Hypothesis Test:")
+    if delta >= 5.0 and p_value < 0.05:
+        print("  🎉 H1 CONFIRMED: e-prop learns Temporal XOR!")
+        if a1['mean_bal_acc'] > 0.60:
+            print("  🎉 STRONG: accuracy > 60%")
+        if delta3 > 2.0:
+            print("  🎉 D5 PREDICTION CONFIRMED!")
+    else:
+        print("  ⚠️  H1 NULL")
+    
+    # Save
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = RESULTS_DIR / f'exp_p2a_01_v18_sign_invert_{timestamp}.json'
+    
+    data = {
+        'timestamp': timestamp,
+        'version': 'v18 (sign invert)',
+        'config': CONFIG,
+        'results': results,
+        'delta_a1_a2': float(delta),
+        'delta_a1_a3': float(delta3),
+        'p_value': float(p_value),
+    }
+    
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=2)
+    
+    print(f"\n💾 Saved: {filename}")
+    print("=" * 70)
+
+
+if __name__ == '__main__':
+    main()

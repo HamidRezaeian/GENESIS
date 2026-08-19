@@ -1,0 +1,109 @@
+{
+  "timestamp": "20260808_214045",
+  "experiment": "Exp-P2A-02",
+  "version": "Metabolic Pareto Frontier",
+  "pre_registration": {
+    "H1": "T_block<50% \u2192 acc > 0.85",
+    "H2": "T_block=90% \u2192 acc > 0.7",
+    "H1_result": 0.8699999999999999,
+    "H2_result": 0.6076,
+    "H1_pass": true,
+    "H2_pass": false,
+    "success": false
+  },
+  "config": {
+    "trial_length": 10,
+    "n_trials": 500,
+    "T_A": 3,
+    "T_B": 6,
+    "T_target": 9,
+    "n_input": 2,
+    "n_hidden": 50,
+    "n_output": 2,
+    "theta": 1.0,
+    "tau_mem": 20.0,
+    "tau_syn": 20.0,
+    "tau_e": 15.0,
+    "beta": 1.0,
+    "eta": 0.01,
+    "w_scale": 0.5,
+    "conditions": [
+      {
+        "label": "unconstrained",
+        "T_block_pct": 0,
+        "update_budget": 500
+      },
+      {
+        "label": "light",
+        "T_block_pct": 25,
+        "update_budget": 375
+      },
+      {
+        "label": "moderate",
+        "T_block_pct": 50,
+        "update_budget": 250
+      },
+      {
+        "label": "heavy",
+        "T_block_pct": 75,
+        "update_budget": 125
+      },
+      {
+        "label": "extreme",
+        "T_block_pct": 90,
+        "update_budget": 50
+      }
+    ],
+    "n_seeds": 5,
+    "random_seed": 42,
+    "H1_threshold": 0.85,
+    "H2_threshold": 0.7
+  },
+  "results": {
+    "unconstrained": {
+      "T_block_pct": 0,
+      "update_budget": 500,
+      "mean_accuracy": 0.8836,
+      "std_accuracy": 0.0615324304736941,
+      "mean_updates_used": 500.0,
+      "mean_updates_blocked": 0.0,
+      "mean_loss": 0.23865011534587613
+    },
+    "light": {
+      "T_block_pct": 25,
+      "update_budget": 375,
+      "mean_accuracy": 0.8699999999999999,
+      "std_accuracy": 0.07820997378851367,
+      "mean_updates_used": 375.0,
+      "mean_updates_blocked": 125.0,
+      "mean_loss": 0.8383297543807396
+    },
+    "moderate": {
+      "T_block_pct": 50,
+      "update_budget": 250,
+      "mean_accuracy": 0.8688,
+      "std_accuracy": 0.0800159984003199,
+      "mean_updates_used": 250.0,
+      "mean_updates_blocked": 250.0,
+      "mean_loss": 0.46165065844571085
+    },
+    "heavy": {
+      "T_block_pct": 75,
+      "update_budget": 125,
+      "mean_accuracy": 0.7988,
+      "std_accuracy": 0.13224583169234483,
+      "mean_updates_used": 125.0,
+      "mean_updates_blocked": 375.0,
+      "mean_loss": 1.9659316073018647
+    },
+    "extreme": {
+      "T_block_pct": 90,
+      "update_budget": 50,
+      "mean_accuracy": 0.6076,
+      "std_accuracy": 0.10088726381461634,
+      "mean_updates_used": 50.0,
+      "mean_updates_blocked": 450.0,
+      "mean_loss": 3.4115864123715918
+    }
+  }
+}

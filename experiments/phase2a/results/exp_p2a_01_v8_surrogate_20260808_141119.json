@@ -1,0 +1,177 @@
+{
+  "timestamp": "20260808_141119",
+  "version": "v8 (fixed surrogate derivative)",
+  "config": {
+    "n_ticks": 500,
+    "delay_k": 2,
+    "n_input": 20,
+    "n_hidden": 50,
+    "n_output": 2,
+    "vth": 0.5,
+    "dv": 0.3,
+    "du": 0.3,
+    "w_scale": 2.0,
+    "connectivity": 0.3,
+    "recurrent_connectivity": 0.2,
+    "eta": 0.01,
+    "tau_e": 10,
+    "surrogate_margin": 1.0,
+    "arms": [
+      "A1_eprop",
+      "A2_nolearn",
+      "A3_stdp3c"
+    ],
+    "n_seeds": 4,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "arm": "A1_eprop",
+      "mean_acc": 0.49297188755020077,
+      "std_acc": 0.004139664282748646,
+      "mean_trace": 3.532318949256713,
+      "seeds": [
+        {
+          "arm": "A1_eprop",
+          "seed": 42,
+          "accuracy": 0.4879518072289157,
+          "updates": 255,
+          "total": 498,
+          "spikes": 19252,
+          "trace_max": 4.543091932342284,
+          "trace_mean": 3.0943046649705255
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 43,
+          "accuracy": 0.4899598393574297,
+          "updates": 254,
+          "total": 498,
+          "spikes": 16811,
+          "trace_max": 4.543091932342284,
+          "trace_mean": 3.0943046649705255
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 44,
+          "accuracy": 0.4979919678714859,
+          "updates": 497,
+          "total": 498,
+          "spikes": 15996,
+          "trace_max": 0.5,
+          "trace_mean": 0.22715459661711424
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 45,
+          "accuracy": 0.4959839357429719,
+          "updates": 490,
+          "total": 498,
+          "spikes": 18666,
+          "trace_max": 4.543091932342284,
+          "trace_mean": 3.0943046649705255
+        }
+      ]
+    },
+    {
+      "arm": "A2_nolearn",
+      "mean_acc": 0.5035140562248996,
+      "std_acc": 0.024649565657009882,
+      "mean_trace": 0.0,
+      "seeds": [
+        {
+          "arm": "A2_nolearn",
+          "seed": 42,
+          "accuracy": 0.4879518072289157,
+          "updates": 0,
+          "total": 498,
+          "spikes": 14982,
+          "trace_max": 0.0,
+          "trace_mean": 0.0
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 43,
+          "accuracy": 0.4899598393574297,
+          "updates": 0,
+          "total": 498,
+          "spikes": 12484,
+          "trace_max": 0.0,
+          "trace_mean": 0.0
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 44,
+          "accuracy": 0.4899598393574297,
+          "updates": 0,
+          "total": 498,
+          "spikes": 10657,
+          "trace_max": 0.0,
+          "trace_mean": 0.0
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 45,
+          "accuracy": 0.5461847389558233,
+          "updates": 0,
+          "total": 498,
+          "spikes": 12773,
+          "trace_max": 0.0,
+          "trace_mean": 0.0
+        }
+      ]
+    },
+    {
+      "arm": "A3_stdp3c",
+      "mean_acc": 0.49297188755020077,
+      "std_acc": 0.004139664282748646,
+      "mean_trace": 3.532318949256713,
+      "seeds": [
+        {
+          "arm": "A3_stdp3c",
+          "seed": 42,
+          "accuracy": 0.4879518072289157,
+          "updates": 255,
+          "total": 498,
+          "spikes": 19252,
+          "trace_max": 4.543091932342284,
+          "trace_mean": 3.0943046649705255
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 43,
+          "accuracy": 0.4899598393574297,
+          "updates": 254,
+          "total": 498,
+          "spikes": 16811,
+          "trace_max": 4.543091932342284,
+          "trace_mean": 3.0943046649705255
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 44,
+          "accuracy": 0.4979919678714859,
+          "updates": 497,
+          "total": 498,
+          "spikes": 15996,
+          "trace_max": 0.5,
+          "trace_mean": 0.22715459661711424
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 45,
+          "accuracy": 0.4959839357429719,
+          "updates": 490,
+          "total": 498,
+          "spikes": 18666,
+          "trace_max": 4.543091932342284,
+          "trace_mean": 3.0943046649705255
+        }
+      ]
+    }
+  ],
+  "delta_a1_a2": -1.054216867469887,
+  "delta_a1_a3": 0.0,
+  "p_value": 0.774,
+  "h1_confirmed": false
+}

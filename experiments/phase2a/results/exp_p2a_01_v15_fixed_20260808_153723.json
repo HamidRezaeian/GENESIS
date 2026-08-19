@@ -1,0 +1,171 @@
+{
+  "timestamp": "20260808_153723",
+  "version": "v15 (four key fixes, broadcasting fixed)",
+  "config": {
+    "n_ticks": 3000,
+    "T1": 3,
+    "T2": 6,
+    "T_out": 9,
+    "pulse_prob": 0.3,
+    "n_input": 30,
+    "n_hidden": 100,
+    "n_output": 2,
+    "theta": 0.5,
+    "tau_m": 20.0,
+    "dv": 0.05,
+    "du": 0.05,
+    "tau_out": 20.0,
+    "w_scale": 0.1,
+    "connectivity": 0.2,
+    "recurrent_connectivity": 0.2,
+    "eta": 0.01,
+    "tau_e": 20.0,
+    "beta": 5.0,
+    "max_weight": 5.0,
+    "max_grad": 1.0,
+    "arms": [
+      "A1_eprop",
+      "A2_nolearn",
+      "A3_stdp3c"
+    ],
+    "n_seeds": 4,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "arm": "A1_eprop",
+      "mean_bal_acc": 0.5079145528321709,
+      "mean_reg_acc": 0.5578078078078078,
+      "mean_loss": 2.328519198758894,
+      "seeds": [
+        {
+          "arm": "A1_eprop",
+          "seed": 42,
+          "balanced_accuracy": 0.5033783783783784,
+          "regular_accuracy": 0.5585585585585585,
+          "updates": 333,
+          "mean_loss": 2.2706179756400995,
+          "n_trials": 333
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 43,
+          "balanced_accuracy": 0.5,
+          "regular_accuracy": 0.5765765765765766,
+          "updates": 333,
+          "mean_loss": 2.306714655752715,
+          "n_trials": 333
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 44,
+          "balanced_accuracy": 0.526595744680851,
+          "regular_accuracy": 0.46546546546546547,
+          "updates": 333,
+          "mean_loss": 2.6204432031516927,
+          "n_trials": 333
+        },
+        {
+          "arm": "A1_eprop",
+          "seed": 45,
+          "balanced_accuracy": 0.5016840882694541,
+          "regular_accuracy": 0.6306306306306306,
+          "updates": 333,
+          "mean_loss": 2.116300960491068,
+          "n_trials": 333
+        }
+      ]
+    },
+    {
+      "arm": "A2_nolearn",
+      "mean_bal_acc": 0.5107514758334118,
+      "mean_reg_acc": 0.5435435435435435,
+      "mean_loss": 0.0,
+      "seeds": [
+        {
+          "arm": "A2_nolearn",
+          "seed": 42,
+          "balanced_accuracy": 0.5270270270270271,
+          "regular_accuracy": 0.5705705705705706,
+          "updates": 0,
+          "mean_loss": 0.0,
+          "n_trials": 333
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 43,
+          "balanced_accuracy": 0.4973958333333333,
+          "regular_accuracy": 0.5735735735735735,
+          "updates": 0,
+          "mean_loss": 0.0,
+          "n_trials": 333
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 44,
+          "balanced_accuracy": 0.5,
+          "regular_accuracy": 0.43543543543543545,
+          "updates": 0,
+          "mean_loss": 0.0,
+          "n_trials": 333
+        },
+        {
+          "arm": "A2_nolearn",
+          "seed": 45,
+          "balanced_accuracy": 0.5185830429732868,
+          "regular_accuracy": 0.5945945945945946,
+          "updates": 0,
+          "mean_loss": 0.0,
+          "n_trials": 333
+        }
+      ]
+    },
+    {
+      "arm": "A3_stdp3c",
+      "mean_bal_acc": 0.5079145528321709,
+      "mean_reg_acc": 0.5578078078078078,
+      "mean_loss": 2.328519198758894,
+      "seeds": [
+        {
+          "arm": "A3_stdp3c",
+          "seed": 42,
+          "balanced_accuracy": 0.5033783783783784,
+          "regular_accuracy": 0.5585585585585585,
+          "updates": 333,
+          "mean_loss": 2.2706179756400995,
+          "n_trials": 333
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 43,
+          "balanced_accuracy": 0.5,
+          "regular_accuracy": 0.5765765765765766,
+          "updates": 333,
+          "mean_loss": 2.306714655752715,
+          "n_trials": 333
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 44,
+          "balanced_accuracy": 0.526595744680851,
+          "regular_accuracy": 0.46546546546546547,
+          "updates": 333,
+          "mean_loss": 2.6204432031516927,
+          "n_trials": 333
+        },
+        {
+          "arm": "A3_stdp3c",
+          "seed": 45,
+          "balanced_accuracy": 0.5016840882694541,
+          "regular_accuracy": 0.6306306306306306,
+          "updates": 333,
+          "mean_loss": 2.116300960491068,
+          "n_trials": 333
+        }
+      ]
+    }
+  ],
+  "delta_a1_a2": -0.2836923001240943,
+  "delta_a1_a3": 0.0,
+  "p_value": 0.945
+}

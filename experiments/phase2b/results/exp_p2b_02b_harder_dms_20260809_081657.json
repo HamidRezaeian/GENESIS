@@ -1,0 +1,107 @@
+{
+  "timestamp": "20260809_081657",
+  "experiment": "Exp-P2B-02b",
+  "version": "Harder DMS Task (Longer Delay)",
+  "pre_registration": {
+    "H1": "WM accuracy > 75%",
+    "H2": "No-WM accuracy < 60%",
+    "H3": "WM at 50% block > 65%",
+    "wm_acc": 0.6876,
+    "no_wm_acc": 0.9164,
+    "wm_acc_50": 0.6804,
+    "H1_pass": false,
+    "H2_pass": false,
+    "H3_pass": true,
+    "success": false
+  },
+  "config": {
+    "trial_length": 40,
+    "n_trials": 500,
+    "T_sample": 3,
+    "T_test": 33,
+    "delay_ticks": 29,
+    "n_input": 2,
+    "n_output": 2,
+    "theta": 1.0,
+    "tau_mem_fast": 20.0,
+    "tau_mem_slow": 50.0,
+    "tau_syn": 20.0,
+    "tau_e": 15.0,
+    "beta": 1.0,
+    "eta": 0.01,
+    "w_scale": 0.5,
+    "architectures": [
+      {
+        "label": "no_WM",
+        "n_hidden": 50,
+        "n_wm": 0
+      },
+      {
+        "label": "with_WM",
+        "n_hidden": 50,
+        "n_wm": 20
+      }
+    ],
+    "conditions": [
+      {
+        "label": "unconstrained",
+        "T_block_pct": 0,
+        "budget_fraction": 1.0
+      },
+      {
+        "label": "moderate",
+        "T_block_pct": 50,
+        "budget_fraction": 0.5
+      },
+      {
+        "label": "heavy",
+        "T_block_pct": 75,
+        "budget_fraction": 0.25
+      }
+    ],
+    "n_seeds": 5,
+    "random_seed": 42
+  },
+  "results": {
+    "no_WM": {
+      "unconstrained": {
+        "T_block_pct": 0,
+        "update_budget": 500,
+        "mean_accuracy": 0.9164,
+        "std_accuracy": 0.03458091959448157
+      },
+      "moderate": {
+        "T_block_pct": 50,
+        "update_budget": 250,
+        "mean_accuracy": 0.9228,
+        "std_accuracy": 0.03371883746513214
+      },
+      "heavy": {
+        "T_block_pct": 75,
+        "update_budget": 125,
+        "mean_accuracy": 0.9028,
+        "std_accuracy": 0.08790540370193405
+      }
+    },
+    "with_WM": {
+      "unconstrained": {
+        "T_block_pct": 0,
+        "update_budget": 500,
+        "mean_accuracy": 0.6876,
+        "std_accuracy": 0.05085508824100101
+      },
+      "moderate": {
+        "T_block_pct": 50,
+        "update_budget": 250,
+        "mean_accuracy": 0.6804,
+        "std_accuracy": 0.07486948644140685
+      },
+      "heavy": {
+        "T_block_pct": 75,
+        "update_budget": 125,
+        "mean_accuracy": 0.7896000000000001,
+        "std_accuracy": 0.15602768985023138
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "timestamp": "20260808_163856",
+  "test": "positive_control_xor_no_constraint",
+  "config": {
+    "n_ticks": 5000,
+    "T1": 3,
+    "T2": 6,
+    "T_out": 9,
+    "pulse_prob": 0.3,
+    "n_input": 30,
+    "n_hidden": 100,
+    "n_output": 2,
+    "theta": 0.3,
+    "tau_m": 20.0,
+    "dv": 0.05,
+    "du": 0.05,
+    "tau_out": 20.0,
+    "readout_window": 5,
+    "w_scale": 1.0,
+    "connectivity": 0.3,
+    "recurrent_connectivity": 0.2,
+    "eta": 0.05,
+    "tau_e": 20.0,
+    "beta": 5.0,
+    "max_weight": 5.0,
+    "max_grad": 1.0,
+    "n_seeds": 8,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "seed": 42,
+      "balanced_accuracy": 0.5046373036545899,
+      "mean_loss": 0.7533567425866033,
+      "n_trials": 555
+    },
+    {
+      "seed": 43,
+      "balanced_accuracy": 0.5007769175127923,
+      "mean_loss": 0.8215408859363449,
+      "n_trials": 555
+    },
+    {
+      "seed": 44,
+      "balanced_accuracy": 0.4963991769547325,
+      "mean_loss": 1.294509829661038,
+      "n_trials": 555
+    },
+    {
+      "seed": 45,
+      "balanced_accuracy": 0.5172730195300989,
+      "mean_loss": 0.9255571643597618,
+      "n_trials": 555
+    },
+    {
+      "seed": 46,
+      "balanced_accuracy": 0.5093140231827423,
+      "mean_loss": 1.412435782014707,
+      "n_trials": 555
+    },
+    {
+      "seed": 47,
+      "balanced_accuracy": 0.4924603174603175,
+      "mean_loss": 0.8319392297588399,
+      "n_trials": 555
+    },
+    {
+      "seed": 48,
+      "balanced_accuracy": 0.5390292553191489,
+      "mean_loss": 1.8255565630460546,
+      "n_trials": 555
+    },
+    {
+      "seed": 49,
+      "balanced_accuracy": 0.532701396773427,
+      "mean_loss": 1.2992138388979522,
+      "n_trials": 555
+    }
+  ],
+  "mean_accuracy": 0.5115739262984812,
+  "std_accuracy": 0.015803666975357098,
+  "mean_loss": 1.1455137545326628,
+  "success": false
+}
