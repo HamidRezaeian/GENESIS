@@ -41,3 +41,12 @@ profile*.txt
 
 # Runtime brain-checkpoint self-heal archives (brain_io._archive_stale)
 *.legacy-*.npz
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz

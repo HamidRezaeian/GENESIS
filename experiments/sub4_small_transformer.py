@@ -43,15 +43,7 @@ LR = 0.005
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(_DIR, "..")
-sys.path.insert(0, os.path.join(ROOT, "src"))
-
-os.environ["GENESIS_RAM_SIZE"] = str(2 * 1024 * 1024)
-os.environ["GENESIS_MAX_ORGANISMS"] = "512"
-os.environ["GENESIS_REMAP"] = "0"
-os.environ["GENESIS_ECONOMY"] = "books"
-os.environ["GENESIS_LIVE_WEB"] = "0"
-
-import genesis_lab as gl
+# Standalone Substrate 4 sequence learner (Zero numba dependency)
 
 def softmax(x, axis=-1):
     ex = np.exp(x - np.max(x, axis=axis, keepdims=True))
@@ -139,13 +131,14 @@ class SmallTransformerAgent:
         return pred_byte, err_sum
 
 def build_patch(seed):
-    from books_of_genesis import inject_contiguous_library, contiguous_library_start
-    inject_contiguous_library(gl.g_ram, gl.RAM_SIZE, gl.BOOK_CATEGORY, gl.BOOK_NAME, PATCH_SIZE)
-    start = contiguous_library_start(gl.RAM_SIZE, PATCH_SIZE)
-    patch = [int(b) for b in gl.g_ram[start:start + PATCH_SIZE] if 32 <= int(b) <= 126 and int(b) != 0x55]
-    if len(patch) < 16:
-        patch = [int(c) for c in ("the quick brown fox jumps over the lazy dog 0123456789 ") * 20][:PATCH_SIZE]
-    return patch
+    sys.path.insert(0, os.path.join(ROOT, "src"))
+    from books_of_genesis import _load_glyphs
+    glyphs = _load_glyphs("English", "00_Ascent")
+    if len(glyphs) < PATCH_SIZE:
+        glyphs = _load_glyphs("English", "00_Graded") + glyphs
+    if len(glyphs) < 16:
+        glyphs = [ord(c) for c in ("the quick brown fox jumps over the lazy dog 0123456789 ") * 20]
+    return glyphs[:PATCH_SIZE]
 
 def run_arm(seed, is_learn):
     patch = build_patch(seed)

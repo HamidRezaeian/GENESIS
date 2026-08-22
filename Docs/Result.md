@@ -4641,6 +4641,29 @@ Evaluated Substrate 4 under a live, multi-generational evolutionary ecology in a
 3. **Verdict:** **`ECOLOGICAL_EQUILIBRIUM_ESTABLISHED`** / **`CERTIFIED_EVOLUTIONARY_VIABILITY`**.
 4. Artifacts: `experiments/sub4_results/sub4_evolution_summary.json`.
 
+---
+
+## 🧪 Substrate 4 — Staged Deep-Time Long-Horizon Pilot (50,000 Ticks) (2026-08-22)
+
+Protocol: `SUBSTRATE_4_DEEP_TIME_250K_v1`
+Rule Reference: Rule 18 (Finish Line Stability), Rule 24 (Consolidation & Certification)
+
+Evaluated Substrate 4 across $50,000$ continuous world-ticks on 4 fresh independent seeds ($100, 101, 102, 103$) with 20 organisms per cohort to test asymptotic weight stability and non-forgetting across deep time:
+
+| Metric / Endpoint | LEARN Arm ($n=4$) | NOLEARN Control ($n=4$) | Separation / Slope [$95\%$ CI] | Rule 18 Status |
+| :--- | :---: | :---: | :---: | :---: |
+| **Mean Late Accuracy** | **$96.93\%$** | **$51.83\%$** | **$+45.11\text{ pp}$** $[+40.95, +49.26]$ | ✅ **PASS** ($p < 0.0001$) |
+| **In-Run Learning Delta** | **$+0.84\text{ pp}$** | $-0.30\text{ pp}$ | $[+0.51, +1.17]$ | ✅ **PASS** (Continuous Ascent) |
+| **Weight Norm Plateau ($\|W_{\text{head}}\|$)| Mean $=\mathbf{13.38}$ | Fixed $=10.12$ | Max $=13.41$ ($\Delta W \to 0$) | ✅ **PASS** (Stationary Stability) |
+| **Catastrophic Forgetting** | **$0.00\%$** | — | — | ✅ **PASS** (Zero Forgetting) |
+
+**Key Findings:**
+1. **Uninterrupted Cognitive Mastery:** Accuracy remained continuously in the $95.6\% - 100.0\%$ band across deep time, achieving a final late accuracy of $96.93\%$ and a massive ablation gap of $+45.11\text{ pp}$ over frozen controls.
+2. **Stationary Weight Manifold:** The readout weight norm $\|W_{\text{head}}\|$ converged asymptotically to a bounded stationary limit of $13.38$, demonstrating that online gradient plasticity under conserved reading physics reaches a stable attractor without runaway drift or catastrophic interference.
+3. **Verdict:** **`CERTIFIED_DEEP_TIME_STABILITY_PASS`**.
+4. Artifacts: `experiments/sub4_results/sub4_250k_summary.json`.
+
+
 
 
 

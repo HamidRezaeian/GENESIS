@@ -2,14 +2,16 @@
 
 <div align="center">
 
+[![Release](https://img.shields.io/badge/Release-v2.1.0--publication--ready-10b981?style=for-the-badge&logo=github)](https://github.com/HamidRezaeian/GENESIS/releases/tag/v2.1.0-publication-ready)
 [![Certification](https://img.shields.io/badge/Replication%20Status-Certified%20Level%202-34d399?style=for-the-badge&logo=shield)](Docs/FRAMEWORKS/REPLICATION_CERTIFICATE_SUB4.json)
 [![Generalization](https://img.shields.io/badge/Task%20Families-4%2F5%20Passed-38bdf8?style=for-the-badge&logo=target)](experiments/tf_results/tf_all_summary.json)
-[![Stability](https://img.shields.io/badge/50k%20Horizon-Zero%20Forgetting%20Passed-818cf8?style=for-the-badge&logo=pulse)](experiments/sub4_results/sub4_50k_summary.json)
+[![Stability](https://img.shields.io/badge/50k%20Horizon-Zero%20Forgetting%20Passed-818cf8?style=for-the-badge&logo=pulse)](experiments/sub4_results/sub4_250k_summary.json)
+[![LaTeX Paper](https://img.shields.io/badge/Paper-IEEE%20LaTeX%20Ready-f59e0b?style=for-the-badge&logo=overleaf)](Docs/Paper/genesis_main.tex)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-c084fc?style=for-the-badge&logo=gnu)](LICENSE)
 
 ### *Grounding Open-Ended Neural Evolution & In-Lifetime Learning on Physical Hardware Substrates*
 
-[**Interactive Presentation Deck**](presentation.html) • [**Scientific Manuscript (Draft v3)**](Docs/Article_Draft.md) • [**Experimental Results Record**](Docs/Result.md) • [**Ascent Protocol**](Docs/Architecture/Ascent.md)
+[**LaTeX Paper Manuscript**](Docs/Paper/genesis_main.tex) • [**Interactive Presentation Deck**](presentation.html) • [**Scientific Markdown Draft**](Docs/Article_Draft.md) • [**Experimental Record**](Docs/Result.md) • [**Ascent Protocol**](Docs/Architecture/Ascent.md)
 
 </div>
 
@@ -104,6 +106,9 @@ Open [`presentation.html`](presentation.html) or [`Docs/Presentation/index.html`
 ```
 GENESIS/
 ├── Docs/
+│   ├── Paper/
+│   │   ├── genesis_main.tex      # Full IEEE-style publication-ready LaTeX article
+│   │   └── references.bib        # Complete BibTeX bibliography database
 │   ├── Article_Draft.md          # Complete scientific manuscript (Draft v3 / Revision 4)
 │   ├── Result.md                 # Complete experimental record and telemetry tables
 │   ├── Presentation/index.html   # Interactive 8-slide HTML5/Chart.js presentation deck
@@ -115,6 +120,8 @@ GENESIS/
 │       └── REPLICATION_CERTIFICATE_SUB4.json
 ├── experiments/
 │   ├── sub4_small_transformer.py # Substrate 4 Causal Transformer core architecture
+│   ├── sub4_recurrent_transformer.py # Substrate 4-R Recurrent Causal Transformer
+│   ├── sub4_deep_time_250k.py    # Deep-time continuous long-horizon scaling driver
 │   ├── sub4_long_horizon_50k.py  # 50,000-tick deep-time pilot driver
 │   ├── sub4_population_evolution.py # Multi-generational evolutionary ecology driver
 │   ├── tf_suite/                 # Task Families 1-5 benchmark drivers
@@ -124,7 +131,7 @@ GENESIS/
 │   │   ├── tf4_navigation.py     # TF4: 2D Spatial Grid Navigation
 │   │   ├── tf5_causal.py         # TF5: Causal Intervention & Discovery
 │   │   └── run_tf_all.py         # Master parallel runner for all 5 tasks
-│   └── tf_results/               # Raw JSON telemetry outputs
+│   └── sub4_results/             # Long-horizon & multi-generational telemetry JSONs
 ├── src/                          # Core engine & environment modules
 │   ├── neuromorphic_engine.py    # SNN physics engine (Exps 1-99 historical record)
 │   ├── genesis_lab.py            # Universe orchestration & memory allocator
