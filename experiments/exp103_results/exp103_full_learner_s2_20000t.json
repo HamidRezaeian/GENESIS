@@ -17,14 +17,14 @@
   "early_mean_err": 0.238748,
   "late_mean_err": 0.234488,
   "err_delta": -0.00426,
-  "final_norm_readout_w": 2.772067,
-  "elapsed_s": 0.363,
+  "final_norm_readout_w": 2.772068,
+  "elapsed_s": 0.525,
   "samples": [
     {
       "tick": 1000,
       "acc": 77.375,
       "mean_readout_err": 0.259793,
-      "norm_readout_w": 2.772318
+      "norm_readout_w": 2.772319
     },
     {
       "tick": 2000,
@@ -138,7 +138,7 @@
       "tick": 20000,
       "acc": 78.0,
       "mean_readout_err": 0.234478,
-      "norm_readout_w": 2.772067
+      "norm_readout_w": 2.772068
     }
   ]
 }

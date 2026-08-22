@@ -1,0 +1,74 @@
+{
+  "certificate_id": "REP_CERT_SUB4_TF1_TF5_v1",
+  "certificate_level": "LEVEL_2_CROSS_TASK_REPLICATION_CERTIFICATE",
+  "substrate": "Substrate4_Small_Transformer",
+  "architecture_parameters": {
+    "vocabulary_size": 256,
+    "d_model": 32,
+    "context_len": 16,
+    "n_heads": 2,
+    "total_trainable_params": 10240,
+    "learning_rate": 0.005
+  },
+  "evaluation_date_utc": "2026-08-19T15:54:00Z",
+  "confirmatory_seeds": [100, 101, 102, 103],
+  "task_families_evaluated": [
+    {
+      "id": "TF1",
+      "name": "Sequence Reading & Delayed Match-to-Sample",
+      "status": "PASSED",
+      "in_lifetime_delta_pp": 3.78,
+      "ablation_gap_pp": 39.46,
+      "gate_a_passed": true,
+      "gate_b_passed": true
+    },
+    {
+      "id": "TF2",
+      "name": "Dynamic Bit Parity",
+      "status": "FAILED_PARITY_BOUNDARY",
+      "in_lifetime_delta_pp": -0.21,
+      "ablation_gap_pp": 49.38,
+      "gate_a_passed": false,
+      "gate_b_passed": true
+    },
+    {
+      "id": "TF3",
+      "name": "Compositional Modular Arithmetic",
+      "status": "PASSED",
+      "in_lifetime_delta_pp": 12.77,
+      "ablation_gap_pp": 15.02,
+      "gate_a_passed": true,
+      "gate_b_passed": true
+    },
+    {
+      "id": "TF4",
+      "name": "2D Spatial Grid Navigation",
+      "status": "PASSED",
+      "in_lifetime_delta_pp": 25.61,
+      "ablation_gap_pp": 25.62,
+      "gate_a_passed": true,
+      "gate_b_passed": true
+    },
+    {
+      "id": "TF5",
+      "name": "Causal Intervention & Do-Calculus",
+      "status": "PASSED",
+      "in_lifetime_delta_pp": 14.34,
+      "ablation_gap_pp": 17.24,
+      "gate_a_passed": true,
+      "gate_b_passed": true
+    }
+  ],
+  "passed_ratio": "4/5",
+  "rule24_generalization_status": "CERTIFIED_BROAD_GENERALIZATION",
+  "rule18_claim_boundary": {
+    "statistical_replication_status": "CERTIFIED_LEVEL_2",
+    "broad_task_generalization": "ESTABLISHED_4_OF_5",
+    "agi_claim": "NOT_SUPPORTED_REQUIRES_5M_TICK_LONG_HORIZON_GATE"
+  },
+  "artifacts": {
+    "spec": "Docs/FRAMEWORKS/TASK_FAMILIES_SPEC_v1.md",
+    "raw_results": "experiments/tf_results/tf_all_summary.json",
+    "confirmatory_summary": "experiments/sub4_results/sub4_20k_confirmatory_summary.json"
+  }
+}

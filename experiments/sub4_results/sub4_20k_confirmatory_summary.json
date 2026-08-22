@@ -1,0 +1,86 @@
+{
+  "protocol": "SUBSTRATE_4_EXTENDED_20K_CONFIRMATORY_v1",
+  "amendment": "SUBSTRATE_4_LEARNING_CURVE_v1",
+  "seeds": [
+    100,
+    101,
+    102,
+    103
+  ],
+  "n_seeds": 4,
+  "ticks": 20000,
+  "report_every": 1000,
+  "wall_time_s": 1158.1,
+  "metrics": {
+    "mean_learn_early_acc": 86.7882,
+    "mean_learn_late_acc": 90.5729,
+    "mean_learn_delta_pp": 3.7847,
+    "delta_ci95": [
+      2.2,
+      5.3694
+    ],
+    "mean_slope_pp_per_window": 0.110628,
+    "slope_ci95": [
+      0.003318,
+      0.217937
+    ],
+    "mean_nolearn_late_acc": 51.1111,
+    "mean_paired_gap_pp": 39.4618,
+    "gap_ci95": [
+      34.5388,
+      44.3848
+    ],
+    "mean_rho": 0.2847,
+    "rho_ci95": [
+      0.1908,
+      0.3785
+    ],
+    "perm_p_value": 0.1279,
+    "T_slope_pass": true,
+    "M_magnitude_pass": true,
+    "B_gate_gap_pass": true,
+    "verdict": "GATE_A_SCREEN_PASS_CONFIRMED"
+  },
+  "per_seed": {
+    "100": {
+      "learn_early_acc": 85.2778,
+      "learn_late_acc": 90.3472,
+      "learn_delta_pp": 5.0694,
+      "learn_slope": 0.210683,
+      "nolearn_early_acc": 49.9306,
+      "nolearn_late_acc": 50.4167,
+      "paired_gap_pp": 39.9306,
+      "rho": 0.3443
+    },
+    "101": {
+      "learn_early_acc": 87.7083,
+      "learn_late_acc": 91.4583,
+      "learn_delta_pp": 3.75,
+      "learn_slope": 0.091321,
+      "nolearn_early_acc": 48.4028,
+      "nolearn_late_acc": 49.4444,
+      "paired_gap_pp": 42.0139,
+      "rho": 0.3051
+    },
+    "102": {
+      "learn_early_acc": 87.0833,
+      "learn_late_acc": 90.7639,
+      "learn_delta_pp": 3.6805,
+      "learn_slope": 0.069861,
+      "nolearn_early_acc": 50.1389,
+      "nolearn_late_acc": 49.8611,
+      "paired_gap_pp": 40.9027,
+      "rho": 0.2849
+    },
+    "103": {
+      "learn_early_acc": 87.0833,
+      "learn_late_acc": 89.7222,
+      "learn_delta_pp": 2.6389,
+      "learn_slope": 0.070645,
+      "nolearn_early_acc": 54.3056,
+      "nolearn_late_acc": 54.7222,
+      "paired_gap_pp": 35.0,
+      "rho": 0.2043
+    }
+  }
+}

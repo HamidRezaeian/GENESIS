@@ -18,7 +18,7 @@
   "late_mean_err": 0.822854,
   "err_delta": -0.00773,
   "final_norm_readout_w": 2.616587,
-  "elapsed_s": 27.768,
+  "elapsed_s": 37.348,
   "samples": [
     {
       "tick": 1000,

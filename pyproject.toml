@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 # ============================================================
 # GENESIS — combined project configuration
@@ -9,7 +9,7 @@ build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "genesis"
-version = "4.1.0-0a"
+version = "4.1.0a0"
 description = "GENESIS: Deep Cortical Evolution & Neuromorphic Substrate Engine"
 readme = "README.md"
 requires-python = ">=3.10"

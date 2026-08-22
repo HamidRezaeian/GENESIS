@@ -19,7 +19,7 @@
   "err_delta": -0.062904,
   "final_norm_readout_w": 2.756767,
   "verdict": "LEARNING_SIGNAL_RECOMMEND_FULL_RUN",
-  "elapsed_s": 0.637,
+  "elapsed_s": 0.91,
   "samples": [
     {
       "tick": 100,

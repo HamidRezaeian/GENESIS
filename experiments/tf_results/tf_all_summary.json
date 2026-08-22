@@ -1,0 +1,111 @@
+{
+  "protocol": "TASK_FAMILIES_1_TO_5_EVAL_v1",
+  "seeds": [
+    100,
+    101,
+    102,
+    103
+  ],
+  "ticks_per_task": 10000,
+  "total_wall_time_s": 959.92,
+  "passed_tasks_count": 4,
+  "total_tasks_count": 5,
+  "generalization_status": "CERTIFIED_BROAD_GENERALIZATION_LEVEL_2",
+  "scorecard": {
+    "TF1": {
+      "task_name": "Continuous Sequence Reading (RAM Library)",
+      "mean_early_learn": 85.24,
+      "mean_late_learn": 91.7,
+      "mean_delta_pp": 6.46,
+      "delta_ci95": [
+        3.8,
+        9.11
+      ],
+      "mean_nolearn_late": 49.62,
+      "mean_gap_pp": 42.08,
+      "gap_ci95": [
+        38.51,
+        45.66
+      ],
+      "gate_a_inrun_pass": true,
+      "gate_b_ablation_pass": true,
+      "task_passed": true
+    },
+    "TF2": {
+      "task_name": "Bit Parity (Logical / XOR)",
+      "mean_early_learn": 52.26,
+      "mean_late_learn": 49.88,
+      "mean_delta_pp": -2.38,
+      "delta_ci95": [
+        -3.9,
+        -0.86
+      ],
+      "mean_nolearn_late": 0.0,
+      "mean_gap_pp": 49.88,
+      "gap_ci95": [
+        47.67,
+        52.09
+      ],
+      "gate_a_inrun_pass": false,
+      "gate_b_ablation_pass": true,
+      "task_passed": false
+    },
+    "TF3": {
+      "task_name": "Compositional Modular Arithmetic",
+      "mean_early_learn": 2.74,
+      "mean_late_learn": 15.47,
+      "mean_delta_pp": 12.73,
+      "delta_ci95": [
+        12.28,
+        13.19
+      ],
+      "mean_nolearn_late": 0.32,
+      "mean_gap_pp": 15.15,
+      "gap_ci95": [
+        13.18,
+        17.12
+      ],
+      "gate_a_inrun_pass": true,
+      "gate_b_ablation_pass": true,
+      "task_passed": true
+    },
+    "TF4": {
+      "task_name": "2D Spatial Grid Navigation",
+      "mean_early_learn": 0.01,
+      "mean_late_learn": 25.27,
+      "mean_delta_pp": 25.26,
+      "delta_ci95": [
+        23.48,
+        27.03
+      ],
+      "mean_nolearn_late": 0.31,
+      "mean_gap_pp": 24.96,
+      "gap_ci95": [
+        22.79,
+        27.13
+      ],
+      "gate_a_inrun_pass": true,
+      "gate_b_ablation_pass": true,
+      "task_passed": true
+    },
+    "TF5": {
+      "task_name": "Causal Intervention & Discovery",
+      "mean_early_learn": 2.75,
+      "mean_late_learn": 17.89,
+      "mean_delta_pp": 15.14,
+      "delta_ci95": [
+        14.63,
+        15.65
+      ],
+      "mean_nolearn_late": 0.0,
+      "mean_gap_pp": 17.89,
+      "gap_ci95": [
+        16.5,
+        19.28
+      ],
+      "gate_a_inrun_pass": true,
+      "gate_b_ablation_pass": true,
+      "task_passed": true
+    }
+  }
+}

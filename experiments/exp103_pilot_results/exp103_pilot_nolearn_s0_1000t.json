@@ -19,7 +19,7 @@
   "err_delta": 0.019335,
   "final_norm_readout_w": 2.618579,
   "verdict": "WORSE_STOP",
-  "elapsed_s": 0.628,
+  "elapsed_s": 0.88,
   "samples": [
     {
       "tick": 100,

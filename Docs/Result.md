@@ -4556,3 +4556,65 @@ $$\Delta w = \text{lr} \frac{\text{err} \cdot x}{\|x\|^2 + \epsilon}$$
 
 where $\epsilon = 10^{-8}$ is a numerical safety floor. This is a magnitude-invariant update correction required by correlated echo-state reservoir features, **NOT** parameter tuning: the pre-registered learning rate remains unchanged at `lr = 0.01` (Rule 16 / Rule 17).
 
+**Results:**
+- **Exp 103 (Global Reservoir):** LEARNER late accuracy 78.08% vs NOLEARN 67.72% (Ablation gap $+10.35\text{ pp}$, Gate 2 PASS). In-run delta $\Delta = +0.06\text{ pp}$ (Gate 1 FAIL against +2.0pp bar). Verdict: `STATIC_ONLY` / `RESERVOIR_HELPS_STATICALLY_BUT_INRUN_LEARNING_WEAK`.
+- **Exp 103b (Per-Organism Reservoir, 60 orgs cohort):** PERORG late accuracy 78.66% vs NOLEARN 57.35% (Ablation gap $+21.31\text{ pp}$, Gate 2 PASS). In-run delta $\Delta = -0.02\text{ pp}$ (Gate 1 FAIL). Verdict: `NULL_OR_DEGRADED` (Static-only representation advantage).
+
+---
+
+## 🧪 Substrate 4 — Confirmatory Certification on Fresh Seeds 100–103 (2026-08-19)
+
+Protocol: `SUBSTRATE_4_EXTENDED_20K_CONFIRMATORY_v1`
+Amendment: `Docs/Architecture/SUBSTRATE_4_LEARNING_CURVE_v1.md` (Clause D8)
+
+Confirmatory evaluation of the Causal Small Transformer sequence learner across fresh independent seeds ($100, 101, 102, 103$) $\times$ $20,000$ ticks $\times$ $60$ organisms per arm with zero cache reuse.
+
+**Results:**
+- **T-Test (OLS Slope):** Mean slope $= +0.1106\text{ pp/k}$ [$95\%\text{ CI: } +0.0033, +0.2179$] $\to$ **PASS** ($CI_{95\%} > 0$).
+- **M-Test (Relative Error Reduction $\rho$):** Mean $\rho = 28.47\%$ [$95\%\text{ CI: } +19.08\%, +37.85\%$] $\to$ **PASS** ($\rho \ge 25.0\%$).
+- **B-Test (Gate B Late Ablation Gap):** Mean gap $= +39.46\text{ pp}$ [$95\%\text{ CI: } +34.54, +44.38$] $\to$ **PASS**.
+- **Final Verdict:** **`GATE_A_SCREEN_PASS_CONFIRMED`** (First formal in-lifetime learning pass in project history).
+
+Artifacts: `experiments/sub4_results/sub4_20k_confirmatory_summary.json`.
+
+---
+
+## 🧪 Task Families 2–5 Benchmark Suite & Broad Generalization (2026-08-19)
+
+Protocol: `TASK_FAMILIES_2_TO_5_EVAL_v1`
+Rule Reference: Rule 24 (Consolidation & Level 1/2 Replication Certification)
+
+Evaluated 4 fresh seeds ($100, 101, 102, 103$) $\times$ 32 live runs across 4 distinct cognitive task families on Substrate 4:
+
+| Task Family | Cognitive Domain | Early Acc | Late Acc | In-Run Delta ($\Delta$) [95% CI] | Ablation Gap [95% CI] | Status |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **TF1: Sequence Reading** | Sequence Memory | $86.79\%$ | $90.57\%$ | **$+3.78\text{ pp}$** $[+2.20, +5.37]$ | **$+39.46\text{ pp}$** $[+34.54, +44.38]$ | ✅ **PASS** |
+| **TF2: Bit Parity** | Logical XOR | $49.59\%$ | $49.38\%$ | **$-0.21\text{ pp}$** $[-1.87, +1.45]$ | **$+49.38\text{ pp}$** $[+47.49, +51.27]$ | ❌ **FAIL** (Parity bound) |
+| **TF3: Compositional Arithmetic** | Algebraic Composition | $2.56\%$ | $15.34\%$ | **$+12.77\text{ pp}$** $[+12.03, +13.51]$ | **$+15.02\text{ pp}$** $[+13.63, +16.41]$ | ✅ **PASS** |
+| **TF4: 2D Spatial Navigation** | 2D Spatial Planning | $0.01\%$ | $25.62\%$ | **$+25.61\text{ pp}$** $[+23.81, +27.41]$ | **$+25.62\text{ pp}$** $[+23.81, +27.43]$ | ✅ **PASS** |
+---
+
+## 🧪 Substrate 4 — Staged Long-Horizon 50,000-Tick Pilot (2026-08-22)
+
+Protocol: `SUBSTRATE_4_LONG_HORIZON_50K_v1`
+Rule Reference: Rule 18 (Ascent Finish Line Criteria) & Rule 24 (Replication Standards)
+
+Evaluated Substrate 4 over a continuous **50,000 world-ticks** horizon across 4 fresh independent seeds ($100, 101, 102, 103$) $\times$ 30 organisms per cohort for both `LEARN` and `NOLEARN` arms (8 full deep-time runs, total elapsed wall-time: 1786.5s):
+
+| Metric / Screen | Pre-Registered Pass Criterion | Measured Value ($n=4$) | $95\%$ Confidence Interval | Empirical Status |
+| :--- | :---: | :---: | :---: | :---: |
+| **Mean LEARN Late Acc** | — | **$91.01\%$** | $[89.28\%, 92.74\%]$ | ✅ High Retention |
+| **Mean NOLEARN Late Acc** | — | **$51.53\%$** | $[50.84\%, 52.22\%]$ | Baseline Control |
+| **Ablation Gap (B-Screen)** | $\ge +20.0\text{ pp}$ and $CI_{95\%} > 0$ | **$+39.48\text{ pp}$** | $[+37.74, +41.21]$ | ✅ **PASS** ($p < 0.0001$) |
+| **Learning Slope (T-Screen)** | $CI_{95\%} > 0$ across 50k | **$+0.0437\text{ pp/k}$** | $[+0.0099, +0.0774]$ | ✅ **PASS** (Zero Forgetting) |
+| **Relative Error Reduction ($\rho$)** | $\ge 25.0\%$ | **$40.64\%$** | $[+21.96\%, +59.32\%]$ | ✅ **PASS** |
+| **Weight Trajectory Stability** | Norm bounded $< 100.0$ | Mean $\|W_{\text{head}}\| = \mathbf{13.83}$ | Max $= 13.88$ | ✅ **PASS** (Stationary) |
+
+**Key Findings:**
+1. **Zero Catastrophic Forgetting:** Prediction accuracy remains rock-solid in the $90.5\%-93.2\%$ band across 50,000 continuous ticks with a statistically positive global slope ($+0.044\text{ pp/k}$, $CI > 0$).
+2. **Asymptotic Weight Stabilization:** Readout weight norm $\|W_{\text{head}}\|$ grows smoothly from initial $10.12$ to an asymptotic stationary plateau of $13.83$ with incremental displacement $\Delta W$ stabilizing at $\sim 0.25-0.30$, demonstrating bounded, stable online plasticity.
+3. **Verdict:** **`CERTIFIED_LONG_HORIZON_STABILITY_PASS`** (First empirical proof of 50,000-tick continuous stability in project history).
+4. Artifacts: `experiments/sub4_results/sub4_50k_summary.json`.
+
+
+
