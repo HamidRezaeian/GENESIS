@@ -14,7 +14,7 @@ numba_cache/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
-!GENESIS_CUDA*.ipynb
+!GENESIS*.ipynb
 
 # OS
 .DS_Store
