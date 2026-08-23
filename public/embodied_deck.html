@@ -711,13 +711,15 @@
 
             const qValues = new Float32Array(N_ACTIONS);
             const visitCounts = new Int32Array(N_ACTIONS);
+            const effectiveSims = policyMode === 'DIRECTED' ? 32 : 16;
+            const effectiveCpuct = policyMode === 'DIRECTED' ? 0.6 : 1.4;
 
-            for (let sim = 0; sim < MCTS_SIMS; sim++) {
+            for (let sim = 0; sim < effectiveSims; sim++) {
                 let bestScore = -1e9, candidateA = 0;
                 const totalN = visitCounts.reduce((a, b) => a + b, 0);
 
                 for (let a = 0; a < N_ACTIONS; a++) {
-                    const u = C_PUCT * priors[a] * Math.sqrt(totalN + 1) / (1 + visitCounts[a]);
+                    const u = effectiveCpuct * priors[a] * Math.sqrt(totalN + 1) / (1 + visitCounts[a]);
                     const score = qValues[a] + u;
                     if (score > bestScore) {
                         bestScore = score;
@@ -1194,7 +1196,15 @@
 
             let action = 0;
             if (policyMode === 'DIRECTED') {
-                action = mctsInfo.visitCounts.indexOf(Math.max(...mctsInfo.visitCounts));
+                let bestA = 0, bestScore = -1e9;
+                for (let a = 0; a < N_ACTIONS; a++) {
+                    const score = mctsInfo.visitCounts[a] + mctsInfo.qValues[a] * 0.1;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestA = a;
+                    }
+                }
+                action = bestA;
             } else {
                 const tau = 0.3;
                 const expCounts = new Float32Array(N_ACTIONS);
