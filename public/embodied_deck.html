@@ -348,9 +348,10 @@
                     <span class="badge badge-emerald">AUTO-SAVED (500 Ticks)</span>
                 </div>
                 <div class="controls-bar">
+                    <button class="btn btn-active" style="background: linear-gradient(135deg, rgba(0, 255, 157, 0.25), rgba(0, 240, 255, 0.25)); border-color: var(--emerald); width: 100%; justify-content: center;" onclick="loadPreTrainedSub7Brain()">⚡ 1-Click Load Substrate 7 Trained Brain</button>
                     <button class="btn" onclick="saveBrainManual()">💾 Save Brain Now</button>
                     <button class="btn" onclick="exportBrainJSON()">📥 Export Checkpoint (.json)</button>
-                    <button class="btn" onclick="document.getElementById('file-import-brain').click()">📂 Load Checkpoint</button>
+                    <button class="btn" onclick="document.getElementById('file-import-brain').click()">📂 Load Checkpoint File</button>
                     <button class="btn" style="color:var(--rose);" onclick="wipeBrain()">🗑️ Wipe Brain (Tabula Rasa)</button>
                     <input type="file" id="file-import-brain" style="display:none;" accept=".json" onchange="importBrainJSON(event)">
                 </div>
@@ -658,6 +659,20 @@
                 }
             };
             reader.readAsText(file);
+        }
+
+        function loadPreTrainedSub7Brain() {
+            fetch('sub7_mcts_trained_brain.json')
+                .then(res => res.json())
+                .then(data => {
+                    deserializeBrain(data);
+                    saveBrainToStorage();
+                    addLog(`Loaded Substrate 7 Trained Brain (30,000 Ticks MCTS) successfully!`);
+                    alert(`✅ مغز آموزش‌دیده رسمی Substrate 7 (با ۳۰،۰۰۰ تیک یادگیری MCTS) با موفقیت بارگذاری شد!`);
+                })
+                .catch(err => {
+                    alert("فایل بارگذاری نشد. لطفاً از دکمه Load Checkpoint File فایل Brain/sub7_mcts_trained_brain.json را انتخاب کنید.");
+                });
         }
 
         function wipeBrain() {
