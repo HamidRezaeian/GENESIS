@@ -1,0 +1,139 @@
+{
+  "protocol": "SUBSTRATE_5I_IMAGINATION_PLANNING_v1",
+  "horizon": 3,
+  "mean_imagination_food": 176.0,
+  "mean_reactive_food": 143.25,
+  "mean_control_food": 248.75,
+  "mean_imagination_reward": -2692.12,
+  "mean_reactive_reward": -2304.75,
+  "mean_control_reward": -2836.12,
+  "mean_imagination_hazard_hits": 243.25,
+  "mean_reactive_hazard_hits": 153.25,
+  "mean_control_hazard_hits": 327.5,
+  "imagination_runs": [
+    {
+      "seed": 100,
+      "mode": "IMAGINATION",
+      "ticks": 50000,
+      "total_reward": -2580.0,
+      "food_collected": 188,
+      "hazard_hits": 243,
+      "dyn_norm": 2.034,
+      "val_norm": 0.678
+    },
+    {
+      "seed": 101,
+      "mode": "IMAGINATION",
+      "ticks": 50000,
+      "total_reward": -2638.0,
+      "food_collected": 177,
+      "hazard_hits": 251,
+      "dyn_norm": 2.127,
+      "val_norm": 0.914
+    },
+    {
+      "seed": 102,
+      "mode": "IMAGINATION",
+      "ticks": 50000,
+      "total_reward": -2836.5,
+      "food_collected": 157,
+      "hazard_hits": 224,
+      "dyn_norm": 2.204,
+      "val_norm": 0.794
+    },
+    {
+      "seed": 103,
+      "mode": "IMAGINATION",
+      "ticks": 50000,
+      "total_reward": -2714.0,
+      "food_collected": 182,
+      "hazard_hits": 255,
+      "dyn_norm": 2.063,
+      "val_norm": 1.147
+    }
+  ],
+  "reactive_runs": [
+    {
+      "seed": 100,
+      "mode": "REACTIVE",
+      "ticks": 50000,
+      "total_reward": -2213.5,
+      "food_collected": 160,
+      "hazard_hits": 174,
+      "dyn_norm": 2.1,
+      "val_norm": 0.558
+    },
+    {
+      "seed": 101,
+      "mode": "REACTIVE",
+      "ticks": 50000,
+      "total_reward": -2402.5,
+      "food_collected": 150,
+      "hazard_hits": 160,
+      "dyn_norm": 2.281,
+      "val_norm": 0.594
+    },
+    {
+      "seed": 102,
+      "mode": "REACTIVE",
+      "ticks": 50000,
+      "total_reward": -2040.0,
+      "food_collected": 161,
+      "hazard_hits": 139,
+      "dyn_norm": 2.408,
+      "val_norm": 0.742
+    },
+    {
+      "seed": 103,
+      "mode": "REACTIVE",
+      "ticks": 50000,
+      "total_reward": -2563.0,
+      "food_collected": 102,
+      "hazard_hits": 140,
+      "dyn_norm": 2.094,
+      "val_norm": 0.911
+    }
+  ],
+  "control_runs": [
+    {
+      "seed": 100,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -2784.5,
+      "food_collected": 257,
+      "hazard_hits": 338,
+      "dyn_norm": 2.945,
+      "val_norm": 0.583
+    },
+    {
+      "seed": 101,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -2807.0,
+      "food_collected": 242,
+      "hazard_hits": 297,
+      "dyn_norm": 2.87,
+      "val_norm": 0.467
+    },
+    {
+      "seed": 102,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -3010.0,
+      "food_collected": 233,
+      "hazard_hits": 331,
+      "dyn_norm": 2.893,
+      "val_norm": 0.5
+    },
+    {
+      "seed": 103,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -2743.0,
+      "food_collected": 263,
+      "hazard_hits": 344,
+      "dyn_norm": 2.931,
+      "val_norm": 0.519
+    }
+  ]
+}
