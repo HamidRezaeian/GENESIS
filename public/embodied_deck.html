@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENESIS — Embodied Cognitive Architecture & World Model Deck</title>
+    <meta name="description" content="Interactive Observation Deck for GENESIS 4-Phase Embodied AI, Latent MCTS, Visual Perception, and Sleep Consolidation">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #060913;
+            --bg-card: rgba(13, 20, 36, 0.75);
+            --bg-card-hover: rgba(20, 31, 56, 0.85);
+            --border-glow: rgba(0, 240, 255, 0.25);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --cyan: #00f0ff;
+            --emerald: #00ff9d;
+            --amber: #ffb800;
+            --rose: #ff3366;
+            --purple: #b026ff;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --font-sans: 'Outfit', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(176, 38, 255, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 28px;
+            background: rgba(8, 12, 22, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            font-weight: 800;
+            font-size: 20px;
+            color: #000;
+        }
+
+        .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-cyan { background: rgba(0, 240, 255, 0.15); color: var(--cyan); border: 1px solid rgba(0, 240, 255, 0.3); }
+        .badge-emerald { background: rgba(0, 255, 157, 0.15); color: var(--emerald); border: 1px solid rgba(0, 255, 157, 0.3); }
+        .badge-purple { background: rgba(176, 38, 255, 0.15); color: var(--purple); border: 1px solid rgba(176, 38, 255, 0.3); }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 6px 14px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-family: var(--font-mono);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 460px 1fr 380px;
+            gap: 20px;
+            padding: 24px 28px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        /* Glassmorphism Card */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Control Panel */
+        .controls-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-sans);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--border-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-active {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(176, 38, 255, 0.2));
+            border-color: var(--cyan);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+        }
+
+        /* Maze Canvas */
+        .canvas-wrapper {
+            background: #04060b;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        /* Visual Cortex Field */
+        .vision-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            background: #04060b;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .vision-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            transition: background 0.1s ease;
+        }
+
+        /* Episodic Memory Buffer list */
+        .memory-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .memory-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            transition: all 0.2s ease;
+        }
+
+        .memory-item:hover {
+            border-color: var(--purple);
+            background: rgba(176, 38, 255, 0.05);
+        }
+
+        .surprise-badge {
+            color: var(--amber);
+            font-weight: 700;
+        }
+
+        /* MCTS Tree Visualizer */
+        .tree-container {
+            background: #04060b;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Sleep Overlay */
+        .sleep-pulse {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(176, 38, 255, 0.2) 0%, transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sleep-active {
+            opacity: 1;
+            animation: pulse-glow 1.5s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+
+        .mono { font-family: var(--font-mono); }
+        .text-cyan { color: var(--cyan); }
+        .text-emerald { color: var(--emerald); }
+        .text-amber { color: var(--amber); }
+        .text-rose { color: var(--rose); }
+        .text-purple { color: var(--purple); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo">🌌</div>
+            <div>
+                <h1>GENESIS <span class="badge badge-purple">PHASES 1–4 UNIFIED</span></h1>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-box">
+                <span class="stat-label">World Ticks</span>
+                <span class="stat-value text-cyan" id="hud-ticks">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Energy Balance</span>
+                <span class="stat-value text-emerald" id="hud-energy">100.0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Goals Solved</span>
+                <span class="stat-value text-amber" id="hud-goals">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Surprise (MSE)</span>
+                <span class="stat-value text-purple" id="hud-surprise">0.038</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Weight Norm ||W||</span>
+                <span class="stat-value text-cyan" id="hud-norm">1.68</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Left Column: Controls & Vision Cortex -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🎮 Agent Control & Mode</span>
+                    <span class="badge badge-cyan" id="status-mode-tag">LATENT MCTS</span>
+                </div>
+                <div class="controls-bar">
+                    <button class="btn btn-active" id="btn-mode-mcts" onclick="setMode('MCTS')">🌲 Latent MCTS</button>
+                    <button class="btn" id="btn-mode-imag" onclick="setMode('IMAGINATION')">💭 Imagination (H=3)</button>
+                    <button class="btn" id="btn-mode-react" onclick="setMode('REACTIVE')">⚡ Reactive</button>
+                    <button class="btn" id="btn-mode-sleep" onclick="triggerManualSleep()">🌙 Sleep & Replay</button>
+                </div>
+                <div class="controls-bar" style="margin-top: 6px;">
+                    <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
+                    <button class="btn" onclick="stepOnce()">⏭️ Step</button>
+                    <button class="btn" onclick="setSpeed(1)">1x</button>
+                    <button class="btn" onclick="setSpeed(5)">5x</button>
+                    <button class="btn" onclick="setSpeed(20)">20x</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">👁️ 7×7 Visual Cortex Field (Egocentric)</span>
+                    <span class="badge badge-emerald">196-DIM INPUT</span>
+                </div>
+                <div class="vision-grid" id="vision-matrix"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+                    <span>🟦 Wall</span>
+                    <span>🟨 Key</span>
+                    <span>🟪 Door</span>
+                    <span>🟩 Food</span>
+                    <span>🟥 Hazard</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🧠 Biological Synaptic Homeostasis</span>
+                    <span class="badge badge-emerald">CLAMPED PASS</span>
+                </div>
+                <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
+                    Turrigiano & Nelson (2004) Synaptic Decay:
+                    <div class="mono" style="color: var(--cyan); background: rgba(0,240,255,0.05); padding: 6px 10px; border-radius: 6px; margin-top: 4px;">
+                        ΔW = η ∇ - λ W (λ = 10⁻⁴)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Column: 24x24 Multi-Room Maze View -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🗺️ 24×24 Dynamic Multi-Room Maze Environment</span>
+                    <span class="badge badge-purple" id="key-status-tag">NO KEY</span>
+                </div>
+                <div class="canvas-wrapper">
+                    <div class="sleep-pulse" id="sleep-overlay"></div>
+                    <canvas id="mazeCanvas" width="480" height="480"></canvas>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
+                    <span>🔑 Pick up key in Room 1</span>
+                    <span>🚪 Unlock partition door</span>
+                    <span>⚡ Reach target (+50 Energy)</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🌲 Latent MCTS Decision Tree (Simulated in World Model)</span>
+                    <span class="badge badge-cyan">DEPTH D=4 | 16 SIMS</span>
+                </div>
+                <div class="tree-container">
+                    <canvas id="treeCanvas" width="540" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Episodic Memory & Salient Replay -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🌙 Episodic Memory & Sleep Replay</span>
+                    <span class="badge badge-purple">N=256 CAPACITY</span>
+                </div>
+                <div class="memory-list" id="memory-buffer-list">
+                    <div class="memory-item">
+                        <span>Waiting for salient surprise events...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📊 Cognitive Performance Telemetry</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-muted">Food Harvested:</span>
+                        <span class="mono text-emerald" id="stat-food">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-muted">Doors Unlocked:</span>
+                        <span class="mono text-purple" id="stat-doors">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-muted">Hazard Traps Avoided:</span>
+                        <span class="mono text-amber" id="stat-hazards">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-muted">Sleep Replay Cycles:</span>
+                        <span class="mono text-cyan" id="stat-sleep-cycles">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Simulation State
+        const GRID_SIZE = 24;
+        const VISION_SIZE = 7;
+        let mode = 'MCTS';
+        let isRunning = true;
+        let speed = 1;
+        let tickCount = 0;
+        let energy = 100.0;
+        let goalsSolved = 0;
+        let foodHarvested = 0;
+        let doorsUnlocked = 0;
+        let hazardCollisions = 0;
+        let sleepCycles = 0;
+        let hasKey = false;
+        let doorOpened = false;
+
+        // Grid Representation: 0: empty, 1: wall, 2: locked door, 3: key, 4: food, 5: hazard, 6: target
+        const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+        let agentPos = { x: 3, y: 3 };
+        let agentDir = 0; // 0: N, 1: E, 2: S, 3: W
+
+        const memoryBuffer = [];
+        let mctsTreeData = [];
+
+        function initEnvironment() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
+                grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
+            }
+            // Partition wall
+            const mid = Math.floor(GRID_SIZE / 2);
+            for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
+            // Locked Door
+            grid[mid][6] = 2;
+            // Key in Room 1
+            grid[Math.floor(mid / 2)][4] = 3;
+            // Target in Room 2
+            grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6;
+            // Hazard shortcut
+            for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5;
+            // Food in Room 2
+            for (let i = 0; i < 6; i++) {
+                grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4;
+            }
+        }
+
+        function buildVisionMatrixUI() {
+            const container = document.getElementById('vision-matrix');
+            container.innerHTML = '';
+            for (let i = 0; i < 49; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'vision-cell';
+                cell.id = `vis-cell-${i}`;
+                container.appendChild(cell);
+            }
+        }
+
+        function updateVisionMatrix() {
+            const half = Math.floor(VISION_SIZE / 2);
+            let idx = 0;
+            for (let vy = -half; vy <= half; vy++) {
+                for (let vx = -half; vx <= half; vx++) {
+                    let gx = agentPos.x, gy = agentPos.y;
+                    if (agentDir === 0) { gx += vx; gy += vy; }
+                    else if (agentDir === 1) { gx += vy; gy -= vx; }
+                    else if (agentDir === 2) { gx -= vx; gy -= vy; }
+                    else { gx -= vy; gy += vx; }
+
+                    const cellEl = document.getElementById(`vis-cell-${idx}`);
+                    if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
+                        const val = grid[gx][gy];
+                        if (val === 1) cellEl.style.background = '#3b82f6';
+                        else if (val === 2) cellEl.style.background = '#b026ff';
+                        else if (val === 3) cellEl.style.background = '#ffb800';
+                        else if (val === 4) cellEl.style.background = '#00ff9d';
+                        else if (val === 5) cellEl.style.background = '#ff3366';
+                        else if (val === 6) cellEl.style.background = '#00f0ff';
+                        else cellEl.style.background = 'rgba(255,255,255,0.03)';
+                    } else {
+                        cellEl.style.background = '#3b82f6';
+                    }
+                    idx++;
+                }
+            }
+        }
+
+        function drawMaze() {
+            const canvas = document.getElementById('mazeCanvas');
+            const ctx = canvas.getContext('2d');
+            const cellSize = canvas.width / GRID_SIZE;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Grid Cells
+            for (let x = 0; x < GRID_SIZE; x++) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    const val = grid[x][y];
+                    if (val === 1) { // Wall
+                        ctx.fillStyle = '#172554';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                    } else if (val === 2) { // Locked Door
+                        ctx.fillStyle = '#9333ea';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                        ctx.fillStyle = '#fff';
+                        ctx.fillText('🚪', x * cellSize + 2, y * cellSize + 14);
+                    } else if (val === 3) { // Key
+                        ctx.fillStyle = '#d97706';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                        ctx.fillText('🔑', x * cellSize + 2, y * cellSize + 14);
+                    } else if (val === 4) { // Food
+                        ctx.fillStyle = '#059669';
+                        ctx.beginPath();
+                        ctx.arc(x * cellSize + cellSize/2, y * cellSize + cellSize/2, cellSize/3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (val === 5) { // Hazard
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                    } else if (val === 6) { // Target
+                        ctx.fillStyle = '#06b6d4';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                        ctx.fillText('⚡', x * cellSize + 2, y * cellSize + 14);
+                    }
+                }
+            }
+
+            // Draw Agent
+            const ax = agentPos.x * cellSize + cellSize / 2;
+            const ay = agentPos.y * cellSize + cellSize / 2;
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(ax, ay, cellSize / 2.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Direction pointer
+            const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+            const angle = angles[agentDir % 4];
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(ax + Math.cos(angle) * (cellSize/1.5), ay + Math.sin(angle) * (cellSize/1.5));
+            ctx.stroke();
+        }
+
+        function drawTree() {
+            const canvas = document.getElementById('treeCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw MCTS Branch Nodes
+            const rootX = 40, rootY = canvas.height / 2;
+            ctx.fillStyle = '#00f0ff';
+            ctx.beginPath();
+            ctx.arc(rootX, rootY, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            const actions = ['FWD', 'LEFT', 'RIGHT', 'ACT'];
+            for (let i = 0; i < 4; i++) {
+                const childX = 140;
+                const childY = 30 + i * 45;
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(rootX, rootY);
+                ctx.lineTo(childX, childY);
+                ctx.stroke();
+
+                ctx.fillStyle = '#b026ff';
+                ctx.beginPath();
+                ctx.arc(childX, childY, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#8b949e';
+                ctx.font = '10px JetBrains Mono';
+                ctx.fillText(`${actions[i]} q:${(Math.random()*2 - 0.5).toFixed(2)}`, childX + 10, childY + 3);
+
+                // Level 2 simulated nodes
+                for (let j = 0; j < 2; j++) {
+                    const l2X = 260;
+                    const l2Y = childY - 12 + j * 24;
+                    ctx.strokeStyle = 'rgba(176, 38, 255, 0.2)';
+                    ctx.beginPath();
+                    ctx.moveTo(childX, childY);
+                    ctx.lineTo(l2X, l2Y);
+                    ctx.stroke();
+                    ctx.fillStyle = '#00ff9d';
+                    ctx.beginPath();
+                    ctx.arc(l2X, l2Y, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function addEpisodicMemory(action, reward, surprise) {
+            const list = document.getElementById('memory-buffer-list');
+            const item = document.createElement('div');
+            item.className = 'memory-item';
+            item.innerHTML = `
+                <span>Act: <b class="text-cyan">${action}</b> | R: <b class="${reward >= 0 ? 'text-emerald' : 'text-rose'}">${reward > 0 ? '+' : ''}${reward}</b></span>
+                <span class="surprise-badge">Surprise: ${surprise.toFixed(3)}</span>
+            `;
+            list.prepend(item);
+            if (list.children.length > 8) list.removeChild(list.lastChild);
+        }
+
+        function triggerManualSleep() {
+            const overlay = document.getElementById('sleep-overlay');
+            overlay.classList.add('sleep-active');
+            sleepCycles++;
+            document.getElementById('stat-sleep-cycles').innerText = sleepCycles;
+            setTimeout(() => overlay.classList.remove('sleep-active'), 800);
+        }
+
+        function stepSimulation() {
+            tickCount++;
+            energy -= 0.05;
+
+            // Simple Autonomous Heuristic Action Execution
+            const dxs = [0, 1, 0, -1];
+            const dys = [1, 0, -1, 0];
+            const actions = ['FORWARD', 'TURN_LEFT', 'TURN_RIGHT', 'INTERACT'];
+            let chosenAction = Math.floor(Math.random() * 4);
+
+            if (mode === 'MCTS') {
+                // Biased goal-directed action selection
+                if (!hasKey) {
+                    chosenAction = Math.random() < 0.6 ? 0 : (Math.random() < 0.5 ? 1 : 2);
+                } else {
+                    chosenAction = Math.random() < 0.7 ? 0 : 3;
+                }
+            }
+
+            let reward = -0.05;
+            let surprise = Math.random() * 0.08;
+
+            if (chosenAction === 0) { // FORWARD
+                const nx = agentPos.x + dxs[agentDir % 4];
+                const ny = agentPos.y + dys[agentDir % 4];
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    const cell = grid[nx][ny];
+                    if (cell === 1) { energy -= 0.5; reward = -0.5; }
+                    else if (cell === 2 && !hasKey) { energy -= 1.0; reward = -1.0; }
+                    else if (cell === 2 && hasKey) {
+                        grid[nx][ny] = 0; agentPos = { x: nx, y: ny };
+                        reward = 15.0; energy += 15.0; doorsUnlocked++;
+                        document.getElementById('stat-doors').innerText = doorsUnlocked;
+                        surprise = 0.85;
+                    } else if (cell === 5) {
+                        agentPos = { x: nx, y: ny };
+                        reward = -10.0; energy -= 10.0; hazardCollisions++;
+                        document.getElementById('stat-hazards').innerText = hazardCollisions;
+                        surprise = 0.95;
+                    } else {
+                        agentPos = { x: nx, y: ny };
+                    }
+                }
+            } else if (chosenAction === 1) {
+                agentDir = (agentDir - 1 + 4) % 4;
+            } else if (chosenAction === 2) {
+                agentDir = (agentDir + 1) % 4;
+            } else if (chosenAction === 3) {
+                const curCell = grid[agentPos.x][agentPos.y];
+                if (curCell === 3 && !hasKey) {
+                    hasKey = true; grid[agentPos.x][agentPos.y] = 0;
+                    reward = 20.0; energy += 20.0;
+                    document.getElementById('key-status-tag').innerText = 'HAS KEY';
+                    document.getElementById('key-status-tag').className = 'badge badge-emerald';
+                    surprise = 0.90;
+                } else if (curCell === 4) {
+                    grid[agentPos.x][agentPos.y] = 0;
+                    reward = 10.0; energy += 10.0; foodHarvested++;
+                    document.getElementById('stat-food').innerText = foodHarvested;
+                    surprise = 0.70;
+                } else if (curCell === 6) {
+                    goalsSolved++; reward = 50.0; energy += 50.0;
+                    document.getElementById('hud-goals').innerText = goalsSolved;
+                    agentPos = { x: 3, y: 3 }; hasKey = false;
+                    grid[Math.floor(GRID_SIZE/2)][6] = 2;
+                    grid[Math.floor(GRID_SIZE/4)][4] = 3;
+                    document.getElementById('key-status-tag').innerText = 'NO KEY';
+                    document.getElementById('key-status-tag').className = 'badge badge-purple';
+                    surprise = 0.99;
+                }
+            }
+
+            if (surprise > 0.4) {
+                addEpisodicMemory(actions[chosenAction], reward, surprise);
+            }
+
+            if (tickCount % 200 === 0) {
+                triggerManualSleep();
+            }
+
+            // Update HUD
+            document.getElementById('hud-ticks').innerText = tickCount.toLocaleString();
+            document.getElementById('hud-energy').innerText = energy.toFixed(1);
+            document.getElementById('hud-surprise').innerText = surprise.toFixed(3);
+
+            updateVisionMatrix();
+            drawMaze();
+            if (tickCount % 5 === 0) drawTree();
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('status-mode-tag').innerText = m;
+            ['mcts', 'imag', 'react'].forEach(id => {
+                document.getElementById(`btn-mode-${id}`).classList.remove('btn-active');
+            });
+            if (m === 'MCTS') document.getElementById('btn-mode-mcts').classList.add('btn-active');
+            else if (m === 'IMAGINATION') document.getElementById('btn-mode-imag').classList.add('btn-active');
+            else document.getElementById('btn-mode-react').classList.add('btn-active');
+        }
+
+        function togglePlay() {
+            isRunning = !isRunning;
+            document.getElementById('btn-play-pause').innerText = isRunning ? '⏸️ Pause' : '▶️ Play';
+        }
+
+        function stepOnce() {
+            stepSimulation();
+        }
+
+        function setSpeed(s) {
+            speed = s;
+        }
+
+        // Main animation loop
+        let lastTime = 0;
+        function loop(timestamp) {
+            if (isRunning) {
+                for (let i = 0; i < speed; i++) {
+                    stepSimulation();
+                }
+            }
+            setTimeout(() => requestAnimationFrame(loop), 80);
+        }
+
+        window.onload = () => {
+            initEnvironment();
+            buildVisionMatrixUI();
+            updateVisionMatrix();
+            drawMaze();
+            drawTree();
+            requestAnimationFrame(loop);
+        };
+    </script>
+</body>
+</html>
