@@ -1151,6 +1151,22 @@
             }
         }
 
+        function resetAgentPosition() {
+            if (currentLevel === 1) {
+                agentPos = { x: 3, y: 2 };
+                agentDir = 2; // Facing South towards food
+            } else if (currentLevel === 2) {
+                agentPos = { x: 2, y: 2 };
+                agentDir = 1; // Facing East towards open path
+            } else if (currentLevel === 3) {
+                agentPos = { x: 3, y: 3 };
+                agentDir = 1; // Facing East towards open doorway
+            } else {
+                agentPos = { x: 3, y: 3 };
+                agentDir = 0;
+            }
+        }
+
         function getVisualObservation() {
             const half = Math.floor(VISION_SIZE / 2);
             const obs = new Float32Array(VISUAL_DIM);
@@ -1159,10 +1175,21 @@
             for (let vy = -half; vy <= half; vy++) {
                 for (let vx = -half; vx <= half; vx++) {
                     let gx = agentPos.x, gy = agentPos.y;
-                    if (agentDir === 0) { gx += vx; gy += vy; }
-                    else if (agentDir === 1) { gx += vy; gy -= vx; }
-                    else if (agentDir === 2) { gx -= vx; gy -= vy; }
-                    else { gx -= vy; gy += vx; }
+                    // vy is Longitudinal: -half (ahead/front) to +half (behind/back)
+                    // vx is Lateral: -half (left) to +half (right)
+                    if (agentDir === 0) { // North (ahead is dy = -1, right is dx = +1)
+                        gx += vx;
+                        gy += vy;
+                    } else if (agentDir === 1) { // East (ahead is dx = +1, right is dy = +1)
+                        gx -= vy;
+                        gy += vx;
+                    } else if (agentDir === 2) { // South (ahead is dy = +1, right is dx = -1)
+                        gx -= vx;
+                        gy -= vy;
+                    } else if (agentDir === 3) { // West (ahead is dx = -1, right is dy = -1)
+                        gx += vy;
+                        gy -= vx;
+                    }
 
                     if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
                         const cell = grid[gx][gy];
@@ -1323,8 +1350,7 @@
 
             if (energy <= 0.0) {
                 energy = 100.0;
-                agentPos = { x: 3, y: 3 };
-                agentDir = 0;
+                resetAgentPosition();
                 addLog("💀 Starvation — Respawned with 100.0 Energy.");
             }
 
