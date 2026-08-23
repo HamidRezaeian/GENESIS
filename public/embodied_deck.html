@@ -709,17 +709,31 @@
             }
             for (let i = 0; i < N_ACTIONS; i++) priors[i] /= (sumExp + 1e-9);
 
+            // AlphaZero / MuZero Standard: Inject Dirichlet root noise to prevent local entrapment
+            const noisyPriors = new Float32Array(N_ACTIONS);
+            let noiseSum = 0;
+            const noise = new Float32Array(N_ACTIONS);
+            for (let a = 0; a < N_ACTIONS; a++) {
+                const u = Math.max(1e-6, Math.random());
+                noise[a] = -Math.log(u);
+                noiseSum += noise[a];
+            }
+            const epsNoise = policyMode === 'DIRECTED' ? 0.20 : 0.40;
+            for (let a = 0; a < N_ACTIONS; a++) {
+                noisyPriors[a] = (1 - epsNoise) * priors[a] + epsNoise * (noise[a] / (noiseSum + 1e-9));
+            }
+
             const qValues = new Float32Array(N_ACTIONS);
             const visitCounts = new Int32Array(N_ACTIONS);
             const effectiveSims = policyMode === 'DIRECTED' ? 32 : 16;
-            const effectiveCpuct = policyMode === 'DIRECTED' ? 0.6 : 1.4;
+            const effectiveCpuct = policyMode === 'DIRECTED' ? 0.8 : 1.4;
 
             for (let sim = 0; sim < effectiveSims; sim++) {
                 let bestScore = -1e9, candidateA = 0;
                 const totalN = visitCounts.reduce((a, b) => a + b, 0);
 
                 for (let a = 0; a < N_ACTIONS; a++) {
-                    const u = effectiveCpuct * priors[a] * Math.sqrt(totalN + 1) / (1 + visitCounts[a]);
+                    const u = effectiveCpuct * noisyPriors[a] * Math.sqrt(totalN + 1) / (1 + visitCounts[a]);
                     const score = qValues[a] + u;
                     if (score > bestScore) {
                         bestScore = score;
