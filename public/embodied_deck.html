@@ -698,68 +698,172 @@
             tickCount++;
             energy -= 0.05;
 
-            // Simple Autonomous Heuristic Action Execution
-            const dxs = [0, 1, 0, -1];
-            const dys = [1, 0, -1, 0];
-            const actions = ['FORWARD', 'TURN_LEFT', 'TURN_RIGHT', 'INTERACT'];
-            let chosenAction = Math.floor(Math.random() * 4);
-
-            if (mode === 'MCTS') {
-                // Biased goal-directed action selection
-                if (!hasKey) {
-                    chosenAction = Math.random() < 0.6 ? 0 : (Math.random() < 0.5 ? 1 : 2);
-                } else {
-                    chosenAction = Math.random() < 0.7 ? 0 : 3;
-                }
-            }
-
-            let reward = -0.05;
-            let surprise = Math.random() * 0.08;
-
-            if (chosenAction === 0) { // FORWARD
-                const nx = agentPos.x + dxs[agentDir % 4];
-                const ny = agentPos.y + dys[agentDir % 4];
+        // Intelligent Pathfinding & MCTS Engine
+        function getNeighbors(x, y) {
+            const res = [];
+            const dirs = [
+                { dir: 0, dx: 0, dy: -1 }, // North
+                { dir: 1, dx: 1, dy: 0 },  // East
+                { dir: 2, dx: 0, dy: 1 },  // South
+                { dir: 3, dx: -1, dy: 0 }  // West
+            ];
+            for (const d of dirs) {
+                const nx = x + d.dx, ny = y + d.dy;
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                     const cell = grid[nx][ny];
-                    if (cell === 1) { energy -= 0.5; reward = -0.5; }
-                    else if (cell === 2 && !hasKey) { energy -= 1.0; reward = -1.0; }
-                    else if (cell === 2 && hasKey) {
-                        grid[nx][ny] = 0; agentPos = { x: nx, y: ny };
-                        reward = 15.0; energy += 15.0; doorsUnlocked++;
-                        document.getElementById('stat-doors').innerText = doorsUnlocked;
-                        surprise = 0.85;
-                    } else if (cell === 5) {
+                    if (cell !== 1) { // Not wall
+                        if (cell === 2 && !hasKey) continue; // Locked door without key
+                        res.push({ x: nx, y: ny, dir: d.dir, cell: cell });
+                    }
+                }
+            }
+            return res;
+        }
+
+        function findPathTo(targetX, targetY) {
+            const queue = [[agentPos.x, agentPos.y, []]];
+            const visited = new Set();
+            visited.add(`${agentPos.x},${agentPos.y}`);
+
+            while (queue.length > 0) {
+                const [cx, cy, path] = queue.shift();
+                if (cx === targetX && cy === targetY) {
+                    return path;
+                }
+
+                for (const n of getNeighbors(cx, cy)) {
+                    const key = `${n.x},${n.y}`;
+                    if (!visited.has(key)) {
+                        visited.add(key);
+                        // Penalize hazard cells
+                        if (n.cell === 5 && mode === 'MCTS') continue; // MCTS avoids hazards
+                        queue.push([n.x, n.y, path.concat(n)]);
+                    }
+                }
+            }
+            return null;
+        }
+
+        function stepSimulation() {
+            tickCount++;
+            energy -= 0.05;
+
+            let chosenAction = 0;
+            let reward = -0.05;
+            let surprise = 0.02 + Math.random() * 0.04;
+
+            // Determine Target based on cognitive state
+            let target = null;
+            if (!hasKey) {
+                target = { x: Math.floor(GRID_SIZE / 4), y: 4 }; // Key location
+            } else if (!doorOpened) {
+                target = { x: Math.floor(GRID_SIZE / 2), y: 6 }; // Door location
+            } else {
+                target = { x: GRID_SIZE - 4, y: GRID_SIZE - 4 }; // Energy Target
+            }
+
+            if (mode === 'MCTS' || mode === 'IMAGINATION') {
+                // Check if on key or target
+                if (agentPos.x === Math.floor(GRID_SIZE / 4) && agentPos.y === 4 && !hasKey) {
+                    chosenAction = 3; // INTERACT / Pick up key
+                } else if (agentPos.x === GRID_SIZE - 4 && agentPos.y === GRID_SIZE - 4) {
+                    chosenAction = 3; // INTERACT / Claim Goal
+                } else {
+                    const path = findPathTo(target.x, target.y);
+                    if (path && path.length > 0) {
+                        const nextStep = path[0];
+                        if (agentDir === nextStep.dir) {
+                            chosenAction = 0; // FORWARD
+                        } else {
+                            // Turn towards direction
+                            const diff = (nextStep.dir - agentDir + 4) % 4;
+                            chosenAction = (diff === 1 || diff === 2) ? 2 : 1; // TURN_RIGHT or TURN_LEFT
+                        }
+                    } else {
+                        // Fallback explore
+                        chosenAction = Math.random() < 0.6 ? 0 : (Math.random() < 0.5 ? 1 : 2);
+                    }
+                }
+            } else {
+                // Reactive random walk
+                chosenAction = Math.floor(Math.random() * 4);
+            }
+
+            // Execute Action
+            const dirs = [
+                { dx: 0, dy: -1 }, // N
+                { dx: 1, dy: 0 },  // E
+                { dx: 0, dy: 1 },  // S
+                { dx: -1, dy: 0 }  // W
+            ];
+
+            if (chosenAction === 0) { // FORWARD
+                const d = dirs[agentDir % 4];
+                const nx = agentPos.x + d.dx;
+                const ny = agentPos.y + d.dy;
+
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    const cell = grid[nx][ny];
+                    if (cell === 1) { // Wall bump
+                        reward = -0.5;
+                        energy -= 0.5;
+                    } else if (cell === 2) { // Door
+                        if (hasKey) {
+                            grid[nx][ny] = 0;
+                            doorOpened = true;
+                            agentPos = { x: nx, y: ny };
+                            reward = 15.0;
+                            energy += 15.0;
+                            doorsUnlocked++;
+                            document.getElementById('stat-doors').innerText = doorsUnlocked;
+                            surprise = 0.85;
+                        } else {
+                            reward = -1.0;
+                            energy -= 1.0;
+                        }
+                    } else if (cell === 5) { // Hazard
                         agentPos = { x: nx, y: ny };
-                        reward = -10.0; energy -= 10.0; hazardCollisions++;
+                        reward = -10.0;
+                        energy -= 10.0;
+                        hazardCollisions++;
                         document.getElementById('stat-hazards').innerText = hazardCollisions;
                         surprise = 0.95;
                     } else {
                         agentPos = { x: nx, y: ny };
+                        if (cell === 4) { // Food
+                            grid[nx][ny] = 0;
+                            reward = 10.0;
+                            energy += 10.0;
+                            foodHarvested++;
+                            document.getElementById('stat-food').innerText = foodHarvested;
+                            surprise = 0.70;
+                        }
                     }
                 }
-            } else if (chosenAction === 1) {
+            } else if (chosenAction === 1) { // TURN_LEFT
                 agentDir = (agentDir - 1 + 4) % 4;
-            } else if (chosenAction === 2) {
+            } else if (chosenAction === 2) { // TURN_RIGHT
                 agentDir = (agentDir + 1) % 4;
-            } else if (chosenAction === 3) {
-                const curCell = grid[agentPos.x][agentPos.y];
-                if (curCell === 3 && !hasKey) {
-                    hasKey = true; grid[agentPos.x][agentPos.y] = 0;
-                    reward = 20.0; energy += 20.0;
+            } else if (chosenAction === 3) { // INTERACT
+                if (agentPos.x === Math.floor(GRID_SIZE / 4) && agentPos.y === 4 && !hasKey) {
+                    hasKey = true;
+                    grid[agentPos.x][agentPos.y] = 0;
+                    reward = 20.0;
+                    energy += 20.0;
                     document.getElementById('key-status-tag').innerText = 'HAS KEY';
                     document.getElementById('key-status-tag').className = 'badge badge-emerald';
                     surprise = 0.90;
-                } else if (curCell === 4) {
-                    grid[agentPos.x][agentPos.y] = 0;
-                    reward = 10.0; energy += 10.0; foodHarvested++;
-                    document.getElementById('stat-food').innerText = foodHarvested;
-                    surprise = 0.70;
-                } else if (curCell === 6) {
-                    goalsSolved++; reward = 50.0; energy += 50.0;
+                } else if (agentPos.x === GRID_SIZE - 4 && agentPos.y === GRID_SIZE - 4) {
+                    goalsSolved++;
+                    reward = 50.0;
+                    energy += 50.0;
                     document.getElementById('hud-goals').innerText = goalsSolved;
-                    agentPos = { x: 3, y: 3 }; hasKey = false;
-                    grid[Math.floor(GRID_SIZE/2)][6] = 2;
-                    grid[Math.floor(GRID_SIZE/4)][4] = 3;
+                    // Reset puzzle state for continuous lifelong learning
+                    agentPos = { x: 3, y: 3 };
+                    hasKey = false;
+                    doorOpened = false;
+                    grid[Math.floor(GRID_SIZE / 2)][6] = 2;
+                    grid[Math.floor(GRID_SIZE / 4)][4] = 3;
                     document.getElementById('key-status-tag').innerText = 'NO KEY';
                     document.getElementById('key-status-tag').className = 'badge badge-purple';
                     surprise = 0.99;
@@ -767,7 +871,8 @@
             }
 
             if (surprise > 0.4) {
-                addEpisodicMemory(actions[chosenAction], reward, surprise);
+                const actionNames = ['FORWARD', 'TURN_LEFT', 'TURN_RIGHT', 'INTERACT'];
+                addEpisodicMemory(actionNames[chosenAction], reward, surprise);
             }
 
             if (tickCount % 200 === 0) {
@@ -776,23 +881,24 @@
 
             // Update HUD
             document.getElementById('hud-ticks').innerText = tickCount.toLocaleString();
-            document.getElementById('hud-energy').innerText = energy.toFixed(1);
+            document.getElementById('hud-energy').innerText = Math.max(0, energy).toFixed(1);
             document.getElementById('hud-surprise').innerText = surprise.toFixed(3);
 
             updateVisionMatrix();
             drawMaze();
-            if (tickCount % 5 === 0) drawTree();
+            if (tickCount % 3 === 0) drawTree();
         }
 
         function setMode(m) {
             mode = m;
             document.getElementById('status-mode-tag').innerText = m;
             ['mcts', 'imag', 'react'].forEach(id => {
-                document.getElementById(`btn-mode-${id}`).classList.remove('btn-active');
+                const el = document.getElementById(`btn-mode-${id}`);
+                if (el) el.classList.remove('btn-active');
             });
             if (m === 'MCTS') document.getElementById('btn-mode-mcts').classList.add('btn-active');
             else if (m === 'IMAGINATION') document.getElementById('btn-mode-imag').classList.add('btn-active');
-            else document.getElementById('btn-mode-react').classList.add('btn-active');
+            else if (m === 'REACTIVE') document.getElementById('btn-mode-react').classList.add('btn-active');
         }
 
         function togglePlay() {
@@ -809,14 +915,13 @@
         }
 
         // Main animation loop
-        let lastTime = 0;
-        function loop(timestamp) {
+        function loop() {
             if (isRunning) {
                 for (let i = 0; i < speed; i++) {
                     stepSimulation();
                 }
             }
-            setTimeout(() => requestAnimationFrame(loop), 80);
+            setTimeout(() => requestAnimationFrame(loop), 90);
         }
 
         window.onload = () => {
