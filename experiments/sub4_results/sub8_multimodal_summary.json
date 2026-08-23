@@ -1,0 +1,7 @@
+{
+  "train_FIND FOOD": 1,
+  "train_GET KEY": 1,
+  "train_NAVIGATE GOAL": 0,
+  "retention_solves_task1": 0,
+  "retention_rate_pct": 0.0
+}

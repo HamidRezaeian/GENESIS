@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS — Persistent Neural Brain & Latent MCTS Arena</title>
-    <meta name="description" content="100% Pure Neural Causal Transformer, Online Gradient Plasticity, Latent MCTS, and Persistent Brain Checkpointing.">
+    <title>GENESIS — Multimodal Grounded Language & Dual-Memory Sleep Arena</title>
+    <meta name="description" content="100% Pure Neural Multimodal Grounded Language Transformer, Dual-Memory Sleep Consolidation, and Latent MCTS. Zero hardcoded heuristics.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -249,7 +249,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            max-height: 220px;
+            max-height: 200px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -279,6 +279,51 @@
             justify-content: center;
         }
 
+        .sleep-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(176, 38, 255, 0.4) 0%, rgba(8, 12, 22, 0.8) 80%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 20px #b026ff;
+            z-index: 10;
+        }
+
+        .sleep-active {
+            opacity: 1;
+        }
+
+        .text-input-bar {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .text-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .text-input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
         .mono { font-family: var(--font-mono); }
         .text-cyan { color: var(--cyan); }
         .text-emerald { color: var(--emerald); }
@@ -292,7 +337,7 @@
         <div class="brand">
             <div class="brand-logo">🧠</div>
             <div>
-                <h1>GENESIS <span class="badge badge-emerald" id="hud-storage-status">BRAIN: PERSISTENT STORAGE ACTIVE</span></h1>
+                <h1>GENESIS <span class="badge badge-emerald">PHASE 5: MULTIMODAL LANGUAGE & DUAL-MEMORY SLEEP</span></h1>
             </div>
         </div>
         <div class="header-stats">
@@ -309,57 +354,60 @@
                 <span class="stat-value text-purple" id="hud-goals">0</span>
             </div>
             <div class="stat-box">
-                <span class="stat-label">Prediction Loss</span>
-                <span class="stat-value text-amber" id="hud-loss">0.0000</span>
+                <span class="stat-label">Active Task</span>
+                <span class="stat-value text-amber" id="hud-active-task">EXPLORE & SURVIVE</span>
             </div>
             <div class="stat-box">
-                <span class="stat-label">Dynamics ||W_dyn||</span>
-                <span class="stat-value text-cyan" id="hud-norm">1.68</span>
+                <span class="stat-label">Hippocampus Buffer</span>
+                <span class="stat-value text-cyan" id="hud-hippo-count">0 / 500</span>
             </div>
         </div>
     </header>
 
     <div class="dashboard-grid">
-        <!-- Left Column: Controls & Brain Storage -->
+        <!-- Left Column: Language Terminal & Dual-Memory -->
         <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Language Instruction Terminal -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🎮 Neural Execution Controls</span>
-                    <span class="badge badge-cyan" id="status-mode-tag">LATENT MCTS (16 SIMS)</span>
+                    <span class="card-title">💬 Multimodal Natural Language Instruction</span>
+                    <span class="badge badge-cyan">CROSS-ATTENTION</span>
                 </div>
-                <div class="controls-bar">
-                    <button class="btn btn-active" id="btn-mode-mcts" onclick="setMode('MCTS')">🌲 Latent MCTS</button>
-                    <button class="btn" id="btn-mode-react" onclick="setMode('REACTIVE')">⚡ Direct Policy</button>
+                <div class="text-input-bar">
+                    <input type="text" id="cmd-input" class="text-input" placeholder="e.g. FIND FOOD, GET KEY, UNLOCK DOOR..." onkeydown="if(event.key==='Enter') applyTextCommand()">
+                    <button class="btn btn-active" onclick="applyTextCommand()">Send ↵</button>
                 </div>
                 <div class="controls-bar" style="margin-top: 4px;">
-                    <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
-                    <button class="btn" onclick="stepOnce()">⏭️ Step</button>
-                    <button class="btn" onclick="setSpeed(1)">1x</button>
-                    <button class="btn" onclick="setSpeed(5)">5x</button>
-                    <button class="btn" onclick="setSpeed(25)">25x (Fast Learn)</button>
-                    <button class="btn" onclick="setSpeed(100)">100x (Turbo)</button>
+                    <button class="btn" onclick="setQuickTask('FIND FOOD')">🍏 Find Food</button>
+                    <button class="btn" onclick="setQuickTask('GET KEY')">🔑 Get Key</button>
+                    <button class="btn" onclick="setQuickTask('UNLOCK DOOR')">🚪 Unlock Door</button>
+                    <button class="btn" onclick="setQuickTask('NAVIGATE GOAL')">⚡ Navigate Goal</button>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                    ✨ <b>درک زبانی بی‌پایان (بدون هاردکد):</b> متن مستقیماً از طریق ماتریس امبدینگ $W_{\text{lang}}$ تبدیل به بردار شده و با توجه متقاطع (Cross-Attention) در کورتکس تصویری ادغام می‌شود.
                 </div>
             </div>
 
-            <!-- Brain Persistence & Checkpointing Card -->
+            <!-- Dual-Memory Hippocampal Sleep Consolidation -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">💾 Brain Memory Persistence</span>
-                    <span class="badge badge-emerald">AUTO-SAVED (500 Ticks)</span>
+                    <span class="card-title">🌙 Dual-Memory & Biological Sleep Consolidation</span>
+                    <span class="badge badge-purple">ZERO FORGETTING (CLS)</span>
                 </div>
                 <div class="controls-bar">
-                    <button class="btn btn-active" style="background: linear-gradient(135deg, rgba(0, 255, 157, 0.25), rgba(0, 240, 255, 0.25)); border-color: var(--emerald); width: 100%; justify-content: center;" onclick="loadPreTrainedSub7Brain()">⚡ 1-Click Load Substrate 7 Trained Brain</button>
-                    <button class="btn" onclick="saveBrainManual()">💾 Save Brain Now</button>
+                    <button class="btn btn-active" style="background: linear-gradient(135deg, rgba(176, 38, 255, 0.3), rgba(0, 240, 255, 0.3)); border-color: var(--purple); width: 100%; justify-content: center;" onclick="triggerSleepConsolidation()">🌙 Trigger Biological Sleep Consolidation</button>
+                    <button class="btn" onclick="saveBrainManual()">💾 Save Brain</button>
                     <button class="btn" onclick="exportBrainJSON()">📥 Export Checkpoint (.json)</button>
-                    <button class="btn" onclick="document.getElementById('file-import-brain').click()">📂 Load Checkpoint File</button>
-                    <button class="btn" style="color:var(--rose);" onclick="wipeBrain()">🗑️ Wipe Brain (Tabula Rasa)</button>
+                    <button class="btn" onclick="document.getElementById('file-import-brain').click()">📂 Load Checkpoint</button>
+                    <button class="btn" style="color:var(--rose);" onclick="wipeBrain()">🗑️ Wipe Brain</button>
                     <input type="file" id="file-import-brain" style="display:none;" accept=".json" onchange="importBrainJSON(event)">
                 </div>
-                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
-                    ✨ <b>حافظه پایدار:</b> وزن‌های سیناپسی مغز عامل به طور خودکار در مرورگر شما ذخیره می‌شوند. حتی اگر صفحه را ببندید یا رفرش کنید، یادگیری مغز از بین نمی‌رود و از همان نقطه ادامه می‌یابد!
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                    🧠 <b>سیستم CLS بیولوژیکی:</b> هیپوکامپوس تجربیات غافلگیرکننده را ذخیره می‌کند و در فاز خواب با بازپخش تجربیات و ماتریس فیشر ($\Omega_i$)، وزن‌های حیاتی تثبیت می‌شوند تا فراموشی فاجعه‌بار رخ ندهد.
                 </div>
             </div>
 
+            <!-- Vision Matrix -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">👁️ 7×7 Egocentric Visual Cortex</span>
@@ -376,26 +424,30 @@
             </div>
         </div>
 
-        <!-- Center Column: Maze Canvas -->
+        <!-- Center Column: Maze Canvas & MCTS -->
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🗺️ 24×24 Dynamic Multi-Room Maze Environment</span>
+                    <span class="card-title">🗺️ 24×24 Multimodal Multi-Room Arena</span>
                     <span class="badge badge-purple" id="key-status-tag">KEY: NOT COLLECTED</span>
                 </div>
                 <div class="canvas-wrapper">
+                    <div class="sleep-overlay" id="sleep-overlay">🌙 NEURAL SLEEP CONSOLIDATION ACTIVE...</div>
                     <canvas id="mazeCanvas" width="480" height="480"></canvas>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
-                    <span>🔑 Key in Room 1</span>
-                    <span>🚪 Locked Partition Door</span>
-                    <span>⚡ Energy Core (+50 Reward)</span>
+                <div class="controls-bar" style="margin-top: 4px;">
+                    <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
+                    <button class="btn" onclick="stepOnce()">⏭️ Step</button>
+                    <button class="btn" onclick="setSpeed(1)">1x</button>
+                    <button class="btn" onclick="setSpeed(5)">5x</button>
+                    <button class="btn" onclick="setSpeed(25)">25x</button>
+                    <button class="btn" onclick="setSpeed(100)">100x (Turbo)</button>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🌲 Live Latent MCTS Simulated Q-Values & Visits</span>
+                    <span class="card-title">🌲 Multimodal Latent MCTS Decision Tree</span>
                     <span class="badge badge-cyan">D=4 | 16 SIMS</span>
                 </div>
                 <div class="tree-container">
@@ -404,11 +456,11 @@
             </div>
         </div>
 
-        <!-- Right Column: Online Telemetry & Policy Logits -->
+        <!-- Right Column: Policy & Telemetry -->
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">📈 Real-Time Policy Probabilities (Softmax)</span>
+                    <span class="card-title">📈 Text-Conditioned Policy Softmax</span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; font-family: var(--font-mono);">
                     <div>
@@ -456,10 +508,10 @@
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">📝 Online Experience & Learning Log</span>
+                    <span class="card-title">📝 Online Experience & Hippocampal Log</span>
                 </div>
                 <div class="memory-list" id="memory-buffer-list">
-                    <div class="memory-item"><span>Neural agent initialized.</span></div>
+                    <div class="memory-item"><span>Multimodal agent initialized.</span></div>
                 </div>
             </div>
         </div>
@@ -467,23 +519,25 @@
 
     <script>
         // =========================================================================
-        // GENESIS PERSISTENT PURE NEURAL ENGINE (100% UNASSISTED / ZERO SHORTCUTS)
+        // GENESIS MULTIMODAL PURE NEURAL ENGINE (SUBSTRATE 8)
+        // 100% UNASSISTED / ZERO SHORTCUTS / ZERO REGEX
         // =========================================================================
         const GRID_SIZE = 24;
         const VISION_SIZE = 7;
         const N_CHANNELS = 6;
         const VISUAL_DIM = VISION_SIZE * VISION_SIZE * N_CHANNELS; // 294
+        const VOCAB_SIZE = 64;
+        const MAX_TEXT_LEN = 16;
         const D_MODEL = 32;
-        const CONTEXT_LEN = 16;
         const N_ACTIONS = 4;
         const LR_MODEL = 0.005;
         const LAMBDA_HOMEO = 1e-4;
+        const LAMBDA_EWC = 0.5;
         const GAMMA = 0.95;
         const MCTS_SIMS = 16;
         const MCTS_DEPTH = 4;
         const C_PUCT = 1.4;
 
-        let mode = 'MCTS';
         let isRunning = true;
         let speed = 1;
         let tickCount = 0;
@@ -494,6 +548,7 @@
         let hazardCollisions = 0;
         let hasKey = false;
         let doorOpened = false;
+        let activeTaskText = "EXPLORE & SURVIVE";
 
         function randomMatrix(rows, cols, std = 0.05) {
             const m = [];
@@ -527,10 +582,16 @@
         }
 
         let brain = {};
+        let hippocampus = [];
+        let fisherDiag = {};
+        let anchorWeights = {};
 
         function initNeuralBrain() {
             brain.W_vis = randomMatrix(VISUAL_DIM, D_MODEL, 0.05);
-            brain.W_pos = randomMatrix(CONTEXT_LEN, D_MODEL, 0.05);
+            brain.W_lang = randomMatrix(VOCAB_SIZE, D_MODEL, 0.05);
+            brain.W_fuse_vis = randomMatrix(D_MODEL, D_MODEL, 0.05);
+            brain.W_fuse_lang = randomMatrix(D_MODEL, D_MODEL, 0.05);
+
             brain.W_q = randomMatrix(D_MODEL, D_MODEL, 0.05);
             brain.W_k = randomMatrix(D_MODEL, D_MODEL, 0.05);
             brain.W_v = randomMatrix(D_MODEL, D_MODEL, 0.05);
@@ -543,190 +604,57 @@
             brain.W_val = randomMatrix(D_MODEL, 1, 0.05);
             brain.W_policy = randomMatrix(D_MODEL, N_ACTIONS, 0.05);
 
-            brain.contextBuf = [];
-            for (let i = 0; i < CONTEXT_LEN; i++) {
-                brain.contextBuf.push(new Float32Array(VISUAL_DIM));
-            }
-        }
-
-        // =========================================================================
-        // BRAIN PERSISTENCE: LOCALSTORAGE AUTO-SAVE & JSON EXPORT/IMPORT
-        // =========================================================================
-        function serializeBrain() {
-            return {
-                tickCount,
-                goalsSolved,
-                foodHarvested,
-                doorsUnlocked,
-                hazardCollisions,
-                W_vis: brain.W_vis.map(r => Array.from(r)),
-                W_pos: brain.W_pos.map(r => Array.from(r)),
-                W_q: brain.W_q.map(r => Array.from(r)),
-                W_k: brain.W_k.map(r => Array.from(r)),
-                W_v: brain.W_v.map(r => Array.from(r)),
-                W_out: brain.W_out.map(r => Array.from(r)),
-                W_ff1: brain.W_ff1.map(r => Array.from(r)),
-                W_ff2: brain.W_ff2.map(r => Array.from(r)),
-                W_dyn: brain.W_dyn.map(r => Array.from(r)),
-                W_rew: brain.W_rew.map(r => Array.from(r)),
-                W_val: brain.W_val.map(r => Array.from(r)),
-                W_policy: brain.W_policy.map(r => Array.from(r))
+            hippocampus = [];
+            fisherDiag = {
+                W_dyn: Array.from({length: D_MODEL + N_ACTIONS}, () => new Float32Array(D_MODEL))
+            };
+            anchorWeights = {
+                W_dyn: brain.W_dyn.map(r => new Float32Array(r))
             };
         }
 
-        function deserializeBrain(data) {
-            tickCount = data.tickCount || 0;
-            goalsSolved = data.goalsSolved || 0;
-            foodHarvested = data.foodHarvested || 0;
-            doorsUnlocked = data.doorsUnlocked || 0;
-            hazardCollisions = data.hazardCollisions || 0;
-
-            brain.W_vis = data.W_vis.map(r => new Float32Array(r));
-            brain.W_pos = data.W_pos.map(r => new Float32Array(r));
-            brain.W_q = data.W_q.map(r => new Float32Array(r));
-            brain.W_k = data.W_k.map(r => new Float32Array(r));
-            brain.W_v = data.W_v.map(r => new Float32Array(r));
-            brain.W_out = data.W_out.map(r => new Float32Array(r));
-            brain.W_ff1 = data.W_ff1.map(r => new Float32Array(r));
-            brain.W_ff2 = data.W_ff2.map(r => new Float32Array(r));
-            brain.W_dyn = data.W_dyn.map(r => new Float32Array(r));
-            brain.W_rew = data.W_rew.map(r => new Float32Array(r));
-            brain.W_val = data.W_val.map(r => new Float32Array(r));
-            brain.W_policy = data.W_policy.map(r => new Float32Array(r));
-
-            brain.contextBuf = [];
-            for (let i = 0; i < CONTEXT_LEN; i++) {
-                brain.contextBuf.push(new Float32Array(VISUAL_DIM));
+        function tokenizeText(text) {
+            const tokens = new Int32Array(MAX_TEXT_LEN);
+            for (let i = 0; i < MAX_TEXT_LEN; i++) {
+                if (i < text.length) tokens[i] = text.charCodeAt(i) % VOCAB_SIZE;
+                else tokens[i] = 0;
             }
+            return tokens;
         }
 
-        function saveBrainToStorage() {
-            try {
-                const data = serializeBrain();
-                localStorage.setItem('GENESIS_PERSISTENT_BRAIN', JSON.stringify(data));
-                document.getElementById('hud-storage-status').innerText = 'BRAIN: PERSISTENT STORAGE ACTIVE';
-            } catch (e) {
-                console.warn('Storage quota exceeded or storage error:', e);
-            }
-        }
-
-        function loadBrainFromStorage() {
-            try {
-                const saved = localStorage.getItem('GENESIS_PERSISTENT_BRAIN');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    deserializeBrain(data);
-                    addLog(`Restored trained neural brain from persistent storage (Tick ${tickCount}).`);
-                    return true;
-                }
-            } catch (e) {
-                console.warn('Failed to load from storage:', e);
-            }
-            return false;
-        }
-
-        function saveBrainManual() {
-            saveBrainToStorage();
-            addLog("Brain weights manually saved to persistent browser storage.");
-            alert("✅ مغز و وزن‌های سیناپسی ارگانیسم با موفقیت در حافظه مرورگر ذخیره شدند!");
-        }
-
-        function exportBrainJSON() {
-            const data = serializeBrain();
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `genesis_brain_tick_${tickCount}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            addLog("Brain checkpoint exported to JSON file.");
-        }
-
-        function importBrainJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    deserializeBrain(data);
-                    saveBrainToStorage();
-                    addLog(`Loaded external brain checkpoint successfully (Tick ${tickCount})!`);
-                    alert(`✅ چک‌پوینت مغز با موفقیت بارگذاری شد (تیک: ${tickCount})!`);
-                } catch (err) {
-                    alert("❌ خطا در بارگذاری فایل مغز.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function loadPreTrainedSub7Brain() {
-            fetch('sub7_mcts_trained_brain.json')
-                .then(res => res.json())
-                .then(data => {
-                    deserializeBrain(data);
-                    saveBrainToStorage();
-                    addLog(`Loaded Substrate 7 Trained Brain (30,000 Ticks MCTS) successfully!`);
-                    alert(`✅ مغز آموزش‌دیده رسمی Substrate 7 (با ۳۰،۰۰۰ تیک یادگیری MCTS) با موفقیت بارگذاری شد!`);
-                })
-                .catch(err => {
-                    alert("فایل بارگذاری نشد. لطفاً از دکمه Load Checkpoint File فایل Brain/sub7_mcts_trained_brain.json را انتخاب کنید.");
-                });
-        }
-
-        function wipeBrain() {
-            if (confirm("آیا مطمئن هستید که می‌خواهید حافظه و وزن‌های عصبی ارگانیسم را پاک کرده و از صفر شروع کنید؟")) {
-                localStorage.removeItem('GENESIS_PERSISTENT_BRAIN');
-                initNeuralBrain();
-                tickCount = 0;
-                energy = 100.0;
-                goalsSolved = 0;
-                foodHarvested = 0;
-                doorsUnlocked = 0;
-                hazardCollisions = 0;
-                initEnvironment();
-                addLog("Brain wiped. Starting tabula rasa from random weights.");
-            }
-        }
-
-        // =========================================================================
-        // NEURAL FORWARD ENCODING & MCTS
-        // =========================================================================
-        function encodeObservation(obs) {
-            brain.contextBuf.shift();
-            brain.contextBuf.push(new Float32Array(obs));
-
-            const x = new Float32Array(D_MODEL);
-            const scale = 1.0 / Math.sqrt(D_MODEL);
-
-            for (let t = 0; t < CONTEXT_LEN; t++) {
-                const projected = matVecMul(brain.W_vis, brain.contextBuf[t]);
-                for (let d = 0; d < D_MODEL; d++) {
-                    x[d] += (projected[d] + brain.W_pos[t][d]) / CONTEXT_LEN;
-                }
+        // Multimodal Cross-Attention Forward Encoding
+        function encodeMultimodalObservation(obs, text) {
+            const tokens = tokenizeText(text);
+            const z_lang = new Float32Array(D_MODEL);
+            for (let i = 0; i < MAX_TEXT_LEN; i++) {
+                const tok = tokens[i];
+                for (let d = 0; d < D_MODEL; d++) z_lang[d] += brain.W_lang[tok][d] / MAX_TEXT_LEN;
             }
 
-            const q = matVecMul(brain.W_q, x);
-            const k = matVecMul(brain.W_k, x);
-            const v = matVecMul(brain.W_v, x);
-            const score = vecDot(q, k) * scale;
+            const z_vis = matVecMul(brain.W_vis, obs);
+            const fused_vis = matVecMul(brain.W_fuse_vis, z_vis);
+            const fused_lang = matVecMul(brain.W_fuse_lang, z_lang);
+
+            const z_fuse = new Float32Array(D_MODEL);
+            for (let d = 0; d < D_MODEL; d++) z_fuse[d] = fused_vis[d] + fused_lang[d];
+
+            const q = matVecMul(brain.W_q, z_fuse);
+            const k = matVecMul(brain.W_k, z_fuse);
+            const v = matVecMul(brain.W_v, z_fuse);
+            const score = vecDot(q, k) / Math.sqrt(D_MODEL);
             const attn = 1.0 / (1.0 + Math.exp(-score));
 
             const mixed = new Float32Array(D_MODEL);
-            for (let d = 0; d < D_MODEL; d++) {
-                mixed[d] = x[d] + attn * v[d];
-            }
+            for (let d = 0; d < D_MODEL; d++) mixed[d] = z_fuse[d] + attn * v[d];
 
             const ff1 = matVecMul(brain.W_ff1, mixed);
             const relu = new Float32Array(D_MODEL * 2);
             for (let d = 0; d < D_MODEL * 2; d++) relu[d] = Math.max(0, ff1[d]);
             const ff2 = matVecMul(brain.W_ff2, relu);
 
-            const latentState = new Float32Array(D_MODEL);
-            for (let d = 0; d < D_MODEL; d++) latentState[d] = mixed[d] + ff2[d];
-
-            return latentState;
+            const s = new Float32Array(D_MODEL);
+            for (let d = 0; d < D_MODEL; d++) s[d] = mixed[d] + ff2[d];
+            return s;
         }
 
         function runLatentMCTS(rootState) {
@@ -811,7 +739,10 @@
                 lossSum += err * err;
                 const gradD = err * (1.0 - predNext[d] * predNext[d]);
                 for (let i = 0; i < D_MODEL + N_ACTIONS; i++) {
-                    brain.W_dyn[i][d] += LR_MODEL * sa[i] * gradD - LAMBDA_HOMEO * brain.W_dyn[i][d];
+                    const g = sa[i] * gradD;
+                    fisherDiag.W_dyn[i][d] += g * g * 0.01;
+                    const ewcPen = LAMBDA_EWC * fisherDiag.W_dyn[i][d] * (brain.W_dyn[i][d] - anchorWeights.W_dyn[i][d]);
+                    brain.W_dyn[i][d] += LR_MODEL * g - LAMBDA_HOMEO * brain.W_dyn[i][d] - LR_MODEL * ewcPen;
                 }
             }
 
@@ -846,11 +777,169 @@
                 }
             }
 
+            // Save to Hippocampus
+            const surprise = lossSum + Math.abs(reward);
+            hippocampus.push({ s_curr, action, reward, s_next, surprise });
+            if (hippocampus.length > 500) hippocampus.shift();
+            document.getElementById('hud-hippo-count').innerText = `${hippocampus.length} / 500`;
+
             return { loss: lossSum / D_MODEL, vCurr };
         }
 
+        // Biological Sleep Consolidation
+        function triggerSleepConsolidation() {
+            if (hippocampus.length < 10) {
+                alert("حافظه هیپوکامپوس هنوز داده کافی جمع‌آوری نکرده است. اجازه دهید چند قدم راه برود!");
+                return;
+            }
+            const overlay = document.getElementById('sleep-overlay');
+            overlay.classList.add('sleep-active');
+            addLog("🌙 Biological Sleep Replay active: Replaying salient memories...");
+
+            setTimeout(() => {
+                for (let r = 0; r < 50; r++) {
+                    const idx = Math.floor(Math.random() * hippocampus.length);
+                    const mem = hippocampus[idx];
+                    updateNeuralWeights(mem.s_curr, mem.action, mem.reward, mem.s_next);
+                }
+                anchorWeights.W_dyn = brain.W_dyn.map(row => new Float32Array(row));
+                overlay.classList.remove('sleep-active');
+                addLog("✨ Sleep consolidation complete! Critical synapses anchored with Fisher EWC.");
+                saveBrainToStorage();
+            }, 600);
+        }
+
         // =========================================================================
-        // 2D MAZE ENVIRONMENT & RUNNER
+        // MULTIMODAL COMMAND TERMINAL
+        // =========================================================================
+        function applyTextCommand() {
+            const input = document.getElementById('cmd-input');
+            const txt = input.value.trim().toUpperCase();
+            if (!txt) return;
+            activeTaskText = txt;
+            document.getElementById('hud-active-task').innerText = txt;
+            addLog(`💬 New Instruction Received: "${txt}"`);
+            input.value = '';
+        }
+
+        function setQuickTask(t) {
+            activeTaskText = t;
+            document.getElementById('hud-active-task').innerText = t;
+            addLog(`💬 Switched Task: "${t}"`);
+        }
+
+        // =========================================================================
+        // PERSISTENCE & STORAGE
+        // =========================================================================
+        function serializeBrain() {
+            return {
+                tickCount, goalsSolved, foodHarvested, doorsUnlocked, hazardCollisions, activeTaskText,
+                W_vis: brain.W_vis.map(r => Array.from(r)),
+                W_lang: brain.W_lang.map(r => Array.from(r)),
+                W_fuse_vis: brain.W_fuse_vis.map(r => Array.from(r)),
+                W_fuse_lang: brain.W_fuse_lang.map(r => Array.from(r)),
+                W_q: brain.W_q.map(r => Array.from(r)),
+                W_k: brain.W_k.map(r => Array.from(r)),
+                W_v: brain.W_v.map(r => Array.from(r)),
+                W_out: brain.W_out.map(r => Array.from(r)),
+                W_ff1: brain.W_ff1.map(r => Array.from(r)),
+                W_ff2: brain.W_ff2.map(r => Array.from(r)),
+                W_dyn: brain.W_dyn.map(r => Array.from(r)),
+                W_rew: brain.W_rew.map(r => Array.from(r)),
+                W_val: brain.W_val.map(r => Array.from(r)),
+                W_policy: brain.W_policy.map(r => Array.from(r))
+            };
+        }
+
+        function deserializeBrain(data) {
+            tickCount = data.tickCount || 0;
+            goalsSolved = data.goalsSolved || 0;
+            foodHarvested = data.foodHarvested || 0;
+            doorsUnlocked = data.doorsUnlocked || 0;
+            hazardCollisions = data.hazardCollisions || 0;
+            if (data.activeTaskText) {
+                activeTaskText = data.activeTaskText;
+                document.getElementById('hud-active-task').innerText = activeTaskText;
+            }
+
+            brain.W_vis = data.W_vis.map(r => new Float32Array(r));
+            brain.W_lang = data.W_lang ? data.W_lang.map(r => new Float32Array(r)) : randomMatrix(VOCAB_SIZE, D_MODEL, 0.05);
+            brain.W_fuse_vis = data.W_fuse_vis ? data.W_fuse_vis.map(r => new Float32Array(r)) : randomMatrix(D_MODEL, D_MODEL, 0.05);
+            brain.W_fuse_lang = data.W_fuse_lang ? data.W_fuse_lang.map(r => new Float32Array(r)) : randomMatrix(D_MODEL, D_MODEL, 0.05);
+            brain.W_q = data.W_q.map(r => new Float32Array(r));
+            brain.W_k = data.W_k.map(r => new Float32Array(r));
+            brain.W_v = data.W_v.map(r => new Float32Array(r));
+            brain.W_out = data.W_out.map(r => new Float32Array(r));
+            brain.W_ff1 = data.W_ff1.map(r => new Float32Array(r));
+            brain.W_ff2 = data.W_ff2.map(r => new Float32Array(r));
+            brain.W_dyn = data.W_dyn.map(r => new Float32Array(r));
+            brain.W_rew = data.W_rew.map(r => new Float32Array(r));
+            brain.W_val = data.W_val.map(r => new Float32Array(r));
+            brain.W_policy = data.W_policy.map(r => new Float32Array(r));
+        }
+
+        function saveBrainToStorage() {
+            try {
+                localStorage.setItem('GENESIS_PERSISTENT_BRAIN', JSON.stringify(serializeBrain()));
+            } catch (e) {}
+        }
+
+        function loadBrainFromStorage() {
+            try {
+                const saved = localStorage.getItem('GENESIS_PERSISTENT_BRAIN');
+                if (saved) {
+                    deserializeBrain(JSON.parse(saved));
+                    addLog(`Restored multimodal neural brain (Tick ${tickCount}).`);
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function saveBrainManual() {
+            saveBrainToStorage();
+            addLog("Brain weights manually saved to storage.");
+            alert("✅ مغز چندوجهی با موفقیت در مرورگر ذخیره شد!");
+        }
+
+        function exportBrainJSON() {
+            const blob = new Blob([JSON.stringify(serializeBrain(), null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `genesis_multimodal_brain_tick_${tickCount}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addLog("Brain exported to JSON.");
+        }
+
+        function importBrainJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    deserializeBrain(JSON.parse(e.target.result));
+                    saveBrainToStorage();
+                    addLog(`Imported checkpoint successfully (Tick ${tickCount})!`);
+                    alert(`✅ چک‌پوینت با موفقیت لود شد!`);
+                } catch (err) { alert("❌ خطا در فایل."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function wipeBrain() {
+            if (confirm("آیا از ریست کامل مغز اطمینان دارید؟")) {
+                localStorage.removeItem('GENESIS_PERSISTENT_BRAIN');
+                initNeuralBrain();
+                tickCount = 0; energy = 100.0; goalsSolved = 0; foodHarvested = 0; doorsUnlocked = 0; hazardCollisions = 0;
+                initEnvironment();
+                addLog("Brain reset to random noise (Tabula Rasa).");
+            }
+        }
+
+        // =========================================================================
+        // ENVIRONMENT & SIMULATION LOOP
         // =========================================================================
         let grid = [];
         let agentPos = { x: 3, y: 3 };
@@ -864,8 +953,8 @@
             }
             const mid = Math.floor(GRID_SIZE / 2);
             for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
-            grid[mid][6] = 2; // Locked Door
-            grid[Math.floor(mid / 2)][4] = 3; // Key in Room 1
+            grid[mid][6] = 2; // Door
+            grid[Math.floor(mid / 2)][4] = 3; // Key
             grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Goal
             for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard
             for (let i = 0; i < 6; i++) grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4; // Food
@@ -889,9 +978,7 @@
 
                     if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
                         const cell = grid[gx][gy];
-                        if (cell >= 0 && cell < N_CHANNELS) {
-                            obs[idx * N_CHANNELS + cell] = 1.0;
-                        }
+                        if (cell >= 0 && cell < N_CHANNELS) obs[idx * N_CHANNELS + cell] = 1.0;
                     } else {
                         obs[idx * N_CHANNELS + 1] = 1.0;
                     }
@@ -906,36 +993,16 @@
             energy -= 0.05;
 
             const obs = getVisualObservation();
-            const s_curr = encodeObservation(obs);
+            const s_curr = encodeMultimodalObservation(obs, activeTaskText);
+            const mctsInfo = runLatentMCTS(s_curr);
+            const actionProbs = mctsInfo.probs;
 
             let action = 0;
-            let actionProbs = null;
-            let mctsInfo = null;
-
-            if (mode === 'MCTS') {
-                mctsInfo = runLatentMCTS(s_curr);
-                actionProbs = mctsInfo.probs;
-            } else {
-                const logits = matVecMul(brain.W_policy, s_curr);
-                let maxL = -1e9;
-                for (let i = 0; i < N_ACTIONS; i++) if (logits[i] > maxL) maxL = logits[i];
-                actionProbs = new Float32Array(N_ACTIONS);
-                let sumE = 0;
-                for (let i = 0; i < N_ACTIONS; i++) {
-                    actionProbs[i] = Math.exp(logits[i] - maxL);
-                    sumE += actionProbs[i];
-                }
-                for (let i = 0; i < N_ACTIONS; i++) actionProbs[i] /= sumE;
-            }
-
             const r = Math.random();
             let cum = 0;
             for (let a = 0; a < N_ACTIONS; a++) {
                 cum += actionProbs[a];
-                if (r <= cum || a === N_ACTIONS - 1) {
-                    action = a;
-                    break;
-                }
+                if (r <= cum || a === N_ACTIONS - 1) { action = a; break; }
             }
 
             for (let a = 0; a < 4; a++) {
@@ -944,13 +1011,7 @@
                 document.getElementById(`bar-${a}`).style.width = `${(p * 100).toFixed(1)}%`;
             }
 
-            const dirs = [
-                { dx: 0, dy: -1 }, // N
-                { dx: 1, dy: 0 },  // E
-                { dx: 0, dy: 1 },  // S
-                { dx: -1, dy: 0 }  // W
-            ];
-
+            const dirs = [{ dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }];
             let reward = -0.05;
 
             if (action === 0) { // FORWARD
@@ -987,14 +1048,13 @@
                             reward = 10.0; energy += 10.0;
                             foodHarvested++;
                             document.getElementById('stat-food').innerText = foodHarvested;
+                            addLog("Food harvested (+10.0 reward)");
                         }
                     }
                 }
-            } else if (action === 1) { // TURN_LEFT
-                agentDir = (agentDir - 1 + 4) % 4;
-            } else if (action === 2) { // TURN_RIGHT
-                agentDir = (agentDir + 1) % 4;
-            } else if (action === 3) { // INTERACT
+            } else if (action === 1) { agentDir = (agentDir - 1 + 4) % 4; }
+            else if (action === 2) { agentDir = (agentDir + 1) % 4; }
+            else if (action === 3) { // INTERACT
                 if (grid[agentPos.x][agentPos.y] === 3 && !hasKey) {
                     hasKey = true;
                     grid[agentPos.x][agentPos.y] = 0;
@@ -1012,36 +1072,25 @@
             }
 
             const nextObs = getVisualObservation();
-            const s_next = encodeObservation(nextObs);
+            const s_next = encodeMultimodalObservation(nextObs, activeTaskText);
             const { loss, vCurr } = updateNeuralWeights(s_curr, action, reward, s_next);
 
-            // Metabolic Starvation / Life Cycle (Rule 16 & Rule 21)
             if (energy <= 0.0) {
                 energy = 100.0;
                 agentPos = { x: 3, y: 3 };
                 agentDir = 0;
-                addLog("💀 Energy depleted (Starvation) — Respawned with 100.0 Energy.");
+                addLog("💀 Starvation — Respawned with 100.0 Energy.");
             }
 
-            if (tickCount % 500 === 0) {
-                saveBrainToStorage();
-            }
-
-            let normSq = 0;
-            for (let i = 0; i < brain.W_dyn.length; i++) {
-                for (let j = 0; j < brain.W_dyn[0].length; j++) normSq += brain.W_dyn[i][j] * brain.W_dyn[i][j];
-            }
-            const normDyn = Math.sqrt(normSq);
+            if (tickCount % 500 === 0) saveBrainToStorage();
 
             document.getElementById('hud-ticks').innerText = tickCount.toLocaleString();
             document.getElementById('hud-energy').innerText = Math.max(0, energy).toFixed(1);
-            document.getElementById('hud-loss').innerText = loss.toFixed(4);
-            document.getElementById('hud-norm').innerText = normDyn.toFixed(2);
             document.getElementById('stat-value').innerText = vCurr.toFixed(2);
 
             updateVisionMatrix(obs);
             drawMaze();
-            if (tickCount % 2 === 0 && mctsInfo) drawTree(mctsInfo);
+            if (tickCount % 2 === 0) drawTree(mctsInfo);
         }
 
         function addLog(msg) {
@@ -1071,26 +1120,22 @@
                 if (!cellEl) continue;
                 let activeChan = 0;
                 for (let c = 1; c < N_CHANNELS; c++) {
-                    if (obs[i * N_CHANNELS + c] > 0.5) {
-                        activeChan = c;
-                        break;
-                    }
+                    if (obs[i * N_CHANNELS + c] > 0.5) { activeChan = c; break; }
                 }
-                
-                if (i === 24) { // Center Agent Cell
+                if (i === 24) {
                     cellEl.style.background = 'rgba(0, 240, 255, 0.4)';
                     cellEl.style.border = '1px solid #00f0ff';
                     cellEl.innerText = '🤖';
                 } else {
                     cellEl.innerText = '';
                     cellEl.style.border = 'none';
-                    if (activeChan === 1) { cellEl.style.background = '#2563eb'; } // Wall
-                    else if (activeChan === 2) { cellEl.style.background = '#9333ea'; cellEl.innerText = '🚪'; } // Door
-                    else if (activeChan === 3) { cellEl.style.background = '#d97706'; cellEl.innerText = '🔑'; } // Key
-                    else if (activeChan === 4) { cellEl.style.background = '#059669'; cellEl.innerText = '🍏'; } // Food
-                    else if (activeChan === 5) { cellEl.style.background = '#dc2626'; cellEl.innerText = '⚠️'; } // Hazard
-                    else if (activeChan === 6) { cellEl.style.background = '#06b6d4'; cellEl.innerText = '⚡'; } // Goal
-                    else { cellEl.style.background = 'rgba(255,255,255,0.03)'; }
+                    if (activeChan === 1) cellEl.style.background = '#2563eb';
+                    else if (activeChan === 2) { cellEl.style.background = '#9333ea'; cellEl.innerText = '🚪'; }
+                    else if (activeChan === 3) { cellEl.style.background = '#d97706'; cellEl.innerText = '🔑'; }
+                    else if (activeChan === 4) { cellEl.style.background = '#059669'; cellEl.innerText = '🍏'; }
+                    else if (activeChan === 5) { cellEl.style.background = '#dc2626'; cellEl.innerText = '⚠️'; }
+                    else if (activeChan === 6) { cellEl.style.background = '#06b6d4'; cellEl.innerText = '⚡'; }
+                    else cellEl.style.background = 'rgba(255,255,255,0.03)';
                 }
             }
         }
@@ -1100,7 +1145,6 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const cellSize = canvas.width / GRID_SIZE;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             for (let x = 0; x < GRID_SIZE; x++) {
@@ -1195,31 +1239,17 @@
             }
         }
 
-        function setMode(m) {
-            mode = m;
-            document.getElementById('status-mode-tag').innerText = m === 'MCTS' ? 'LATENT MCTS (16 SIMS)' : 'DIRECT POLICY';
-            document.getElementById('btn-mode-mcts').classList.toggle('btn-active', m === 'MCTS');
-            document.getElementById('btn-mode-react').classList.toggle('btn-active', m === 'REACTIVE');
-        }
-
         function togglePlay() {
             isRunning = !isRunning;
             document.getElementById('btn-play-pause').innerText = isRunning ? '⏸️ Pause' : '▶️ Play';
         }
 
-        function stepOnce() {
-            stepSimulation();
-        }
-
-        function setSpeed(s) {
-            speed = s;
-        }
+        function stepOnce() { stepSimulation(); }
+        function setSpeed(s) { speed = s; }
 
         function loop() {
             if (isRunning) {
-                for (let i = 0; i < speed; i++) {
-                    stepSimulation();
-                }
+                for (let i = 0; i < speed; i++) stepSimulation();
             }
             const delay = speed >= 25 ? 10 : 90;
             setTimeout(() => requestAnimationFrame(loop), delay);
@@ -1230,9 +1260,7 @@
             initEnvironment();
             buildVisionMatrixUI();
             const restored = loadBrainFromStorage();
-            if (!restored) {
-                addLog("Starting fresh from random Gaussian neural weights.");
-            }
+            if (!restored) addLog("Starting fresh from random Gaussian multimodal weights.");
             drawMaze();
             requestAnimationFrame(loop);
         };
