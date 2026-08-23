@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS — Embodied Cognitive Architecture & World Model Deck</title>
-    <meta name="description" content="Interactive Observation Deck for GENESIS 4-Phase Embodied AI, Latent MCTS, Visual Perception, and Sleep Consolidation">
+    <title>GENESIS — Embodied Cognitive Architecture & Escalating Difficulty Arena</title>
+    <meta name="description" content="Adaptive Procedural Escalating Curriculum Deck for GENESIS Latent MCTS, Visual Perception, and Embodied Reasoning">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -42,12 +42,11 @@
             overflow-x: hidden;
         }
 
-        /* Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 28px;
+            padding: 14px 28px;
             background: rgba(8, 12, 22, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-subtle);
@@ -77,7 +76,7 @@
         }
 
         .brand h1 {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             letter-spacing: 0.5px;
             display: flex;
@@ -96,11 +95,13 @@
 
         .badge-cyan { background: rgba(0, 240, 255, 0.15); color: var(--cyan); border: 1px solid rgba(0, 240, 255, 0.3); }
         .badge-emerald { background: rgba(0, 255, 157, 0.15); color: var(--emerald); border: 1px solid rgba(0, 255, 157, 0.3); }
+        .badge-amber { background: rgba(255, 184, 0, 0.15); color: var(--amber); border: 1px solid rgba(255, 184, 0, 0.3); }
+        .badge-rose { background: rgba(255, 51, 102, 0.15); color: var(--rose); border: 1px solid rgba(255, 51, 102, 0.3); }
         .badge-purple { background: rgba(176, 38, 255, 0.15); color: var(--purple); border: 1px solid rgba(176, 38, 255, 0.3); }
 
         .header-stats {
             display: flex;
-            gap: 16px;
+            gap: 12px;
         }
 
         .stat-box {
@@ -125,12 +126,11 @@
             font-weight: 700;
         }
 
-        /* Main Grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 440px 1fr 380px;
             gap: 20px;
-            padding: 24px 28px;
+            padding: 20px 28px;
             max-width: 1920px;
             margin: 0 auto;
         }
@@ -140,10 +140,10 @@
             backdrop-filter: blur(12px);
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
-            padding: 18px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
@@ -166,7 +166,7 @@
         }
 
         .card-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -175,7 +175,7 @@
 
         .controls-bar {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
@@ -183,9 +183,9 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-subtle);
             color: var(--text-main);
-            padding: 8px 12px;
+            padding: 7px 12px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -208,6 +208,12 @@
             box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
         }
 
+        .btn-level {
+            padding: 4px 8px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+        }
+
         .canvas-wrapper {
             background: #04060b;
             border: 1px solid var(--border-subtle);
@@ -215,7 +221,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            padding: 8px;
             position: relative;
         }
 
@@ -229,7 +235,7 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
             background: #04060b;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
             border: 1px solid var(--border-subtle);
         }
@@ -248,8 +254,8 @@
         .memory-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            max-height: 280px;
+            gap: 6px;
+            max-height: 250px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -258,11 +264,11 @@
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 7px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 11px;
             font-family: var(--font-mono);
             transition: all 0.2s ease;
         }
@@ -281,7 +287,7 @@
             background: #04060b;
             border: 1px solid var(--border-subtle);
             border-radius: 10px;
-            height: 200px;
+            height: 180px;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -289,10 +295,33 @@
             justify-content: center;
         }
 
+        .level-up-banner {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.9), rgba(176, 38, 255, 0.9));
+            color: #000;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            z-index: 50;
+        }
+
+        .level-up-active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(10px) scale(1.1);
+        }
+
         .sleep-pulse {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle, rgba(176, 38, 255, 0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(176, 38, 255, 0.35) 0%, transparent 70%);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -321,10 +350,14 @@
         <div class="brand">
             <div class="brand-logo">🌌</div>
             <div>
-                <h1>GENESIS <span class="badge badge-purple">PHASES 1–4 UNIFIED</span></h1>
+                <h1>GENESIS <span class="badge badge-amber" id="hud-level-tag">LEVEL 1: TWO CHAMBERS</span></h1>
             </div>
         </div>
         <div class="header-stats">
+            <div class="stat-box">
+                <span class="stat-label">Dungeon Level</span>
+                <span class="stat-value text-amber" id="hud-level-num">1</span>
+            </div>
             <div class="stat-box">
                 <span class="stat-label">World Ticks</span>
                 <span class="stat-value text-cyan" id="hud-ticks">0</span>
@@ -334,8 +367,8 @@
                 <span class="stat-value text-emerald" id="hud-energy">100.0</span>
             </div>
             <div class="stat-box">
-                <span class="stat-label">Goals Solved</span>
-                <span class="stat-value text-amber" id="hud-goals">0</span>
+                <span class="stat-label">Mazes Cleared</span>
+                <span class="stat-value text-purple" id="hud-goals">0</span>
             </div>
             <div class="stat-box">
                 <span class="stat-label">Surprise (MSE)</span>
@@ -350,7 +383,7 @@
 
     <div class="dashboard-grid">
         <!-- Left Column: Controls & Vision Cortex -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">🎮 Agent Control & Mode</span>
@@ -358,16 +391,33 @@
                 </div>
                 <div class="controls-bar">
                     <button class="btn btn-active" id="btn-mode-mcts" onclick="setMode('MCTS')">🌲 Latent MCTS</button>
-                    <button class="btn" id="btn-mode-imag" onclick="setMode('IMAGINATION')">💭 Imagination (H=3)</button>
+                    <button class="btn" id="btn-mode-imag" onclick="setMode('IMAGINATION')">💭 Imagination</button>
                     <button class="btn" id="btn-mode-react" onclick="setMode('REACTIVE')">⚡ Reactive</button>
-                    <button class="btn" id="btn-mode-sleep" onclick="triggerManualSleep()">🌙 Sleep & Replay</button>
+                    <button class="btn" id="btn-mode-sleep" onclick="triggerManualSleep()">🌙 Sleep</button>
                 </div>
-                <div class="controls-bar" style="margin-top: 6px;">
+                <div class="controls-bar" style="margin-top: 4px;">
                     <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
                     <button class="btn" onclick="stepOnce()">⏭️ Step</button>
                     <button class="btn" onclick="setSpeed(1)">1x</button>
                     <button class="btn" onclick="setSpeed(3)">3x</button>
                     <button class="btn" onclick="setSpeed(10)">10x</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🏆 Escalating Curriculum Selector</span>
+                    <span class="badge badge-emerald">AUTO-ESCALATE ON</span>
+                </div>
+                <div class="controls-bar">
+                    <button class="btn btn-level" onclick="jumpToLevel(1)">Lvl 1: Basic</button>
+                    <button class="btn btn-level" onclick="jumpToLevel(2)">Lvl 2: Dual Keys</button>
+                    <button class="btn btn-level" onclick="jumpToLevel(3)">Lvl 3: Quad Maze</button>
+                    <button class="btn btn-level" onclick="jumpToLevel(4)">Lvl 4: Labyrinth</button>
+                    <button class="btn btn-level" onclick="jumpToLevel(5)">Lvl 5: Nightmare</button>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                    هر بار که ارگانیسم ماز را حل کند، مرحله به طور خودکار سخت‌تر شده و تعداد کلیدها، درهای قفل‌شده، دیوارهای متحرک و تله‌ها افزایش می‌یابد!
                 </div>
             </div>
 
@@ -385,36 +435,24 @@
                     <span>🟥 Hazard</span>
                 </div>
             </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">🧠 Biological Synaptic Homeostasis</span>
-                    <span class="badge badge-emerald">CLAMPED PASS</span>
-                </div>
-                <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
-                    Turrigiano & Nelson (2004) Synaptic Decay:
-                    <div class="mono" style="color: var(--cyan); background: rgba(0,240,255,0.05); padding: 6px 10px; border-radius: 6px; margin-top: 4px;">
-                        ΔW = η ∇ - λ W (λ = 10⁻⁴)
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Center Column: 24x24 Multi-Room Maze View -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Center Column: Dynamic Maze Canvas -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🗺️ 24×24 Dynamic Multi-Room Maze Environment</span>
-                    <span class="badge badge-purple" id="key-status-tag">NO KEY</span>
+                    <span class="card-title">🗺️ Dynamic Labyrinth & Puzzle Environment</span>
+                    <span class="badge badge-purple" id="key-status-tag">KEYS: 0/1</span>
                 </div>
                 <div class="canvas-wrapper">
+                    <div class="level-up-banner" id="level-up-banner">🎉 LEVEL COMPLETED! ADVANCING...</div>
                     <div class="sleep-pulse" id="sleep-overlay"></div>
                     <canvas id="mazeCanvas" width="480" height="480"></canvas>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
-                    <span>🔑 Pick up key in Room 1</span>
-                    <span>🚪 Unlock partition door</span>
-                    <span>⚡ Reach target (+50 Energy)</span>
+                    <span>🔑 Collect all keys in sequence</span>
+                    <span>🚪 Unlock all partition doors</span>
+                    <span>⚡ Reach the energy core</span>
                 </div>
             </div>
 
@@ -424,13 +462,13 @@
                     <span class="badge badge-cyan">DEPTH D=4 | 16 SIMS</span>
                 </div>
                 <div class="tree-container">
-                    <canvas id="treeCanvas" width="540" height="200"></canvas>
+                    <canvas id="treeCanvas" width="540" height="180"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Episodic Memory & Salient Replay -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Right Column: Episodic Memory & Telemetry -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">🌙 Episodic Memory & Sleep Replay</span>
@@ -466,12 +504,26 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🧠 Biological Synaptic Homeostasis</span>
+                    <span class="badge badge-emerald">CLAMPED PASS</span>
+                </div>
+                <div style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                    Turrigiano & Nelson (2004) Synaptic Decay:
+                    <div class="mono" style="color: var(--cyan); background: rgba(0,240,255,0.05); padding: 5px 8px; border-radius: 6px; margin-top: 4px;">
+                        ΔW = η ∇ - λ W (λ = 10⁻⁴)
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const GRID_SIZE = 24;
         const VISION_SIZE = 7;
+        let currentLevel = 1;
         let mode = 'MCTS';
         let isRunning = true;
         let speed = 1;
@@ -482,39 +534,156 @@
         let doorsUnlocked = 0;
         let hazardCollisions = 0;
         let sleepCycles = 0;
-        let hasKey = false;
-        let doorOpened = false;
 
-        // 0: empty, 1: wall, 2: locked door, 3: key, 4: food, 5: hazard, 6: target
+        let totalKeysInLevel = 1;
+        let keysCollected = 0;
+        let doorsTotal = 1;
+        let doorsOpenedCount = 0;
+
+        // Grid Representation: 0: empty, 1: wall, 2: locked door, 3: key, 4: food, 5: hazard, 6: target
         let grid = [];
         let agentPos = { x: 3, y: 3 };
         let agentDir = 0; // 0: N, 1: E, 2: S, 3: W
 
-        function initEnvironment() {
+        const LEVEL_NAMES = [
+            "",
+            "LEVEL 1: TWO CHAMBERS",
+            "LEVEL 2: DUAL VAULT & TRAPS",
+            "LEVEL 3: QUAD LABYRINTH",
+            "LEVEL 4: DEEP DUNGEON",
+            "LEVEL 5: NIGHTMARE MAZE"
+        ];
+
+        function generateLevel(lvl) {
+            currentLevel = lvl;
             grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
-            // Boundary walls
+            keysCollected = 0;
+            doorsOpenedCount = 0;
+
+            // Outer Boundary
             for (let i = 0; i < GRID_SIZE; i++) {
                 grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
                 grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
             }
-            // Partition wall at mid
-            const mid = Math.floor(GRID_SIZE / 2);
-            for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
-            // Locked Door
-            grid[mid][6] = 2;
-            // Key in Room 1
-            grid[Math.floor(mid / 2)][4] = 3;
-            // Target in Room 2
-            grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6;
-            // Hazard shortcut
-            for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5;
-            // Food in Room 2
-            for (let i = 0; i < 6; i++) {
-                grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4;
+
+            if (lvl === 1) {
+                totalKeysInLevel = 1;
+                doorsTotal = 1;
+                const mid = Math.floor(GRID_SIZE / 2);
+                for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
+                grid[mid][6] = 2; // Door
+                grid[Math.floor(mid / 2)][4] = 3; // Key
+                grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Target
+                for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard
+                for (let i = 0; i < 5; i++) grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4; // Food
+                agentPos = { x: 3, y: 3 };
+
+            } else if (lvl === 2) {
+                totalKeysInLevel = 2;
+                doorsTotal = 2;
+                const p1 = 8, p2 = 16;
+                // Two horizontal partition walls
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    grid[p1][i] = 1;
+                    grid[p2][i] = 1;
+                }
+                grid[p1][5] = 2; // Door 1
+                grid[p2][18] = 2; // Door 2
+
+                grid[4][4] = 3; // Key 1 in Room 1
+                grid[12][12] = 3; // Key 2 in Room 2
+
+                grid[20][20] = 6; // Target in Room 3
+
+                // More Hazards
+                for (let x = 6; x <= 10; x++) grid[p1 - 1][x] = 5;
+                for (let x = 12; x <= 16; x++) grid[p2 - 1][x] = 5;
+
+                for (let i = 0; i < 8; i++) grid[p1 + 2 + (i % 3) * 2][3 + i * 2] = 4;
+                agentPos = { x: 3, y: 3 };
+
+            } else if (lvl === 3) {
+                totalKeysInLevel = 3;
+                doorsTotal = 3;
+                const mid = 12;
+                // 4 Quadrants
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    grid[mid][i] = 1;
+                    grid[i][mid] = 1;
+                }
+                // Doors between quadrants
+                grid[mid][6] = 2;   // Q1 -> Q3
+                grid[18][mid] = 2;  // Q3 -> Q4
+                grid[mid][18] = 2;  // Q4 -> Q2
+
+                grid[4][4] = 3;    // Key 1 (Q1)
+                grid[18][4] = 3;   // Key 2 (Q3)
+                grid[18][18] = 3;  // Key 3 (Q4)
+                grid[4][18] = 6;   // Target (Q2)
+
+                // Dense Hazard Fields
+                for (let i = 2; i <= 8; i += 2) {
+                    grid[mid - 2][i] = 5;
+                    grid[i][mid + 2] = 5;
+                }
+                for (let i = 0; i < 10; i++) grid[6 + (i % 3) * 4][6 + (i % 3) * 4] = 4;
+                agentPos = { x: 3, y: 3 };
+
+            } else { // Level 4 & 5 (Complex Procedural Labyrinth)
+                totalKeysInLevel = Math.min(4, lvl);
+                doorsTotal = Math.min(4, lvl);
+                
+                // Grid maze partitions
+                for (let x = 6; x < GRID_SIZE - 2; x += 6) {
+                    for (let y = 1; y < GRID_SIZE - 1; y++) {
+                        if (y % 4 !== 0) grid[x][y] = 1;
+                    }
+                }
+                // Random Doors, Keys & Hazards
+                const keyPositions = [{x: 4, y: 4}, {x: 10, y: 16}, {x: 16, y: 8}, {x: 20, y: 14}];
+                const doorPositions = [{x: 6, y: 8}, {x: 12, y: 12}, {x: 18, y: 16}];
+
+                for (let i = 0; i < totalKeysInLevel; i++) {
+                    const kp = keyPositions[i % keyPositions.length];
+                    grid[kp.x][kp.y] = 3;
+                }
+                for (let i = 0; i < doorsTotal; i++) {
+                    const dp = doorPositions[i % doorPositions.length];
+                    grid[dp.x][dp.y] = 2;
+                }
+
+                grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6;
+
+                // Scatter extra hazards & food
+                for (let i = 0; i < lvl * 4; i++) {
+                    const hx = 2 + (i * 3) % (GRID_SIZE - 4);
+                    const hy = 2 + (i * 5) % (GRID_SIZE - 4);
+                    if (grid[hx][hy] === 0) grid[hx][hy] = 5;
+                }
+                for (let i = 0; i < 8; i++) {
+                    const fx = 3 + (i * 4) % (GRID_SIZE - 4);
+                    const fy = 3 + (i * 2) % (GRID_SIZE - 4);
+                    if (grid[fx][fy] === 0) grid[fx][fy] = 4;
+                }
+                agentPos = { x: 2, y: 2 };
             }
-            agentPos = { x: 3, y: 3 };
-            hasKey = false;
-            doorOpened = false;
+
+            document.getElementById('hud-level-num').innerText = currentLevel;
+            document.getElementById('hud-level-tag').innerText = LEVEL_NAMES[Math.min(5, currentLevel)] || `LEVEL ${currentLevel}: CHAOS MAZE`;
+            document.getElementById('key-status-tag').innerText = `KEYS: ${keysCollected}/${totalKeysInLevel}`;
+            document.getElementById('key-status-tag').className = 'badge badge-purple';
+        }
+
+        function jumpToLevel(l) {
+            generateLevel(l);
+            drawMaze();
+            updateVisionMatrix();
+        }
+
+        function triggerLevelUpBanner() {
+            const banner = document.getElementById('level-up-banner');
+            banner.classList.add('level-up-active');
+            setTimeout(() => banner.classList.remove('level-up-active'), 1200);
         }
 
         function buildVisionMatrixUI() {
@@ -577,17 +746,17 @@
                         ctx.fillStyle = '#9333ea';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
                         ctx.fillStyle = '#fff';
-                        ctx.font = '12px sans-serif';
-                        ctx.fillText('🚪', x * cellSize + 2, y * cellSize + 14);
+                        ctx.font = '11px sans-serif';
+                        ctx.fillText('🚪', x * cellSize + 2, y * cellSize + 13);
                     } else if (val === 3) {
                         ctx.fillStyle = '#d97706';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
-                        ctx.font = '12px sans-serif';
-                        ctx.fillText('🔑', x * cellSize + 2, y * cellSize + 14);
+                        ctx.font = '11px sans-serif';
+                        ctx.fillText('🔑', x * cellSize + 2, y * cellSize + 13);
                     } else if (val === 4) {
                         ctx.fillStyle = '#059669';
                         ctx.beginPath();
-                        ctx.arc(x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                        ctx.arc(x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize / 3.2, 0, Math.PI * 2);
                         ctx.fill();
                     } else if (val === 5) {
                         ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
@@ -595,8 +764,8 @@
                     } else if (val === 6) {
                         ctx.fillStyle = '#06b6d4';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
-                        ctx.font = '12px sans-serif';
-                        ctx.fillText('⚡', x * cellSize + 2, y * cellSize + 14);
+                        ctx.font = '11px sans-serif';
+                        ctx.fillText('⚡', x * cellSize + 2, y * cellSize + 13);
                     }
                 }
             }
@@ -612,7 +781,6 @@
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            // Direction pointer
             const angles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
             const angle = angles[agentDir % 4];
             ctx.strokeStyle = '#fff';
@@ -632,13 +800,13 @@
             const rootX = 40, rootY = canvas.height / 2;
             ctx.fillStyle = '#00f0ff';
             ctx.beginPath();
-            ctx.arc(rootX, rootY, 7, 0, Math.PI * 2);
+            ctx.arc(rootX, rootY, 6, 0, Math.PI * 2);
             ctx.fill();
 
             const actions = ['FWD', 'LEFT', 'RIGHT', 'ACT'];
             for (let i = 0; i < 4; i++) {
                 const childX = 140;
-                const childY = 30 + i * 45;
+                const childY = 25 + i * 42;
                 ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
@@ -648,16 +816,16 @@
 
                 ctx.fillStyle = '#b026ff';
                 ctx.beginPath();
-                ctx.arc(childX, childY, 5, 0, Math.PI * 2);
+                ctx.arc(childX, childY, 4.5, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.fillStyle = '#8b949e';
                 ctx.font = '10px JetBrains Mono';
-                ctx.fillText(`${actions[i]} q:${(Math.random() * 2 - 0.5).toFixed(2)}`, childX + 10, childY + 3);
+                ctx.fillText(`${actions[i]} q:${(Math.random() * 2 - 0.5).toFixed(2)}`, childX + 8, childY + 3);
 
                 for (let j = 0; j < 2; j++) {
                     const l2X = 260;
-                    const l2Y = childY - 12 + j * 24;
+                    const l2Y = childY - 10 + j * 20;
                     ctx.strokeStyle = 'rgba(176, 38, 255, 0.2)';
                     ctx.beginPath();
                     ctx.moveTo(childX, childY);
@@ -665,7 +833,7 @@
                     ctx.stroke();
                     ctx.fillStyle = '#00ff9d';
                     ctx.beginPath();
-                    ctx.arc(l2X, l2Y, 3.5, 0, Math.PI * 2);
+                    ctx.arc(l2X, l2Y, 3, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
@@ -707,7 +875,7 @@
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                     const cell = grid[nx][ny];
                     if (cell !== 1) {
-                        if (cell === 2 && !hasKey) continue;
+                        if (cell === 2 && keysCollected === 0) continue;
                         res.push({ x: nx, y: ny, dir: d.dir, cell: cell });
                     }
                 }
@@ -738,6 +906,23 @@
             return null;
         }
 
+        function findNearestItem(valType) {
+            let bestDist = 1e9;
+            let bestPos = null;
+            for (let x = 0; x < GRID_SIZE; x++) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    if (grid[x][y] === valType) {
+                        const dist = Math.abs(agentPos.x - x) + Math.abs(agentPos.y - y);
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            bestPos = { x, y };
+                        }
+                    }
+                }
+            }
+            return bestPos;
+        }
+
         function stepSimulation() {
             tickCount++;
             energy -= 0.05;
@@ -746,21 +931,28 @@
             let reward = -0.05;
             let surprise = 0.02 + Math.random() * 0.04;
 
+            // Target Priority: 1) Keys -> 2) Doors -> 3) Goal Target -> 4) Food
             let target = null;
-            if (!hasKey) {
-                target = { x: Math.floor(GRID_SIZE / 4), y: 4 };
-            } else if (!doorOpened) {
-                target = { x: Math.floor(GRID_SIZE / 2), y: 6 };
-            } else {
-                target = { x: GRID_SIZE - 4, y: GRID_SIZE - 4 };
+            if (keysCollected < totalKeysInLevel) {
+                target = findNearestItem(3); // Nearest Key
+            }
+            if (!target && doorsOpenedCount < doorsTotal) {
+                target = findNearestItem(2); // Nearest Locked Door
+            }
+            if (!target) {
+                target = findNearestItem(6); // Goal Target
+            }
+            if (!target) {
+                target = findNearestItem(4); // Food
             }
 
             if (mode === 'MCTS' || mode === 'IMAGINATION') {
-                if (agentPos.x === Math.floor(GRID_SIZE / 4) && agentPos.y === 4 && !hasKey) {
-                    chosenAction = 3;
-                } else if (agentPos.x === GRID_SIZE - 4 && agentPos.y === GRID_SIZE - 4) {
-                    chosenAction = 3;
-                } else {
+                const curVal = grid[agentPos.x][agentPos.y];
+                if (curVal === 3) {
+                    chosenAction = 3; // Pick Key
+                } else if (curVal === 6) {
+                    chosenAction = 3; // Claim Goal
+                } else if (target) {
                     const path = findPathTo(target.x, target.y);
                     if (path && path.length > 0) {
                         const nextStep = path[0];
@@ -773,6 +965,8 @@
                     } else {
                         chosenAction = Math.random() < 0.6 ? 0 : (Math.random() < 0.5 ? 1 : 2);
                     }
+                } else {
+                    chosenAction = Math.random() < 0.6 ? 0 : (Math.random() < 0.5 ? 1 : 2);
                 }
             } else {
                 chosenAction = Math.floor(Math.random() * 4);
@@ -795,9 +989,9 @@
                     if (cell === 1) {
                         reward = -0.5; energy -= 0.5;
                     } else if (cell === 2) {
-                        if (hasKey) {
+                        if (keysCollected > 0) {
                             grid[nx][ny] = 0;
-                            doorOpened = true;
+                            doorsOpenedCount++;
                             agentPos = { x: nx, y: ny };
                             reward = 15.0; energy += 15.0;
                             doorsUnlocked++;
@@ -828,18 +1022,23 @@
             } else if (chosenAction === 2) {
                 agentDir = (agentDir + 1) % 4;
             } else if (chosenAction === 3) {
-                if (agentPos.x === Math.floor(GRID_SIZE / 4) && agentPos.y === 4 && !hasKey) {
-                    hasKey = true;
+                if (grid[agentPos.x][agentPos.y] === 3) {
+                    keysCollected++;
                     grid[agentPos.x][agentPos.y] = 0;
                     reward = 20.0; energy += 20.0;
-                    document.getElementById('key-status-tag').innerText = 'HAS KEY';
-                    document.getElementById('key-status-tag').className = 'badge badge-emerald';
+                    document.getElementById('key-status-tag').innerText = `KEYS: ${keysCollected}/${totalKeysInLevel}`;
+                    if (keysCollected >= totalKeysInLevel) {
+                        document.getElementById('key-status-tag').className = 'badge badge-emerald';
+                    }
                     surprise = 0.90;
-                } else if (agentPos.x === GRID_SIZE - 4 && agentPos.y === GRID_SIZE - 4) {
+                } else if (grid[agentPos.x][agentPos.y] === 6) {
                     goalsSolved++;
                     reward = 50.0; energy += 50.0;
                     document.getElementById('hud-goals').innerText = goalsSolved;
-                    initEnvironment();
+                    triggerLevelUpBanner();
+                    // Advance to harder level
+                    const nextLvl = currentLevel + 1;
+                    setTimeout(() => generateLevel(nextLvl), 400);
                     surprise = 0.99;
                 }
             }
@@ -897,7 +1096,7 @@
         }
 
         window.onload = () => {
-            initEnvironment();
+            generateLevel(1);
             buildVisionMatrixUI();
             updateVisionMatrix();
             drawMaze();
