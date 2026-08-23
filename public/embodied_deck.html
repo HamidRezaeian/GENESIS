@@ -1015,6 +1015,14 @@
             const s_next = encodeObservation(nextObs);
             const { loss, vCurr } = updateNeuralWeights(s_curr, action, reward, s_next);
 
+            // Metabolic Starvation / Life Cycle (Rule 16 & Rule 21)
+            if (energy <= 0.0) {
+                energy = 100.0;
+                agentPos = { x: 3, y: 3 };
+                agentDir = 0;
+                addLog("💀 Energy depleted (Starvation) — Respawned with 100.0 Energy.");
+            }
+
             if (tickCount % 500 === 0) {
                 saveBrainToStorage();
             }
@@ -1068,13 +1076,22 @@
                         break;
                     }
                 }
-                if (activeChan === 1) cellEl.style.background = '#3b82f6';
-                else if (activeChan === 2) cellEl.style.background = '#b026ff';
-                else if (activeChan === 3) cellEl.style.background = '#ffb800';
-                else if (activeChan === 4) cellEl.style.background = '#00ff9d';
-                else if (activeChan === 5) cellEl.style.background = '#ff3366';
-                else if (activeChan === 6) cellEl.style.background = '#00f0ff';
-                else cellEl.style.background = 'rgba(255,255,255,0.03)';
+                
+                if (i === 24) { // Center Agent Cell
+                    cellEl.style.background = 'rgba(0, 240, 255, 0.4)';
+                    cellEl.style.border = '1px solid #00f0ff';
+                    cellEl.innerText = '🤖';
+                } else {
+                    cellEl.innerText = '';
+                    cellEl.style.border = 'none';
+                    if (activeChan === 1) { cellEl.style.background = '#2563eb'; } // Wall
+                    else if (activeChan === 2) { cellEl.style.background = '#9333ea'; cellEl.innerText = '🚪'; } // Door
+                    else if (activeChan === 3) { cellEl.style.background = '#d97706'; cellEl.innerText = '🔑'; } // Key
+                    else if (activeChan === 4) { cellEl.style.background = '#059669'; cellEl.innerText = '🍏'; } // Food
+                    else if (activeChan === 5) { cellEl.style.background = '#dc2626'; cellEl.innerText = '⚠️'; } // Hazard
+                    else if (activeChan === 6) { cellEl.style.background = '#06b6d4'; cellEl.innerText = '⚡'; } // Goal
+                    else { cellEl.style.background = 'rgba(255,255,255,0.03)'; }
+                }
             }
         }
 
