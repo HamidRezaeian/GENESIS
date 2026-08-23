@@ -12,7 +12,6 @@
         :root {
             --bg-base: #060913;
             --bg-card: rgba(13, 20, 36, 0.75);
-            --bg-card-hover: rgba(20, 31, 56, 0.85);
             --border-glow: rgba(0, 240, 255, 0.25);
             --border-subtle: rgba(255, 255, 255, 0.08);
             --cyan: #00f0ff;
@@ -43,7 +42,7 @@
             overflow-x: hidden;
         }
 
-        /* Top Header */
+        /* Header */
         header {
             display: flex;
             justify-content: space-between;
@@ -101,14 +100,14 @@
 
         .header-stats {
             display: flex;
-            gap: 20px;
+            gap: 16px;
         }
 
         .stat-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            padding: 6px 14px;
+            padding: 6px 12px;
             display: flex;
             flex-direction: column;
         }
@@ -126,17 +125,16 @@
             font-weight: 700;
         }
 
-        /* Main Dashboard Grid */
+        /* Main Grid */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 460px 1fr 380px;
+            grid-template-columns: 440px 1fr 380px;
             gap: 20px;
             padding: 24px 28px;
             max-width: 1920px;
             margin: 0 auto;
         }
 
-        /* Glassmorphism Card */
         .card {
             background: var(--bg-card);
             backdrop-filter: blur(12px);
@@ -175,10 +173,9 @@
             gap: 8px;
         }
 
-        /* Control Panel */
         .controls-bar {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
@@ -186,7 +183,7 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-subtle);
             color: var(--text-main);
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 600;
@@ -205,13 +202,12 @@
         }
 
         .btn-active {
-            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(176, 38, 255, 0.2));
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(176, 38, 255, 0.25));
             border-color: var(--cyan);
             color: #fff;
             box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
         }
 
-        /* Maze Canvas */
         .canvas-wrapper {
             background: #04060b;
             border: 1px solid var(--border-subtle);
@@ -225,23 +221,22 @@
 
         canvas {
             display: block;
-            image-rendering: pixelated;
+            border-radius: 6px;
         }
 
-        /* Visual Cortex Field */
         .vision-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
+            gap: 4px;
             background: #04060b;
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
             border: 1px solid var(--border-subtle);
         }
 
         .vision-cell {
             aspect-ratio: 1;
-            border-radius: 3px;
+            border-radius: 4px;
             background: rgba(255, 255, 255, 0.03);
             display: flex;
             align-items: center;
@@ -250,7 +245,6 @@
             transition: background 0.1s ease;
         }
 
-        /* Episodic Memory Buffer list */
         .memory-list {
             display: flex;
             flex-direction: column;
@@ -283,12 +277,11 @@
             font-weight: 700;
         }
 
-        /* MCTS Tree Visualizer */
         .tree-container {
             background: #04060b;
             border: 1px solid var(--border-subtle);
             border-radius: 10px;
-            height: 220px;
+            height: 200px;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -296,11 +289,10 @@
             justify-content: center;
         }
 
-        /* Sleep Overlay */
         .sleep-pulse {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle, rgba(176, 38, 255, 0.2) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(176, 38, 255, 0.3) 0%, transparent 70%);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -308,12 +300,12 @@
 
         .sleep-active {
             opacity: 1;
-            animation: pulse-glow 1.5s infinite alternate;
+            animation: pulse-glow 1.2s infinite alternate;
         }
 
         @keyframes pulse-glow {
             0% { opacity: 0.3; }
-            100% { opacity: 0.8; }
+            100% { opacity: 0.9; }
         }
 
         .mono { font-family: var(--font-mono); }
@@ -374,8 +366,8 @@
                     <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
                     <button class="btn" onclick="stepOnce()">⏭️ Step</button>
                     <button class="btn" onclick="setSpeed(1)">1x</button>
-                    <button class="btn" onclick="setSpeed(5)">5x</button>
-                    <button class="btn" onclick="setSpeed(20)">20x</button>
+                    <button class="btn" onclick="setSpeed(3)">3x</button>
+                    <button class="btn" onclick="setSpeed(10)">10x</button>
                 </div>
             </div>
 
@@ -478,7 +470,6 @@
     </div>
 
     <script>
-        // Global Simulation State
         const GRID_SIZE = 24;
         const VISION_SIZE = 7;
         let mode = 'MCTS';
@@ -494,20 +485,19 @@
         let hasKey = false;
         let doorOpened = false;
 
-        // Grid Representation: 0: empty, 1: wall, 2: locked door, 3: key, 4: food, 5: hazard, 6: target
-        const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+        // 0: empty, 1: wall, 2: locked door, 3: key, 4: food, 5: hazard, 6: target
+        let grid = [];
         let agentPos = { x: 3, y: 3 };
         let agentDir = 0; // 0: N, 1: E, 2: S, 3: W
 
-        const memoryBuffer = [];
-        let mctsTreeData = [];
-
         function initEnvironment() {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+            // Boundary walls
             for (let i = 0; i < GRID_SIZE; i++) {
                 grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
                 grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
             }
-            // Partition wall
+            // Partition wall at mid
             const mid = Math.floor(GRID_SIZE / 2);
             for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
             // Locked Door
@@ -522,6 +512,9 @@
             for (let i = 0; i < 6; i++) {
                 grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4;
             }
+            agentPos = { x: 3, y: 3 };
+            hasKey = false;
+            doorOpened = false;
         }
 
         function buildVisionMatrixUI() {
@@ -547,17 +540,19 @@
                     else { gx -= vy; gy += vx; }
 
                     const cellEl = document.getElementById(`vis-cell-${idx}`);
-                    if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
-                        const val = grid[gx][gy];
-                        if (val === 1) cellEl.style.background = '#3b82f6';
-                        else if (val === 2) cellEl.style.background = '#b026ff';
-                        else if (val === 3) cellEl.style.background = '#ffb800';
-                        else if (val === 4) cellEl.style.background = '#00ff9d';
-                        else if (val === 5) cellEl.style.background = '#ff3366';
-                        else if (val === 6) cellEl.style.background = '#00f0ff';
-                        else cellEl.style.background = 'rgba(255,255,255,0.03)';
-                    } else {
-                        cellEl.style.background = '#3b82f6';
+                    if (cellEl) {
+                        if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
+                            const val = grid[gx][gy];
+                            if (val === 1) cellEl.style.background = '#3b82f6';
+                            else if (val === 2) cellEl.style.background = '#b026ff';
+                            else if (val === 3) cellEl.style.background = '#ffb800';
+                            else if (val === 4) cellEl.style.background = '#00ff9d';
+                            else if (val === 5) cellEl.style.background = '#ff3366';
+                            else if (val === 6) cellEl.style.background = '#00f0ff';
+                            else cellEl.style.background = 'rgba(255,255,255,0.03)';
+                        } else {
+                            cellEl.style.background = '#3b82f6';
+                        }
                     }
                     idx++;
                 }
@@ -566,38 +561,41 @@
 
         function drawMaze() {
             const canvas = document.getElementById('mazeCanvas');
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const cellSize = canvas.width / GRID_SIZE;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Grid Cells
             for (let x = 0; x < GRID_SIZE; x++) {
                 for (let y = 0; y < GRID_SIZE; y++) {
                     const val = grid[x][y];
-                    if (val === 1) { // Wall
+                    if (val === 1) {
                         ctx.fillStyle = '#172554';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
-                    } else if (val === 2) { // Locked Door
+                    } else if (val === 2) {
                         ctx.fillStyle = '#9333ea';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
                         ctx.fillStyle = '#fff';
+                        ctx.font = '12px sans-serif';
                         ctx.fillText('🚪', x * cellSize + 2, y * cellSize + 14);
-                    } else if (val === 3) { // Key
+                    } else if (val === 3) {
                         ctx.fillStyle = '#d97706';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                        ctx.font = '12px sans-serif';
                         ctx.fillText('🔑', x * cellSize + 2, y * cellSize + 14);
-                    } else if (val === 4) { // Food
+                    } else if (val === 4) {
                         ctx.fillStyle = '#059669';
                         ctx.beginPath();
-                        ctx.arc(x * cellSize + cellSize/2, y * cellSize + cellSize/2, cellSize/3, 0, Math.PI * 2);
+                        ctx.arc(x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
                         ctx.fill();
-                    } else if (val === 5) { // Hazard
-                        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+                    } else if (val === 5) {
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
-                    } else if (val === 6) { // Target
+                    } else if (val === 6) {
                         ctx.fillStyle = '#06b6d4';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                        ctx.font = '12px sans-serif';
                         ctx.fillText('⚡', x * cellSize + 2, y * cellSize + 14);
                     }
                 }
@@ -615,22 +613,22 @@
             ctx.shadowBlur = 0;
 
             // Direction pointer
-            const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+            const angles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
             const angle = angles[agentDir % 4];
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(ax, ay);
-            ctx.lineTo(ax + Math.cos(angle) * (cellSize/1.5), ay + Math.sin(angle) * (cellSize/1.5));
+            ctx.lineTo(ax + Math.cos(angle) * (cellSize / 1.5), ay + Math.sin(angle) * (cellSize / 1.5));
             ctx.stroke();
         }
 
         function drawTree() {
             const canvas = document.getElementById('treeCanvas');
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw MCTS Branch Nodes
             const rootX = 40, rootY = canvas.height / 2;
             ctx.fillStyle = '#00f0ff';
             ctx.beginPath();
@@ -655,9 +653,8 @@
 
                 ctx.fillStyle = '#8b949e';
                 ctx.font = '10px JetBrains Mono';
-                ctx.fillText(`${actions[i]} q:${(Math.random()*2 - 0.5).toFixed(2)}`, childX + 10, childY + 3);
+                ctx.fillText(`${actions[i]} q:${(Math.random() * 2 - 0.5).toFixed(2)}`, childX + 10, childY + 3);
 
-                // Level 2 simulated nodes
                 for (let j = 0; j < 2; j++) {
                     const l2X = 260;
                     const l2Y = childY - 12 + j * 24;
@@ -676,6 +673,7 @@
 
         function addEpisodicMemory(action, reward, surprise) {
             const list = document.getElementById('memory-buffer-list');
+            if (!list) return;
             const item = document.createElement('div');
             item.className = 'memory-item';
             item.innerHTML = `
@@ -688,31 +686,28 @@
 
         function triggerManualSleep() {
             const overlay = document.getElementById('sleep-overlay');
-            overlay.classList.add('sleep-active');
-            sleepCycles++;
-            document.getElementById('stat-sleep-cycles').innerText = sleepCycles;
-            setTimeout(() => overlay.classList.remove('sleep-active'), 800);
+            if (overlay) {
+                overlay.classList.add('sleep-active');
+                sleepCycles++;
+                document.getElementById('stat-sleep-cycles').innerText = sleepCycles;
+                setTimeout(() => overlay.classList.remove('sleep-active'), 800);
+            }
         }
 
-        function stepSimulation() {
-            tickCount++;
-            energy -= 0.05;
-
-        // Intelligent Pathfinding & MCTS Engine
         function getNeighbors(x, y) {
             const res = [];
             const dirs = [
-                { dir: 0, dx: 0, dy: -1 }, // North
-                { dir: 1, dx: 1, dy: 0 },  // East
-                { dir: 2, dx: 0, dy: 1 },  // South
-                { dir: 3, dx: -1, dy: 0 }  // West
+                { dir: 0, dx: 0, dy: -1 },
+                { dir: 1, dx: 1, dy: 0 },
+                { dir: 2, dx: 0, dy: 1 },
+                { dir: 3, dx: -1, dy: 0 }
             ];
             for (const d of dirs) {
                 const nx = x + d.dx, ny = y + d.dy;
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                     const cell = grid[nx][ny];
-                    if (cell !== 1) { // Not wall
-                        if (cell === 2 && !hasKey) continue; // Locked door without key
+                    if (cell !== 1) {
+                        if (cell === 2 && !hasKey) continue;
                         res.push({ x: nx, y: ny, dir: d.dir, cell: cell });
                     }
                 }
@@ -735,8 +730,7 @@
                     const key = `${n.x},${n.y}`;
                     if (!visited.has(key)) {
                         visited.add(key);
-                        // Penalize hazard cells
-                        if (n.cell === 5 && mode === 'MCTS') continue; // MCTS avoids hazards
+                        if (n.cell === 5 && mode === 'MCTS') continue;
                         queue.push([n.x, n.y, path.concat(n)]);
                     }
                 }
@@ -752,120 +746,100 @@
             let reward = -0.05;
             let surprise = 0.02 + Math.random() * 0.04;
 
-            // Determine Target based on cognitive state
             let target = null;
             if (!hasKey) {
-                target = { x: Math.floor(GRID_SIZE / 4), y: 4 }; // Key location
+                target = { x: Math.floor(GRID_SIZE / 4), y: 4 };
             } else if (!doorOpened) {
-                target = { x: Math.floor(GRID_SIZE / 2), y: 6 }; // Door location
+                target = { x: Math.floor(GRID_SIZE / 2), y: 6 };
             } else {
-                target = { x: GRID_SIZE - 4, y: GRID_SIZE - 4 }; // Energy Target
+                target = { x: GRID_SIZE - 4, y: GRID_SIZE - 4 };
             }
 
             if (mode === 'MCTS' || mode === 'IMAGINATION') {
-                // Check if on key or target
                 if (agentPos.x === Math.floor(GRID_SIZE / 4) && agentPos.y === 4 && !hasKey) {
-                    chosenAction = 3; // INTERACT / Pick up key
+                    chosenAction = 3;
                 } else if (agentPos.x === GRID_SIZE - 4 && agentPos.y === GRID_SIZE - 4) {
-                    chosenAction = 3; // INTERACT / Claim Goal
+                    chosenAction = 3;
                 } else {
                     const path = findPathTo(target.x, target.y);
                     if (path && path.length > 0) {
                         const nextStep = path[0];
                         if (agentDir === nextStep.dir) {
-                            chosenAction = 0; // FORWARD
+                            chosenAction = 0;
                         } else {
-                            // Turn towards direction
                             const diff = (nextStep.dir - agentDir + 4) % 4;
-                            chosenAction = (diff === 1 || diff === 2) ? 2 : 1; // TURN_RIGHT or TURN_LEFT
+                            chosenAction = (diff === 1 || diff === 2) ? 2 : 1;
                         }
                     } else {
-                        // Fallback explore
                         chosenAction = Math.random() < 0.6 ? 0 : (Math.random() < 0.5 ? 1 : 2);
                     }
                 }
             } else {
-                // Reactive random walk
                 chosenAction = Math.floor(Math.random() * 4);
             }
 
-            // Execute Action
             const dirs = [
-                { dx: 0, dy: -1 }, // N
-                { dx: 1, dy: 0 },  // E
-                { dx: 0, dy: 1 },  // S
-                { dx: -1, dy: 0 }  // W
+                { dx: 0, dy: -1 },
+                { dx: 1, dy: 0 },
+                { dx: 0, dy: 1 },
+                { dx: -1, dy: 0 }
             ];
 
-            if (chosenAction === 0) { // FORWARD
+            if (chosenAction === 0) {
                 const d = dirs[agentDir % 4];
                 const nx = agentPos.x + d.dx;
                 const ny = agentPos.y + d.dy;
 
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                     const cell = grid[nx][ny];
-                    if (cell === 1) { // Wall bump
-                        reward = -0.5;
-                        energy -= 0.5;
-                    } else if (cell === 2) { // Door
+                    if (cell === 1) {
+                        reward = -0.5; energy -= 0.5;
+                    } else if (cell === 2) {
                         if (hasKey) {
                             grid[nx][ny] = 0;
                             doorOpened = true;
                             agentPos = { x: nx, y: ny };
-                            reward = 15.0;
-                            energy += 15.0;
+                            reward = 15.0; energy += 15.0;
                             doorsUnlocked++;
                             document.getElementById('stat-doors').innerText = doorsUnlocked;
                             surprise = 0.85;
                         } else {
-                            reward = -1.0;
-                            energy -= 1.0;
+                            reward = -1.0; energy -= 1.0;
                         }
-                    } else if (cell === 5) { // Hazard
+                    } else if (cell === 5) {
                         agentPos = { x: nx, y: ny };
-                        reward = -10.0;
-                        energy -= 10.0;
+                        reward = -10.0; energy -= 10.0;
                         hazardCollisions++;
                         document.getElementById('stat-hazards').innerText = hazardCollisions;
                         surprise = 0.95;
                     } else {
                         agentPos = { x: nx, y: ny };
-                        if (cell === 4) { // Food
+                        if (cell === 4) {
                             grid[nx][ny] = 0;
-                            reward = 10.0;
-                            energy += 10.0;
+                            reward = 10.0; energy += 10.0;
                             foodHarvested++;
                             document.getElementById('stat-food').innerText = foodHarvested;
                             surprise = 0.70;
                         }
                     }
                 }
-            } else if (chosenAction === 1) { // TURN_LEFT
+            } else if (chosenAction === 1) {
                 agentDir = (agentDir - 1 + 4) % 4;
-            } else if (chosenAction === 2) { // TURN_RIGHT
+            } else if (chosenAction === 2) {
                 agentDir = (agentDir + 1) % 4;
-            } else if (chosenAction === 3) { // INTERACT
+            } else if (chosenAction === 3) {
                 if (agentPos.x === Math.floor(GRID_SIZE / 4) && agentPos.y === 4 && !hasKey) {
                     hasKey = true;
                     grid[agentPos.x][agentPos.y] = 0;
-                    reward = 20.0;
-                    energy += 20.0;
+                    reward = 20.0; energy += 20.0;
                     document.getElementById('key-status-tag').innerText = 'HAS KEY';
                     document.getElementById('key-status-tag').className = 'badge badge-emerald';
                     surprise = 0.90;
                 } else if (agentPos.x === GRID_SIZE - 4 && agentPos.y === GRID_SIZE - 4) {
                     goalsSolved++;
-                    reward = 50.0;
-                    energy += 50.0;
+                    reward = 50.0; energy += 50.0;
                     document.getElementById('hud-goals').innerText = goalsSolved;
-                    // Reset puzzle state for continuous lifelong learning
-                    agentPos = { x: 3, y: 3 };
-                    hasKey = false;
-                    doorOpened = false;
-                    grid[Math.floor(GRID_SIZE / 2)][6] = 2;
-                    grid[Math.floor(GRID_SIZE / 4)][4] = 3;
-                    document.getElementById('key-status-tag').innerText = 'NO KEY';
-                    document.getElementById('key-status-tag').className = 'badge badge-purple';
+                    initEnvironment();
                     surprise = 0.99;
                 }
             }
@@ -879,7 +853,6 @@
                 triggerManualSleep();
             }
 
-            // Update HUD
             document.getElementById('hud-ticks').innerText = tickCount.toLocaleString();
             document.getElementById('hud-energy').innerText = Math.max(0, energy).toFixed(1);
             document.getElementById('hud-surprise').innerText = surprise.toFixed(3);
@@ -914,14 +887,13 @@
             speed = s;
         }
 
-        // Main animation loop
         function loop() {
             if (isRunning) {
                 for (let i = 0; i < speed; i++) {
                     stepSimulation();
                 }
             }
-            setTimeout(() => requestAnimationFrame(loop), 90);
+            setTimeout(() => requestAnimationFrame(loop), 100);
         }
 
         window.onload = () => {
