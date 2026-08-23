@@ -25,6 +25,12 @@
    - **Replication Certificate Spec:** `Docs/FRAMEWORKS/REPLICATION_CERTIFICATE_SPEC.md`
    - **Series 1200 Seeds (1201-1210):** Evaluated across fresh processes with zero base weight drift ($0$ Bytes).
 
+## Rule 25: Mandatory Rigorous Pre-Delivery Verification & Zero-Flaw Engineering (Learned 2026-08-23)
+
+1. **Mandatory Pre-Delivery Self-Audit:** The agent MUST strictly inspect and verify every code modification, algorithmic derivation, and decision logic before presenting it to the user. Never provide unverified, flawed, or untested implementations.
+2. **Deterministic & Tie-Breaking Integrity:** In all search trees, planning algorithms (e.g., MCTS, PUCT), and decision policies, tie-breaking mechanisms and exploitation paths MUST be mathematically sound, Q-grounded, and thoroughly verified against edge-case degeneracies (e.g., uniform counts, zero-gradient drift).
+3. **Absolute Zero Hardcoding Invariant:** All behaviors, language tokens, and cognitive actions MUST emerge purely from matrix algebra, neural forward passes, and grounded sensory states. Never inject heuristic shortcuts, if-else keyword scripts, or artificial crutches.
+
 ## Core Architectural Specifications (Organized under `Docs/Architecture/`)
 
 - [Ascent.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/Ascent.md): Deep Time evolution, cognitive probes, and binding finish line criteria.
