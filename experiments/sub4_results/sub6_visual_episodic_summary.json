@@ -1,0 +1,103 @@
+{
+  "protocol": "SUBSTRATE_6_VISUAL_EPISODIC_CONSOLIDATION_v1",
+  "vision_field": "7x7x4",
+  "episodic_capacity": 256,
+  "mean_episodic_food": 79.0,
+  "mean_baseline_food": 181.0,
+  "mean_episodic_reward": -2527.75,
+  "mean_baseline_reward": -2642.75,
+  "mean_episodic_hazard_hits": 110.75,
+  "mean_baseline_hazard_hits": 241.75,
+  "episodic_runs": [
+    {
+      "seed": 100,
+      "use_episodic": true,
+      "ticks": 50000,
+      "total_reward": -2429.5,
+      "food_collected": 88,
+      "hazard_hits": 112,
+      "sleep_cycles": 100,
+      "dyn_norm": 6.353,
+      "val_norm": 2.542
+    },
+    {
+      "seed": 101,
+      "use_episodic": true,
+      "ticks": 50000,
+      "total_reward": -2543.0,
+      "food_collected": 82,
+      "hazard_hits": 104,
+      "sleep_cycles": 100,
+      "dyn_norm": 6.88,
+      "val_norm": 2.096
+    },
+    {
+      "seed": 102,
+      "use_episodic": true,
+      "ticks": 50000,
+      "total_reward": -2484.5,
+      "food_collected": 89,
+      "hazard_hits": 114,
+      "sleep_cycles": 100,
+      "dyn_norm": 7.667,
+      "val_norm": 2.382
+    },
+    {
+      "seed": 103,
+      "use_episodic": true,
+      "ticks": 50000,
+      "total_reward": -2654.0,
+      "food_collected": 57,
+      "hazard_hits": 113,
+      "sleep_cycles": 100,
+      "dyn_norm": 6.557,
+      "val_norm": 2.142
+    }
+  ],
+  "baseline_runs": [
+    {
+      "seed": 100,
+      "use_episodic": false,
+      "ticks": 50000,
+      "total_reward": -2659.5,
+      "food_collected": 191,
+      "hazard_hits": 264,
+      "sleep_cycles": 0,
+      "dyn_norm": 6.762,
+      "val_norm": 0.831
+    },
+    {
+      "seed": 101,
+      "use_episodic": false,
+      "ticks": 50000,
+      "total_reward": -2765.5,
+      "food_collected": 177,
+      "hazard_hits": 275,
+      "sleep_cycles": 0,
+      "dyn_norm": 7.03,
+      "val_norm": 0.737
+    },
+    {
+      "seed": 102,
+      "use_episodic": false,
+      "ticks": 50000,
+      "total_reward": -2419.0,
+      "food_collected": 188,
+      "hazard_hits": 198,
+      "sleep_cycles": 0,
+      "dyn_norm": 7.785,
+      "val_norm": 0.758
+    },
+    {
+      "seed": 103,
+      "use_episodic": false,
+      "ticks": 50000,
+      "total_reward": -2727.0,
+      "food_collected": 168,
+      "hazard_hits": 230,
+      "sleep_cycles": 0,
+      "dyn_norm": 6.918,
+      "val_norm": 0.755
+    }
+  ]
+}
