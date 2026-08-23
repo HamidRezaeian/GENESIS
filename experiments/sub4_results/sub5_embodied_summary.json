@@ -1,0 +1,93 @@
+{
+  "protocol": "SUBSTRATE_5_EMBODIED_ACTION_PERCEPTION_v1",
+  "phase": 2,
+  "mean_learn_food": 97.5,
+  "mean_ctrl_food": 245.5,
+  "mean_learn_reward": -4881.5,
+  "mean_ctrl_reward": -5416.5,
+  "mean_sensory_surprise": 0.038597,
+  "learn_runs": [
+    {
+      "seed": 100,
+      "is_learn": true,
+      "ticks": 50000,
+      "total_reward": -5221.0,
+      "food_collected": 74,
+      "mean_sensory_surprise": 0.03829,
+      "actor_norm": 1.858,
+      "world_norm": 2.482
+    },
+    {
+      "seed": 101,
+      "is_learn": true,
+      "ticks": 50000,
+      "total_reward": -5030.0,
+      "food_collected": 98,
+      "mean_sensory_surprise": 0.04119,
+      "actor_norm": 1.903,
+      "world_norm": 2.256
+    },
+    {
+      "seed": 102,
+      "is_learn": true,
+      "ticks": 50000,
+      "total_reward": -4742.0,
+      "food_collected": 108,
+      "mean_sensory_surprise": 0.03927,
+      "actor_norm": 1.974,
+      "world_norm": 2.501
+    },
+    {
+      "seed": 103,
+      "is_learn": true,
+      "ticks": 50000,
+      "total_reward": -4533.0,
+      "food_collected": 110,
+      "mean_sensory_surprise": 0.03564,
+      "actor_norm": 1.748,
+      "world_norm": 2.311
+    }
+  ],
+  "control_runs": [
+    {
+      "seed": 100,
+      "is_learn": false,
+      "ticks": 50000,
+      "total_reward": -5407.0,
+      "food_collected": 256,
+      "mean_sensory_surprise": 0.12873,
+      "actor_norm": 1.178,
+      "world_norm": 2.919
+    },
+    {
+      "seed": 101,
+      "is_learn": false,
+      "ticks": 50000,
+      "total_reward": -5106.0,
+      "food_collected": 267,
+      "mean_sensory_surprise": 0.13952,
+      "actor_norm": 1.148,
+      "world_norm": 2.85
+    },
+    {
+      "seed": 102,
+      "is_learn": false,
+      "ticks": 50000,
+      "total_reward": -5524.5,
+      "food_collected": 232,
+      "mean_sensory_surprise": 0.13989,
+      "actor_norm": 1.131,
+      "world_norm": 2.893
+    },
+    {
+      "seed": 103,
+      "is_learn": false,
+      "ticks": 50000,
+      "total_reward": -5628.5,
+      "food_collected": 227,
+      "mean_sensory_surprise": 0.14821,
+      "actor_norm": 1.186,
+      "world_norm": 2.934
+    }
+  ]
+}
