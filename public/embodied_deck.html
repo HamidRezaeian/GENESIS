@@ -457,8 +457,16 @@
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🗺️ 24×24 Multimodal Multi-Room Arena</span>
+                    <span class="card-title">🗺️ Developmental Curriculum Arena</span>
                     <span class="badge badge-purple" id="key-status-tag">KEY: NOT COLLECTED</span>
+                </div>
+                <div class="controls-bar" style="margin-bottom: 2px;">
+                    <span style="font-size: 11px; font-weight:700; color:var(--text-muted); align-self:center;">CURRICULUM:</span>
+                    <button class="btn btn-active" id="btn-lvl-1" onclick="setLevel(1)">🍼 Lvl 1: Infant (6x6)</button>
+                    <button class="btn" id="btn-lvl-2" onclick="setLevel(2)">🚶 Lvl 2: Toddler</button>
+                    <button class="btn" id="btn-lvl-3" onclick="setLevel(3)">🏃 Lvl 3: Chambers</button>
+                    <button class="btn" id="btn-lvl-4" onclick="setLevel(4)">🔑 Lvl 4: Key & Lock</button>
+                    <button class="btn" id="btn-lvl-5" onclick="setLevel(5)">🏆 Lvl 5: Master</button>
                 </div>
                 <div class="canvas-wrapper">
                     <div class="sleep-overlay" id="sleep-overlay">🌙 NEURAL SLEEP CONSOLIDATION ACTIVE...</div>
@@ -1025,28 +1033,120 @@
         }
 
         // =========================================================================
-        // ENVIRONMENT & SIMULATION LOOP
+        // DEVELOPMENTAL CURRICULUM LEVEL GENERATOR & ENVIRONMENT
+        // ZERO SHORTCUTS / ZERO HEURISTICS / PURE ADAPTIVE LEARNING
         // =========================================================================
         let grid = [];
-        let agentPos = { x: 3, y: 3 };
-        let agentDir = 0;
+        let agentPos = { x: 3, y: 2 };
+        let agentDir = 2; // Facing South
+        let currentLevel = 1;
+        let levelConsecutiveSolves = 0;
+
+        function setLevel(lvl) {
+            currentLevel = lvl;
+            levelConsecutiveSolves = 0;
+            initEnvironment();
+            const names = [
+                "Lvl 1: 🍼 Infant (6x6 Open Food)",
+                "Lvl 2: 🚶 Toddler (8x8 Corner Food)",
+                "Lvl 3: 🏃 Chambers (12x12 Open Doorway)",
+                "Lvl 4: 🔑 Key & Lock (16x16 1 Key + 1 Door)",
+                "Lvl 5: 🏆 Master (24x24 Full Multi-Room)"
+            ];
+            document.getElementById('hud-active-task').innerText = names[lvl - 1];
+            addChatMessage('🤖 GENESIS Organism', `Switched to: ${names[lvl - 1]}`, 'chat-agent');
+            for (let l = 1; l <= 5; l++) {
+                const btn = document.getElementById(`btn-lvl-${l}`);
+                if (btn) btn.classList.toggle('btn-active', l === lvl);
+            }
+        }
 
         function initEnvironment() {
             grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
-            for (let i = 0; i < GRID_SIZE; i++) {
-                grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
-                grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
-            }
-            const mid = Math.floor(GRID_SIZE / 2);
-            for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
-            grid[mid][6] = 2; // Door
-            grid[Math.floor(mid / 2)][4] = 3; // Key
-            grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Goal
-            for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard
-            for (let i = 0; i < 6; i++) grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4; // Food
-            agentPos = { x: 3, y: 3 };
             hasKey = false;
             doorOpened = false;
+
+            if (currentLevel === 1) { // 🍼 Infant: 8x8 bounded area, food directly 3 steps ahead!
+                const S = 8;
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        if (i >= S || j >= S) grid[i][j] = 1;
+                    }
+                }
+                for (let i = 0; i < S; i++) {
+                    grid[0][i] = 1; grid[S - 1][i] = 1;
+                    grid[i][0] = 1; grid[i][S - 1] = 1;
+                }
+                agentPos = { x: 3, y: 2 };
+                agentDir = 2; // Facing South directly towards food
+                grid[3][5] = 4; // Green food right in front!
+            } else if (currentLevel === 2) { // 🚶 Toddler: 10x10 with corner
+                const S = 10;
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        if (i >= S || j >= S) grid[i][j] = 1;
+                    }
+                }
+                for (let i = 0; i < S; i++) {
+                    grid[0][i] = 1; grid[S - 1][i] = 1;
+                    grid[i][0] = 1; grid[i][S - 1] = 1;
+                }
+                grid[4][4] = 1; grid[5][4] = 1;
+                agentPos = { x: 2, y: 2 };
+                agentDir = 1; // Facing East
+                grid[7][7] = 4; // Food around corner
+            } else if (currentLevel === 3) { // 🏃 Chambers: 14x14 with open doorway
+                const S = 14;
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        if (i >= S || j >= S) grid[i][j] = 1;
+                    }
+                }
+                for (let i = 0; i < S; i++) {
+                    grid[0][i] = 1; grid[S - 1][i] = 1;
+                    grid[i][0] = 1; grid[i][S - 1] = 1;
+                }
+                const mid = 7;
+                for (let i = 0; i < S; i++) grid[mid][i] = 1;
+                grid[mid][4] = 0; // Open doorway!
+                agentPos = { x: 3, y: 3 };
+                agentDir = 0;
+                grid[S - 3][S - 3] = 6; // Goal
+                grid[mid + 2][4] = 4;
+            } else if (currentLevel === 4) { // 🔑 Key & Lock: 18x18
+                const S = 18;
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        if (i >= S || j >= S) grid[i][j] = 1;
+                    }
+                }
+                for (let i = 0; i < S; i++) {
+                    grid[0][i] = 1; grid[S - 1][i] = 1;
+                    grid[i][0] = 1; grid[i][S - 1] = 1;
+                }
+                const mid = 9;
+                for (let i = 0; i < S; i++) grid[mid][i] = 1;
+                grid[mid][5] = 2; // Locked Door!
+                grid[4][4] = 3; // Key in Room 1!
+                grid[S - 3][S - 3] = 6; // Goal
+                grid[mid + 2][4] = 4;
+                agentPos = { x: 3, y: 3 };
+                agentDir = 0;
+            } else { // 🏆 Master: 24x24 Full Multi-Room
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
+                    grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
+                }
+                const mid = Math.floor(GRID_SIZE / 2);
+                for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
+                grid[mid][6] = 2; // Door
+                grid[Math.floor(mid / 2)][4] = 3; // Key
+                grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Goal
+                for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard
+                for (let i = 0; i < 6; i++) grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4; // Food
+                agentPos = { x: 3, y: 3 };
+                agentDir = 0;
+            }
         }
 
         function getVisualObservation() {
@@ -1094,10 +1194,8 @@
 
             let action = 0;
             if (policyMode === 'DIRECTED') {
-                // Argmax Decision: Follow best evaluated MCTS branch deterministically
                 action = mctsInfo.visitCounts.indexOf(Math.max(...mctsInfo.visitCounts));
             } else {
-                // Low-temperature tempered sampling (tau = 0.3)
                 const tau = 0.3;
                 const expCounts = new Float32Array(N_ACTIONS);
                 let sumExp = 0;
@@ -1157,6 +1255,15 @@
                             foodHarvested++;
                             document.getElementById('stat-food').innerText = foodHarvested;
                             addLog("Food harvested (+10.0 reward)");
+                            
+                            // Developmental Curriculum Auto-Graduation
+                            if (currentLevel <= 2) {
+                                levelConsecutiveSolves++;
+                                if (levelConsecutiveSolves >= 3 && currentLevel < 5) {
+                                    addChatMessage('🤖 GENESIS Organism', `🎉 LEVEL ${currentLevel} MASTERED! Auto-Graduating to Level ${currentLevel + 1}...`, 'chat-agent');
+                                    setLevel(currentLevel + 1);
+                                }
+                            }
                         }
                     }
                 }
@@ -1175,7 +1282,19 @@
                     reward = 50.0; energy += 50.0;
                     document.getElementById('hud-goals').innerText = goalsSolved;
                     addLog("GOAL SOLVED! (+50.0 reward)");
-                    initEnvironment();
+                    
+                    // Developmental Curriculum Auto-Graduation for advanced tiers
+                    if (currentLevel >= 3) {
+                        levelConsecutiveSolves++;
+                        if (levelConsecutiveSolves >= 2 && currentLevel < 5) {
+                            addChatMessage('🤖 GENESIS Organism', `🎉 LEVEL ${currentLevel} MASTERED! Auto-Graduating to Level ${currentLevel + 1}...`, 'chat-agent');
+                            setLevel(currentLevel + 1);
+                        } else {
+                            initEnvironment();
+                        }
+                    } else {
+                        initEnvironment();
+                    }
                 }
             }
 
