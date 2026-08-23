@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENESIS — 100% Pure Neural Transformer & Latent MCTS Arena</title>
-    <meta name="description" content="100% Pure Neural Causal Transformer, Online Gradient Plasticity and Latent MCTS. Zero hardcoded heuristics, zero shortcuts.">
+    <title>GENESIS — Persistent Neural Brain & Latent MCTS Arena</title>
+    <meta name="description" content="100% Pure Neural Causal Transformer, Online Gradient Plasticity, Latent MCTS, and Persistent Brain Checkpointing.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -249,7 +249,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            max-height: 250px;
+            max-height: 220px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -267,16 +267,6 @@
             transition: all 0.2s ease;
         }
 
-        .memory-item:hover {
-            border-color: var(--purple);
-            background: rgba(176, 38, 255, 0.05);
-        }
-
-        .surprise-badge {
-            color: var(--amber);
-            font-weight: 700;
-        }
-
         .tree-container {
             background: #04060b;
             border: 1px solid var(--border-subtle);
@@ -287,25 +277,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .sleep-pulse {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle, rgba(176, 38, 255, 0.35) 0%, transparent 70%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .sleep-active {
-            opacity: 1;
-            animation: pulse-glow 1.2s infinite alternate;
-        }
-
-        @keyframes pulse-glow {
-            0% { opacity: 0.3; }
-            100% { opacity: 0.9; }
         }
 
         .mono { font-family: var(--font-mono); }
@@ -321,12 +292,12 @@
         <div class="brand">
             <div class="brand-logo">🧠</div>
             <div>
-                <h1>GENESIS <span class="badge badge-emerald">100% PURE NEURAL MCTS (ZERO SHORTCUTS)</span></h1>
+                <h1>GENESIS <span class="badge badge-emerald" id="hud-storage-status">BRAIN: PERSISTENT STORAGE ACTIVE</span></h1>
             </div>
         </div>
         <div class="header-stats">
             <div class="stat-box">
-                <span class="stat-label">Learning Steps</span>
+                <span class="stat-label">Cumulative Steps</span>
                 <span class="stat-value text-cyan" id="hud-ticks">0</span>
             </div>
             <div class="stat-box">
@@ -349,7 +320,7 @@
     </header>
 
     <div class="dashboard-grid">
-        <!-- Left Column: Controls & Vision Cortex -->
+        <!-- Left Column: Controls & Brain Storage -->
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <div class="card">
                 <div class="card-header">
@@ -359,7 +330,6 @@
                 <div class="controls-bar">
                     <button class="btn btn-active" id="btn-mode-mcts" onclick="setMode('MCTS')">🌲 Latent MCTS</button>
                     <button class="btn" id="btn-mode-react" onclick="setMode('REACTIVE')">⚡ Direct Policy</button>
-                    <button class="btn" onclick="resetBrain()">🔄 Re-Init Weights (Tabula Rasa)</button>
                 </div>
                 <div class="controls-bar" style="margin-top: 4px;">
                     <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
@@ -369,14 +339,29 @@
                     <button class="btn" onclick="setSpeed(25)">25x (Fast Learn)</button>
                     <button class="btn" onclick="setSpeed(100)">100x (Turbo)</button>
                 </div>
-                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 4px;">
-                    ⚡ <b>ضمانت علمی ۱۰۰٪:</b> هیچ الگوریتم کمکی یا هاردکدی در این صفحه وجود ندارد. عامل کار را با وزن‌های کاملاً تصادفی آغاز کرده و تک‌تک حرکات با ضرب ماتریسی ترنسفورمر و جستجوی MCTS هدایت می‌شوند.
+            </div>
+
+            <!-- Brain Persistence & Checkpointing Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">💾 Brain Memory Persistence</span>
+                    <span class="badge badge-emerald">AUTO-SAVED (500 Ticks)</span>
+                </div>
+                <div class="controls-bar">
+                    <button class="btn" onclick="saveBrainManual()">💾 Save Brain Now</button>
+                    <button class="btn" onclick="exportBrainJSON()">📥 Export Checkpoint (.json)</button>
+                    <button class="btn" onclick="document.getElementById('file-import-brain').click()">📂 Load Checkpoint</button>
+                    <button class="btn" style="color:var(--rose);" onclick="wipeBrain()">🗑️ Wipe Brain (Tabula Rasa)</button>
+                    <input type="file" id="file-import-brain" style="display:none;" accept=".json" onchange="importBrainJSON(event)">
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">
+                    ✨ <b>حافظه پایدار:</b> وزن‌های سیناپسی مغز عامل به طور خودکار در مرورگر شما ذخیره می‌شوند. حتی اگر صفحه را ببندید یا رفرش کنید، یادگیری مغز از بین نمی‌رود و از همان نقطه ادامه می‌یابد!
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">👁️ 7×7 Egocentric Visual Cortex (Raw Input)</span>
+                    <span class="card-title">👁️ 7×7 Egocentric Visual Cortex</span>
                     <span class="badge badge-emerald">294-DIM TENSOR</span>
                 </div>
                 <div class="vision-grid" id="vision-matrix"></div>
@@ -386,18 +371,6 @@
                     <span>🟪 Door</span>
                     <span>🟩 Food</span>
                     <span>🟥 Hazard</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">🧠 Weight Norm Homeostasis (Turrigiano 2004)</span>
-                    <span class="badge badge-emerald">ACTIVE PLASTICITY</span>
-                </div>
-                <div style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">
-                    <div class="mono" style="color: var(--cyan); background: rgba(0,240,255,0.05); padding: 5px 8px; border-radius: 6px;">
-                        ΔW = η ∇ - λ W (λ = 10⁻⁴, η = 0.005)
-                    </div>
                 </div>
             </div>
         </div>
@@ -410,7 +383,6 @@
                     <span class="badge badge-purple" id="key-status-tag">KEY: NOT COLLECTED</span>
                 </div>
                 <div class="canvas-wrapper">
-                    <div class="sleep-pulse" id="sleep-overlay"></div>
                     <canvas id="mazeCanvas" width="480" height="480"></canvas>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
@@ -483,10 +455,10 @@
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">📝 Online Experience & Surprise Log</span>
+                    <span class="card-title">📝 Online Experience & Learning Log</span>
                 </div>
                 <div class="memory-list" id="memory-buffer-list">
-                    <div class="memory-item"><span>Neural agent initialized (tabula rasa).</span></div>
+                    <div class="memory-item"><span>Neural agent initialized.</span></div>
                 </div>
             </div>
         </div>
@@ -494,8 +466,7 @@
 
     <script>
         // =========================================================================
-        // GENESIS PURE NEURAL ENGINE (100% EXACT TRANSLATION OF SUBSTRATE 7)
-        // ZERO SHORTCUTS, ZERO HEURISTICS, ZERO CHEATS
+        // GENESIS PERSISTENT PURE NEURAL ENGINE (100% UNASSISTED / ZERO SHORTCUTS)
         // =========================================================================
         const GRID_SIZE = 24;
         const VISION_SIZE = 7;
@@ -523,7 +494,6 @@
         let hasKey = false;
         let doorOpened = false;
 
-        // Matrix Utility Helpers
         function randomMatrix(rows, cols, std = 0.05) {
             const m = [];
             for (let i = 0; i < rows; i++) {
@@ -555,7 +525,6 @@
             return sum;
         }
 
-        // Neural Network Weights Container
         let brain = {};
 
         function initNeuralBrain() {
@@ -568,7 +537,6 @@
             brain.W_ff1 = randomMatrix(D_MODEL, D_MODEL * 2, 0.05);
             brain.W_ff2 = randomMatrix(D_MODEL * 2, D_MODEL, 0.05);
 
-            // World Model Heads
             brain.W_dyn = randomMatrix(D_MODEL + N_ACTIONS, D_MODEL, 0.05);
             brain.W_rew = randomMatrix(D_MODEL + N_ACTIONS, 1, 0.05);
             brain.W_val = randomMatrix(D_MODEL, 1, 0.05);
@@ -580,24 +548,140 @@
             }
         }
 
-        function resetBrain() {
-            initNeuralBrain();
-            tickCount = 0;
-            energy = 100.0;
-            goalsSolved = 0;
-            foodHarvested = 0;
-            doorsUnlocked = 0;
-            hazardCollisions = 0;
-            initEnvironment();
-            addLog("Brain weights reset to random noise (Tabula Rasa).");
+        // =========================================================================
+        // BRAIN PERSISTENCE: LOCALSTORAGE AUTO-SAVE & JSON EXPORT/IMPORT
+        // =========================================================================
+        function serializeBrain() {
+            return {
+                tickCount,
+                goalsSolved,
+                foodHarvested,
+                doorsUnlocked,
+                hazardCollisions,
+                W_vis: brain.W_vis.map(r => Array.from(r)),
+                W_pos: brain.W_pos.map(r => Array.from(r)),
+                W_q: brain.W_q.map(r => Array.from(r)),
+                W_k: brain.W_k.map(r => Array.from(r)),
+                W_v: brain.W_v.map(r => Array.from(r)),
+                W_out: brain.W_out.map(r => Array.from(r)),
+                W_ff1: brain.W_ff1.map(r => Array.from(r)),
+                W_ff2: brain.W_ff2.map(r => Array.from(r)),
+                W_dyn: brain.W_dyn.map(r => Array.from(r)),
+                W_rew: brain.W_rew.map(r => Array.from(r)),
+                W_val: brain.W_val.map(r => Array.from(r)),
+                W_policy: brain.W_policy.map(r => Array.from(r))
+            };
         }
 
-        // Neural Forward Encoding
+        function deserializeBrain(data) {
+            tickCount = data.tickCount || 0;
+            goalsSolved = data.goalsSolved || 0;
+            foodHarvested = data.foodHarvested || 0;
+            doorsUnlocked = data.doorsUnlocked || 0;
+            hazardCollisions = data.hazardCollisions || 0;
+
+            brain.W_vis = data.W_vis.map(r => new Float32Array(r));
+            brain.W_pos = data.W_pos.map(r => new Float32Array(r));
+            brain.W_q = data.W_q.map(r => new Float32Array(r));
+            brain.W_k = data.W_k.map(r => new Float32Array(r));
+            brain.W_v = data.W_v.map(r => new Float32Array(r));
+            brain.W_out = data.W_out.map(r => new Float32Array(r));
+            brain.W_ff1 = data.W_ff1.map(r => new Float32Array(r));
+            brain.W_ff2 = data.W_ff2.map(r => new Float32Array(r));
+            brain.W_dyn = data.W_dyn.map(r => new Float32Array(r));
+            brain.W_rew = data.W_rew.map(r => new Float32Array(r));
+            brain.W_val = data.W_val.map(r => new Float32Array(r));
+            brain.W_policy = data.W_policy.map(r => new Float32Array(r));
+
+            brain.contextBuf = [];
+            for (let i = 0; i < CONTEXT_LEN; i++) {
+                brain.contextBuf.push(new Float32Array(VISUAL_DIM));
+            }
+        }
+
+        function saveBrainToStorage() {
+            try {
+                const data = serializeBrain();
+                localStorage.setItem('GENESIS_PERSISTENT_BRAIN', JSON.stringify(data));
+                document.getElementById('hud-storage-status').innerText = 'BRAIN: PERSISTENT STORAGE ACTIVE';
+            } catch (e) {
+                console.warn('Storage quota exceeded or storage error:', e);
+            }
+        }
+
+        function loadBrainFromStorage() {
+            try {
+                const saved = localStorage.getItem('GENESIS_PERSISTENT_BRAIN');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    deserializeBrain(data);
+                    addLog(`Restored trained neural brain from persistent storage (Tick ${tickCount}).`);
+                    return true;
+                }
+            } catch (e) {
+                console.warn('Failed to load from storage:', e);
+            }
+            return false;
+        }
+
+        function saveBrainManual() {
+            saveBrainToStorage();
+            addLog("Brain weights manually saved to persistent browser storage.");
+            alert("✅ مغز و وزن‌های سیناپسی ارگانیسم با موفقیت در حافظه مرورگر ذخیره شدند!");
+        }
+
+        function exportBrainJSON() {
+            const data = serializeBrain();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `genesis_brain_tick_${tickCount}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addLog("Brain checkpoint exported to JSON file.");
+        }
+
+        function importBrainJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    deserializeBrain(data);
+                    saveBrainToStorage();
+                    addLog(`Loaded external brain checkpoint successfully (Tick ${tickCount})!`);
+                    alert(`✅ چک‌پوینت مغز با موفقیت بارگذاری شد (تیک: ${tickCount})!`);
+                } catch (err) {
+                    alert("❌ خطا در بارگذاری فایل مغز.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function wipeBrain() {
+            if (confirm("آیا مطمئن هستید که می‌خواهید حافظه و وزن‌های عصبی ارگانیسم را پاک کرده و از صفر شروع کنید؟")) {
+                localStorage.removeItem('GENESIS_PERSISTENT_BRAIN');
+                initNeuralBrain();
+                tickCount = 0;
+                energy = 100.0;
+                goalsSolved = 0;
+                foodHarvested = 0;
+                doorsUnlocked = 0;
+                hazardCollisions = 0;
+                initEnvironment();
+                addLog("Brain wiped. Starting tabula rasa from random weights.");
+            }
+        }
+
+        // =========================================================================
+        // NEURAL FORWARD ENCODING & MCTS
+        // =========================================================================
         function encodeObservation(obs) {
             brain.contextBuf.shift();
             brain.contextBuf.push(new Float32Array(obs));
 
-            // Mean aggregate context with linear visual projection
             const x = new Float32Array(D_MODEL);
             const scale = 1.0 / Math.sqrt(D_MODEL);
 
@@ -608,19 +692,17 @@
                 }
             }
 
-            // Self-Attention mixing
             const q = matVecMul(brain.W_q, x);
             const k = matVecMul(brain.W_k, x);
             const v = matVecMul(brain.W_v, x);
             const score = vecDot(q, k) * scale;
-            const attn = 1.0 / (1.0 + Math.exp(-score)); // Sigmoid causal scalar
+            const attn = 1.0 / (1.0 + Math.exp(-score));
 
             const mixed = new Float32Array(D_MODEL);
             for (let d = 0; d < D_MODEL; d++) {
                 mixed[d] = x[d] + attn * v[d];
             }
 
-            // Feed-forward MLP
             const ff1 = matVecMul(brain.W_ff1, mixed);
             const relu = new Float32Array(D_MODEL * 2);
             for (let d = 0; d < D_MODEL * 2; d++) relu[d] = Math.max(0, ff1[d]);
@@ -632,9 +714,7 @@
             return latentState;
         }
 
-        // Latent MCTS Tree Search in Learned World Model
         function runLatentMCTS(rootState) {
-            // Compute root policy prior
             const logits = matVecMul(brain.W_policy, rootState);
             let maxL = -1e9;
             for (let i = 0; i < N_ACTIONS; i++) if (logits[i] > maxL) maxL = logits[i];
@@ -649,9 +729,7 @@
             const qValues = new Float32Array(N_ACTIONS);
             const visitCounts = new Int32Array(N_ACTIONS);
 
-            // 16 Simulations in latent space
             for (let sim = 0; sim < MCTS_SIMS; sim++) {
-                // PUCT Choice at root
                 let bestScore = -1e9, candidateA = 0;
                 const totalN = visitCounts.reduce((a, b) => a + b, 0);
 
@@ -664,7 +742,6 @@
                     }
                 }
 
-                // Rollout in World Model
                 let currState = new Float32Array(rootState);
                 let simReturn = 0;
                 let stepA = candidateA;
@@ -674,15 +751,12 @@
                     for (let d = 0; d < D_MODEL; d++) sa[d] = currState[d];
                     sa[D_MODEL + stepA] = 1.0;
 
-                    // Dynamics s' = tanh(sa @ W_dyn)
                     const nextS = matVecMul(brain.W_dyn, sa);
                     for (let d = 0; d < D_MODEL; d++) currState[d] = Math.tanh(nextS[d]);
 
-                    // Pred Reward r = sa @ W_rew
                     const rew = vecDot(sa, brain.W_rew.map(r => r[0]));
                     simReturn += Math.pow(GAMMA, depth) * rew;
 
-                    // Greedy rollout step
                     const pLogits = matVecMul(brain.W_policy, currState);
                     stepA = 0;
                     for (let a = 1; a < N_ACTIONS; a++) {
@@ -690,16 +764,13 @@
                     }
                 }
 
-                // Leaf Value
                 const vLeaf = vecDot(currState, brain.W_val.map(r => r[0]));
                 simReturn += Math.pow(GAMMA, MCTS_DEPTH) * vLeaf;
 
-                // Backprop
                 visitCounts[candidateA]++;
                 qValues[candidateA] += (simReturn - qValues[candidateA]) / visitCounts[candidateA];
             }
 
-            // MCTS Action Probabilities
             const totalVisits = visitCounts.reduce((a, b) => a + b, 0);
             const mctsProbs = new Float32Array(N_ACTIONS);
             if (totalVisits > 0) {
@@ -711,13 +782,11 @@
             return { probs: mctsProbs, qValues, visitCounts };
         }
 
-        // Online Neural Plasticity Updates
         function updateNeuralWeights(s_curr, action, reward, s_next) {
             const sa = new Float32Array(D_MODEL + N_ACTIONS);
             for (let d = 0; d < D_MODEL; d++) sa[d] = s_curr[d];
             sa[D_MODEL + action] = 1.0;
 
-            // 1. World Dynamics MSE update: s' = tanh(sa @ W_dyn)
             const predNext = matVecMul(brain.W_dyn, sa);
             for (let d = 0; d < D_MODEL; d++) predNext[d] = Math.tanh(predNext[d]);
 
@@ -731,14 +800,12 @@
                 }
             }
 
-            // 2. Reward Predictor update
             const predRew = vecDot(sa, brain.W_rew.map(r => r[0]));
             const errRew = reward - predRew;
             for (let i = 0; i < D_MODEL + N_ACTIONS; i++) {
                 brain.W_rew[i][0] += LR_MODEL * sa[i] * errRew - LAMBDA_HOMEO * brain.W_rew[i][0];
             }
 
-            // 3. Value Critic TD update
             const vCurr = vecDot(s_curr, brain.W_val.map(r => r[0]));
             const vNext = vecDot(s_next, brain.W_val.map(r => r[0]));
             const tdErr = reward + GAMMA * vNext - vCurr;
@@ -746,7 +813,6 @@
                 brain.W_val[i][0] += LR_MODEL * s_curr[i] * tdErr - LAMBDA_HOMEO * brain.W_val[i][0];
             }
 
-            // 4. Policy Prior update
             const logits = matVecMul(brain.W_policy, s_curr);
             let maxL = -1e9;
             for (let i = 0; i < N_ACTIONS; i++) if (logits[i] > maxL) maxL = logits[i];
@@ -769,7 +835,7 @@
         }
 
         // =========================================================================
-        // 2D MULTI-ROOM ENVIRONMENT SIMULATION
+        // 2D MAZE ENVIRONMENT & RUNNER
         // =========================================================================
         let grid = [];
         let agentPos = { x: 3, y: 3 };
@@ -777,18 +843,16 @@
 
         function initEnvironment() {
             grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
-            // Outer walls
             for (let i = 0; i < GRID_SIZE; i++) {
                 grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
                 grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
             }
-            // Partition wall at mid
             const mid = Math.floor(GRID_SIZE / 2);
             for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
             grid[mid][6] = 2; // Locked Door
             grid[Math.floor(mid / 2)][4] = 3; // Key in Room 1
-            grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Goal Target
-            for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard Corridor
+            grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Goal
+            for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard
             for (let i = 0; i < 6; i++) grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4; // Food
             agentPos = { x: 3, y: 3 };
             hasKey = false;
@@ -814,7 +878,7 @@
                             obs[idx * N_CHANNELS + cell] = 1.0;
                         }
                     } else {
-                        obs[idx * N_CHANNELS + 1] = 1.0; // Wall out of bounds
+                        obs[idx * N_CHANNELS + 1] = 1.0;
                     }
                     idx++;
                 }
@@ -826,12 +890,9 @@
             tickCount++;
             energy -= 0.05;
 
-            // 1. Perceive Raw Visual Observation
             const obs = getVisualObservation();
-            // 2. Neural Causal Encode
             const s_curr = encodeObservation(obs);
 
-            // 3. Latent MCTS Tree Search or Policy
             let action = 0;
             let actionProbs = null;
             let mctsInfo = null;
@@ -852,7 +913,6 @@
                 for (let i = 0; i < N_ACTIONS; i++) actionProbs[i] /= sumE;
             }
 
-            // Sample Action from Neural Distribution
             const r = Math.random();
             let cum = 0;
             for (let a = 0; a < N_ACTIONS; a++) {
@@ -863,14 +923,12 @@
                 }
             }
 
-            // Update UI Probability Bars
             for (let a = 0; a < 4; a++) {
                 const p = actionProbs[a];
                 document.getElementById(`prob-${a}`).innerText = p.toFixed(3);
                 document.getElementById(`bar-${a}`).style.width = `${(p * 100).toFixed(1)}%`;
             }
 
-            // 4. Physical Environment Transition
             const dirs = [
                 { dx: 0, dy: -1 }, // N
                 { dx: 1, dy: 0 },  // E
@@ -887,9 +945,9 @@
 
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                     const cell = grid[nx][ny];
-                    if (cell === 1) { // Wall bump
+                    if (cell === 1) {
                         reward = -0.5; energy -= 0.5;
-                    } else if (cell === 2) { // Locked door
+                    } else if (cell === 2) {
                         if (hasKey) {
                             grid[nx][ny] = 0;
                             doorOpened = true;
@@ -901,7 +959,7 @@
                         } else {
                             reward = -1.0; energy -= 1.0;
                         }
-                    } else if (cell === 5) { // Hazard
+                    } else if (cell === 5) {
                         agentPos = { x: nx, y: ny };
                         reward = -10.0; energy -= 10.0;
                         hazardCollisions++;
@@ -909,7 +967,7 @@
                         addLog("Hazard collision (-10.0 penalty)");
                     } else {
                         agentPos = { x: nx, y: ny };
-                        if (cell === 4) { // Food
+                        if (cell === 4) {
                             grid[nx][ny] = 0;
                             reward = 10.0; energy += 10.0;
                             foodHarvested++;
@@ -938,19 +996,20 @@
                 }
             }
 
-            // 5. Neural Plasticity Step (Learn from real transition)
             const nextObs = getVisualObservation();
             const s_next = encodeObservation(nextObs);
             const { loss, vCurr } = updateNeuralWeights(s_curr, action, reward, s_next);
 
-            // Compute Synaptic Norm
+            if (tickCount % 500 === 0) {
+                saveBrainToStorage();
+            }
+
             let normSq = 0;
             for (let i = 0; i < brain.W_dyn.length; i++) {
                 for (let j = 0; j < brain.W_dyn[0].length; j++) normSq += brain.W_dyn[i][j] * brain.W_dyn[i][j];
             }
             const normDyn = Math.sqrt(normSq);
 
-            // Update UI Telemetry
             document.getElementById('hud-ticks').innerText = tickCount.toLocaleString();
             document.getElementById('hud-energy').innerText = Math.max(0, energy).toFixed(1);
             document.getElementById('hud-loss').innerText = loss.toFixed(4);
@@ -1046,7 +1105,6 @@
                 }
             }
 
-            // Draw Agent
             const ax = agentPos.x * cellSize + cellSize / 2;
             const ay = agentPos.y * cellSize + cellSize / 2;
             ctx.fillStyle = '#00f0ff';
@@ -1139,6 +1197,10 @@
             initNeuralBrain();
             initEnvironment();
             buildVisionMatrixUI();
+            const restored = loadBrainFromStorage();
+            if (!restored) {
+                addLog("Starting fresh from random Gaussian neural weights.");
+            }
             drawMaze();
             requestAnimationFrame(loop);
         };
