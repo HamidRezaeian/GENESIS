@@ -465,6 +465,8 @@
                     <canvas id="mazeCanvas" width="480" height="480"></canvas>
                 </div>
                 <div class="controls-bar" style="margin-top: 4px;">
+                    <button class="btn btn-active" id="btn-pol-dir" onclick="setPolicyMode('DIRECTED')">🎯 Directed (Argmax MCTS)</button>
+                    <button class="btn" id="btn-pol-exp" onclick="setPolicyMode('EXPLORATION')">🎲 Exploration (Temp=0.3)</button>
                     <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
                     <button class="btn" onclick="stepOnce()">⏭️ Step</button>
                     <button class="btn" onclick="setSpeed(1)">1x</button>
@@ -562,7 +564,7 @@
         const D_MODEL = 32;
         const N_ACTIONS = 4;
         const LR_MODEL = 0.005;
-        const LAMBDA_HOMEO = 1e-4;
+        const LAMBDA_HOMEO = 1e-6;
         const LAMBDA_EWC = 0.5;
         const GAMMA = 0.95;
         const MCTS_SIMS = 16;
@@ -1072,6 +1074,15 @@
             return obs;
         }
 
+        let policyMode = 'DIRECTED'; // 'DIRECTED' or 'EXPLORATION'
+
+        function setPolicyMode(m) {
+            policyMode = m;
+            document.getElementById('btn-pol-dir').classList.toggle('btn-active', m === 'DIRECTED');
+            document.getElementById('btn-pol-exp').classList.toggle('btn-active', m === 'EXPLORATION');
+            addChatMessage('🤖 GENESIS Organism', `Decision Policy switched to: ${m === 'DIRECTED' ? '🎯 DIRECTED EXPLOITATION (Argmax MCTS)' : '🎲 STOCHASTIC EXPLORATION'}`, 'chat-agent');
+        }
+
         function stepSimulation() {
             tickCount++;
             energy -= 0.05;
@@ -1082,11 +1093,24 @@
             const actionProbs = mctsInfo.probs;
 
             let action = 0;
-            const r = Math.random();
-            let cum = 0;
-            for (let a = 0; a < N_ACTIONS; a++) {
-                cum += actionProbs[a];
-                if (r <= cum || a === N_ACTIONS - 1) { action = a; break; }
+            if (policyMode === 'DIRECTED') {
+                // Argmax Decision: Follow best evaluated MCTS branch deterministically
+                action = mctsInfo.visitCounts.indexOf(Math.max(...mctsInfo.visitCounts));
+            } else {
+                // Low-temperature tempered sampling (tau = 0.3)
+                const tau = 0.3;
+                const expCounts = new Float32Array(N_ACTIONS);
+                let sumExp = 0;
+                for (let a = 0; a < N_ACTIONS; a++) {
+                    expCounts[a] = Math.pow(mctsInfo.visitCounts[a] + 1e-4, 1.0 / tau);
+                    sumExp += expCounts[a];
+                }
+                const r = Math.random();
+                let cum = 0;
+                for (let a = 0; a < N_ACTIONS; a++) {
+                    cum += expCounts[a] / sumExp;
+                    if (r <= cum || a === N_ACTIONS - 1) { action = a; break; }
+                }
             }
 
             for (let a = 0; a < 4; a++) {
@@ -1158,6 +1182,15 @@
             const nextObs = getVisualObservation();
             const s_next = encodeMultimodalObservation(nextObs, activeTaskText);
             const { loss, vCurr } = updateNeuralWeights(s_curr, action, reward, s_next);
+
+            // Online Mini-Batch Hippocampus Replay (2 samples per tick for fast value propagation)
+            if (hippocampus.length >= 4) {
+                for (let b = 0; b < 2; b++) {
+                    const rIdx = Math.floor(Math.random() * hippocampus.length);
+                    const mem = hippocampus[rIdx];
+                    updateNeuralWeights(mem.s_curr, mem.action, mem.reward, mem.s_next);
+                }
+            }
 
             if (energy <= 0.0) {
                 energy = 100.0;
