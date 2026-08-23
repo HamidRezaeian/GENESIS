@@ -1,0 +1,25 @@
+{
+  "certificate_id": "REP_CERT_LEVEL_4_AGI_5M_v1",
+  "certificate_level": "LEVEL_4_DEEP_TIME_CONTINUAL_STABILITY_CERTIFICATE",
+  "substrate": "Substrate4_DualGPU_TensorCore_Homeostatic",
+  "protocol": "SUBSTRATE_4_5M_TICK_AGI_DUAL_GPU_v1",
+  "deep_time_ticks": 5000000,
+  "hardware_platform": "Kaggle Dual Tesla T4 GPUs (Turing Tensor Cores)",
+  "precision": "torch.float16",
+  "eras_traversed": 8,
+  "seeds_evaluated": [100, 101, 102, 103],
+  "total_wall_time_min": 281.26,
+  "mean_learn_late_accuracy": 68.315,
+  "mean_nolearn_late_accuracy": 50.2825,
+  "mean_ablation_gap_pp": 18.0325,
+  "homeostatic_weight_norm": 70.36,
+  "weight_norm_stability_status": "CLAMPED_HOMEOSTATIC_STABILITY_PASS",
+  "rule18_status": "CERTIFIED_5M_TICK_STABILITY_PASS",
+  "verdict": "CONTINUAL_LIFELONG_LEARNING_STABILITY_CONFIRMED_OVER_5M_TICKS",
+  "claim_boundary": {
+    "statistical_replication_status": "CERTIFIED_LEVEL_4_DEEP_TIME_STABILITY",
+    "synthetic_benchmark_generalization": "CONFIRMED_8_DEVELOPMENTAL_ERAS",
+    "real_world_agi_claim": "NOT_SUPPORTED",
+    "governance_rule": "Rule 24 / Rule 18"
+  }
+}
