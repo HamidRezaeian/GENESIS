@@ -1,0 +1,151 @@
+{
+  "protocol": "SUBSTRATE_7_LATENT_MCTS_REASONING_v1",
+  "mcts_depth": 4,
+  "mcts_simulations": 16,
+  "mean_mcts_goals": 0.5,
+  "mean_greedy_goals": 0.5,
+  "mean_control_goals": 2.5,
+  "mean_mcts_doors": 1.25,
+  "mean_greedy_doors": 1.25,
+  "mean_mcts_reward": -2964.12,
+  "mean_greedy_reward": -2902.38,
+  "mean_control_reward": -3993.12,
+  "mcts_runs": [
+    {
+      "seed": 100,
+      "mode": "MCTS",
+      "ticks": 50000,
+      "total_reward": -2746.5,
+      "doors_unlocked": 1,
+      "goals_reached": 1,
+      "hazard_hits": 26,
+      "dyn_norm": 1.736,
+      "val_norm": 0.612
+    },
+    {
+      "seed": 101,
+      "mode": "MCTS",
+      "ticks": 50000,
+      "total_reward": -2917.5,
+      "doors_unlocked": 1,
+      "goals_reached": 0,
+      "hazard_hits": 31,
+      "dyn_norm": 1.644,
+      "val_norm": 0.557
+    },
+    {
+      "seed": 102,
+      "mode": "MCTS",
+      "ticks": 50000,
+      "total_reward": -3256.5,
+      "doors_unlocked": 2,
+      "goals_reached": 1,
+      "hazard_hits": 76,
+      "dyn_norm": 1.725,
+      "val_norm": 0.596
+    },
+    {
+      "seed": 103,
+      "mode": "MCTS",
+      "ticks": 50000,
+      "total_reward": -2936.0,
+      "doors_unlocked": 1,
+      "goals_reached": 0,
+      "hazard_hits": 37,
+      "dyn_norm": 1.621,
+      "val_norm": 0.823
+    }
+  ],
+  "greedy_runs": [
+    {
+      "seed": 100,
+      "mode": "GREEDY",
+      "ticks": 50000,
+      "total_reward": -2724.0,
+      "doors_unlocked": 2,
+      "goals_reached": 1,
+      "hazard_hits": 29,
+      "dyn_norm": 1.811,
+      "val_norm": 0.628
+    },
+    {
+      "seed": 101,
+      "mode": "GREEDY",
+      "ticks": 50000,
+      "total_reward": -3106.0,
+      "doors_unlocked": 1,
+      "goals_reached": 0,
+      "hazard_hits": 52,
+      "dyn_norm": 1.635,
+      "val_norm": 0.641
+    },
+    {
+      "seed": 102,
+      "mode": "GREEDY",
+      "ticks": 50000,
+      "total_reward": -2886.0,
+      "doors_unlocked": 1,
+      "goals_reached": 1,
+      "hazard_hits": 30,
+      "dyn_norm": 1.67,
+      "val_norm": 0.574
+    },
+    {
+      "seed": 103,
+      "mode": "GREEDY",
+      "ticks": 50000,
+      "total_reward": -2893.5,
+      "doors_unlocked": 1,
+      "goals_reached": 0,
+      "hazard_hits": 32,
+      "dyn_norm": 1.666,
+      "val_norm": 1.025
+    }
+  ],
+  "control_runs": [
+    {
+      "seed": 100,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -4097.0,
+      "doors_unlocked": 4,
+      "goals_reached": 4,
+      "hazard_hits": 123,
+      "dyn_norm": 1.687,
+      "val_norm": 0.319
+    },
+    {
+      "seed": 101,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -3812.5,
+      "doors_unlocked": 3,
+      "goals_reached": 2,
+      "hazard_hits": 73,
+      "dyn_norm": 1.623,
+      "val_norm": 0.301
+    },
+    {
+      "seed": 102,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -3845.5,
+      "doors_unlocked": 3,
+      "goals_reached": 2,
+      "hazard_hits": 81,
+      "dyn_norm": 1.658,
+      "val_norm": 0.332
+    },
+    {
+      "seed": 103,
+      "mode": "RANDOM",
+      "ticks": 50000,
+      "total_reward": -4217.5,
+      "doors_unlocked": 2,
+      "goals_reached": 2,
+      "hazard_hits": 115,
+      "dyn_norm": 1.717,
+      "val_norm": 0.288
+    }
+  ]
+}
