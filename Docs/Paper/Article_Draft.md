@@ -260,7 +260,19 @@ Following early trials in Substrate 8, several critical optimizations were intro
 
 ---
 
-## 7. Scientific Certification & Claim Boundaries
+## 6.6 Substrate 8: Autotelic Environments & Thermodynamic Working Memory
+
+In August 2026, the architecture underwent a major refactor (Substrate 8 / Phase A & B) to strictly align with physical grounding invariants (Rule 9, 15, and 21):
+
+1. **Autotelic Environment Generation:** Hardcoded level designs were eliminated. The environment now generates valid, non-stationary manifolds procedurally using BFS reachability. Difficulty (e.g., scale, hazard density, locked doors) is dynamically scaled based on the population's metabolic efficiency.
+2. **Physical Information Income:** "Magic number" game rewards were replaced. Income is strictly derived from information-theoretic spatial territory clearing, formalized as $U_{\text{quantum}} \times \log_2(\Delta_{\text{reach}})$, mathematically linking metabolic income to topological exploration.
+3. **Thermodynamic Working Memory (Chemical Field):** Addressing Rule 15 constraints, we introduced a Diffusive Chemical Field ($\partial c/\partial t = D \nabla^2 c$) as an externalized memory substrate. The agent injects discrete quanta ($Q=256$) via physical action and senses the decaying gradient across a 7th continuous visual channel. The mathematical decay ($\lambda$) forces strategic memory use while preventing infinite state retention, allowing the MCTS planner to break deep spatial loops without explicit algorithmic detection.
+
+## 6.7 The Next Frontier: Temporal Abstraction (Substrate 9)
+
+With spatial navigation, working memory, and physical income computationally grounded, the next major cognitive bottleneck is **Temporal Abstraction and Hierarchical Planning**. While the continuous chemical gradient provides spatial trajectory optimization for PUCT, the current Transformer model lacks a multi-timescale temporal credit assignment framework. The future Substrate 9 architecture focuses on "Options" discovery—learning temporally extended macro-actions and cross-modal concept binding—to achieve cognitive closure while respecting Rule 21 computational conservation laws.
+
+---
 
 Under the governance of **Rule 24** (`Docs/FRAMEWORKS/REPLICATION_CERTIFICATE_SPEC.md`), the formal evaluation certificate is registered:
 
