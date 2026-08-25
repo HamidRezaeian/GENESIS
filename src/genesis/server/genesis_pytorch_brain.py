@@ -55,6 +55,8 @@ class GenesisPyTorchBrain:
         self.W_opt_q = self._rand_mat(self.NUM_OPTIONS, D_MODEL, 0.05)
         self.W_k_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
         self.W_v_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
+        self.W_forget = self._rand_mat(D_MODEL, 1, 0.05)
+        self.W_import = self._rand_mat(D_MODEL, 1, 0.05)
 
         self.W_dyn = self._rand_mat(D_MODEL + N_ACTIONS, D_MODEL, 0.05)
         # 1D for rewards and vals
@@ -88,9 +90,13 @@ class GenesisPyTorchBrain:
             
         hist_tensor = torch.stack(self.state_history)
         
+        forget_gate = torch.sigmoid(torch.matmul(hist_tensor, self.W_forget))
+        import_gate = torch.sigmoid(torch.matmul(hist_tensor, self.W_import))
+        weighted_history = hist_tensor * forget_gate * import_gate
+        
         Q_opt = self.W_opt_q
-        K_hist = torch.matmul(hist_tensor, self.W_k_hist)
-        V_hist = torch.matmul(hist_tensor, self.W_v_hist)
+        K_hist = torch.matmul(weighted_history, self.W_k_hist)
+        V_hist = torch.matmul(weighted_history, self.W_v_hist)
         
         score_opt = torch.matmul(Q_opt, K_hist.T) / 5.656854
         attn_opt = torch.softmax(score_opt, dim=-1)
@@ -386,6 +392,8 @@ class GenesisPyTorchBrain:
             W_opt_q=self.W_opt_q.cpu().numpy().astype(np.float32),
             W_k_hist=self.W_k_hist.cpu().numpy().astype(np.float32),
             W_v_hist=self.W_v_hist.cpu().numpy().astype(np.float32),
+            W_forget=self.W_forget.cpu().numpy().astype(np.float32),
+            W_import=self.W_import.cpu().numpy().astype(np.float32),
             W_dyn=self.W_dyn.cpu().numpy().astype(np.float32),
             W_rew=self.W_rew.cpu().numpy().astype(np.float32),
             W_val=self.W_val.cpu().numpy().astype(np.float32),
@@ -401,7 +409,10 @@ class GenesisPyTorchBrain:
     def load_checkpoint(self, path: Path):
         data = np.load(path)
         if "W_vis" in data:
-            self.W_vis = torch.tensor(data["W_vis"], dtype=self.dtype, device=self.device)
+            if data["W_vis"].shape == self.W_vis.shape:
+                self.W_vis = torch.tensor(data["W_vis"], dtype=self.dtype, device=self.device)
+            else:
+                print(f"[GENESIS CORE] W_vis shape mismatch. Ignoring checkpoint W_vis.")
             self.W_lang = torch.tensor(data["W_lang"], dtype=self.dtype, device=self.device)
             self.W_fuse_vis = torch.tensor(data["W_fuse_vis"], dtype=self.dtype, device=self.device)
             self.W_fuse_lang = torch.tensor(data["W_fuse_lang"], dtype=self.dtype, device=self.device)
@@ -424,11 +435,19 @@ class GenesisPyTorchBrain:
                 self.W_opt_q = torch.tensor(data["W_opt_q"], dtype=self.dtype, device=self.device)
                 self.W_k_hist = torch.tensor(data["W_k_hist"], dtype=self.dtype, device=self.device)
                 self.W_v_hist = torch.tensor(data["W_v_hist"], dtype=self.dtype, device=self.device)
+                if "W_forget" in data:
+                    self.W_forget = torch.tensor(data["W_forget"], dtype=self.dtype, device=self.device)
+                    self.W_import = torch.tensor(data["W_import"], dtype=self.dtype, device=self.device)
+                else:
+                    self.W_forget = self._rand_mat(D_MODEL, 1, 0.05)
+                    self.W_import = self._rand_mat(D_MODEL, 1, 0.05)
             else:
                 self.NUM_OPTIONS = 8
                 self.W_opt_q = self._rand_mat(self.NUM_OPTIONS, D_MODEL, 0.05)
                 self.W_k_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
                 self.W_v_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
+                self.W_forget = self._rand_mat(D_MODEL, 1, 0.05)
+                self.W_import = self._rand_mat(D_MODEL, 1, 0.05)
                 
             self.hippocampus = []
             self.state_history = []
