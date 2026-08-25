@@ -678,6 +678,7 @@ class GenesisEngineRunner:
         self.env.tick_cost = self.metabolic_cost
         self.env.max_energy_hint = self.max_energy
         self.env.reset_episode(seed=self.episode_seed)
+        self.brain.state_history.clear()
 
         # Load existing brain if available
         ckpt_path = BRAIN_DIR / "canonical_brain.npz"
@@ -691,6 +692,7 @@ class GenesisEngineRunner:
     def _end_episode(self, success: bool):
         self.episode_seed = (self.episode_seed + 1) % (2**31)
         self.env.reset_episode(seed=self.episode_seed)
+        self.brain.state_history.clear()
 
     def step_once(self) -> dict:
         self.tick_count += 1

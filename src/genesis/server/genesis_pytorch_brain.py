@@ -19,6 +19,7 @@ class GenesisPyTorchBrain:
         
         self.rng = np.random.RandomState(42)
         self.hippocampus = []
+        self.state_history = []
         self.init_weights()
         self.fisher_diag = {"W_dyn": torch.zeros((D_MODEL + N_ACTIONS, D_MODEL), dtype=self.dtype, device=self.device)}
         self.anchor_weights = {"W_dyn": self.W_dyn.clone()}
@@ -49,6 +50,12 @@ class GenesisPyTorchBrain:
         self.W_ff1 = self._rand_mat(D_MODEL, D_MODEL * 2, 0.05)
         self.W_ff2 = self._rand_mat(D_MODEL * 2, D_MODEL, 0.05)
 
+        # Substrate 9: Temporal Abstraction (Option Queries)
+        self.NUM_OPTIONS = 8
+        self.W_opt_q = self._rand_mat(self.NUM_OPTIONS, D_MODEL, 0.05)
+        self.W_k_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
+        self.W_v_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
+
         self.W_dyn = self._rand_mat(D_MODEL + N_ACTIONS, D_MODEL, 0.05)
         # 1D for rewards and vals
         self.W_rew = self._rand_mat(D_MODEL + N_ACTIONS, 1, 0.05).squeeze(-1)
@@ -75,13 +82,30 @@ class GenesisPyTorchBrain:
         fused_l = torch.matmul(text_emb, self.W_fuse_lang)
         fused = torch.tanh(fused_v + fused_l)
         
-        Q = torch.matmul(fused, self.W_q)
-        K = torch.matmul(fused, self.W_k)
-        V = torch.matmul(fused, self.W_v)
+        self.state_history.append(fused)
+        if len(self.state_history) > 16:
+            self.state_history.pop(0)
+            
+        hist_tensor = torch.stack(self.state_history)
+        
+        Q_opt = self.W_opt_q
+        K_hist = torch.matmul(hist_tensor, self.W_k_hist)
+        V_hist = torch.matmul(hist_tensor, self.W_v_hist)
+        
+        score_opt = torch.matmul(Q_opt, K_hist.T) / 5.656854
+        attn_opt = torch.softmax(score_opt, dim=-1)
+        mixed_opt = torch.matmul(attn_opt, V_hist)
+        
+        temporal_context = mixed_opt.mean(dim=0)
+        fused_with_time = fused + temporal_context
+        
+        Q = torch.matmul(fused_with_time, self.W_q)
+        K = torch.matmul(fused_with_time, self.W_k)
+        V = torch.matmul(fused_with_time, self.W_v)
         
         score = torch.matmul(Q, K) / 5.656854
         attn = torch.sigmoid(score)
-        mixed = fused + attn * V
+        mixed = fused_with_time + attn * V
         
         ff1 = torch.relu(torch.matmul(mixed, self.W_ff1))
         ff2 = torch.matmul(ff1, self.W_ff2)
@@ -359,6 +383,9 @@ class GenesisPyTorchBrain:
             W_out=self.W_out.cpu().numpy().astype(np.float32),
             W_ff1=self.W_ff1.cpu().numpy().astype(np.float32),
             W_ff2=self.W_ff2.cpu().numpy().astype(np.float32),
+            W_opt_q=self.W_opt_q.cpu().numpy().astype(np.float32),
+            W_k_hist=self.W_k_hist.cpu().numpy().astype(np.float32),
+            W_v_hist=self.W_v_hist.cpu().numpy().astype(np.float32),
             W_dyn=self.W_dyn.cpu().numpy().astype(np.float32),
             W_rew=self.W_rew.cpu().numpy().astype(np.float32),
             W_val=self.W_val.cpu().numpy().astype(np.float32),
@@ -393,7 +420,18 @@ class GenesisPyTorchBrain:
                 self.W_val_target = self.W_val.clone()
             self.W_policy = torch.tensor(data["W_policy"], dtype=self.dtype, device=self.device)
             
+            if "W_opt_q" in data:
+                self.W_opt_q = torch.tensor(data["W_opt_q"], dtype=self.dtype, device=self.device)
+                self.W_k_hist = torch.tensor(data["W_k_hist"], dtype=self.dtype, device=self.device)
+                self.W_v_hist = torch.tensor(data["W_v_hist"], dtype=self.dtype, device=self.device)
+            else:
+                self.NUM_OPTIONS = 8
+                self.W_opt_q = self._rand_mat(self.NUM_OPTIONS, D_MODEL, 0.05)
+                self.W_k_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
+                self.W_v_hist = self._rand_mat(D_MODEL, D_MODEL, 0.05)
+                
             self.hippocampus = []
+            self.state_history = []
             for i in range(len(data["h_action"])):
                 self.hippocampus.append({
                     "s_curr": data["h_s_curr"][i],
