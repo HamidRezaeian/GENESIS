@@ -14,7 +14,7 @@ A diagnostic curriculum may isolate a substrate capacity only if its artificial 
 Do not privilege or reject ANN-like or biological architectures by resemblance. Compare architectures under equivalent physical limits. Investigate temporal sparsity, event-driven/local computation, asynchronous activity, plasticity, modularity, hierarchy, and communication empirically. “Sparse” normally means low activity over time, not necessarily few connections.
 
 ## Rule 12: Scientific record
-Maintain `Docs/Article_Draft.md` as a rigorous academic record containing reproducible methods, configurations, cycles, memory, errors, population/survival statistics, ablations, limitations, negative findings, and falsifying evidence. Clearly separate established results, hypotheses, assumptions, history, and open questions.
+Maintain `Docs/Paper/Article_Draft.md` as a rigorous academic record containing reproducible methods, configurations, cycles, memory, errors, population/survival statistics, ablations, limitations, negative findings, and falsifying evidence. Clearly separate established results, hypotheses, assumptions, history, and open questions.
 
 ## Rule 13: Open-endedness and grounded contention
 The final environment must permit indefinitely novel behavior, not an enumerable fixed curriculum. Computational contention must derive from measured bandwidth, cache, execution, synchronization, communication, latency, or related constraints. Never disguise a density penalty or desired behavior as physics.

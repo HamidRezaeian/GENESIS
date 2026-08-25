@@ -9,8 +9,8 @@ D_MODEL = 32
 N_ACTIONS = 4
 MAX_TEXT_LEN = 16
 VOCAB_SIZE = 64
-MCTS_SIMS_DIRECTED = 6 # Depth of quantum parallel search
-MCTS_SIMS_EXPLORE = 6 # Depth
+MCTS_SIMS_DIRECTED = 32 # Number of PUCT simulations in Directed mode
+MCTS_SIMS_EXPLORE = 16 # Number of PUCT simulations in Explore mode
 
 class GenesisPyTorchBrain:
     def __init__(self, device="cuda"):
@@ -53,6 +53,7 @@ class GenesisPyTorchBrain:
         # 1D for rewards and vals
         self.W_rew = self._rand_mat(D_MODEL + N_ACTIONS, 1, 0.05).squeeze(-1)
         self.W_val = self._rand_mat(D_MODEL, 1, 0.05).squeeze(-1)
+        self.W_val_target = self.W_val.clone()
         self.W_policy = self._rand_mat(D_MODEL, N_ACTIONS, 0.05)
 
     def encode_text(self, text_str: str) -> torch.Tensor:
@@ -89,84 +90,81 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def run_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED") -> dict:
-        # Quantum Search (Batched Tensor Rollout)
         root_state = torch.tensor(root_state_np, dtype=self.dtype, device=self.device)
         
         logits = torch.matmul(root_state, self.W_policy)
-        max_l = torch.max(logits)
-        exp_l = torch.exp(logits - max_l)
+        exp_l = torch.exp(logits - torch.max(logits))
         priors = exp_l / (torch.sum(exp_l) + 1e-9)
         
-        noise_np = -np.log(np.maximum(1e-6, self.rng.uniform(0.0, 1.0, N_ACTIONS)))
-        noise_np /= (np.sum(noise_np) + 1e-9)
-        noise = torch.tensor(noise_np, dtype=self.dtype, device=self.device)
-        
+        noise = -torch.log(torch.clamp(torch.rand(N_ACTIONS, device=self.device), min=1e-6))
+        noise /= (torch.sum(noise) + 1e-9)
         eps_noise = 0.20 if policy_mode == "DIRECTED" else 0.40
         noisy_priors = (1.0 - eps_noise) * priors + eps_noise * noise
         
-        depth = MCTS_SIMS_DIRECTED if policy_mode == "DIRECTED" else MCTS_SIMS_EXPLORE
-        
-        states = root_state.unsqueeze(0)
-        total_paths = 4 ** depth
-        returns = torch.zeros(total_paths, device=self.device, dtype=self.dtype)
-        first_actions = torch.arange(4, device=self.device).repeat_interleave(4 ** (depth - 1))
-        
-        discount = 1.0
-        for d in range(depth):
-            num_paths = states.shape[0]
-            states = states.repeat_interleave(4, dim=0)
-            actions = torch.arange(4, device=self.device).repeat(num_paths)
-            actions_onehot = F.one_hot(actions, num_classes=4).to(dtype=self.dtype)
-            
-            sa = torch.cat([states, actions_onehot], dim=1)
-            next_states = torch.tanh(torch.matmul(sa, self.W_dyn))
-            r = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1)
-            
-            r_expanded = r.repeat_interleave(4 ** (depth - d - 1))
-            returns += discount * r_expanded
-            states = next_states
-            discount *= 0.95
-            
-        leaf_vals = torch.matmul(states, self.W_val.unsqueeze(-1)).squeeze(-1)
-        returns += discount * leaf_vals
-        
-        q_values = torch.zeros(4, device=self.device, dtype=self.dtype)
-        for a in range(4):
-            mask = (first_actions == a)
-            q_values[a] = returns[mask].mean()
-            
-        # Min-Max normalize Q-values (AlphaZero standard) to prevent softmax saturation
-        q_min = torch.min(q_values)
-        q_max = torch.max(q_values)
-        if q_max > q_min:
-            q_norm = (q_values - q_min) / (q_max - q_min)
-        else:
-            q_norm = torch.zeros_like(q_values)
-            
+        sims = MCTS_SIMS_DIRECTED if policy_mode == "DIRECTED" else MCTS_SIMS_EXPLORE
+        depth = 6
         cpuct = 0.8 if policy_mode == "DIRECTED" else 1.4
-        score = q_norm + cpuct * noisy_priors
         
+        q_sum = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
+        n_visits = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
+        
+        for _ in range(sims):
+            q_mean = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+            q_min = torch.min(q_mean)
+            q_max = torch.max(q_mean)
+            if q_max > q_min:
+                q_norm = (q_mean - q_min) / (q_max - q_min)
+            else:
+                q_norm = torch.zeros_like(q_mean)
+                
+            N_parent = torch.sum(n_visits)
+            puct_scores = q_norm + cpuct * noisy_priors * torch.sqrt(N_parent + 1.0) / (1.0 + n_visits)
+            a = torch.argmax(puct_scores).item()
+            
+            curr_s = root_state.clone()
+            sa = torch.zeros(36, dtype=self.dtype, device=self.device)
+            sa[:32] = curr_s
+            sa[32 + a] = 1.0
+            
+            discount = 1.0
+            path_return = 0.0
+            
+            for d in range(depth):
+                curr_s = torch.tanh(torch.matmul(sa, self.W_dyn))
+                r = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item()
+                path_return += discount * r
+                discount *= 0.95
+                
+                if d < depth - 1:
+                    # Rollout policy uses uniform random for speed
+                    next_a = torch.randint(0, N_ACTIONS, (1,), device=self.device).item()
+                    sa = torch.zeros(36, dtype=self.dtype, device=self.device)
+                    sa[:32] = curr_s
+                    sa[32 + next_a] = 1.0
+                    
+            leaf_v = torch.matmul(curr_s, self.W_val.unsqueeze(-1)).squeeze(-1).item()
+            path_return += discount * leaf_v
+            
+            q_sum[a] += path_return
+            n_visits[a] += 1.0
+
         temperature = 0.5 if policy_mode == "DIRECTED" else 1.5
-        scaled_score = score / temperature
+        probs_tensor = n_visits ** (1.0 / temperature)
+        probs_tensor /= (torch.sum(probs_tensor) + 1e-9)
         
-        max_score = torch.max(scaled_score)
-        exp_score = torch.exp(scaled_score - max_score)
-        probs_tensor = exp_score / (torch.sum(exp_score) + 1e-9)
-        
-        probs = probs_tensor.cpu().numpy().astype(np.float32)
-        visit_counts = np.full(4, 4**(depth-1), dtype=np.int32)
+        q_values = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
         
         return {
-            "probs": probs.tolist(),
-            "qValues": q_values.cpu().numpy().astype(np.float32).tolist(),
-            "visitCounts": visit_counts.tolist()
+            "probs": probs_tensor.cpu().numpy().tolist(),
+            "qValues": q_values.cpu().numpy().tolist(),
+            "visitCounts": n_visits.cpu().numpy().astype(np.int32).tolist()
         }
 
     @torch.no_grad()
-    def update_neural_weights(self, s_curr_np: np.ndarray, action: int, reward: float, s_next_np: np.ndarray) -> dict:
+    def update_neural_weights(self, s_curr_np: np.ndarray, action: int, reward: float, s_next_np: np.ndarray, is_terminal: bool = False, is_replay: bool = False) -> dict:
         s_curr = torch.tensor(s_curr_np, dtype=self.dtype, device=self.device)
         s_next = torch.tensor(s_next_np, dtype=self.dtype, device=self.device)
-        rew_val = float(reward)
+        rew_val = torch.tensor(reward, dtype=self.dtype, device=self.device)
         
         sa = torch.zeros(36, dtype=self.dtype, device=self.device)
         sa[:32] = s_curr
@@ -186,42 +184,142 @@ class GenesisPyTorchBrain:
         err_rew = rew_val - pred_rew
         self.W_rew += 0.005 * sa * err_rew - 1e-6 * self.W_rew
         
+        # Target Network for stable bootstrapping
         v_curr = torch.matmul(s_curr, self.W_val.unsqueeze(-1)).squeeze(-1)
-        v_next = torch.matmul(s_next, self.W_val.unsqueeze(-1)).squeeze(-1)
-        td_err = rew_val + 0.95 * v_next - v_curr
+        if is_terminal:
+            td_target = rew_val
+        else:
+            v_next_target = torch.matmul(s_next, self.W_val_target.unsqueeze(-1)).squeeze(-1)
+            td_target = rew_val + 0.95 * v_next_target
+            
+        td_err = td_target - v_curr
         self.W_val += 0.005 * s_curr * td_err - 1e-6 * self.W_val
+        
+        # Polyak averaging for target network
+        tau = 0.01
+        self.W_val_target = (1.0 - tau) * self.W_val_target + tau * self.W_val
         
         logits = torch.matmul(s_curr, self.W_policy)
         exp_l = torch.exp(logits - torch.max(logits))
         probs = exp_l / (torch.sum(exp_l) + 1e-9)
         grad_p = -probs
         grad_p[action] += 1.0
-        self.W_policy += 0.005 * torch.outer(s_curr, grad_p * td_err) - 1e-6 * self.W_policy
         
-        # Hippocampus
+        # Standard Actor-Critic policy gradient with clamped advantage for stability
+        clamped_td = torch.clamp(td_err, min=-10.0, max=10.0)
+        policy_grad = grad_p * clamped_td
+        
+        self.W_policy += 0.005 * torch.outer(s_curr, policy_grad) - 1e-6 * self.W_policy
+        
+        # Hippocampus uses |td_err| as priority signal, and avoids duplicate injection during replays
         loss_val = float(loss_dyn.item() / 32.0)
         v_curr_val = float(v_curr.item())
+        td_err_val = float(abs(td_err.item()))
         
-        self.hippocampus.append({
-            "s_curr": s_curr_np.copy(),
-            "action": action,
-            "reward": reward,
-            "s_next": s_next_np.copy(),
-            "surprise": loss_val + abs(reward)
-        })
-        if len(self.hippocampus) > 5000:
-            self.hippocampus.pop(0)
+        if not is_replay:
+            self.hippocampus.append({
+                "s_curr": s_curr_np.copy(),
+                "action": action,
+                "reward": reward,
+                "s_next": s_next_np.copy(),
+                "is_terminal": is_terminal,
+                "surprise": td_err_val + 1e-5
+            })
+            if len(self.hippocampus) > 5000:
+                self.hippocampus.pop(0)
             
         return {"loss": loss_val, "vCurr": v_curr_val}
+
+    @torch.no_grad()
+    def update_neural_weights_batch(self, s_curr_np, action_np, reward_np, s_next_np, is_terminal_np):
+        """Highly optimized batched manual PyTorch parameter update."""
+        s_curr_b = torch.tensor(s_curr_np, dtype=self.dtype, device=self.device)
+        action_b = torch.tensor(action_np, dtype=torch.long, device=self.device)
+        reward_b = torch.tensor(reward_np, dtype=self.dtype, device=self.device)
+        s_next_b = torch.tensor(s_next_np, dtype=self.dtype, device=self.device)
+        is_terminal_b = torch.tensor(is_terminal_np, dtype=torch.bool, device=self.device)
+        
+        B = s_curr_b.shape[0]
+        if B == 0:
+            return {"loss": 0.0, "vCurr": 0.0, "td_errs": np.array([])}
+            
+        sa = torch.zeros((B, 36), dtype=self.dtype, device=self.device)
+        sa[:, :32] = s_curr_b
+        sa[torch.arange(B, device=self.device), 32 + action_b] = 1.0
+        
+        # 1. Dynamics
+        pred_next = torch.tanh(torch.matmul(sa, self.W_dyn)) # [B, 32]
+        err_dyn = s_next_b - pred_next # [B, 32]
+        loss_dyn_b = torch.sum(err_dyn ** 2, dim=1) # [B]
+        
+        grad_d = err_dyn * (1.0 - pred_next ** 2) # [B, 32]
+        G_mean = torch.matmul(sa.T, grad_d) / B # [36, B] @ [B, 32] -> [36, 32]
+        
+        delta_fish = torch.matmul((sa * sa).T, (grad_d * grad_d)) / B # [36, 32]
+        self.fisher_diag["W_dyn"] += delta_fish * 0.01
+        
+        ewc_pen = 0.5 * self.fisher_diag["W_dyn"] * (self.W_dyn - self.anchor_weights["W_dyn"])
+        self.W_dyn += 0.005 * G_mean - 1e-6 * self.W_dyn - 0.005 * ewc_pen
+        
+        # 2. Reward
+        pred_rew = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1) # [B]
+        err_rew = reward_b - pred_rew # [B]
+        grad_r_mean = torch.matmul(sa.T, err_rew) / B # [36, B] @ [B] -> [36]
+        self.W_rew += 0.005 * grad_r_mean - 1e-6 * self.W_rew
+        
+        # 3. Value
+        v_curr = torch.matmul(s_curr_b, self.W_val.unsqueeze(-1)).squeeze(-1) # [B]
+        v_next_target = torch.matmul(s_next_b, self.W_val_target.unsqueeze(-1)).squeeze(-1) # [B]
+        
+        td_target = reward_b + 0.95 * v_next_target * (~is_terminal_b).to(self.dtype)
+        td_err = td_target - v_curr # [B]
+        
+        grad_v_mean = torch.matmul(s_curr_b.T, td_err) / B # [32, B] @ [B] -> [32]
+        self.W_val += 0.005 * grad_v_mean - 1e-6 * self.W_val
+        
+        # Polyak averaging target network - adjusted for effective batch
+        tau = 0.01
+        tau_eff = 1.0 - (1.0 - tau) ** B
+        self.W_val_target = (1.0 - tau_eff) * self.W_val_target + tau_eff * self.W_val
+        
+        # 4. Policy
+        logits = torch.matmul(s_curr_b, self.W_policy) # [B, 4]
+        max_l, _ = torch.max(logits, dim=1, keepdim=True)
+        exp_l = torch.exp(logits - max_l)
+        probs = exp_l / (torch.sum(exp_l, dim=1, keepdim=True) + 1e-9)
+        
+        grad_p = -probs # [B, 4]
+        grad_p[torch.arange(B, device=self.device), action_b] += 1.0
+        
+        clamped_td = torch.clamp(td_err, min=-10.0, max=10.0) # [B]
+        policy_grad = grad_p * clamped_td.unsqueeze(1) # [B, 4] * [B, 1] -> [B, 4]
+        
+        grad_pol_mean = torch.matmul(s_curr_b.T, policy_grad) / B # [32, B] @ [B, 4] -> [32, 4]
+        self.W_policy += 0.005 * grad_pol_mean - 1e-6 * self.W_policy
+        
+        return {
+            "loss": loss_dyn_b.mean().item() / 32.0,
+            "vCurr": v_curr.mean().item(),
+            "td_errs": torch.abs(td_err).cpu().numpy()
+        }
 
     def sleep_consolidation(self) -> int:
         if len(self.hippocampus) < 10:
             return 0
         replays = min(50, len(self.hippocampus))
-        for _ in range(replays):
-            idx = self.rng.randint(0, len(self.hippocampus))
-            mem = self.hippocampus[idx]
-            self.update_neural_weights(mem["s_curr"], mem["action"], mem["reward"], mem["s_next"])
+        
+        indices = self.rng.choice(len(self.hippocampus), size=replays, replace=False)
+        s_curr_b = np.stack([self.hippocampus[idx]["s_curr"] for idx in indices])
+        action_b = np.array([self.hippocampus[idx]["action"] for idx in indices], dtype=np.int64)
+        reward_b = np.array([self.hippocampus[idx]["reward"] for idx in indices], dtype=np.float32)
+        s_next_b = np.stack([self.hippocampus[idx]["s_next"] for idx in indices])
+        term_b = np.array([self.hippocampus[idx].get("is_terminal", False) for idx in indices], dtype=bool)
+        
+        batch_metrics = self.update_neural_weights_batch(s_curr_b, action_b, reward_b, s_next_b, term_b)
+        
+        for i, idx in enumerate(indices):
+            self.hippocampus[idx]["surprise"] = float(batch_metrics["td_errs"][i]) + 1e-5
+            
         self.anchor_weights["W_dyn"] = self.W_dyn.clone()
         return replays
 
@@ -264,32 +362,46 @@ class GenesisPyTorchBrain:
             W_dyn=self.W_dyn.cpu().numpy().astype(np.float32),
             W_rew=self.W_rew.cpu().numpy().astype(np.float32),
             W_val=self.W_val.cpu().numpy().astype(np.float32),
+            W_val_target=self.W_val_target.cpu().numpy().astype(np.float32),
             W_policy=self.W_policy.cpu().numpy().astype(np.float32),
-            hippo_s_curr=h_s_curr,
-            hippo_action=h_action,
-            hippo_reward=h_reward,
-            hippo_s_next=h_s_next,
-            hippo_surprise=h_surprise
+            h_s_curr=h_s_curr,
+            h_action=h_action,
+            h_reward=h_reward,
+            h_s_next=h_s_next,
+            h_surprise=h_surprise
         )
 
     def load_checkpoint(self, path: Path):
         data = np.load(path)
-        for k in ["W_vis", "W_lang", "W_fuse_vis", "W_fuse_lang", "W_q", "W_k", "W_v", "W_out", "W_ff1", "W_ff2", "W_dyn", "W_rew", "W_val", "W_policy"]:
-            if k in data:
-                arr = data[k].astype(np.float32)
-                if k in ["W_rew", "W_val"] and arr.ndim > 1:
-                    arr = arr.reshape(-1)
-                setattr(self, k, torch.tensor(arr, dtype=self.dtype, device=self.device))
-        
-        if "hippo_action" in data and len(data["hippo_action"]) > 0:
+        if "W_vis" in data:
+            self.W_vis = torch.tensor(data["W_vis"], dtype=self.dtype, device=self.device)
+            self.W_lang = torch.tensor(data["W_lang"], dtype=self.dtype, device=self.device)
+            self.W_fuse_vis = torch.tensor(data["W_fuse_vis"], dtype=self.dtype, device=self.device)
+            self.W_fuse_lang = torch.tensor(data["W_fuse_lang"], dtype=self.dtype, device=self.device)
+            self.W_q = torch.tensor(data["W_q"], dtype=self.dtype, device=self.device)
+            self.W_k = torch.tensor(data["W_k"], dtype=self.dtype, device=self.device)
+            self.W_v = torch.tensor(data["W_v"], dtype=self.dtype, device=self.device)
+            self.W_out = torch.tensor(data["W_out"], dtype=self.dtype, device=self.device)
+            self.W_ff1 = torch.tensor(data["W_ff1"], dtype=self.dtype, device=self.device)
+            self.W_ff2 = torch.tensor(data["W_ff2"], dtype=self.dtype, device=self.device)
+            self.W_dyn = torch.tensor(data["W_dyn"], dtype=self.dtype, device=self.device)
+            self.W_rew = torch.tensor(data["W_rew"], dtype=self.dtype, device=self.device)
+            self.W_val = torch.tensor(data["W_val"], dtype=self.dtype, device=self.device)
+            if "W_val_target" in data:
+                self.W_val_target = torch.tensor(data["W_val_target"], dtype=self.dtype, device=self.device)
+            else:
+                self.W_val_target = self.W_val.clone()
+            self.W_policy = torch.tensor(data["W_policy"], dtype=self.dtype, device=self.device)
+            
             self.hippocampus = []
-            for i in range(len(data["hippo_action"])):
+            for i in range(len(data["h_action"])):
                 self.hippocampus.append({
-                    "s_curr": data["hippo_s_curr"][i],
-                    "action": int(data["hippo_action"][i]),
-                    "reward": float(data["hippo_reward"][i]),
-                    "s_next": data["hippo_s_next"][i],
-                    "surprise": float(data["hippo_surprise"][i])
+                    "s_curr": data["h_s_curr"][i],
+                    "action": data["h_action"][i],
+                    "reward": data["h_reward"][i],
+                    "s_next": data["h_s_next"][i],
+                    "is_terminal": False, # Backwards compatibility
+                    "surprise": data["h_surprise"][i]
                 })
         
         self.anchor_weights["W_dyn"] = self.W_dyn.clone()

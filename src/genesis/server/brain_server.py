@@ -632,7 +632,9 @@ class GenesisEngineRunner:
 
         next_obs = self.env.get_visual_observation()
         s_next = self.brain.forward_transformer(next_obs, self.active_task_text)
-        metrics = self.brain.update_neural_weights(s_curr, action, reward, s_next)
+        
+        is_term = (self.energy <= 0.0) or (event == "GOAL_SOLVED")
+        metrics = self.brain.update_neural_weights(s_curr, action, reward, s_next, is_terminal=is_term, is_replay=False)
 
         # Prioritized Mini-batch replay
         if len(self.brain.hippocampus) >= 32:
@@ -640,9 +642,17 @@ class GenesisEngineRunner:
             np.maximum(surprises, 1e-6, out=surprises)
             probs = surprises / np.sum(surprises)
             indices = self.brain.rng.choice(len(self.brain.hippocampus), size=32, p=probs)
-            for idx in indices:
-                m = self.brain.hippocampus[idx]
-                self.brain.update_neural_weights(m["s_curr"], m["action"], m["reward"], m["s_next"])
+            
+            s_curr_b = np.stack([self.brain.hippocampus[idx]["s_curr"] for idx in indices])
+            action_b = np.array([self.brain.hippocampus[idx]["action"] for idx in indices], dtype=np.int64)
+            reward_b = np.array([self.brain.hippocampus[idx]["reward"] for idx in indices], dtype=np.float32)
+            s_next_b = np.stack([self.brain.hippocampus[idx]["s_next"] for idx in indices])
+            term_b = np.array([self.brain.hippocampus[idx].get("is_terminal", False) for idx in indices], dtype=bool)
+            
+            batch_metrics = self.brain.update_neural_weights_batch(s_curr_b, action_b, reward_b, s_next_b, term_b)
+            
+            for i, idx in enumerate(indices):
+                self.brain.hippocampus[idx]["surprise"] = float(batch_metrics["td_errs"][i]) + 1e-5
 
         if self.energy <= 0.0:
             self.energy = self.max_energy
