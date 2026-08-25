@@ -700,11 +700,15 @@ class GenesisEngineRunner:
 
         obs = self.env.get_visual_observation()
         s_curr = self.brain.forward_transformer(obs, self.active_task_text)
-        mcts_info = self.brain.run_mcts(s_curr, self.policy_mode)
-
-        probs = np.array(mcts_info["probs"], dtype=np.float64)
-        probs /= (np.sum(probs) + 1e-9) # ensure sum is exactly 1.0 for np.random.choice
+        mcts_info = self.brain.run_hierarchical_mcts(s_curr, self.policy_mode)
+        
+        # In Substrate 12, we get both option, action and emitted symbol
+        probs = np.array(mcts_info["action_probs"], dtype=np.float64)
+        probs /= (np.sum(probs) + 1e-9)
         action = int(self.brain.rng.choice(N_ACTIONS, p=probs))
+        
+        self.prev_option = mcts_info["selected_option"]
+        self.prev_symbol = mcts_info.get("emitted_symbol", 0)
 
         reward, event = self.env.step(action)
         self.energy += reward
@@ -741,13 +745,23 @@ class GenesisEngineRunner:
         s_next = self.brain.forward_transformer(next_obs, self.active_task_text)
         
         is_term = (self.energy <= 0.0) or (event == "GOAL_SOLVED")
+        
+        if hasattr(self, 'prev_option'):
+            self.brain.update_hierarchical_experience(s_curr, self.prev_option, self.prev_symbol, action, reward, s_next, is_term)
+            
         metrics = self.brain.update_neural_weights(s_curr, action, reward, s_next, is_terminal=is_term, is_replay=False)
 
         # Prioritized Mini-batch replay
         if len(self.brain.hippocampus) >= 32:
-            surprises = np.array([m["surprise"] for m in self.brain.hippocampus], dtype=np.float32)
+            surprises = np.array([m.get("surprise", 1e-5) for m in self.brain.hippocampus], dtype=np.float32)
+            np.nan_to_num(surprises, nan=1e-5, posinf=1.0, neginf=1e-5, copy=False)
             np.maximum(surprises, 1e-6, out=surprises)
-            probs = surprises / np.sum(surprises)
+            s_sum = float(np.sum(surprises))
+            if s_sum <= 0.0 or not np.isfinite(s_sum):
+                probs = np.ones(len(self.brain.hippocampus), dtype=np.float64) / len(self.brain.hippocampus)
+            else:
+                probs = (surprises / s_sum).astype(np.float64)
+                probs /= np.sum(probs)
             indices = self.brain.rng.choice(len(self.brain.hippocampus), size=32, p=probs)
             
             s_curr_b = np.stack([self.brain.hippocampus[idx]["s_curr"] for idx in indices])

@@ -1,920 +1,4 @@
-<!DOCTYPE html>
 
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>GENESIS · Observation Deck · Substrate 13</title>
-
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2 29 9.5v13L16 30 3 22.5v-13z' fill='none' stroke='url(%23g)' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4' fill='url(%23g)'/%3E%3C/svg%3E">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-<style>
-
-/* ============================================================
-
-   GENESIS OBSERVATION DECK — Substrate 12
-
-   Design system: deep dark (#09090b) · glassmorphism ·
-
-   cyan / neon-purple / emerald accents · mono telemetry
-
-   ============================================================ */
-
-:root{
-
-  --bg:#09090b; --bg2:#0c0d12;
-
-  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
-
-  --stroke:rgba(255,255,255,.09); --stroke2:rgba(255,255,255,.14);
-
-  --text:#e4e4e7; --dim:#8b8b96; --faint:#565661;
-
-  --cyan:#22d3ee; --cyan2:#67e8f9; --purple:#a855f7; --purple2:#c084fc;
-
-  --emerald:#34d399; --amber:#fbbf24; --red:#fb7185; --blue:#60a5fa;
-
-  --ui:'Inter',system-ui,sans-serif;
-
-  --disp:'Outfit',var(--ui);
-
-  --mono:'JetBrains Mono',ui-monospace,monospace;
-
-  --ease:cubic-bezier(.22,1,.36,1);
-
-}
-
-*{margin:0;padding:0;box-sizing:border-box}
-
-html,body{height:100%}
-
-body{
-
-  background:var(--bg); color:var(--text); font-family:var(--ui);
-
-  overflow-x:hidden; -webkit-font-smoothing:antialiased;
-
-}
-
-::selection{background:rgba(34,211,238,.25)}
-
-button{font-family:inherit}
-
-canvas{display:block}
-
-/* ---------- ambient background ---------- */
-
-.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-
-.bgfx::before{content:'';position:absolute;inset:0;
-
-  background:
-
-    radial-gradient(900px 600px at 12% -10%, rgba(34,211,238,.07), transparent 60%),
-
-    radial-gradient(900px 700px at 105% 110%, rgba(168,85,247,.08), transparent 60%),
-
-    radial-gradient(600px 400px at 80% 0%, rgba(52,211,153,.04), transparent 60%);
-
-}
-
-.bgfx::after{content:'';position:absolute;inset:0;opacity:.5;
-
-  background-image:
-
-    linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
-
-    linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
-
-  background-size:52px 52px;
-
-  mask-image:radial-gradient(ellipse at 50% 30%,black 30%,transparent 80%);
-
-  -webkit-mask-image:radial-gradient(ellipse at 50% 30%,black 30%,transparent 80%);
-
-}
-
-/* ---------- boot overlay ---------- */
-
-#boot{position:fixed;inset:0;z-index:200;background:var(--bg);display:grid;place-items:center;
-
-  transition:opacity .6s ease .1s;}
-
-#boot.done{opacity:0;pointer-events:none}
-
-.boot-card{text-align:center}
-
-.boot-logo{width:64px;height:72px;margin:0 auto 18px;position:relative;
-
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
-
-  background:linear-gradient(160deg,var(--cyan),var(--purple));
-
-  animation:bootPulse 1.2s ease-in-out infinite;}
-
-.boot-logo::after{content:'';position:absolute;inset:2.5px;background:var(--bg)}
-
-.boot-title{font:600 13px/1 var(--mono);letter-spacing:.35em;color:var(--text)}
-
-.boot-sub{font:400 10px/1 var(--mono);letter-spacing:.2em;color:var(--faint);margin-top:10px}
-
-.boot-bar{width:210px;height:2px;margin:20px auto 0;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
-
-.boot-bar i{display:block;height:100%;width:40%;border-radius:2px;
-
-  background:linear-gradient(90deg,var(--cyan),var(--purple));animation:bootScan 1.1s var(--ease) infinite}
-
-@keyframes bootPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7)}}
-
-@keyframes bootScan{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
-
-/* ---------- top bar ---------- */
-
-.topbar{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;
-
-  gap:16px;padding:16px 26px 14px;flex-wrap:wrap}
-
-.topbar::after{content:'';position:absolute;left:26px;right:26px;bottom:0;height:1px;
-
-  background:linear-gradient(90deg,transparent,rgba(34,211,238,.5),rgba(168,85,247,.5),transparent);
-
-  background-size:200% 100%;animation:gline 7s linear infinite}
-
-@keyframes gline{to{background-position:200% 0}}
-
-.brand{display:flex;align-items:center;gap:14px}
-
-.brand-mark{width:40px;height:45px;position:relative;flex:none;
-
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
-
-  background:linear-gradient(160deg,var(--cyan),var(--purple));
-
-  filter:drop-shadow(0 0 14px rgba(34,211,238,.35))}
-
-.brand-mark::after{content:'';position:absolute;inset:2px;background:var(--bg)}
-
-.brand-mark i{position:absolute;inset:0;display:grid;place-items:center;z-index:2;
-
-  font:700 13px var(--disp);background:none;
-
-  background-clip:initial;-webkit-background-clip:initial;
-
-  color:var(--cyan2)}
-
-.brand h1{font:700 21px/1 var(--disp);letter-spacing:.14em;
-
-  background:linear-gradient(90deg,#e4e4e7,var(--cyan2) 45%,var(--purple2));
-
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-
-.brand p{font:500 9px/1 var(--mono);letter-spacing:.28em;color:var(--faint);margin-top:5px}
-
-.brand p em{color:var(--purple2);font-style:normal}
-
-.top-stats{display:flex;gap:10px;flex-wrap:wrap}
-
-.pill{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;
-
-  background:var(--panel);border:1px solid var(--stroke);backdrop-filter:blur(12px)}
-
-.pill .lbl{font:600 8.5px/1 var(--mono);letter-spacing:.18em;color:var(--faint)}
-
-.pill b{font:600 13px/1 var(--mono);color:var(--text);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
-
-.pill b.wide{min-width:86px}
-
-.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:dotPulse 1.6s infinite}
-
-.pill.live .dot{background:var(--emerald)}
-
-.pill.sim .dot{background:var(--purple)}
-
-.pill.live{border-color:rgba(52,211,153,.35)}
-
-.pill.live span.fd{color:var(--emerald)}
-
-.pill.sim span.fd{color:var(--purple2)}
-
-@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.45)}50%{box-shadow:0 0 0 5px rgba(52,211,153,0)}}
-
-/* ---------- deck grid ---------- */
-
-.deck{position:relative;z-index:5;display:grid;gap:16px;padding:18px 26px 30px;
-
-  grid-template-columns:minmax(320px,440px) minmax(420px,1fr) minmax(300px,390px);
-
-  grid-template-rows:auto auto 1fr;
-
-  grid-template-areas:
-
-    "env  sym  meta"
-
-    "env  tree chat"
-
-    "vis  act  chat";
-
-  align-items:stretch;max-width:1780px;margin:0 auto}
-
-/* ---------- panel chrome ---------- */
-
-.panel{position:relative;border-radius:16px;padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;
-
-  background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
-
-  border:1px solid var(--stroke);
-
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-
-  box-shadow:0 24px 50px -24px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.04);
-
-  animation:panelIn .8s var(--ease) both}
-
-.panel::before{content:'';position:absolute;left:14px;right:14px;top:0;height:1px;
-
-  background:linear-gradient(90deg,transparent,var(--topline,rgba(255,255,255,.18)),transparent)}
-
-.panel:nth-of-type(1){animation-delay:.05s}.panel:nth-of-type(2){animation-delay:.12s}
-
-.panel:nth-of-type(3){animation-delay:.19s}.panel:nth-of-type(4){animation-delay:.26s}
-
-.panel:nth-of-type(5){animation-delay:.33s}.panel:nth-of-type(6){animation-delay:.4s}
-
-.panel:nth-of-type(7){animation-delay:.47s}
-
-@keyframes panelIn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
-
-.panel.alert{animation:alertFlash .5s ease-out}
-
-@keyframes alertFlash{0%{box-shadow:0 0 0 1px rgba(244,63,94,.8),0 0 46px rgba(244,63,94,.3)}100%{box-shadow:0 24px 50px -24px rgba(0,0,0,.75)}}
-
-.p-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-height:16px}
-
-.p-title{display:flex;align-items:center;gap:8px;font:600 10.5px/1 var(--mono);letter-spacing:.22em;color:var(--dim)}
-
-.p-title i{width:6px;height:6px;border-radius:50%;background:var(--accent,var(--cyan));
-
-  box-shadow:0 0 8px var(--accent,var(--cyan))}
-
-.p-sub{font:500 9px/1 var(--mono);letter-spacing:.1em;color:var(--faint);font-variant-numeric:tabular-nums;text-align:right}
-
-/* ---------- env panel ---------- */
-
-.env-panel{grid-area:env;--accent:var(--cyan);--topline:rgba(34,211,238,.35)}
-
-.env-wrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:#0a0b10}
-
-#envCanvas{width:100%;height:auto;aspect-ratio:532/532}
-
-.env-hud{position:absolute;top:10px;left:12px;font:500 9px/1.7 var(--mono);letter-spacing:.12em;
-
-  color:rgba(228,228,231,.55);pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.8)}
-
-.env-hud b{color:var(--cyan2)}
-
-.legend{display:flex;flex-wrap:wrap;gap:7px 14px}
-
-.lg{display:flex;align-items:center;gap:6px;font:500 8.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
-
-.lg i{width:9px;height:9px;border-radius:3px;flex:none}
-
-.lg.agent i{background:var(--cyan);box-shadow:0 0 7px var(--cyan)}
-
-.lg.wall i{background:#2a2a35;border:1px solid var(--stroke2)}
-
-.lg.haz i{background:rgba(244,63,94,.75);box-shadow:0 0 7px rgba(244,63,94,.5)}
-
-.lg.food i{background:var(--emerald);box-shadow:0 0 7px rgba(52,211,153,.5);border-radius:50%}
-
-.lg.key i{background:var(--amber);box-shadow:0 0 7px rgba(251,191,36,.45)}
-
-.lg.lock i{background:transparent;border:1.5px solid var(--amber)}
-
-.lg.chem i{background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 0 7px rgba(168,85,247,.5)}
-
-/* ---------- cortex panel ---------- */
-
-.cortex-panel{grid-area:vis;--accent:var(--cyan2);--topline:rgba(103,232,249,.3)}
-
-.cortex-body{display:flex;gap:14px;align-items:center;justify-content:center;flex:1}
-
-.cortex-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:#0a0b10;flex:none;max-width:230px}
-
-#visCanvas{width:100%;height:auto;aspect-ratio:276/276}
-
-.cortex-meta{display:flex;flex-direction:column;gap:8px;min-width:0}
-
-.kv{font:500 9px/1.5 var(--mono);letter-spacing:.08em;color:var(--faint)}
-
-.kv b{color:var(--text);font-weight:500}
-
-.kv .ok{color:var(--emerald)}.kv .no{color:var(--faint)}
-
-/* ---------- symbol panel ---------- */
-
-.symbol-panel{grid-area:sym;--accent:var(--purple);--topline:rgba(168,85,247,.4)}
-
-.sym-hero{display:flex;align-items:center;gap:20px}
-
-.hexwrap{width:96px;height:108px;flex:none;position:relative;
-
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
-
-  background:linear-gradient(160deg,var(--cyan) 0%,var(--purple) 55%,var(--cyan) 100%);
-
-  filter:drop-shadow(0 0 20px rgba(168,85,247,.4));
-
-  transition:filter .3s}
-
-.hex{position:absolute;inset:2px;background:radial-gradient(circle at 50% 32%,#17131f,#0b0b10 75%);
-
-  display:grid;place-items:center;
-
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-
-.hex span{font:700 40px/1 var(--mono);color:#f3e8ff;text-shadow:0 0 18px rgba(192,132,252,.9),0 0 42px rgba(168,85,247,.55)}
-
-.hexwrap.flash{animation:symFlash .7s var(--ease)}
-
-.hexring{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;
-
-  border:2px solid var(--purple2);opacity:0;pointer-events:none}
-
-.hexwrap.flash .hexring{animation:ringOut .8s ease-out}
-
-@keyframes symFlash{0%{transform:scale(1)}30%{transform:scale(1.09);filter:drop-shadow(0 0 34px rgba(168,85,247,.85)) brightness(1.5)}100%{transform:scale(1)}}
-
-@keyframes ringOut{from{transform:scale(.55);opacity:.8}to{transform:scale(1.6);opacity:0}}
-
-.sym-info{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}
-
-.sym-token{font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--dim)}
-
-.sym-token b{color:var(--purple2);font-size:15px;text-shadow:0 0 12px rgba(168,85,247,.5)}
-
-.sym-token small{color:var(--faint);font-weight:500;margin-left:8px}
-
-.sym-opt{font:500 10px/1.4 var(--mono);letter-spacing:.1em;color:var(--faint)}
-
-.sym-opt b{color:var(--cyan2);font-weight:600}
-
-.loopline{height:14px;border-radius:3px;position:relative;overflow:hidden;
-
-  background:rgba(255,255,255,.03);border:1px solid var(--stroke)}
-
-.loopline::before{content:'';position:absolute;inset:3px;border-radius:2px;
-
-  background:repeating-linear-gradient(90deg,rgba(34,211,238,.55) 0 8px,transparent 8px 20px,rgba(168,85,247,.55) 20px 28px,transparent 28px 40px);
-
-  animation:dashFlow 1.4s linear infinite;opacity:.7}
-
-.loop-cap{font:500 7.5px/1 var(--mono);letter-spacing:.16em;color:var(--faint);text-align:center}
-
-@keyframes dashFlow{to{transform:translateX(40px)}}
-
-.sym-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
-
-.concepts-cap{font:600 8.5px/1 var(--mono);letter-spacing:.2em;color:var(--faint);margin-bottom:6px}
-
-.concepts{display:flex;gap:3px;align-items:flex-end;height:46px;padding:5px 7px;border-radius:10px;
-
-  background:rgba(0,0,0,.3);border:1px solid var(--stroke)}
-
-.cbar{flex:1;min-height:3px;border-radius:2px;background:linear-gradient(180deg,rgba(168,85,247,.55),rgba(168,85,247,.1));
-
-  transition:height .45s var(--ease)}
-
-.cbar.hot{background:linear-gradient(180deg,#e9d5ff,var(--purple));box-shadow:0 0 10px rgba(168,85,247,.65)}
-
-.symhist{display:flex;gap:5px}
-
-.chip{width:30px;height:36px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--stroke);
-
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:none}
-
-.chip b{font:600 13px/1 var(--mono);color:var(--dim)}
-
-.chip span{font:500 7.5px/1 var(--mono);color:var(--faint)}
-
-.chip.first{border-color:rgba(168,85,247,.55);box-shadow:0 0 12px rgba(168,85,247,.25)}
-
-.chip.first b{color:#e9d5ff}
-
-/* ---------- mcts panel ---------- */
-
-.mcts-panel{grid-area:tree;--accent:var(--purple);--topline:rgba(168,85,247,.3);flex:1}
-
-.tree-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.22);flex:1}
-
-#treeCanvas{width:100%;height:auto;aspect-ratio:680/320}
-
-/* ---------- actions panel ---------- */
-
-.actions-panel{grid-area:act;--accent:var(--blue);--topline:rgba(96,165,250,.3)}
-
-.act-rows{display:flex;flex-direction:column;gap:11px;flex:1;justify-content:center}
-
-.arow{display:grid;grid-template-columns:118px 1fr 52px;gap:12px;align-items:center}
-
-.aname{display:flex;align-items:center;gap:8px;font:600 9.5px/1 var(--mono);letter-spacing:.16em;color:var(--dim)}
-
-.aname i{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;flex:none;
-
-  font:600 9px var(--mono);color:#0b0b10;background:var(--c,var(--cyan))}
-
-.atrack{height:11px;border-radius:6px;background:rgba(255,255,255,.045);overflow:hidden;position:relative;
-
-  border:1px solid rgba(255,255,255,.05)}
-
-.afill{height:100%;border-radius:6px;width:0%;position:relative;
-
-  transition:width .55s var(--ease);
-
-  background:linear-gradient(90deg,color-mix(in srgb,var(--c) 55%,transparent),var(--c));
-
-  box-shadow:0 0 12px color-mix(in srgb,var(--c) 55%,transparent)}
-
-.arow.win .aname{color:var(--text)}
-
-.arow.win .afill{box-shadow:0 0 16px color-mix(in srgb,var(--c) 75%,transparent)}
-
-.arow.win .aname i{box-shadow:0 0 10px var(--c)}
-
-.aval{font:600 11px/1 var(--mono);color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
-
-.arow.win .aval{color:var(--c)}
-
-/* ---------- metabolic panel ---------- */
-
-.meta-panel{grid-area:meta;--accent:var(--emerald);--topline:rgba(52,211,153,.35)}
-
-.met-label{display:flex;justify-content:space-between;align-items:baseline}
-
-.met-label span{font:600 9px/1 var(--mono);letter-spacing:.2em;color:var(--dim)}
-
-.met-label b{font:600 13px/1 var(--mono);color:var(--text);font-variant-numeric:tabular-nums}
-
-.ebar{height:13px;border-radius:7px;background:rgba(255,255,255,.045);overflow:hidden;border:1px solid rgba(255,255,255,.05)}
-
-.efill{height:100%;border-radius:7px;width:100%;transition:width .6s var(--ease),background .4s}
-
-.meta-panel.critical .efill{animation:barPulse .8s infinite}
-
-@keyframes barPulse{0%,100%{opacity:1}50%{opacity:.5}}
-
-.memseg{display:flex;gap:3px;height:16px;align-items:stretch}
-
-.memseg i{flex:1;border-radius:2px;background:rgba(255,255,255,.05);transition:background .3s}
-
-.memseg i.on{background:linear-gradient(180deg,var(--emerald),rgba(52,211,153,.4));box-shadow:0 0 6px rgba(52,211,153,.3)}
-
-.memseg i.hot{background:linear-gradient(180deg,var(--amber),rgba(251,191,36,.4))}
-
-.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-.stat{border-radius:11px;padding:11px 13px;background:rgba(0,0,0,.24);border:1px solid var(--stroke)}
-
-.stat .sl{font:600 8px/1 var(--mono);letter-spacing:.2em;color:var(--faint);margin-bottom:7px}
-
-.stat .sv{font:700 19px/1 var(--mono);color:var(--text);font-variant-numeric:tabular-nums}
-
-.stat .sv small{font-size:10px;color:var(--faint);font-weight:500;margin-left:4px}
-
-.pips{display:flex;gap:5px;align-items:center;height:19px}
-
-.pips i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--stroke)}
-
-.pips i.on{background:var(--amber);box-shadow:0 0 8px rgba(251,191,36,.5);border-color:transparent}
-
-.spark-row{display:flex;align-items:center;gap:10px}
-
-.spark-wrap{flex:1;border-radius:9px;border:1px solid var(--stroke);background:rgba(0,0,0,.24);overflow:hidden}
-
-#sparkCanvas{width:100%;height:54px}
-
-.spark-val{font:700 15px/1.2 var(--mono);color:var(--cyan2);text-align:right;font-variant-numeric:tabular-nums}
-
-.spark-val small{display:block;font:500 7.5px/1 var(--mono);letter-spacing:.14em;color:var(--faint);margin-top:4px}
-
-/* ---------- chat panel ---------- */
-
-.chat-panel{grid-area:chat;--accent:var(--cyan);--topline:rgba(34,211,238,.3)}
-
-.chat-log{flex:1;min-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding-right:4px;
-
-  mask-image:linear-gradient(180deg,transparent 0,black 14px);
-
-  -webkit-mask-image:linear-gradient(180deg,transparent 0,black 14px)}
-
-.chat-log::-webkit-scrollbar{width:7px}
-
-.chat-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.09);border-radius:4px}
-
-.chat-log::-webkit-scrollbar-track{background:transparent}
-
-.msg{display:flex;flex-direction:column;gap:4px;padding:10px 13px;border-radius:12px;
-
-  border:1px solid transparent;animation:msgIn .35s var(--ease)}
-
-@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-.msg .who{font:700 8.5px/1 var(--mono);letter-spacing:.2em;color:var(--faint)}
-
-.msg p{font:400 12.5px/1.6 var(--ui);color:var(--text);word-break:break-word}
-
-.msg p code{font:500 11px var(--mono);color:var(--cyan2);background:rgba(34,211,238,.08);
-
-  padding:1px 5px;border-radius:4px}
-
-.msg.user{background:rgba(34,211,238,.055);border-color:rgba(34,211,238,.16)}
-
-.msg.user .who{color:var(--cyan)}
-
-.msg.agent{background:rgba(168,85,247,.055);border-color:rgba(168,85,247,.16)}
-
-.msg.agent .who{color:var(--purple2)}
-
-.msg.sys{background:rgba(251,191,36,.045);border-color:rgba(251,191,36,.18)}
-
-.msg.sys .who{color:var(--amber)}
-
-.msg.typing p{display:flex;gap:5px;padding-top:2px}
-
-.msg.typing p i{width:6px;height:6px;border-radius:50%;background:var(--purple2);animation:tdots 1.1s infinite}
-
-.msg.typing p i:nth-child(2){animation-delay:.18s}
-
-.msg.typing p i:nth-child(3){animation-delay:.36s}
-
-@keyframes tdots{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}
-
-.chat-form{display:flex;gap:9px;padding-top:12px;border-top:1px solid var(--stroke)}
-
-.chat-form .prompt{display:grid;place-items:center;color:var(--cyan);font:700 14px var(--mono);text-shadow:0 0 8px rgba(34,211,238,.5)}
-
-.chat-form input{flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;
-
-  padding:10px 13px;color:var(--text);font:400 12.5px var(--ui);outline:none;transition:border-color .2s,box-shadow .2s}
-
-.chat-form input::placeholder{color:var(--faint)}
-
-.chat-form input:focus{border-color:rgba(34,211,238,.45);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
-
-.chat-form button{padding:0 16px;border:none;border-radius:10px;cursor:pointer;
-
-  background:linear-gradient(135deg,var(--cyan),var(--purple));color:#08080c;
-
-  font:700 10px var(--mono);letter-spacing:.16em;
-
-  transition:transform .15s var(--ease),box-shadow .2s}
-
-.chat-form button:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,211,238,.3)}
-
-.chat-form button:active{transform:translateY(0)}
-
-/* ---------- responsive ---------- */
-
-@media (max-width:1240px){
-
-  .deck{grid-template-columns:minmax(320px,1fr) minmax(380px,1.25fr);
-
-    grid-template-rows:auto auto auto 1fr;
-
-    grid-template-areas:"env sym" "env tree" "vis act" "meta chat"}
-
-}
-
-@media (max-width:820px){
-
-  .deck{grid-template-columns:1fr;grid-template-rows:none;
-
-    grid-template-areas:"env" "sym" "tree" "meta" "vis" "act" "chat"}
-
-  .topbar{padding:14px 16px 12px}.topbar::after{left:16px;right:16px}
-
-  .deck{padding:16px 14px 26px}
-
-}
-
-@media (prefers-reduced-motion:reduce){
-
-  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="bgfx"></div>
-
-<!-- ======== BOOT ======== -->
-
-<div id="boot">
-
-  <div class="boot-card">
-
-    <div class="boot-logo"></div>
-
-    <div class="boot-title">GENESIS OBSERVATION DECK</div>
-
-    <div class="boot-sub">CALIBRATING CAUSAL WORLD MODEL · SUBSTRATE 13</div>
-
-    <div class="boot-bar"><i></i></div>
-
-  </div>
-
-</div>
-
-<!-- ======== TOP BAR ======== -->
-
-<header class="topbar">
-
-  <div class="brand">
-
-    <div class="brand-mark"><i>G</i></div>
-
-    <div>
-
-      <h1>GENESIS</h1>
-
-      <p>OBSERVATION DECK <em>// SUBSTRATE 13 · CAUSAL WORLD MODEL &amp; WHAT-IF MCTS</em></p>
-
-    </div>
-
-  </div>
-
-  <div class="top-stats">
-
-    <div class="pill" id="feedPill"><i class="dot"></i><span class="lbl">FEED</span><span class="fd" id="feedLabel" style="font:600 10px var(--mono);letter-spacing:.14em">CONNECTING</span></div>
-
-    <div class="pill"><span class="lbl">TICK</span><b class="wide" id="tickTop">0</b></div>
-
-    <div class="pill"><span class="lbl">GEN</span><b id="genTop">1</b></div>
-
-    <div class="pill"><span class="lbl">FPS</span><b id="fpsTop">—</b></div>
-
-  </div>
-
-</header>
-
-<!-- ======== DECK ======== -->
-
-<main class="deck">
-
-  <!-- 1 · PHYSICAL SUBSTRATE -->
-
-  <section class="panel env-panel" id="envPanel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>PHYSICAL SUBSTRATE</span>
-
-      <span class="p-sub" id="envHud2">THERMO FIELD · ∂c/∂t = D∇²c</span>
-
-    </div>
-
-    <div class="env-wrap">
-
-      <canvas id="envCanvas" aria-label="thermodynamic environment grid"></canvas>
-
-      <div class="env-hud" id="envHud"></div>
-
-    </div>
-
-    <div class="legend">
-
-      <span class="lg agent"><i></i>AGENT</span>
-
-      <span class="lg wall"><i></i>WALL</span>
-
-      <span class="lg haz"><i></i>HAZARD</span>
-
-      <span class="lg food"><i></i>FOOD</span>
-
-      <span class="lg key"><i></i>KEY</span>
-
-      <span class="lg lock"><i></i>LOCK</span>
-
-      <span class="lg chem"><i></i>CHEM FIELD</span>
-
-    </div>
-
-  </section>
-
-  <!-- 2 · SYMBOLIC LANGUAGE -->
-
-  <section class="panel symbol-panel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>SYMBOLIC LANGUAGE · INNER MONOLOGUE</span>
-
-      <span class="p-sub">VOCAB 64 · GROUNDED</span>
-
-    </div>
-
-    <div class="sym-hero">
-
-      <div class="hexwrap" id="hexwrap">
-
-        <div class="hex"><span id="symChar">·</span></div>
-
-        <div class="hexring"></div>
-
-      </div>
-
-      <div class="sym-info">
-
-        <div class="sym-token">TOKEN <b id="symToken">#—</b><small id="symHex">0x—</small></div>
-
-        <div class="sym-opt">BOUND OPTION <b id="symOption">—</b></div>
-
-        <div class="loop-cap">SYMBOL → ENCODE_TEXT → FUSED LATENT STATE</div>
-
-        <div class="loopline"></div>
-
-      </div>
-
-    </div>
-
-    <div class="sym-grid">
-
-      <div>
-
-        <div class="concepts-cap">CONCEPT ACTIVATIONS · 16D ABSTRACT SPACE</div>
-
-        <div class="concepts" id="concepts"></div>
-
-      </div>
-
-      <div>
-
-        <div class="concepts-cap" style="text-align:right">EMISSION LOG</div>
-
-        <div class="symhist" id="symhist"></div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-  <!-- 3 · METABOLIC -->
-
-  <section class="panel meta-panel" id="metaPanel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>METABOLIC &amp; RESOURCE MONITOR</span>
-
-      <span class="p-sub">RULE 21 · PHYSICAL INCOME</span>
-
-    </div>
-
-    <div>
-
-      <div class="met-label"><span>ENERGY RESERVE</span><b id="energyPct">—</b></div>
-
-      <div class="ebar" style="margin-top:7px"><div class="efill" id="energyFill"></div></div>
-
-    </div>
-
-    <div>
-
-      <div class="met-label"><span>HIPPOCAMPAL MEMORY</span><b id="hippoTxt">0 / 5,000</b></div>
-
-      <div class="memseg" id="memseg" style="margin-top:7px"></div>
-
-    </div>
-
-    <div class="statgrid">
-
-      <div class="stat"><div class="sl">TICKS SURVIVED</div><div class="sv" id="statTicks">0</div></div>
-
-      <div class="stat"><div class="sl">GENERATION</div><div class="sv" id="statGen">1<small>LINEAGE</small></div></div>
-
-      <div class="stat"><div class="sl">DIFFICULTY</div><div class="pips" id="pips"></div></div>
-
-      <div class="stat"><div class="sl">SUBSTRATE</div><div class="sv" style="color:var(--cyan2)">S-13<small>CAUSAL</small></div></div>
-
-    </div>
-
-    <div class="spark-row">
-
-      <div class="spark-wrap"><canvas id="sparkCanvas" aria-label="entropy income history"></canvas></div>
-
-      <div class="spark-val"><span id="entropyVal">0.00</span><small>BITS / TICK · ΔH</small></div>
-
-    </div>
-
-  </section>
-
-  <!-- 4 · MCTS -->
-
-  <section class="panel mcts-panel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>CAUSAL MCTS · WHAT-IF COUNTERFACTUAL TREE</span>
-
-      <span class="p-sub" id="treeSel">—</span>
-
-    </div>
-
-    <div class="tree-wrap"><canvas id="treeCanvas" aria-label="hierarchical mcts tree"></canvas></div>
-
-  </section>
-
-  <!-- 5 · VISUAL CORTEX -->
-
-  <section class="panel cortex-panel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>VISUAL CORTEX</span>
-
-      <span class="p-sub">7×7 EGOCENTRIC</span>
-
-    </div>
-
-    <div class="cortex-body">
-
-      <div class="cortex-wrap"><canvas id="visCanvas" aria-label="agent egocentric receptive field"></canvas></div>
-
-      <div class="cortex-meta">
-
-        <div class="kv">RECEPTIVE FIELD<br><b>7 × 7 · 343D</b></div>
-
-        <div class="kv">CHEM CHANNEL<br><b>CH-7 · CONTINUOUS</b></div>
-
-        <div class="kv">ROTATION<br><b id="visRot">DIR 0 · N</b></div>
-
-        <div class="kv">KEY STATE<br><b id="visKey" class="no">UNBOUND</b></div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-  <!-- 6 · ACTION PROBABILITIES -->
-
-  <section class="panel actions-panel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>LOW-LEVEL POLICY · P(a | s, option)</span>
-
-      <span class="p-sub">SOFTMAX · τ=0.5</span>
-
-    </div>
-
-    <div class="act-rows" id="actRows"></div>
-
-  </section>
-
-  <!-- 7 · DIALOGUE -->
-
-  <section class="panel chat-panel">
-
-    <div class="p-head">
-
-      <span class="p-title"><i></i>GROUNDED DIALOGUE INTERFACE</span>
-
-      <span class="p-sub">UPLINK · TEXT ⇄ LATENT</span>
-
-    </div>
-
-    <div class="chat-log" id="chatLog"></div>
-
-    <form class="chat-form" id="chatForm" autocomplete="off">
-
-      <span class="prompt">❯</span>
-
-      <input id="chatInput" type="text" placeholder="transmit directive to agent…" maxlength="240">
-
-      <button type="submit">SEND</button>
-
-    </form>
-
-  </section>
-
-</main>
-
-<script>
 
 'use strict';
 
@@ -1135,7 +219,7 @@ function handleMsg(d){
 
   }
 
-  if(d.type==='state'||d.type==='STATE_UPDATE'||d.env||d.environment||d.world||d.cog||d.meta||d.tick!=null||d.mcts!=null){
+  if(d.type==='state'||d.env||d.environment||d.world||d.cog||d.meta||d.tick!=null){
 
     applyState(normalize(d));
 
@@ -1255,44 +339,29 @@ function normProbs(p){
 
 function normTree(t){
   if (!t) return null;
-  // If t has action_probs, option_probs or visitCounts, adapt it into hierarchical tree
-  if (!t.children && (t.action_probs || t.visitCounts || t.action_qValues || t.option_probs)) {
+  // If t has action_probs or visitCounts instead of children, adapt it into hierarchical tree
+  if (!t.children && (t.action_probs || t.visitCounts || t.action_qValues)) {
     const root = { label: 'ROOT', visits: 32, value: 0.5, children: [], key: 'ROOT' };
-    const optProbs = t.option_probs || [0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125];
-    const optQ = t.option_qValues || [0,0,0,0,0,0,0,0];
-    const actProbs = t.action_probs || [0.25, 0.25, 0.25, 0.25];
-    const actQ = t.action_qValues || [0,0,0,0];
-    const selOptId = t.selected_option != null ? t.selected_option : 0;
-    const selActId = t.selected_action != null ? t.selected_action : 0;
+    const probs = t.action_probs || [0.25, 0.25, 0.25, 0.25];
+    const qVals = t.action_qValues || [0, 0, 0, 0];
+    const visits = t.visitCounts || [8, 8, 8, 8];
+    const labels = ['FORWARD', 'TURN_LEFT', 'TURN_RIGHT', 'INTERACT'];
     
-    for (let i = 0; i < Math.min(8, optProbs.length); i++) {
-      const vCount = Math.max(1, Math.round(optProbs[i] * 32));
+    for (let i = 0; i < 4; i++) {
+      const vCount = +(visits[i] || Math.round(probs[i] * 32));
       const optNode = {
-        label: (OPTION_NAMES[i % 8] || ('O' + i)),
+        label: labels[i],
         visits: vCount,
-        value: clamp01(optQ[i] > 0 ? optQ[i] / 2.0 : (optProbs[i] || 0.5)),
+        value: clamp01(qVals[i] > 0 ? qVals[i] / 2.0 : (probs[i] || 0.5)),
         children: [],
         key: 'O' + i
       };
-      if (i === selOptId) {
-        ['FORWARD', 'LEFT', 'RIGHT', 'ACT'].forEach((aname, ai) => {
-          optNode.children.push({
-            label: aname,
-            visits: Math.max(1, Math.round((actProbs[ai] || 0.25) * vCount)),
-            value: clamp01(actQ[ai] > 0 ? actQ[ai] / 2.0 : (actProbs[ai] || 0.5)),
-            children: [],
-            key: 'O' + i + '/' + aname
-          });
-        });
-      }
       root.children.push(optNode);
     }
-    const selO = root.children[selOptId] || root.children[0];
-    const selA = selO && selO.children && selO.children[selActId] ? selO.children[selActId] : (selO && selO.children ? selO.children[0] : null);
-    const selPath = new Set(['ROOT']);
-    if (selO) selPath.add(selO.key);
-    if (selA) selPath.add(selA.key);
-    return { root, selO, selA, selPath };
+    let selO = root.children[0];
+    root.children.forEach(o => { if (o.visits > selO.visits) selO = o; });
+    const selPath = new Set(['ROOT', selO.key]);
+    return { root, selO, selA: null, selPath };
   }
   
   // flatten to 3 display levels: root → options (≤8) → actions (≤5 each)
@@ -1313,65 +382,67 @@ function normTree(t){
   return{root,selO,selA,selPath};
 }
 
-function findNode(key){
-  if(!S.cog.tree||!S.cog.tree.root)return null;
-  if(key==='ROOT')return S.cog.tree.root;
-  for(const opt of S.cog.tree.root.children||[]){
-    if(opt.key===key)return opt;
-    for(const act of opt.children||[]){
-      if(act.key===key)return act;
-    }
-  }
-  return null;
-}
-
 function applyState(n){
-  if(n.tick!=null)S.tick=n.tick;
-  if(n.generation!=null)S.generation=n.generation;
-  if(n.difficulty!=null)S.difficulty=n.difficulty;
-  if(n.env){
-    const e=n.env;
-    if(e.grid)S.env.grid=e.grid;
-    if(e.chem)S.env.chem=e.chem;
-    if(e.agent){
-      Object.assign(S.env.agent,e.agent);
-      if(!S.env.trail)S.env.trail=[];
-      S.env.trail.push({x:e.agent.x,y:e.agent.y});
-      if(S.env.trail.length>24)S.env.trail.shift();
-    }
-    if(e.hasKey!=null)S.env.hasKey=e.hasKey;
-    if(e.w)S.env.w=e.w; if(e.h)S.env.h=e.h;
-  }
-  if(n.vis)S.vis=n.vis;
-  if(n.cog){
-    const c=n.cog;
-    if(c.symbol!=null&&c.symbol!==S.cog.symbol){
-      S.cog.symbol=c.symbol;
-      S.cog.symbolHistory.unshift(c.symbol);
-      S.cog.symbolHistory.length=Math.min(10,S.cog.symbolHistory.length);
-      flashSymbol();
-    }
-    if(c.optionId!=null)S.cog.optionId=c.optionId;
-    if(c.optionLabel!=null)S.cog.optionLabel=c.optionLabel;
-    if(c.actionProbs){
-      S.cog.actionProbs=c.actionProbs;
-      S.cog.actionProbsT=c.actionProbs;
-    }
-    if(c.concepts)S.cog.concepts=c.concepts;
-    if(c.tree){
-      S.cog.tree=c.tree;
-      S.cog.selPath=c.tree.selPath;
-    }
-  }
-  if(n.meta){
-    const m=n.meta;
-    if(m.energy!=null)S.meta.energy=m.energy;
-    if(m.hippoCount!=null)S.meta.hippoCount=m.hippoCount;
-    if(m.hippoCap)S.meta.hippoCap=m.hippoCap;
-    if(m.entropyIncome!=null)S.meta.entropyIncome=m.entropyIncome;
-  }
-}
 
+  if(n.tick!=null)S.tick=n.tick;
+
+  if(n.generation!=null)S.generation=n.generation;
+
+  if(n.difficulty!=null)S.difficulty=n.difficulty;
+
+  if(n.env){const e=n.env;
+
+    if(e.grid)S.env.grid=e.grid;
+
+    if(e.chem)S.env.chem=e.chem;
+
+    if(e.agent)Object.assign(S.env.agent,e.agent);
+
+    if(e.hasKey!=null)S.env.hasKey=e.hasKey;
+
+    if(e.w)S.env.w=e.w; if(e.h)S.env.h=e.h;
+
+  }
+
+  if(n.vis)S.vis=n.vis;
+
+  if(n.cog){const c=n.cog;
+
+    if(c.symbol!=null&&c.symbol!==S.cog.symbol){
+
+      S.cog.symbol=c.symbol;
+
+      S.cog.symbolHistory.unshift(c.symbol);S.cog.symbolHistory.length=Math.min(10,S.cog.symbolHistory.length);
+
+      flashSymbol();
+
+    }
+
+    if(c.optionId!=null)S.cog.optionId=c.optionId;
+
+    if(c.optionLabel!=null)S.cog.optionLabel=c.optionLabel;
+
+    if(c.actionProbs)S.cog.actionProbsT=c.actionProbs;
+
+    if(c.concepts)S.cog.concepts=c.concepts;
+
+    if(c.tree){S.cog.tree=c.tree;S.cog.selPath=c.tree.selPath;}
+
+  }
+
+  if(n.meta){const m=n.meta;
+
+    if(m.energy!=null)S.meta.energy=m.energy;
+
+    if(m.hippoCount!=null)S.meta.hippoCount=m.hippoCount;
+
+    if(m.hippoCap)S.meta.hippoCap=m.hippoCap;
+
+    if(m.entropyIncome!=null)S.meta.entropyIncome=m.entropyIncome;
+
+  }
+
+}
 
 /* ================================================================
 
@@ -2592,18 +1663,23 @@ function demoReply(raw){
 let lastT=performance.now(),fpsFrames=0,fpsLast=performance.now();
 
 function frame(now){
-  try {
-    const time=now/1000;
-    drawEnv(time);drawCortex(time);drawTree(time);drawSpark();
-    fpsFrames++;
-    if(now-fpsLast>=1000){
-      el.fpsTop.textContent=Math.round(fpsFrames*1000/(now-fpsLast));
-      fpsFrames=0;fpsLast=now;
-    }
-  } catch(err) {
-    console.error('Frame error:', err);
+
+  const time=now/1000;
+
+  drawEnv(time);drawCortex(time);drawTree(time);drawSpark();
+
+  fpsFrames++;
+
+  if(now-fpsLast>=1000){
+
+    el.fpsTop.textContent=Math.round(fpsFrames*1000/(now-fpsLast));
+
+    fpsFrames=0;fpsLast=now;
+
   }
+
   requestAnimationFrame(frame);
+
 }
 
 setInterval(demoTick,110);
@@ -2626,7 +1702,7 @@ setTimeout(()=>document.getElementById('boot').classList.add('done'),1250);
 
 setTimeout(()=>{
 
-  chatSys('OBSERVATION DECK ONLINE — substrate 13 · causal world model · counterfactual MCTS active');
+  chatSys('OBSERVATION DECK ONLINE — substrate 12 · hierarchical MCTS · symbolic loop active');
 
 },1500);
 
@@ -2644,8 +1720,3 @@ el.chatForm.addEventListener('submit',e=>{
 
 });
 
-</script>
-
-</body>
-
-</html>
