@@ -20,16 +20,20 @@ class GenesisPyTorchBrain:
         self.rng = np.random.RandomState(42)
         self.hippocampus = []
 
-        # Hierarchical MCTS (Substrate 10)
-        self.num_options = 8
+        # Symbolic Abstraction (Substrate 11)
+        self.num_concepts = 16
         self.option_hippocampus = []
-        self.W_option_policy = self._rand_mat(D_MODEL, self.num_options, 0.05)
-        self.W_option_value = self._rand_mat(D_MODEL, self.num_options, 0.05)
+        self.W_concept_policy = self._rand_mat(D_MODEL, self.num_concepts, 0.05)
+        self.W_concept_value = self._rand_mat(D_MODEL, self.num_concepts, 0.05)
+        self.concept_embeddings = self._rand_mat(self.num_concepts, D_MODEL, 0.05)
+        self.W_transfer = self._rand_mat(self.num_concepts, self.num_concepts, 0.05)
         self.option_fisher_diag = {
-            "W_option_value": torch.zeros((D_MODEL, self.num_options), dtype=self.dtype, device=self.device)
+            "W_concept_value": torch.zeros((D_MODEL, self.num_concepts), dtype=self.dtype, device=self.device),
+            "concept_embeddings": torch.zeros((self.num_concepts, D_MODEL), dtype=self.dtype, device=self.device)
         }
         self.option_anchor_weights = {
-            "W_option_value": self.W_option_value.clone()
+            "W_concept_value": self.W_concept_value.clone(),
+            "concept_embeddings": self.concept_embeddings.clone()
         }
 
         self.state_history = []
@@ -218,8 +222,10 @@ class GenesisPyTorchBrain:
         return (ent_b - ent_a).item()
 
     @torch.no_grad()
-    def _simulate_option_entropy(self, root_state, option_id, depth):
-        option_context = self.W_opt_q[option_id]
+    def _simulate_concept_entropy(self, root_state, concept_id, depth):
+        concept_emb = self.concept_embeddings[concept_id]
+        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        option_context = torch.matmul(attn, self.W_opt_q)
         curr_s = root_state + option_context
         
         entropy_estimate = 0.0
@@ -244,10 +250,11 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def _high_level_mcts(self, root_state, policy_mode):
-        logits = torch.matmul(root_state, self.W_option_policy)
+        num_choices = getattr(self, "num_concepts", self.num_concepts)
+        logits = torch.matmul(root_state, self.W_concept_policy)
         priors = torch.softmax(logits, dim=-1)
         
-        noise = -torch.log(torch.clamp(torch.rand(self.num_options, device=self.device), min=1e-6))
+        noise = -torch.log(torch.clamp(torch.rand(self.num_concepts, device=self.device), min=1e-6))
         noise /= (torch.sum(noise) + 1e-9)
         eps_noise = 0.20 if policy_mode == "DIRECTED" else 0.40
         noisy_priors = (1.0 - eps_noise) * priors + eps_noise * noise
@@ -256,8 +263,8 @@ class GenesisPyTorchBrain:
         depth = 3
         cpuct = 1.2 if policy_mode == "DIRECTED" else 1.8
         
-        q_sum = torch.zeros(self.num_options, dtype=self.dtype, device=self.device)
-        n_visits = torch.zeros(self.num_options, dtype=self.dtype, device=self.device)
+        q_sum = torch.zeros(self.num_concepts, dtype=self.dtype, device=self.device)
+        n_visits = torch.zeros(self.num_concepts, dtype=self.dtype, device=self.device)
         
         for _ in range(sims):
             q_mean = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
@@ -272,7 +279,7 @@ class GenesisPyTorchBrain:
             puct_scores = q_norm + cpuct * noisy_priors * torch.sqrt(N_parent + 1.0) / (1.0 + n_visits)
             option = torch.argmax(puct_scores).item()
             
-            ent_est = self._simulate_option_entropy(root_state, option, depth)
+            ent_est = self._simulate_concept_entropy(root_state, option, depth)
             
             q_sum[option] += ent_est
             n_visits[option] += 1.0
@@ -298,8 +305,10 @@ class GenesisPyTorchBrain:
         hl_res = self._high_level_mcts(root_state, policy_mode)
         opt_id = hl_res["selected_option"]
         
-        # Condition Low Level on Option Context
-        opt_ctx = self.W_opt_q[opt_id]
+        # Condition Low Level on Concept Context
+        concept_emb = self.concept_embeddings[opt_id]
+        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        opt_ctx = torch.matmul(attn, self.W_opt_q)
         enriched_state = root_state + opt_ctx
         
         # Run standard MCTS on enriched state
@@ -328,17 +337,17 @@ class GenesisPyTorchBrain:
         ewc_pen = 0.5 * self.option_fisher_diag["W_option_value"] * (self.W_option_value - self.option_anchor_weights["W_option_value"])
         self.W_option_value += 0.005 * grad_v - 1e-6 * self.W_option_value - 0.005 * ewc_pen
         
-        logits = torch.matmul(s_curr, self.W_option_policy)
+        logits = torch.matmul(s_curr, self.W_concept_policy)
         probs = torch.softmax(logits, dim=-1)
         
         target = torch.zeros_like(probs)
         target[option_id] = 1.0
         
         policy_grad = -probs * entropy_gain
-        self.W_option_policy += 0.005 * torch.outer(s_curr, policy_grad) - 1e-6 * self.W_option_policy
+        self.W_concept_policy += 0.005 * torch.outer(s_curr, policy_grad) - 1e-6 * self.W_concept_policy
 
     @torch.no_grad()
-    def update_hierarchical_experience(self, s_curr_np, option_id, action_id, reward, s_next_np, is_terminal=False):
+    def update_hierarchical_experience(self, s_curr_np, concept_id, action_id, reward, s_next_np, is_terminal=False):
         # Calculate latent entropy gain for the option learning
         s_c = torch.tensor(s_curr_np, dtype=self.dtype, device=self.device)
         s_n = torch.tensor(s_next_np, dtype=self.dtype, device=self.device)
@@ -348,7 +357,9 @@ class GenesisPyTorchBrain:
         intrinsic_reward = float(torch.exp(torch.tensor(-ent_gain)).item())
         
         # Low Level Update (Physical environment reward)
-        opt_ctx = self.W_opt_q[option_id].cpu().numpy()
+        concept_emb = self.concept_embeddings[concept_id]
+        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        opt_ctx = torch.matmul(attn, self.W_opt_q).cpu().numpy()
         enriched_s_curr = s_curr_np + opt_ctx
         self.update_neural_weights(enriched_s_curr, action_id, reward, s_next_np, is_terminal)
         
@@ -358,7 +369,7 @@ class GenesisPyTorchBrain:
             
         self.option_hippocampus.append({
             "s_curr": s_curr_np.copy(),
-            "option": option_id,
+            "option": concept_id,
             "entropy_gain": intrinsic_reward
         })
 
@@ -447,8 +458,10 @@ class GenesisPyTorchBrain:
         return (ent_b - ent_a).item()
 
     @torch.no_grad()
-    def _simulate_option_entropy(self, root_state, option_id, depth):
-        option_context = self.W_opt_q[option_id]
+    def _simulate_concept_entropy(self, root_state, concept_id, depth):
+        concept_emb = self.concept_embeddings[concept_id]
+        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        option_context = torch.matmul(attn, self.W_opt_q)
         curr_s = root_state + option_context
         
         entropy_estimate = 0.0
@@ -473,10 +486,11 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def _high_level_mcts(self, root_state, policy_mode):
-        logits = torch.matmul(root_state, self.W_option_policy)
+        num_choices = getattr(self, "num_concepts", self.num_concepts)
+        logits = torch.matmul(root_state, self.W_concept_policy)
         priors = torch.softmax(logits, dim=-1)
         
-        noise = -torch.log(torch.clamp(torch.rand(self.num_options, device=self.device), min=1e-6))
+        noise = -torch.log(torch.clamp(torch.rand(self.num_concepts, device=self.device), min=1e-6))
         noise /= (torch.sum(noise) + 1e-9)
         eps_noise = 0.20 if policy_mode == "DIRECTED" else 0.40
         noisy_priors = (1.0 - eps_noise) * priors + eps_noise * noise
@@ -485,8 +499,8 @@ class GenesisPyTorchBrain:
         depth = 3
         cpuct = 1.2 if policy_mode == "DIRECTED" else 1.8
         
-        q_sum = torch.zeros(self.num_options, dtype=self.dtype, device=self.device)
-        n_visits = torch.zeros(self.num_options, dtype=self.dtype, device=self.device)
+        q_sum = torch.zeros(self.num_concepts, dtype=self.dtype, device=self.device)
+        n_visits = torch.zeros(self.num_concepts, dtype=self.dtype, device=self.device)
         
         for _ in range(sims):
             q_mean = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
@@ -501,7 +515,7 @@ class GenesisPyTorchBrain:
             puct_scores = q_norm + cpuct * noisy_priors * torch.sqrt(N_parent + 1.0) / (1.0 + n_visits)
             option = torch.argmax(puct_scores).item()
             
-            ent_est = self._simulate_option_entropy(root_state, option, depth)
+            ent_est = self._simulate_concept_entropy(root_state, option, depth)
             
             q_sum[option] += ent_est
             n_visits[option] += 1.0
@@ -527,8 +541,10 @@ class GenesisPyTorchBrain:
         hl_res = self._high_level_mcts(root_state, policy_mode)
         opt_id = hl_res["selected_option"]
         
-        # Condition Low Level on Option Context
-        opt_ctx = self.W_opt_q[opt_id]
+        # Condition Low Level on Concept Context
+        concept_emb = self.concept_embeddings[opt_id]
+        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        opt_ctx = torch.matmul(attn, self.W_opt_q)
         enriched_state = root_state + opt_ctx
         
         # Run standard MCTS on enriched state
@@ -557,17 +573,17 @@ class GenesisPyTorchBrain:
         ewc_pen = 0.5 * self.option_fisher_diag["W_option_value"] * (self.W_option_value - self.option_anchor_weights["W_option_value"])
         self.W_option_value += 0.005 * grad_v - 1e-6 * self.W_option_value - 0.005 * ewc_pen
         
-        logits = torch.matmul(s_curr, self.W_option_policy)
+        logits = torch.matmul(s_curr, self.W_concept_policy)
         probs = torch.softmax(logits, dim=-1)
         
         target = torch.zeros_like(probs)
         target[option_id] = 1.0
         
         policy_grad = -probs * entropy_gain
-        self.W_option_policy += 0.005 * torch.outer(s_curr, policy_grad) - 1e-6 * self.W_option_policy
+        self.W_concept_policy += 0.005 * torch.outer(s_curr, policy_grad) - 1e-6 * self.W_concept_policy
 
     @torch.no_grad()
-    def update_hierarchical_experience(self, s_curr_np, option_id, action_id, reward, s_next_np, is_terminal=False):
+    def update_hierarchical_experience(self, s_curr_np, concept_id, action_id, reward, s_next_np, is_terminal=False):
         # Calculate latent entropy gain for the option learning
         s_c = torch.tensor(s_curr_np, dtype=self.dtype, device=self.device)
         s_n = torch.tensor(s_next_np, dtype=self.dtype, device=self.device)
@@ -577,7 +593,9 @@ class GenesisPyTorchBrain:
         intrinsic_reward = float(torch.exp(torch.tensor(-ent_gain)).item())
         
         # Low Level Update (Physical environment reward)
-        opt_ctx = self.W_opt_q[option_id].cpu().numpy()
+        concept_emb = self.concept_embeddings[concept_id]
+        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        opt_ctx = torch.matmul(attn, self.W_opt_q).cpu().numpy()
         enriched_s_curr = s_curr_np + opt_ctx
         self.update_neural_weights(enriched_s_curr, action_id, reward, s_next_np, is_terminal)
         
@@ -587,7 +605,7 @@ class GenesisPyTorchBrain:
             
         self.option_hippocampus.append({
             "s_curr": s_curr_np.copy(),
-            "option": option_id,
+            "option": concept_id,
             "entropy_gain": intrinsic_reward
         })
 
@@ -768,9 +786,10 @@ class GenesisPyTorchBrain:
                 self.W_v_hist = torch.tensor(data["W_v_hist"], dtype=self.dtype, device=self.device)
                 
             if "W_option_policy" in data:
-                self.W_option_policy = torch.tensor(data["W_option_policy"], dtype=self.dtype, device=self.device)
+                self.W_concept_policy = torch.tensor(data["W_option_policy"], dtype=self.dtype, device=self.device)
                 self.W_option_value = torch.tensor(data["W_option_value"], dtype=self.dtype, device=self.device)
-                self.option_anchor_weights["W_option_value"] = self.W_option_value.clone()
+                self.option_anchor_weights["W_concept_value"] = self.W_concept_value.clone()
+            self.option_anchor_weights["concept_embeddings"] = self.concept_embeddings.clone()
 
             if "W_forget" in data:
                 self.W_forget = torch.tensor(data["W_forget"], dtype=self.dtype, device=self.device)
