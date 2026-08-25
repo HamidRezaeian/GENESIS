@@ -30,6 +30,16 @@
 1. **Mandatory Pre-Delivery Self-Audit:** The agent MUST strictly inspect and verify every code modification, algorithmic derivation, and decision logic before presenting it to the user. Never provide unverified, flawed, or untested implementations.
 2. **Deterministic & Tie-Breaking Integrity:** In all search trees, planning algorithms (e.g., MCTS, PUCT), and decision policies, tie-breaking mechanisms and exploitation paths MUST be mathematically sound, Q-grounded, and thoroughly verified against edge-case degeneracies (e.g., uniform counts, zero-gradient drift).
 3. **Absolute Zero Hardcoding Invariant:** All behaviors, language tokens, and cognitive actions MUST emerge purely from matrix algebra, neural forward passes, and grounded sensory states. Never inject heuristic shortcuts, if-else keyword scripts, or artificial crutches.
+4. **Mandatory Runtime Execution Verification & Live End-to-End Handshake:** Before claiming any feature, UI, or server integration is complete or functional:
+   - The agent MUST actively run and execute end-to-end verification (e.g., automated WebSocket round-trip, headless execution, or headless browser test).
+   - The agent MUST confirm that all event hooks (e.g., `window.onload`, WebSocket `onmessage`, canvas paint loops) execute without throwing errors or remaining uninitialized.
+   - Under NO circumstances may the agent ask the user to test, inspect, or refresh until this internal verification has passed with 100% verified telemetry.
+
+## Rule 26: Unified Model & Porting Equivalence Invariant (Learned 2026-08-23)
+
+1. **Single Unified Architecture:** The project operates under exactly ONE canonical AI model and mathematical architecture across all environments (C++ core, Python servers, Numba JIT, Web UIs).
+2. **No Silent Simplifications:** When implementing, optimizing, or porting code to a new framework or UI, the agent MUST NOT downgrade, simplify, or alter the core architecture (e.g., reducing Deep MCTS depth, changing layer dimensions, omitting algorithms) just to make it run faster or compile easier. 
+3. **Spec Alignment:** Any new code or UI wrapper must mathematically match the specifications outlined in the authoritative `Docs/` (e.g., `PHASE5_MULTIMODAL_DUAL_MEMORY_SPEC.md` and `Roadmap_Advanced_AI.md`). If a port is impossible under these strict constraints, the agent must fail explicitly and inform the user rather than providing a fractured or simplified model.
 
 ## Core Architectural Specifications (Organized under `Docs/Architecture/`)
 

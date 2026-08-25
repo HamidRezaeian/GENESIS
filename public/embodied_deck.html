@@ -388,7 +388,7 @@
             </div>
             <div class="stat-box">
                 <span class="stat-label">Hippocampus Buffer</span>
-                <span class="stat-value text-cyan" id="hud-hippo-count">0 / 500</span>
+                <span class="stat-value text-cyan" id="hud-hippo-count">0 / 5000</span>
             </div>
         </div>
     </header>
@@ -417,6 +417,7 @@
                     <button class="btn" onclick="sendQuickPrompt('What is your current plan?')">💭 What is your plan?</button>
                     <button class="btn" onclick="sendQuickPrompt('Find food')">🍏 Find Food</button>
                     <button class="btn" onclick="sendQuickPrompt('Get the gold key')">🔑 Get Key</button>
+                    <button class="btn" id="btn-auto-trainer" onclick="toggleAutoTrainer()" style="color:var(--amber); border-color:var(--amber);">🎓 Auto Trainer: OFF</button>
                 </div>
             </div>
 
@@ -427,12 +428,10 @@
                     <span class="badge badge-purple">ZERO FORGETTING</span>
                 </div>
                 <div class="controls-bar">
-                    <button class="btn btn-active" style="background: linear-gradient(135deg, rgba(176, 38, 255, 0.3), rgba(0, 240, 255, 0.3)); border-color: var(--purple); width: 100%; justify-content: center;" onclick="triggerSleepConsolidation()">🌙 Trigger Biological Sleep Consolidation</button>
-                    <button class="btn" onclick="saveBrainManual()">💾 Save Brain</button>
-                    <button class="btn" onclick="exportBrainJSON()">📥 Export Checkpoint (.json)</button>
-                    <button class="btn" onclick="document.getElementById('file-import-brain').click()">📂 Load Checkpoint</button>
-                    <button class="btn" style="color:var(--rose);" onclick="wipeBrain()">🗑️ Wipe Brain</button>
-                    <input type="file" id="file-import-brain" style="display:none;" accept=".json" onchange="importBrainJSON(event)">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 4px;">
+                        <span class="badge badge-emerald" style="font-size: 10px; opacity: 0.8;">💾 CANONICAL BRAIN AUTO-SAVE ACTIVE</span>
+                        <button class="btn" style="color:var(--rose);" onclick="wipeBrain()">🗑️ Tabula Rasa (Rebirth)</button>
+                    </div>
                 </div>
             </div>
 
@@ -472,15 +471,18 @@
                     <div class="sleep-overlay" id="sleep-overlay">🌙 NEURAL SLEEP CONSOLIDATION ACTIVE...</div>
                     <canvas id="mazeCanvas" width="480" height="480"></canvas>
                 </div>
-                <div class="controls-bar" style="margin-top: 4px;">
+                <div class="controls-bar" style="margin-top: 4px; flex-wrap: wrap;">
                     <button class="btn btn-active" id="btn-pol-dir" onclick="setPolicyMode('DIRECTED')">🎯 Directed (Argmax MCTS)</button>
                     <button class="btn" id="btn-pol-exp" onclick="setPolicyMode('EXPLORATION')">🎲 Exploration (Temp=0.3)</button>
                     <button class="btn" id="btn-play-pause" onclick="togglePlay()">⏸️ Pause</button>
                     <button class="btn" onclick="stepOnce()">⏭️ Step</button>
-                    <button class="btn" onclick="setSpeed(1)">1x</button>
-                    <button class="btn" onclick="setSpeed(5)">5x</button>
-                    <button class="btn" onclick="setSpeed(25)">25x</button>
-                    <button class="btn" onclick="setSpeed(100)">100x (Turbo)</button>
+                    <button class="btn btn-active" id="btn-spd-1" onclick="setSpeed(1)">1x</button>
+                    <button class="btn" id="btn-spd-5" onclick="setSpeed(5)">5x</button>
+                    <button class="btn" id="btn-spd-25" onclick="setSpeed(25)">25x</button>
+                    <button class="btn" id="btn-spd-100" onclick="setSpeed(100)">100x</button>
+                    <button class="btn" id="btn-spd-250" onclick="setSpeed(250)">250x</button>
+                    <button class="btn" id="btn-spd-500" onclick="setSpeed(500)">500x</button>
+                    <button class="btn" id="btn-spd-1000" onclick="setSpeed(1000)" style="color:var(--amber); border-color:var(--amber);">⚡ 1000x (Deep-Time)</button>
                 </div>
             </div>
 
@@ -560,313 +562,157 @@
 
     <script>
         // =========================================================================
-        // GENESIS MULTIMODAL PURE NEURAL ENGINE (SUBSTRATE 8)
-        // 100% UNASSISTED / ZERO SHORTCUTS / ZERO REGEX
+        // GENESIS OBSERVER DECK — PYTHON HPC CORE WEBSOCKET CLIENT
+        // 100% PURE PYTHON COMPUTATION / LIVE STREAMING OBSERVER (RULE 22 & 25)
         // =========================================================================
         const GRID_SIZE = 24;
         const VISION_SIZE = 7;
         const N_CHANNELS = 6;
-        const VISUAL_DIM = VISION_SIZE * VISION_SIZE * N_CHANNELS; // 294
-        const VOCAB_SIZE = 64;
-        const MAX_TEXT_LEN = 16;
-        const D_MODEL = 32;
-        const N_ACTIONS = 4;
-        const LR_MODEL = 0.005;
-        const LAMBDA_HOMEO = 1e-6;
-        const LAMBDA_EWC = 0.5;
-        const GAMMA = 0.95;
-        const MCTS_SIMS = 16;
-        const MCTS_DEPTH = 4;
-        const C_PUCT = 1.4;
-
+        let ws = null;
         let isRunning = true;
-        let speed = 1;
-        let tickCount = 0;
-        let energy = 100.0;
-        let goalsSolved = 0;
-        let foodHarvested = 0;
-        let doorsUnlocked = 0;
-        let hazardCollisions = 0;
-        let hasKey = false;
-        let doorOpened = false;
-        let activeTaskText = "EXPLORE & SURVIVE";
+        let currentSpeed = 1;
+        let currentLevel = 1;
+        let policyMode = 'DIRECTED';
+        let latestState = null;
+        let autoTrainerEnabled = false;
+        let lastTrainerMsg = "";
+        let knownDoors = new Set();
+        let lastLevel = -1;
 
-        function randomMatrix(rows, cols, std = 0.05) {
-            const m = [];
-            for (let i = 0; i < rows; i++) {
-                const row = new Float32Array(cols);
-                for (let j = 0; j < cols; j++) {
-                    row[j] = (Math.random() * 2 - 1) * Math.sqrt(3) * std;
-                }
-                m.push(row);
-            }
-            return m;
-        }
-
-        function matVecMul(M, v) {
-            const rows = M.length, cols = M[0].length;
-            const res = new Float32Array(cols);
-            for (let j = 0; j < cols; j++) {
-                let sum = 0;
-                for (let i = 0; i < rows; i++) {
-                    sum += v[i] * M[i][j];
-                }
-                res[j] = sum;
-            }
-            return res;
-        }
-
-        function vecDot(v1, v2) {
-            let sum = 0;
-            for (let i = 0; i < v1.length; i++) sum += v1[i] * v2[i];
-            return sum;
-        }
-
-        let brain = {};
-        let hippocampus = [];
-        let fisherDiag = {};
-        let anchorWeights = {};
-
-        function initNeuralBrain() {
-            brain.W_vis = randomMatrix(VISUAL_DIM, D_MODEL, 0.05);
-            brain.W_lang = randomMatrix(VOCAB_SIZE, D_MODEL, 0.05);
-            brain.W_fuse_vis = randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_fuse_lang = randomMatrix(D_MODEL, D_MODEL, 0.05);
-
-            brain.W_q = randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_k = randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_v = randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_out = randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_ff1 = randomMatrix(D_MODEL, D_MODEL * 2, 0.05);
-            brain.W_ff2 = randomMatrix(D_MODEL * 2, D_MODEL, 0.05);
-
-            brain.W_dyn = randomMatrix(D_MODEL + N_ACTIONS, D_MODEL, 0.05);
-            brain.W_rew = randomMatrix(D_MODEL + N_ACTIONS, 1, 0.05);
-            brain.W_val = randomMatrix(D_MODEL, 1, 0.05);
-            brain.W_policy = randomMatrix(D_MODEL, N_ACTIONS, 0.05);
-
-            hippocampus = [];
-            fisherDiag = {
-                W_dyn: Array.from({length: D_MODEL + N_ACTIONS}, () => new Float32Array(D_MODEL))
-            };
-            anchorWeights = {
-                W_dyn: brain.W_dyn.map(r => new Float32Array(r))
-            };
-        }
-
-        function tokenizeText(text) {
-            const tokens = new Int32Array(MAX_TEXT_LEN);
-            for (let i = 0; i < MAX_TEXT_LEN; i++) {
-                if (i < text.length) tokens[i] = text.charCodeAt(i) % VOCAB_SIZE;
-                else tokens[i] = 0;
-            }
-            return tokens;
-        }
-
-        function encodeMultimodalObservation(obs, text) {
-            const tokens = tokenizeText(text);
-            const z_lang = new Float32Array(D_MODEL);
-            for (let i = 0; i < MAX_TEXT_LEN; i++) {
-                const tok = tokens[i];
-                for (let d = 0; d < D_MODEL; d++) z_lang[d] += brain.W_lang[tok][d] / MAX_TEXT_LEN;
-            }
-
-            const z_vis = matVecMul(brain.W_vis, obs);
-            const fused_vis = matVecMul(brain.W_fuse_vis, z_vis);
-            const fused_lang = matVecMul(brain.W_fuse_lang, z_lang);
-
-            const z_fuse = new Float32Array(D_MODEL);
-            for (let d = 0; d < D_MODEL; d++) z_fuse[d] = fused_vis[d] + fused_lang[d];
-
-            const q = matVecMul(brain.W_q, z_fuse);
-            const k = matVecMul(brain.W_k, z_fuse);
-            const v = matVecMul(brain.W_v, z_fuse);
-            const score = vecDot(q, k) / Math.sqrt(D_MODEL);
-            const attn = 1.0 / (1.0 + Math.exp(-score));
-
-            const mixed = new Float32Array(D_MODEL);
-            for (let d = 0; d < D_MODEL; d++) mixed[d] = z_fuse[d] + attn * v[d];
-
-            const ff1 = matVecMul(brain.W_ff1, mixed);
-            const relu = new Float32Array(D_MODEL * 2);
-            for (let d = 0; d < D_MODEL * 2; d++) relu[d] = Math.max(0, ff1[d]);
-            const ff2 = matVecMul(brain.W_ff2, relu);
-
-            const s = new Float32Array(D_MODEL);
-            for (let d = 0; d < D_MODEL; d++) s[d] = mixed[d] + ff2[d];
-            return s;
-        }
-
-        function runLatentMCTS(rootState) {
-            const logits = matVecMul(brain.W_policy, rootState);
-            let maxL = -1e9;
-            for (let i = 0; i < N_ACTIONS; i++) if (logits[i] > maxL) maxL = logits[i];
-            const priors = new Float32Array(N_ACTIONS);
-            let sumExp = 0;
-            for (let i = 0; i < N_ACTIONS; i++) {
-                priors[i] = Math.exp(logits[i] - maxL);
-                sumExp += priors[i];
-            }
-            for (let i = 0; i < N_ACTIONS; i++) priors[i] /= (sumExp + 1e-9);
-
-            // AlphaZero / MuZero Standard: Inject Dirichlet root noise to prevent local entrapment
-            const noisyPriors = new Float32Array(N_ACTIONS);
-            let noiseSum = 0;
-            const noise = new Float32Array(N_ACTIONS);
-            for (let a = 0; a < N_ACTIONS; a++) {
-                const u = Math.max(1e-6, Math.random());
-                noise[a] = -Math.log(u);
-                noiseSum += noise[a];
-            }
-            const epsNoise = policyMode === 'DIRECTED' ? 0.20 : 0.40;
-            for (let a = 0; a < N_ACTIONS; a++) {
-                noisyPriors[a] = (1 - epsNoise) * priors[a] + epsNoise * (noise[a] / (noiseSum + 1e-9));
-            }
-
-            const qValues = new Float32Array(N_ACTIONS);
-            const visitCounts = new Int32Array(N_ACTIONS);
-            const effectiveSims = policyMode === 'DIRECTED' ? 32 : 16;
-            const effectiveCpuct = policyMode === 'DIRECTED' ? 0.8 : 1.4;
-
-            for (let sim = 0; sim < effectiveSims; sim++) {
-                let bestScore = -1e9, candidateA = 0;
-                const totalN = visitCounts.reduce((a, b) => a + b, 0);
-
-                for (let a = 0; a < N_ACTIONS; a++) {
-                    const u = effectiveCpuct * noisyPriors[a] * Math.sqrt(totalN + 1) / (1 + visitCounts[a]);
-                    const score = qValues[a] + u;
-                    if (score > bestScore) {
-                        bestScore = score;
-                        candidateA = a;
-                    }
-                }
-
-                let currState = new Float32Array(rootState);
-                let simReturn = 0;
-                let stepA = candidateA;
-
-                for (let depth = 0; depth < MCTS_DEPTH; depth++) {
-                    const sa = new Float32Array(D_MODEL + N_ACTIONS);
-                    for (let d = 0; d < D_MODEL; d++) sa[d] = currState[d];
-                    sa[D_MODEL + stepA] = 1.0;
-
-                    const nextS = matVecMul(brain.W_dyn, sa);
-                    for (let d = 0; d < D_MODEL; d++) currState[d] = Math.tanh(nextS[d]);
-
-                    const rew = vecDot(sa, brain.W_rew.map(r => r[0]));
-                    simReturn += Math.pow(GAMMA, depth) * rew;
-
-                    const pLogits = matVecMul(brain.W_policy, currState);
-                    stepA = 0;
-                    for (let a = 1; a < N_ACTIONS; a++) {
-                        if (pLogits[a] > pLogits[stepA]) stepA = a;
-                    }
-                }
-
-                const vLeaf = vecDot(currState, brain.W_val.map(r => r[0]));
-                simReturn += Math.pow(GAMMA, MCTS_DEPTH) * vLeaf;
-
-                visitCounts[candidateA]++;
-                qValues[candidateA] += (simReturn - qValues[candidateA]) / visitCounts[candidateA];
-            }
-
-            const totalVisits = visitCounts.reduce((a, b) => a + b, 0);
-            const mctsProbs = new Float32Array(N_ACTIONS);
-            if (totalVisits > 0) {
-                for (let a = 0; a < N_ACTIONS; a++) mctsProbs[a] = visitCounts[a] / totalVisits;
+        function connectWebSocket() {
+            let wsUrl;
+            if (location.protocol === 'file:' || !location.host) {
+                wsUrl = 'ws://localhost:8088/ws';
             } else {
-                for (let a = 0; a < N_ACTIONS; a++) mctsProbs[a] = priors[a];
+                const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                wsUrl = `${protocol}//${location.host}/ws`;
             }
+            console.log("[WS] Connecting to:", wsUrl);
+            ws = new WebSocket(wsUrl);
 
-            return { probs: mctsProbs, qValues, visitCounts };
+            ws.onopen = () => {
+                console.log("[WS] Connected to GENESIS Python Core Server at " + wsUrl);
+                addChatMessage('📡 Python Core Server', "🟢 Connected to Python HPC Core Engine (PyTorch / NumPy Substrate 8).", 'chat-agent');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'STATE_UPDATE') {
+                        latestState = data;
+                        renderState(data);
+                    } else if (data.type === 'CHAT_RESPONSE') {
+                        addChatMessage('🤖 GENESIS Organism (Python Core)', data.reply, 'chat-agent');
+                        if (data.activeTask) {
+                            document.getElementById('hud-active-task').innerText = data.activeTask;
+                        }
+                    }
+                } catch (e) { console.error("[WS] Parse error:", e); }
+            };
+
+            ws.onclose = () => {
+                console.log("[WS] Disconnected from server. Reconnecting in 1.5s...");
+                setTimeout(connectWebSocket, 1500);
+            };
+
+            ws.onerror = (err) => {
+                console.error("[WS] Socket error:", err);
+            };
         }
 
-        function updateNeuralWeights(s_curr, action, reward, s_next) {
-            const sa = new Float32Array(D_MODEL + N_ACTIONS);
-            for (let d = 0; d < D_MODEL; d++) sa[d] = s_curr[d];
-            sa[D_MODEL + action] = 1.0;
+        function sendCommand(action, value = null) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action, value }));
+            }
+        }
 
-            const predNext = matVecMul(brain.W_dyn, sa);
-            for (let d = 0; d < D_MODEL; d++) predNext[d] = Math.tanh(predNext[d]);
+        function renderState(s) {
+            if (s.level !== lastLevel) {
+                knownDoors.clear();
+                lastLevel = s.level;
+            }
 
-            let lossSum = 0;
-            for (let d = 0; d < D_MODEL; d++) {
-                const err = s_next[d] - predNext[d];
-                lossSum += err * err;
-                const gradD = err * (1.0 - predNext[d] * predNext[d]);
-                for (let i = 0; i < D_MODEL + N_ACTIONS; i++) {
-                    const g = sa[i] * gradD;
-                    fisherDiag.W_dyn[i][d] += g * g * 0.01;
-                    const ewcPen = LAMBDA_EWC * fisherDiag.W_dyn[i][d] * (brain.W_dyn[i][d] - anchorWeights.W_dyn[i][d]);
-                    brain.W_dyn[i][d] += LR_MODEL * g - LAMBDA_HOMEO * brain.W_dyn[i][d] - LR_MODEL * ewcPen;
+            // Track doors for memory
+            for (let x = 0; x < GRID_SIZE; x++) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    if (s.grid[x][y] === 2) {
+                        knownDoors.add(`${x},${y}`);
+                    }
                 }
             }
 
-            const predRew = vecDot(sa, brain.W_rew.map(r => r[0]));
-            const errRew = reward - predRew;
-            for (let i = 0; i < D_MODEL + N_ACTIONS; i++) {
-                brain.W_rew[i][0] += LR_MODEL * sa[i] * errRew - LAMBDA_HOMEO * brain.W_rew[i][0];
+            document.getElementById('hud-ticks').innerText = s.tick.toLocaleString();
+            document.getElementById('hud-energy').innerText = s.energy.toFixed(1);
+            document.getElementById('hud-goals').innerText = s.goals;
+            document.getElementById('hud-hippo-count').innerText = `${s.hippoCount} / 5000`;
+            document.getElementById('stat-food').innerText = s.food;
+            document.getElementById('stat-doors').innerText = s.doors;
+            document.getElementById('stat-hazards').innerText = s.hazards;
+            document.getElementById('stat-value').innerText = s.vVal.toFixed(2);
+            document.getElementById('hud-active-task').innerText = s.activeTask;
+
+            if (s.hasKey) {
+                document.getElementById('key-status-tag').innerText = 'KEY: COLLECTED';
+                document.getElementById('key-status-tag').className = 'badge badge-emerald';
+            } else {
+                document.getElementById('key-status-tag').innerText = 'KEY: NOT COLLECTED';
+                document.getElementById('key-status-tag').className = 'badge badge-purple';
             }
 
-            const vCurr = vecDot(s_curr, brain.W_val.map(r => r[0]));
-            const vNext = vecDot(s_next, brain.W_val.map(r => r[0]));
-            const tdErr = reward + GAMMA * vNext - vCurr;
-            for (let i = 0; i < D_MODEL; i++) {
-                brain.W_val[i][0] += LR_MODEL * s_curr[i] * tdErr - LAMBDA_HOMEO * brain.W_val[i][0];
-            }
-
-            const logits = matVecMul(brain.W_policy, s_curr);
-            let maxL = -1e9;
-            for (let i = 0; i < N_ACTIONS; i++) if (logits[i] > maxL) maxL = logits[i];
-            const probs = new Float32Array(N_ACTIONS);
-            let sumE = 0;
-            for (let i = 0; i < N_ACTIONS; i++) {
-                probs[i] = Math.exp(logits[i] - maxL);
-                sumE += probs[i];
-            }
-            for (let i = 0; i < N_ACTIONS; i++) probs[i] /= sumE;
-
-            for (let a = 0; a < N_ACTIONS; a++) {
-                const gradA = (a === action ? 1.0 : 0.0) - probs[a];
-                for (let i = 0; i < D_MODEL; i++) {
-                    brain.W_policy[i][a] += LR_MODEL * tdErr * s_curr[i] * gradA - LAMBDA_HOMEO * brain.W_policy[i][a];
+            if (s.isSleeping) {
+                const sleepOverlay = document.getElementById('sleep-overlay');
+                if (sleepOverlay) {
+                    sleepOverlay.classList.add('sleep-active');
+                    setTimeout(() => { sleepOverlay.classList.remove('sleep-active'); }, 1500);
                 }
             }
 
-            const surprise = lossSum + Math.abs(reward);
-            hippocampus.push({ s_curr, action, reward, s_next, surprise });
-            if (hippocampus.length > 500) hippocampus.shift();
-            document.getElementById('hud-hippo-count').innerText = `${hippocampus.length} / 500`;
-
-            return { loss: lossSum / D_MODEL, vCurr };
-        }
-
-        function triggerSleepConsolidation() {
-            if (hippocampus.length < 10) {
-                alert("حافظه هیپوکامپوس هنوز داده کافی جمع‌آوری نکرده است.");
-                return;
+            // Update level buttons
+            for (let l = 1; l <= 5; l++) {
+                const btn = document.getElementById(`btn-lvl-${l}`);
+                if (btn) btn.classList.toggle('btn-active', l === s.level);
             }
-            const overlay = document.getElementById('sleep-overlay');
-            overlay.classList.add('sleep-active');
-            addChatMessage('🤖 GENESIS Organism', "Entering biological sleep phase. Replaying salient memories and anchoring Fisher synapses...", 'chat-agent');
 
-            setTimeout(() => {
-                for (let r = 0; r < 50; r++) {
-                    const idx = Math.floor(Math.random() * hippocampus.length);
-                    const mem = hippocampus[idx];
-                    updateNeuralWeights(mem.s_curr, mem.action, mem.reward, mem.s_next);
+            // Update Policy Softmax Bars
+            if (s.mcts && s.mcts.probs) {
+                for (let a = 0; a < 4; a++) {
+                    const p = s.mcts.probs[a];
+                    const pEl = document.getElementById(`prob-${a}`);
+                    const bEl = document.getElementById(`bar-${a}`);
+                    if (pEl) pEl.innerText = p.toFixed(3);
+                    if (bEl) bEl.style.width = `${(p * 100).toFixed(1)}%`;
                 }
-                anchorWeights.W_dyn = brain.W_dyn.map(row => new Float32Array(row));
-                overlay.classList.remove('sleep-active');
-                addChatMessage('🤖 GENESIS Organism', "✨ Sleep consolidation complete. My memories are integrated and critical pathways protected!", 'chat-agent');
-                saveBrainToStorage();
-            }, 600);
+                drawTree(s.mcts);
+            }
+
+            updateVisionMatrix(s.obs);
+            drawMaze(s);
+
+            // Auto Trainer Logic
+            if (autoTrainerEnabled && policyMode === 'DIRECTED') {
+                const dx = [0, 1, 0, -1];
+                const dy = [-1, 0, 1, 0];
+                const nx = s.agentPos[0] + dx[s.agentDir % 4];
+                const ny = s.agentPos[1] + dy[s.agentDir % 4];
+                
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    const nextCell = s.grid[nx][ny];
+                    let msg = "";
+                    if (nextCell === 1 || nextCell === 5) msg = "CAREFUL";
+                    else if (nextCell === 4) msg = "FOOD";
+                    else if (nextCell === 3) msg = "GET KEY";
+                    else if (nextCell === 2) msg = "UNLOCK DOOR";
+                    else if (nextCell === 6) msg = "ENERGY";
+                    else if (nextCell === 0 && knownDoors.has(`${nx},${ny}`)) msg = "CROSS THE DOOR";
+                    
+                    if (msg !== "" && lastTrainerMsg !== msg) {
+                        lastTrainerMsg = msg;
+                        sendQuickPrompt(msg);
+                    }
+                }
+            }
         }
 
-        // =========================================================================
-        // PURE NEURAL LANGUAGE DECODER & GROUNDED COGNITIVE TELEMETRY
-        // 100% PURE MATRIX ALGEBRA — ZERO IF-ELSE KEYWORD SCRIPTS / ZERO HARDCODING
-        // =========================================================================
         function addChatMessage(author, text, cls) {
             const stream = document.getElementById('chat-stream');
             if (!stream) return;
@@ -877,520 +723,81 @@
             stream.scrollTop = stream.scrollHeight;
         }
 
-        function generateGroundedAgentResponse(userQuery) {
-            // 1. Process query purely via multimodal tokenization and cross-attention
-            activeTaskText = userQuery.toUpperCase().slice(0, MAX_TEXT_LEN);
-            document.getElementById('hud-active-task').innerText = activeTaskText;
-
-            const obs = getVisualObservation();
-            const s_curr = encodeMultimodalObservation(obs, activeTaskText);
-            const mctsInfo = runLatentMCTS(s_curr);
-
-            // 2. Compute Autoregressive Vocabulary Token Distribution from W_lang projection
-            // logits = s_curr @ W_fuse_lang^T
-            const vocabLogits = new Float32Array(VOCAB_SIZE);
-            for (let v = 0; v < VOCAB_SIZE; v++) {
-                let dot = 0;
-                for (let d = 0; d < D_MODEL; d++) {
-                    dot += s_curr[d] * brain.W_lang[v][d];
-                }
-                vocabLogits[v] = dot;
-            }
-
-            // Softmax over vocabulary
-            let maxL = -1e9;
-            for (let v = 0; v < VOCAB_SIZE; v++) if (vocabLogits[v] > maxL) maxL = vocabLogits[v];
-            const vocabProbs = new Float32Array(VOCAB_SIZE);
-            let sumE = 0;
-            for (let v = 0; v < VOCAB_SIZE; v++) {
-                vocabProbs[v] = Math.exp(vocabLogits[v] - maxL);
-                sumE += vocabProbs[v];
-            }
-            for (let v = 0; v < VOCAB_SIZE; v++) vocabProbs[v] /= sumE;
-
-            // Sample top tokens emitted by the neural language head
-            let topTokens = [];
-            for (let v = 0; v < VOCAB_SIZE; v++) topTokens.push({ id: v, p: vocabProbs[v] });
-            topTokens.sort((a, b) => b.p - a.p);
-            const emittedChars = topTokens.slice(0, 8).map(t => String.fromCharCode(65 + (t.id % 26))).join('');
-
-            // 3. Construct Honest, Pure Neural Cognitive Readout
-            const actionNames = ['FWD', 'LEFT', 'RIGHT', 'ACT'];
-            const bestAction = actionNames[mctsInfo.visitCounts.indexOf(Math.max(...mctsInfo.visitCounts))];
-            const vVal = vecDot(s_curr, brain.W_val.map(r => r[0]));
-
-            // Pure neural telemetry representation
-            const reply = `🧠 [Neural State Vector]: [${s_curr.slice(0, 4).map(x => x.toFixed(2)).join(', ')}] | V(s)=${vVal.toFixed(2)} | Energy=${energy.toFixed(1)} | MCTS Intent: ${bestAction} (Q=${mctsInfo.qValues[actionNames.indexOf(bestAction)].toFixed(2)}) | Conditioned on: "${activeTaskText}" | Neural Language Emitted Tokens: "${emittedChars}"`;
-
-            addChatMessage('🤖 GENESIS Organism (Neural Core)', reply, 'chat-agent');
-        }
-
         function sendChatMessage() {
-            const input = document.getElementById('cmd-input');
-            const txt = input.value.trim();
-            if (!txt) return;
-            addChatMessage('👤 You', txt, 'chat-user');
-            input.value = '';
-            setTimeout(() => generateGroundedAgentResponse(txt), 150);
+            const input = document.getElementById('cmd-input') || document.getElementById('chat-input');
+            const text = input ? input.value.trim() : '';
+            if (!text) return;
+            addChatMessage('👤 Observer', text, 'chat-user');
+            if (input) input.value = '';
+            lastTrainerMsg = text;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'USER_CHAT', text: text }));
+            }
         }
 
         function sendQuickPrompt(txt) {
-            addChatMessage('👤 You', txt, 'chat-user');
-            setTimeout(() => generateGroundedAgentResponse(txt), 150);
+            const input = document.getElementById('cmd-input') || document.getElementById('chat-input');
+            if (input) input.value = txt;
+            sendChatMessage();
         }
-
-        // =========================================================================
-        // PERSISTENCE & STORAGE
-        // =========================================================================
-        function serializeBrain() {
-            return {
-                tickCount, goalsSolved, foodHarvested, doorsUnlocked, hazardCollisions, activeTaskText,
-                W_vis: brain.W_vis.map(r => Array.from(r)),
-                W_lang: brain.W_lang.map(r => Array.from(r)),
-                W_fuse_vis: brain.W_fuse_vis.map(r => Array.from(r)),
-                W_fuse_lang: brain.W_fuse_lang.map(r => Array.from(r)),
-                W_q: brain.W_q.map(r => Array.from(r)),
-                W_k: brain.W_k.map(r => Array.from(r)),
-                W_v: brain.W_v.map(r => Array.from(r)),
-                W_out: brain.W_out.map(r => Array.from(r)),
-                W_ff1: brain.W_ff1.map(r => Array.from(r)),
-                W_ff2: brain.W_ff2.map(r => Array.from(r)),
-                W_dyn: brain.W_dyn.map(r => Array.from(r)),
-                W_rew: brain.W_rew.map(r => Array.from(r)),
-                W_val: brain.W_val.map(r => Array.from(r)),
-                W_policy: brain.W_policy.map(r => Array.from(r))
-            };
-        }
-
-        function deserializeBrain(data) {
-            tickCount = data.tickCount || 0;
-            goalsSolved = data.goalsSolved || 0;
-            foodHarvested = data.foodHarvested || 0;
-            doorsUnlocked = data.doorsUnlocked || 0;
-            hazardCollisions = data.hazardCollisions || 0;
-            if (data.activeTaskText) {
-                activeTaskText = data.activeTaskText;
-                document.getElementById('hud-active-task').innerText = activeTaskText;
-            }
-
-            brain.W_vis = data.W_vis.map(r => new Float32Array(r));
-            brain.W_lang = data.W_lang ? data.W_lang.map(r => new Float32Array(r)) : randomMatrix(VOCAB_SIZE, D_MODEL, 0.05);
-            brain.W_fuse_vis = data.W_fuse_vis ? data.W_fuse_vis.map(r => new Float32Array(r)) : randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_fuse_lang = data.W_fuse_lang ? data.W_fuse_lang.map(r => new Float32Array(r)) : randomMatrix(D_MODEL, D_MODEL, 0.05);
-            brain.W_q = data.W_q.map(r => new Float32Array(r));
-            brain.W_k = data.W_k.map(r => new Float32Array(r));
-            brain.W_v = data.W_v.map(r => new Float32Array(r));
-            brain.W_out = data.W_out.map(r => new Float32Array(r));
-            brain.W_ff1 = data.W_ff1.map(r => new Float32Array(r));
-            brain.W_ff2 = data.W_ff2.map(r => new Float32Array(r));
-            brain.W_dyn = data.W_dyn.map(r => new Float32Array(r));
-            brain.W_rew = data.W_rew.map(r => new Float32Array(r));
-            brain.W_val = data.W_val.map(r => new Float32Array(r));
-            brain.W_policy = data.W_policy.map(r => new Float32Array(r));
-        }
-
-        function saveBrainToStorage() {
-            try {
-                localStorage.setItem('GENESIS_PERSISTENT_BRAIN', JSON.stringify(serializeBrain()));
-            } catch (e) {}
-        }
-
-        function loadBrainFromStorage() {
-            try {
-                const saved = localStorage.getItem('GENESIS_PERSISTENT_BRAIN');
-                if (saved) {
-                    deserializeBrain(JSON.parse(saved));
-                    addChatMessage('🤖 GENESIS Organism', `Restored neural memory from persistent storage (Tick ${tickCount}).`, 'chat-agent');
-                    return true;
-                }
-            } catch (e) {}
-            return false;
-        }
-
-        function saveBrainManual() {
-            saveBrainToStorage();
-            addChatMessage('🤖 GENESIS Organism', "My synaptic weights have been saved to local browser memory.", 'chat-agent');
-            alert("✅ مغز چندوجهی در حافظه مرورگر ذخیره شد!");
-        }
-
-        function exportBrainJSON() {
-            const blob = new Blob([JSON.stringify(serializeBrain(), null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `genesis_dialogue_brain_tick_${tickCount}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importBrainJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    deserializeBrain(JSON.parse(e.target.result));
-                    saveBrainToStorage();
-                    addChatMessage('🤖 GENESIS Organism', `Loaded external brain checkpoint successfully (Tick ${tickCount})!`, 'chat-agent');
-                    alert(`✅ چک‌پوینت با موفقیت لود شد!`);
-                } catch (err) { alert("❌ خطا در فایل."); }
-            };
-            reader.readAsText(file);
-        }
-
-        function wipeBrain() {
-            if (confirm("آیا از ریست کامل مغز اطمینان دارید؟")) {
-                localStorage.removeItem('GENESIS_PERSISTENT_BRAIN');
-                initNeuralBrain();
-                tickCount = 0; energy = 100.0; goalsSolved = 0; foodHarvested = 0; doorsUnlocked = 0; hazardCollisions = 0;
-                initEnvironment();
-                addChatMessage('🤖 GENESIS Organism', "Brain reset to random noise (Tabula Rasa).", 'chat-agent');
-            }
-        }
-
-        // =========================================================================
-        // DEVELOPMENTAL CURRICULUM LEVEL GENERATOR & ENVIRONMENT
-        // ZERO SHORTCUTS / ZERO HEURISTICS / PURE ADAPTIVE LEARNING
-        // =========================================================================
-        let grid = [];
-        let agentPos = { x: 3, y: 2 };
-        let agentDir = 2; // Facing South
-        let currentLevel = 1;
-        let levelConsecutiveSolves = 0;
 
         function setLevel(lvl) {
             currentLevel = lvl;
-            levelConsecutiveSolves = 0;
-            initEnvironment();
-            const names = [
-                "Lvl 1: 🍼 Infant (6x6 Open Food)",
-                "Lvl 2: 🚶 Toddler (8x8 Corner Food)",
-                "Lvl 3: 🏃 Chambers (12x12 Open Doorway)",
-                "Lvl 4: 🔑 Key & Lock (16x16 1 Key + 1 Door)",
-                "Lvl 5: 🏆 Master (24x24 Full Multi-Room)"
-            ];
-            document.getElementById('hud-active-task').innerText = names[lvl - 1];
-            addChatMessage('🤖 GENESIS Organism', `Switched to: ${names[lvl - 1]}`, 'chat-agent');
-            for (let l = 1; l <= 5; l++) {
-                const btn = document.getElementById(`btn-lvl-${l}`);
-                if (btn) btn.classList.toggle('btn-active', l === lvl);
+            sendCommand('SET_LEVEL', lvl);
+        }
+
+        function setPolicyMode(mode) {
+            policyMode = mode;
+            document.getElementById('btn-pol-dir').classList.toggle('btn-active', mode === 'DIRECTED');
+            document.getElementById('btn-pol-exp').classList.toggle('btn-active', mode === 'EXPLORATION');
+            sendCommand('SET_POLICY_MODE', mode);
+        }
+
+        function setSpeed(s) {
+            currentSpeed = s;
+            const speedVals = [1, 5, 25, 100, 250, 500, 1000];
+            for (let v of speedVals) {
+                const btn = document.getElementById(`btn-spd-${v}`);
+                if (btn) btn.classList.toggle('btn-active', v === s);
+            }
+            sendCommand('SET_SPEED', s);
+        }
+
+        function togglePlay() {
+            isRunning = !isRunning;
+            document.getElementById('btn-play-pause').innerText = isRunning ? '⏸️ Pause' : '▶️ Play';
+            sendCommand('TOGGLE_PLAY');
+        }
+
+        function stepOnce() {
+            sendCommand('STEP_ONCE');
+        }
+
+        function triggerSleepConsolidation() {
+            const overlay = document.getElementById('sleep-overlay');
+            overlay.classList.add('sleep-active');
+            sendCommand('TRIGGER_SLEEP');
+            setTimeout(() => overlay.classList.remove('sleep-active'), 800);
+        }
+
+        function wipeBrain() {
+            if (confirm("آیا از ریست کامل مغز پایتون اطمینان دارید؟")) {
+                sendCommand('WIPE_BRAIN');
             }
         }
 
-        function initEnvironment() {
-            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
-            hasKey = false;
-            doorOpened = false;
-
-            if (currentLevel === 1) { // 🍼 Infant: 8x8 bounded area, food directly 3 steps ahead!
-                const S = 8;
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    for (let j = 0; j < GRID_SIZE; j++) {
-                        if (i >= S || j >= S) grid[i][j] = 1;
-                    }
-                }
-                for (let i = 0; i < S; i++) {
-                    grid[0][i] = 1; grid[S - 1][i] = 1;
-                    grid[i][0] = 1; grid[i][S - 1] = 1;
-                }
-                agentPos = { x: 3, y: 2 };
-                agentDir = 2; // Facing South directly towards food
-                grid[3][5] = 4; // Green food right in front!
-            } else if (currentLevel === 2) { // 🚶 Toddler: 10x10 with corner
-                const S = 10;
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    for (let j = 0; j < GRID_SIZE; j++) {
-                        if (i >= S || j >= S) grid[i][j] = 1;
-                    }
-                }
-                for (let i = 0; i < S; i++) {
-                    grid[0][i] = 1; grid[S - 1][i] = 1;
-                    grid[i][0] = 1; grid[i][S - 1] = 1;
-                }
-                grid[4][4] = 1; grid[5][4] = 1;
-                agentPos = { x: 2, y: 2 };
-                agentDir = 1; // Facing East
-                grid[7][7] = 4; // Food around corner
-            } else if (currentLevel === 3) { // 🏃 Chambers: 14x14 with open doorway
-                const S = 14;
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    for (let j = 0; j < GRID_SIZE; j++) {
-                        if (i >= S || j >= S) grid[i][j] = 1;
-                    }
-                }
-                for (let i = 0; i < S; i++) {
-                    grid[0][i] = 1; grid[S - 1][i] = 1;
-                    grid[i][0] = 1; grid[i][S - 1] = 1;
-                }
-                const mid = 7;
-                for (let i = 0; i < S; i++) grid[mid][i] = 1;
-                grid[mid][4] = 0; // Open doorway!
-                agentPos = { x: 3, y: 3 };
-                agentDir = 0;
-                grid[S - 3][S - 3] = 6; // Goal
-                grid[mid + 2][4] = 4;
-            } else if (currentLevel === 4) { // 🔑 Key & Lock: 18x18
-                const S = 18;
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    for (let j = 0; j < GRID_SIZE; j++) {
-                        if (i >= S || j >= S) grid[i][j] = 1;
-                    }
-                }
-                for (let i = 0; i < S; i++) {
-                    grid[0][i] = 1; grid[S - 1][i] = 1;
-                    grid[i][0] = 1; grid[i][S - 1] = 1;
-                }
-                const mid = 9;
-                for (let i = 0; i < S; i++) grid[mid][i] = 1;
-                grid[mid][5] = 2; // Locked Door!
-                grid[4][4] = 3; // Key in Room 1!
-                grid[S - 3][S - 3] = 6; // Goal
-                grid[mid + 2][4] = 4;
-                agentPos = { x: 3, y: 3 };
-                agentDir = 0;
-            } else { // 🏆 Master: 24x24 Full Multi-Room
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    grid[0][i] = 1; grid[GRID_SIZE - 1][i] = 1;
-                    grid[i][0] = 1; grid[i][GRID_SIZE - 1] = 1;
-                }
-                const mid = Math.floor(GRID_SIZE / 2);
-                for (let i = 0; i < GRID_SIZE; i++) grid[mid][i] = 1;
-                grid[mid][6] = 2; // Door
-                grid[Math.floor(mid / 2)][4] = 3; // Key
-                grid[GRID_SIZE - 4][GRID_SIZE - 4] = 6; // Goal
-                for (let y = 8; y <= 11; y++) grid[mid - 1][y] = 5; // Hazard
-                for (let i = 0; i < 6; i++) grid[mid + 2 + (i % 3) * 3][4 + i * 2] = 4; // Food
-                agentPos = { x: 3, y: 3 };
-                agentDir = 0;
+        function toggleAutoTrainer() {
+            autoTrainerEnabled = !autoTrainerEnabled;
+            const btn = document.getElementById('btn-auto-trainer');
+            if (btn) {
+                btn.innerText = `🎓 Auto Trainer: ${autoTrainerEnabled ? 'ON' : 'OFF'}`;
+                btn.classList.toggle('btn-active', autoTrainerEnabled);
             }
-        }
-
-        function resetAgentPosition() {
-            if (currentLevel === 1) {
-                agentPos = { x: 3, y: 2 };
-                agentDir = 2; // Facing South towards food
-            } else if (currentLevel === 2) {
-                agentPos = { x: 2, y: 2 };
-                agentDir = 1; // Facing East towards open path
-            } else if (currentLevel === 3) {
-                agentPos = { x: 3, y: 3 };
-                agentDir = 1; // Facing East towards open doorway
-            } else {
-                agentPos = { x: 3, y: 3 };
-                agentDir = 0;
-            }
-        }
-
-        function getVisualObservation() {
-            const half = Math.floor(VISION_SIZE / 2);
-            const obs = new Float32Array(VISUAL_DIM);
-            let idx = 0;
-
-            for (let vy = -half; vy <= half; vy++) {
-                for (let vx = -half; vx <= half; vx++) {
-                    let gx = agentPos.x, gy = agentPos.y;
-                    // vy is Longitudinal: -half (ahead/front) to +half (behind/back)
-                    // vx is Lateral: -half (left) to +half (right)
-                    if (agentDir === 0) { // North (ahead is dy = -1, right is dx = +1)
-                        gx += vx;
-                        gy += vy;
-                    } else if (agentDir === 1) { // East (ahead is dx = +1, right is dy = +1)
-                        gx -= vy;
-                        gy += vx;
-                    } else if (agentDir === 2) { // South (ahead is dy = +1, right is dx = -1)
-                        gx -= vx;
-                        gy -= vy;
-                    } else if (agentDir === 3) { // West (ahead is dx = -1, right is dy = -1)
-                        gx += vy;
-                        gy -= vx;
-                    }
-
-                    if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
-                        const cell = grid[gx][gy];
-                        if (cell >= 0 && cell < N_CHANNELS) obs[idx * N_CHANNELS + cell] = 1.0;
-                    } else {
-                        obs[idx * N_CHANNELS + 1] = 1.0;
-                    }
-                    idx++;
-                }
-            }
-            return obs;
-        }
-
-        let policyMode = 'DIRECTED'; // 'DIRECTED' or 'EXPLORATION'
-
-        function setPolicyMode(m) {
-            policyMode = m;
-            document.getElementById('btn-pol-dir').classList.toggle('btn-active', m === 'DIRECTED');
-            document.getElementById('btn-pol-exp').classList.toggle('btn-active', m === 'EXPLORATION');
-            addChatMessage('🤖 GENESIS Organism', `Decision Policy switched to: ${m === 'DIRECTED' ? '🎯 DIRECTED EXPLOITATION (Argmax MCTS)' : '🎲 STOCHASTIC EXPLORATION'}`, 'chat-agent');
-        }
-
-        function stepSimulation() {
-            tickCount++;
-            energy -= 0.05;
-
-            const obs = getVisualObservation();
-            const s_curr = encodeMultimodalObservation(obs, activeTaskText);
-            const mctsInfo = runLatentMCTS(s_curr);
-            const actionProbs = mctsInfo.probs;
-
-            let action = 0;
-            if (policyMode === 'DIRECTED') {
-                let bestA = 0, bestScore = -1e9;
-                for (let a = 0; a < N_ACTIONS; a++) {
-                    const score = mctsInfo.visitCounts[a] + mctsInfo.qValues[a] * 0.1;
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestA = a;
-                    }
-                }
-                action = bestA;
-            } else {
-                const tau = 0.3;
-                const expCounts = new Float32Array(N_ACTIONS);
-                let sumExp = 0;
-                for (let a = 0; a < N_ACTIONS; a++) {
-                    expCounts[a] = Math.pow(mctsInfo.visitCounts[a] + 1e-4, 1.0 / tau);
-                    sumExp += expCounts[a];
-                }
-                const r = Math.random();
-                let cum = 0;
-                for (let a = 0; a < N_ACTIONS; a++) {
-                    cum += expCounts[a] / sumExp;
-                    if (r <= cum || a === N_ACTIONS - 1) { action = a; break; }
-                }
-            }
-
-            for (let a = 0; a < 4; a++) {
-                const p = actionProbs[a];
-                document.getElementById(`prob-${a}`).innerText = p.toFixed(3);
-                document.getElementById(`bar-${a}`).style.width = `${(p * 100).toFixed(1)}%`;
-            }
-
-            const dirs = [{ dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }];
-            let reward = -0.05;
-
-            if (action === 0) { // FORWARD
-                const d = dirs[agentDir % 4];
-                const nx = agentPos.x + d.dx;
-                const ny = agentPos.y + d.dy;
-
-                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                    const cell = grid[nx][ny];
-                    if (cell === 1) {
-                        reward = -0.5; energy -= 0.5;
-                    } else if (cell === 2) {
-                        if (hasKey) {
-                            grid[nx][ny] = 0;
-                            doorOpened = true;
-                            agentPos = { x: nx, y: ny };
-                            reward = 15.0; energy += 15.0;
-                            doorsUnlocked++;
-                            document.getElementById('stat-doors').innerText = doorsUnlocked;
-                            addLog("Door unlocked (+15.0 reward)");
-                        } else {
-                            reward = -1.0; energy -= 1.0;
-                        }
-                    } else if (cell === 5) {
-                        agentPos = { x: nx, y: ny };
-                        reward = -10.0; energy -= 10.0;
-                        hazardCollisions++;
-                        document.getElementById('stat-hazards').innerText = hazardCollisions;
-                        addLog("Hazard collision (-10.0 penalty)");
-                    } else {
-                        agentPos = { x: nx, y: ny };
-                        if (cell === 4) {
-                            grid[nx][ny] = 0;
-                            reward = 10.0; energy += 10.0;
-                            foodHarvested++;
-                            document.getElementById('stat-food').innerText = foodHarvested;
-                            addLog("Food harvested (+10.0 reward)");
-                            
-                            // Developmental Curriculum Auto-Graduation
-                            if (currentLevel <= 2) {
-                                levelConsecutiveSolves++;
-                                if (levelConsecutiveSolves >= 3 && currentLevel < 5) {
-                                    addChatMessage('🤖 GENESIS Organism', `🎉 LEVEL ${currentLevel} MASTERED! Auto-Graduating to Level ${currentLevel + 1}...`, 'chat-agent');
-                                    setLevel(currentLevel + 1);
-                                }
-                            }
-                        }
-                    }
-                }
-            } else if (action === 1) { agentDir = (agentDir - 1 + 4) % 4; }
-            else if (action === 2) { agentDir = (agentDir + 1) % 4; }
-            else if (action === 3) { // INTERACT
-                if (grid[agentPos.x][agentPos.y] === 3 && !hasKey) {
-                    hasKey = true;
-                    grid[agentPos.x][agentPos.y] = 0;
-                    reward = 20.0; energy += 20.0;
-                    document.getElementById('key-status-tag').innerText = 'KEY: COLLECTED';
-                    document.getElementById('key-status-tag').className = 'badge badge-emerald';
-                    addLog("Key picked up (+20.0 reward)");
-                } else if (grid[agentPos.x][agentPos.y] === 6) {
-                    goalsSolved++;
-                    reward = 50.0; energy += 50.0;
-                    document.getElementById('hud-goals').innerText = goalsSolved;
-                    addLog("GOAL SOLVED! (+50.0 reward)");
-                    
-                    // Developmental Curriculum Auto-Graduation for advanced tiers
-                    if (currentLevel >= 3) {
-                        levelConsecutiveSolves++;
-                        if (levelConsecutiveSolves >= 2 && currentLevel < 5) {
-                            addChatMessage('🤖 GENESIS Organism', `🎉 LEVEL ${currentLevel} MASTERED! Auto-Graduating to Level ${currentLevel + 1}...`, 'chat-agent');
-                            setLevel(currentLevel + 1);
-                        } else {
-                            initEnvironment();
-                        }
-                    } else {
-                        initEnvironment();
-                    }
-                }
-            }
-
-            const nextObs = getVisualObservation();
-            const s_next = encodeMultimodalObservation(nextObs, activeTaskText);
-            const { loss, vCurr } = updateNeuralWeights(s_curr, action, reward, s_next);
-
-            // Online Mini-Batch Hippocampus Replay (2 samples per tick for fast value propagation)
-            if (hippocampus.length >= 4) {
-                for (let b = 0; b < 2; b++) {
-                    const rIdx = Math.floor(Math.random() * hippocampus.length);
-                    const mem = hippocampus[rIdx];
-                    updateNeuralWeights(mem.s_curr, mem.action, mem.reward, mem.s_next);
-                }
-            }
-
-            if (energy <= 0.0) {
-                energy = 100.0;
-                resetAgentPosition();
-                addLog("💀 Starvation — Respawned with 100.0 Energy.");
-            }
-
-            if (tickCount % 500 === 0) saveBrainToStorage();
-
-            document.getElementById('hud-ticks').innerText = tickCount.toLocaleString();
-            document.getElementById('hud-energy').innerText = Math.max(0, energy).toFixed(1);
-            document.getElementById('stat-value').innerText = vCurr.toFixed(2);
-
-            updateVisionMatrix(obs);
-            drawMaze();
-            if (tickCount % 2 === 0) drawTree(mctsInfo);
-        }
-
-        function addLog(msg) {
-            const list = document.getElementById('memory-buffer-list');
-            if (!list) return;
-            const item = document.createElement('div');
-            item.className = 'chat-msg chat-agent';
-            item.innerHTML = `<span>[Tick ${tickCount}] ${msg}</span>`;
-            list.prepend(item);
-            if (list.children.length > 8) list.removeChild(list.lastChild);
         }
 
         function buildVisionMatrixUI() {
             const container = document.getElementById('vision-matrix');
+            if (!container) return;
             container.innerHTML = '';
             for (let i = 0; i < 49; i++) {
                 const cell = document.createElement('div');
@@ -1401,6 +808,7 @@
         }
 
         function updateVisionMatrix(obs) {
+            if (!obs) return;
             for (let i = 0; i < 49; i++) {
                 const cellEl = document.getElementById(`vis-cell-${i}`);
                 if (!cellEl) continue;
@@ -1426,16 +834,16 @@
             }
         }
 
-        function drawMaze() {
+        function drawMaze(s) {
             const canvas = document.getElementById('mazeCanvas');
-            if (!canvas) return;
+            if (!canvas || !s || !s.grid) return;
             const ctx = canvas.getContext('2d');
             const cellSize = canvas.width / GRID_SIZE;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             for (let x = 0; x < GRID_SIZE; x++) {
                 for (let y = 0; y < GRID_SIZE; y++) {
-                    const val = grid[x][y];
+                    const val = s.grid[x][y];
                     if (val === 1) {
                         ctx.fillStyle = '#172554';
                         ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
@@ -1467,8 +875,9 @@
                 }
             }
 
-            const ax = agentPos.x * cellSize + cellSize / 2;
-            const ay = agentPos.y * cellSize + cellSize / 2;
+            // Draw Agent
+            const ax = s.agentPos[0] * cellSize + cellSize / 2;
+            const ay = s.agentPos[1] * cellSize + cellSize / 2;
             ctx.fillStyle = '#00f0ff';
             ctx.shadowColor = '#00f0ff';
             ctx.shadowBlur = 10;
@@ -1478,7 +887,7 @@
             ctx.shadowBlur = 0;
 
             const angles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
-            const angle = angles[agentDir % 4];
+            const angle = angles[s.agentDir % 4];
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -1489,7 +898,7 @@
 
         function drawTree(mctsInfo) {
             const canvas = document.getElementById('treeCanvas');
-            if (!canvas) return;
+            if (!canvas || !mctsInfo) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1503,9 +912,9 @@
             for (let a = 0; a < 4; a++) {
                 const childX = 140;
                 const childY = 25 + a * 42;
-                const p = mctsInfo.probs[a];
-                const q = mctsInfo.qValues[a];
-                const visits = mctsInfo.visitCounts[a];
+                const p = mctsInfo.probs ? mctsInfo.probs[a] : 0.25;
+                const q = mctsInfo.qValues ? mctsInfo.qValues[a] : 0.0;
+                const visits = mctsInfo.visitCounts ? mctsInfo.visitCounts[a] : 0;
 
                 ctx.strokeStyle = `rgba(0, 240, 255, ${Math.max(0.1, p)})`;
                 ctx.lineWidth = 1 + p * 3;
@@ -1525,30 +934,14 @@
             }
         }
 
-        function togglePlay() {
-            isRunning = !isRunning;
-            document.getElementById('btn-play-pause').innerText = isRunning ? '⏸️ Pause' : '▶️ Play';
-        }
-
-        function stepOnce() { stepSimulation(); }
-        function setSpeed(s) { speed = s; }
-
-        function loop() {
-            if (isRunning) {
-                for (let i = 0; i < speed; i++) stepSimulation();
-            }
-            const delay = speed >= 25 ? 10 : 90;
-            setTimeout(() => requestAnimationFrame(loop), delay);
-        }
-
         window.onload = () => {
-            initNeuralBrain();
-            initEnvironment();
             buildVisionMatrixUI();
-            const restored = loadBrainFromStorage();
-            if (!restored) addChatMessage('🤖 GENESIS Organism', "Starting fresh from random Gaussian multimodal weights.", 'chat-agent');
-            drawMaze();
-            requestAnimationFrame(loop);
+            const dummyGrid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+            for (let i = 0; i < 8; i++) { dummyGrid[0][i] = 1; dummyGrid[7][i] = 1; dummyGrid[i][0] = 1; dummyGrid[i][7] = 1; }
+            dummyGrid[3][5] = 4;
+            drawMaze({ grid: dummyGrid, agentPos: [3, 2], agentDir: 2 });
+            drawTree({ probs: [0.25, 0.25, 0.25, 0.25], qValues: [0, 0, 0, 0], visitCounts: [0, 0, 0, 0] });
+            connectWebSocket();
         };
     </script>
 </body>
