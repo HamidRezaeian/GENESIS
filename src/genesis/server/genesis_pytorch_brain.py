@@ -4,7 +4,7 @@ import numpy as np
 import math
 from pathlib import Path
 
-VISUAL_DIM = 7 * 7 * 6  # 294
+VISUAL_DIM = 7 * 7 * 7  # 343
 D_MODEL = 32
 N_ACTIONS = 4
 MAX_TEXT_LEN = 16

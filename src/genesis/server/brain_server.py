@@ -9,6 +9,7 @@ import sys
 import json
 import time
 import math
+from collections import deque
 import asyncio
 import numpy as np
 from pathlib import Path
@@ -27,8 +28,8 @@ from genesis_pytorch_brain import GenesisPyTorchBrain
 # Architectural Hyperparameters
 GRID_SIZE = 24
 VISION_SIZE = 7
-N_CHANNELS = 6
-VISUAL_DIM = VISION_SIZE * VISION_SIZE * N_CHANNELS # 294
+N_CHANNELS = 7
+VISUAL_DIM = VISION_SIZE * VISION_SIZE * N_CHANNELS # 343
 VOCAB_SIZE = 64
 MAX_TEXT_LEN = 16
 D_MODEL = 32
@@ -46,7 +47,32 @@ MCTS_DEPTH = 6
 # ==============================================================================
 
 @njit(fastmath=True, nogil=True)
-def numba_get_visual_observation(grid: np.ndarray, agent_x: int, agent_y: int, agent_dir: int, vision_size: int, n_channels: int) -> np.ndarray:
+def numba_diffuse_chem(chem: np.ndarray, grid: np.ndarray, D: np.float32, decay: np.float32):
+    rows, cols = chem.shape
+    new_chem = np.empty_like(chem)
+    for y in range(rows):
+        for x in range(cols):
+            if grid[y, x] == 1:
+                new_chem[y, x] = np.float32(0.0)
+                continue
+            
+            val = chem[y, x]
+            sum_neighbors = np.float32(0.0)
+            sum_neighbors += chem[y+1, x] if y < rows - 1 and grid[y+1, x] != 1 else val
+            sum_neighbors += chem[y-1, x] if y > 0 and grid[y-1, x] != 1 else val
+            sum_neighbors += chem[y, x+1] if x < cols - 1 and grid[y, x+1] != 1 else val
+            sum_neighbors += chem[y, x-1] if x > 0 and grid[y, x-1] != 1 else val
+            
+            laplacian = sum_neighbors - np.float32(4.0) * val
+            new_val = val + D * laplacian - decay * val
+            new_chem[y, x] = max(np.float32(0.0), np.float32(new_val))
+            
+    for y in range(rows):
+        for x in range(cols):
+            chem[y, x] = new_chem[y, x]
+
+@njit(fastmath=True, nogil=True)
+def numba_get_visual_observation(grid: np.ndarray, chem: np.ndarray, agent_x: int, agent_y: int, agent_dir: int, vision_size: int, n_channels: int) -> np.ndarray:
     half = vision_size // 2
     obs = np.zeros(vision_size * vision_size * n_channels, dtype=np.float32)
     idx = 0
@@ -65,8 +91,9 @@ def numba_get_visual_observation(grid: np.ndarray, agent_x: int, agent_y: int, a
             
             if 0 <= gx < 24 and 0 <= gy < 24:
                 cell = grid[gx, gy]
-                if 0 <= cell < n_channels:
+                if 0 <= cell < 6:
                     obs[idx * n_channels + cell] = np.float32(1.0)
+                obs[idx * n_channels + 6] = chem[gx, gy] / np.float32(100.0) # scale down for observation
             else:
                 obs[idx * n_channels + 1] = np.float32(1.0)
             idx += 1
@@ -266,8 +293,10 @@ class GenesisNumbaBrain:
         d_text = np.zeros(D_MODEL, dtype=np.float32)
         d_priors = np.array([0.25, 0.25, 0.25, 0.25], dtype=np.float32)
         d_grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=np.int32)
+        d_chem = np.zeros((GRID_SIZE, GRID_SIZE), dtype=np.float32)
         
-        numba_get_visual_observation(d_grid, 3, 3, 0, VISION_SIZE, N_CHANNELS)
+        numba_get_visual_observation(d_grid, d_chem, 3, 3, 0, VISION_SIZE, N_CHANNELS)
+        numba_diffuse_chem(d_chem, d_grid, np.float32(0.5), np.float32(1.0/8192.0))
         s = numba_forward_transformer(
             d_obs, d_text, self.W_vis, self.W_fuse_vis, self.W_fuse_lang,
             self.W_q, self.W_k, self.W_v, self.W_out, self.W_ff1, self.W_ff2
@@ -392,169 +421,229 @@ class GenesisNumbaBrain:
 GenesisNeuralBrain = GenesisPyTorchBrain
 
 
+# ---- Phase A constants (Rule 17 provenance tags) ----
+U_QUANTUM       = 32.0        # [H] CELL_STATES(256)/BITS_PER_BYTE(8) — elementary info-income quantum
+GEN_MAX_ATTEMPTS = 64         # [S] structural constant: rejection-sampling budget
+HAZARD_LETHAL_TICKS = 20     # [E] documented exposure horizon (full tank drain while standing)
+COLLISION_K = 1.0
+
+
 class GenesisEnvironment:
     def __init__(self):
         self.grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=np.int32)
+        self.chem = np.zeros((GRID_SIZE, GRID_SIZE), dtype=np.float32)
         self.agent_pos = [3, 2]
-        self.agent_dir = 2 # 0: North, 1: East, 2: South, 3: West
+        self.agent_dir = 2
         self.has_key = False
         self.door_opened = False
-        self.current_level = 1
-        self.level_consecutive_solves = 0
-        self.init_level(1)
+        self.episode_seed = 0
+        self.size = 12
+        self.difficulty = self.base_difficulty()
+        self.tick_cost = 0.0          # injected by runner (= its metabolic_cost)
+        self.max_energy_hint = 0.0
+        self.on_hazard = False
+        self.reset_episode(seed=0)
 
-    def reset_agent_position(self):
-        if self.current_level == 1:
-            self.agent_pos = [3, 2]
-            self.agent_dir = 2
-        elif self.current_level == 2:
-            self.agent_pos = [2, 2]
-            self.agent_dir = 1
-        elif self.current_level == 3:
-            self.agent_pos = [3, 3]
-            self.agent_dir = 1
-        else:
-            self.agent_pos = [3, 3]
-            self.agent_dir = 0
+    @staticmethod
+    def base_difficulty():
+        # All values [E]-class generator parameters (NOT reward knobs)
+        return {"size": 12, "wall_density": 0.02, "gaps": 1,
+                "lock": False, "hazard_density": 0.01, "food": 2}
 
-    def init_level(self, lvl: int):
-        self.current_level = lvl
-        self.grid.fill(0)
+    # -- reachability primitive (also measures door ΔReach for income) --
+    def _bfs(self, sy: int, sx: int, treat_door_as_wall: bool):
+        dist = -np.ones((GRID_SIZE, GRID_SIZE), dtype=np.int32)
+        blocked = (2,) if treat_door_as_wall else ()
+        dq = deque([(sy, sx)]); dist[sy, sx] = 0
+        while dq:
+            y, x = dq.popleft()
+            for dy, dx in ((0,-1),(0,1),(-1,0),(1,0)):
+                ny, nx_ = y+dy, x+dx
+                if 0 <= ny < GRID_SIZE and 0 <= nx_ < GRID_SIZE \
+                        and dist[ny, nx_] == -1 \
+                        and self.grid[ny, nx_] not in (1,) + blocked:
+                    dist[ny, nx_] = dist[y, x] + 1
+                    dq.append((ny, nx_))
+        return dist
+
+    def _bfs_open_all(self):
+        return self._bfs(self.agent_pos[0], self.agent_pos[1], treat_door_as_wall=False)
+
+    def _reachable_count(self, sy, sx):
+        d = self._bfs(sy, sx, treat_door_as_wall=False)
+        return int((d >= 0).sum())
+
+    def reset_episode(self, seed: int, difficulty: dict | None = None):
+        self.episode_seed = int(seed)
+        if difficulty is not None:
+            self.difficulty.update(difficulty)
+        d = self.difficulty
+        S = int(np.clip(d["size"], 8, GRID_SIZE)); self.size = S
+        rng = np.random.default_rng(self.episode_seed)
+
+        layout = self._generate(rng, S, d)
+        if layout is None:                       # deterministic fallback: open arena
+            layout = self._fallback(rng, S)
+        self.grid[:] = layout["grid"]
+        self.chem[:] = 0.0
+        self.agent_pos = layout["spawn"]
+        self.agent_dir = layout["dir"]
         self.has_key = False
         self.door_opened = False
+        self.on_hazard = False
 
-        if lvl == 1: # 🍼 Infant (8x8 boundary, food at (3, 5))
-            S = 8
-            for i in range(GRID_SIZE):
-                for j in range(GRID_SIZE):
-                    if i >= S or j >= S:
-                        self.grid[i, j] = 1
-            for i in range(S):
-                self.grid[0, i] = 1; self.grid[S - 1, i] = 1
-                self.grid[i, 0] = 1; self.grid[i, S - 1] = 1
-            self.agent_pos = [3, 2]
-            self.agent_dir = 2
-            self.grid[3, 5] = 4 # Food directly in front
-        elif lvl == 2: # 🚶 Toddler (10x10 with corner barrier)
-            S = 10
-            for i in range(GRID_SIZE):
-                for j in range(GRID_SIZE):
-                    if i >= S or j >= S:
-                        self.grid[i, j] = 1
-            for i in range(S):
-                self.grid[0, i] = 1; self.grid[S - 1, i] = 1
-                self.grid[i, 0] = 1; self.grid[i, S - 1] = 1
-            self.grid[4, 4] = 1; self.grid[5, 4] = 1
-            self.agent_pos = [2, 2]
-            self.agent_dir = 1
-            self.grid[7, 7] = 4
-        elif lvl == 3: # 🏃 Chambers (14x14 with open doorway)
-            S = 14
-            for i in range(GRID_SIZE):
-                for j in range(GRID_SIZE):
-                    if i >= S or j >= S:
-                        self.grid[i, j] = 1
-            for i in range(S):
-                self.grid[0, i] = 1; self.grid[S - 1, i] = 1
-                self.grid[i, 0] = 1; self.grid[i, S - 1] = 1
-            mid = 7
-            for i in range(S):
-                self.grid[mid, i] = 1
-            self.grid[mid, 4] = 0 # Open doorway
-            self.agent_pos = [3, 3]
-            self.agent_dir = 0
-            self.grid[S - 3, S - 3] = 6 # Goal
-            self.grid[mid + 2, 4] = 4
-        elif lvl == 4: # 🔑 Key & Lock (18x18)
-            S = 18
-            for i in range(GRID_SIZE):
-                for j in range(GRID_SIZE):
-                    if i >= S or j >= S:
-                        self.grid[i, j] = 1
-            for i in range(S):
-                self.grid[0, i] = 1; self.grid[S - 1, i] = 1
-                self.grid[i, 0] = 1; self.grid[i, S - 1] = 1
-            mid = 9
-            for i in range(S):
-                self.grid[mid, i] = 1
-            self.grid[mid, 5] = 2 # Locked Door
-            self.grid[4, 4] = 3 # Key
-            self.grid[S - 3, S - 3] = 6 # Goal
-            self.grid[mid + 2, 4] = 4
-            self.agent_pos = [3, 3]
-            self.agent_dir = 0
-        else: # 🏆 Master (24x24 Full Labyrinth)
-            for i in range(GRID_SIZE):
-                self.grid[0, i] = 1; self.grid[GRID_SIZE - 1, i] = 1
-                self.grid[i, 0] = 1; self.grid[i, GRID_SIZE - 1] = 1
-            mid = GRID_SIZE // 2
-            for i in range(GRID_SIZE):
-                self.grid[mid, i] = 1
-            self.grid[mid, 6] = 2
-            self.grid[mid // 2, 4] = 3
-            self.grid[GRID_SIZE - 4, GRID_SIZE - 4] = 6
-            for y in range(8, 12):
-                self.grid[mid - 1, y] = 5
-            for i in range(6):
-                self.grid[mid + 2 + (i % 3) * 3, 4 + i * 2] = 4
-            self.agent_pos = [3, 3]
-            self.agent_dir = 0
+    def _generate(self, rng, S, d):
+        for _ in range(GEN_MAX_ATTEMPTS):
+            g = np.ones((GRID_SIZE, GRID_SIZE), dtype=np.int32)
+            g[:S, :S] = 0                                   # playable island in fixed 24×24 buffer
+            for _ in range(int(S * S * d["wall_density"])): # scattered segments
+                y, x = rng.integers(1, S - 1, 2)
+                vert = rng.random() < 0.5
+                for k in range(int(rng.integers(2, max(3, S // 4)))):
+                    yy, xx = (y + k, x) if vert else (y, x + k)
+                    if 0 < yy < S - 1 and 0 < xx < S - 1:
+                        g[yy, xx] = 1
+            # partition wall + openings (generalizes the Level-3/4 bottleneck)
+            axis = int(rng.integers(2))
+            cut = int(rng.integers(S // 3, max(S // 3 + 1, 2 * S // 3)))
+            if axis == 0: g[cut, :S] = 1
+            else:         g[:S, cut] = 1
+            gaps = rng.choice(np.arange(1, S - 1), size=int(d["gaps"]), replace=False)
+            for i, gc in enumerate(gaps):
+                if axis == 0: g[cut, int(gc)] = 0
+                else:         g[int(gc), cut] = 0
+            locked_gap = None
+            if d["lock"]:                                    # seal one opening with a keyed door
+                li = int(rng.integers(len(gaps))); locked_gap = int(gaps[li])
+                if axis == 0: g[cut, locked_gap] = 2
+                else:         g[locked_gap, cut] = 2
+
+            free = np.argwhere(g[:S, :S] == 0)
+            if len(free) < 8: continue
+            spawn = free[int(rng.integers(len(free)))]
+
+            probe = GenesisEnvironment.__new__(GenesisEnvironment)  # BFS sandbox on candidate
+            probe.grid = g.copy()
+            dist_locked = probe._bfs(int(spawn[0]), int(spawn[1]), treat_door_as_wall=True)
+            if locked_gap is not None:
+                gy, gx_ = (cut, locked_gap) if axis == 0 else (locked_gap, cut)
+                side_a = dist_locked[:S, :S] >= 0
+                # both sides must exist pre-unlock, key on spawn side
+                key_cands = [(y, x) for y, x in free if side_a[y, x]]
+                if not key_cands: continue
+            else:
+                key_cands = []
+
+            if (dist_locked[:S, :S][free[:, 0], free[:, 1]] < 0).any():
+                continue                                     # disconnected pocket → reject
+
+            # goal at deep-BFS cell (post-unlock reachability implied by open gaps)
+            probe.grid = g
+            probe.agent_pos = [int(spawn[0]), int(spawn[1])]
+            d_open = probe._bfs_open_all()
+
+            far = free[d_open[free[:, 0], free[:, 1]] >= np.quantile(
+                d_open[free[:, 0], free[:, 1]], 0.75)]
+            if len(far) == 0: continue
+            goal = far[int(rng.integers(len(far)))]
+            g[int(goal[0]), int(goal[1])] = 6
+            if locked_gap is not None and not key_cands: continue
+            if key_cands:
+                kc = key_cands[int(rng.integers(len(key_cands)))]
+                g[int(kc[0]), int(kc[1])] = 3
+            # hazards: فقط خانههای خارج از کریدور کوتاهترین مسیر (مسیر معتبر همیشه بدون تله)
+            corridor = set()
+            y, x = int(goal[0]), int(goal[1])
+            dd = d_open
+            cy, cx = y, x
+            while dd[cy, cx] > 0:                            # descent along decreasing distance
+                corridor.add((cy, cx))
+                for dy, dx in ((0,-1),(0,1),(-1,0),(1,0)):
+                    ny, nx_ = cy+dy, cx+dx
+                    if 0 <= ny < S and 0 <= nx_ < S and dd[ny, nx_] == dd[cy, cx] - 1:
+                        cy, cx = ny, nx_; break
+            hz_pool = [(y, x) for y, x in free
+                       if g[y, x] == 0 and (y, x) != tuple(spawn) and (y, x) not in corridor]
+            n_hz = min(len(hz_pool), int(round(d["hazard_density"] * S * S)))
+            for hy, hx in rng.permutation(hz_pool)[:n_hz]:
+                g[hy, hx] = 5
+            fd_pool = [(y, x) for y, x in free if g[y, x] == 0 and (y,x) != tuple(spawn)]
+            for fy, fx in rng.permutation(fd_pool)[:int(d["food"])]:
+                g[fy, fx] = 4
+            direction = int(np.argmax([g[spawn[0]-1, spawn[1]] == 0, g[spawn[0], spawn[1]+1] == 0,
+                                       g[spawn[0]+1, spawn[1]] == 0, g[spawn[0], spawn[1]-1] == 0]))
+            return {"grid": g, "spawn": [int(spawn[0]), int(spawn[1])], "dir": direction}
+        return None
+
+    def _fallback(self, rng, S):
+        g = np.ones((GRID_SIZE, GRID_SIZE), dtype=np.int32); g[:S, :S] = 0
+        g[S-3, S-3] = 6
+        return {"grid": g, "spawn": [2, 2], "dir": 1}
 
     def get_visual_observation(self) -> np.ndarray:
         return numba_get_visual_observation(
-            self.grid, self.agent_pos[0], self.agent_pos[1], self.agent_dir,
+            self.grid, self.chem, self.agent_pos[0], self.agent_pos[1], self.agent_dir,
             VISION_SIZE, N_CHANNELS
         )
 
+    def diffuse(self):
+        numba_diffuse_chem(self.chem, self.grid, np.float32(0.5), np.float32(1.0/8192.0))
+
     def step(self, action: int) -> tuple:
         dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)]
-        # Metabolic baseline: MCTS invalidation cost
-        reward = -0.5
+        reward = 0.0                      # time is priced by passive drain — NO game penalty
         event = None
 
-        if action == 0: # FORWARD
+        if action == 0:  # FORWARD
             dx, dy = dirs[self.agent_dir % 4]
             nx, ny = self.agent_pos[0] + dx, self.agent_pos[1] + dy
-
             if 0 <= nx < GRID_SIZE and 0 <= ny < GRID_SIZE:
                 cell = self.grid[nx, ny]
-                if cell == 1: # Wall
-                    reward = -2.0
-                elif cell == 2: # Door
+                if cell == 1:
+                    reward = -self.tick_cost * COLLISION_K       # [E] wasted motion budget
+                elif cell == 2:
                     if self.has_key:
-                        self.grid[nx, ny] = 0
-                        self.door_opened = True
+                        before = self._reachable_count(*self.agent_pos)
+                        self.grid[nx, ny] = 0; self.door_opened = True
+                        after = self._reachable_count(nx, ny)
                         self.agent_pos = [nx, ny]
-                        reward = 64.0 # Freed 2 cells (door + key memory)
+                        delta = max(after - before, 2)
+                        reward = U_QUANTUM * math.ceil(math.log2(delta))  # [H] measured freed territory
                         event = "DOOR_UNLOCKED"
                     else:
-                        reward = -5.0
-                elif cell == 5: # Hazard
+                        reward = -self.tick_cost                  # blocked attempt = burned budget
+                elif cell == 5:
                     self.agent_pos = [nx, ny]
-                    reward = -50.0
-                    event = "HAZARD_HIT"
+                    reward -= self.hazard_dose()                  # [E] dose, not spike
+                    if not self.on_hazard:
+                        event = "HAZARD_HIT"
+                    self.on_hazard = True
                 else:
                     self.agent_pos = [nx, ny]
-                    if cell == 4: # Food
+                    self.on_hazard = False
+                    if cell == 4:
                         self.grid[nx, ny] = 0
-                        reward = 32.0 # 256 bits / 8
+                        reward += U_QUANTUM                       # [H] unchanged provenance
                         event = "FOOD_HARVESTED"
-        elif action == 1:
-            self.agent_dir = (self.agent_dir - 1 + 4) % 4
-        elif action == 2:
-            self.agent_dir = (self.agent_dir + 1) % 4
-        elif action == 3: # INTERACT
+        elif action in (1, 2):
+            self.agent_dir = (self.agent_dir + (-1 if action == 1 else 1)) % 4
+            self.on_hazard = False
+        elif action == 3:  # INTERACT
+            self.on_hazard = False
             cell = self.grid[self.agent_pos[0], self.agent_pos[1]]
             if cell == 3 and not self.has_key:
-                self.has_key = True
-                self.grid[self.agent_pos[0], self.agent_pos[1]] = 0
-                reward = 32.0
-                event = "KEY_PICKED"
-            elif cell == 6: # Goal
-                reward = 196.0 # Freed entire 14x14 grid
+                self.has_key = True; self.grid[self.agent_pos[0], self.agent_pos[1]] = 0
+                reward += U_QUANTUM; event = "KEY_PICKED"
+            elif cell == 6:
+                reward += U_QUANTUM * math.ceil(math.log2(self.size ** 2))  # [H] freed arena address bits
                 event = "GOAL_SOLVED"
-
+            elif cell == 0:
+                self.chem[self.agent_pos[0], self.agent_pos[1]] = min(1000.0, self.chem[self.agent_pos[0], self.agent_pos[1]] + 256.0)
+                event = "PHEROMONE_EMITTED"
         return reward, event
+
+    def hazard_dose(self):
+        return (self.max_energy_hint / HAZARD_LETHAL_TICKS)  # runner injects max_energy_hint
 
 
 class GenesisEngineRunner:
@@ -572,7 +661,6 @@ class GenesisEngineRunner:
         self.energy = self.max_energy
         
         # Grounded Metabolic Cost
-        # Forward pass FLOPs estimate ~ footprint / 100
         self.metabolic_cost = footprint_bytes / (898.0 * 2000.0) # ~ 0.06 per tick
         
         self.goals_solved = 0
@@ -582,6 +670,14 @@ class GenesisEngineRunner:
         self.policy_mode = "DIRECTED"
         self.active_task_text = "EXPLORE & SURVIVE"
         self.connected_websockets = set()
+        
+        self.win_income = 0.0
+        self.win_ticks = 0
+        self.episode_seed = 0
+        
+        self.env.tick_cost = self.metabolic_cost
+        self.env.max_energy_hint = self.max_energy
+        self.env.reset_episode(seed=self.episode_seed)
 
         # Load existing brain if available
         ckpt_path = BRAIN_DIR / "canonical_brain.npz"
@@ -591,6 +687,10 @@ class GenesisEngineRunner:
                 print(f"[GENESIS CORE] Successfully loaded canonical brain from {ckpt_path}")
             except Exception as e:
                 print(f"[GENESIS CORE] Checkpoint load note: {e}")
+
+    def _end_episode(self, success: bool):
+        self.episode_seed = (self.episode_seed + 1) % (2**31)
+        self.env.reset_episode(seed=self.episode_seed)
 
     def step_once(self) -> dict:
         self.tick_count += 1
@@ -609,27 +709,32 @@ class GenesisEngineRunner:
 
         if event == "FOOD_HARVESTED":
             self.food_harvested += 1
-            if self.env.current_level <= 2:
-                self.env.level_consecutive_solves += 1
-                if self.env.level_consecutive_solves >= 3 and self.env.current_level < 5:
-                    self.env.init_level(self.env.current_level + 1)
-                else:
-                    self.env.init_level(self.env.current_level)
         elif event == "DOOR_UNLOCKED":
             self.doors_unlocked += 1
         elif event == "HAZARD_HIT":
             self.hazard_collisions += 1
         elif event == "GOAL_SOLVED":
             self.goals_solved += 1
-            if self.env.current_level >= 3:
-                self.env.level_consecutive_solves += 1
-                if self.env.level_consecutive_solves >= 2 and self.env.current_level < 5:
-                    self.env.init_level(self.env.current_level + 1)
-                else:
-                    self.env.init_level(self.env.current_level)
-            else:
-                self.env.init_level(self.env.current_level)
+            self._end_episode(True)
 
+        # competence accumulator (incomes only — physical gains):
+        if reward > 0: self.win_income += reward
+        self.win_ticks += 1
+        COMP_WINDOW = 500        # [S] structural
+        EFF_HI, EFF_LO = 1.3, 0.6  # [E] documented surplus-ratio bands
+        if self.win_ticks >= COMP_WINDOW:
+            eff = self.win_income / max(self.win_ticks * self.metabolic_cost, 1e-9)
+            d = self.env.difficulty
+            if eff > EFF_HI:
+                d["size"] = min(24, d["size"] + 2)
+                d["lock"] = True
+            elif eff < EFF_LO:
+                d["size"] = max(8, d["size"] - 2)
+            print(f"[GENESIS] competence={eff:.2f} → {d}")
+            self.win_income = 0.0
+            self.win_ticks = 0
+
+        self.env.diffuse()
         next_obs = self.env.get_visual_observation()
         s_next = self.brain.forward_transformer(next_obs, self.active_task_text)
         
@@ -656,8 +761,7 @@ class GenesisEngineRunner:
 
         if self.energy <= 0.0:
             self.energy = self.max_energy
-            self.env.level_consecutive_solves = 0
-            self.env.init_level(self.env.current_level)
+            self._end_episode(False)
 
         is_sleeping = False
         if self.tick_count > 0 and self.tick_count % 2000 == 0 and len(self.brain.hippocampus) > 100:
@@ -673,7 +777,8 @@ class GenesisEngineRunner:
             "type": "STATE_UPDATE",
             "tick": self.tick_count,
             "energy": max(0.0, self.energy),
-            "level": self.env.current_level,
+            "difficulty": self.env.difficulty,
+            "seed": self.env.episode_seed,
             "goals": self.goals_solved,
             "food": self.food_harvested,
             "doors": self.doors_unlocked,
@@ -682,6 +787,7 @@ class GenesisEngineRunner:
             "agentPos": self.env.agent_pos,
             "agentDir": self.env.agent_dir,
             "grid": self.env.grid.tolist(),
+            "chem": self.env.chem.tolist(),
             "obs": obs.tolist(),
             "mcts": mcts_info,
             "vVal": metrics["vCurr"],
@@ -747,8 +853,8 @@ async def ws_handler(request):
                 cmd = data.get("action")
                 if cmd == "SET_SPEED":
                     runner.speed = int(data.get("value", 1))
-                elif cmd == "SET_LEVEL":
-                    runner.env.init_level(int(data.get("value", 1)))
+                elif cmd == "SET_DIFFICULTY":
+                    runner.env.reset_episode(seed=runner.episode_seed, difficulty=data.get("value"))
                 elif cmd == "SET_POLICY_MODE":
                     runner.policy_mode = str(data.get("value", "DIRECTED"))
                 elif cmd == "TRIGGER_SLEEP":
@@ -775,7 +881,7 @@ async def ws_handler(request):
                     runner.food_harvested = 0
                     runner.doors_unlocked = 0
                     runner.hazard_collisions = 0
-                    runner.env.init_level(1)
+                    runner.env.reset_episode(seed=0, difficulty=runner.env.base_difficulty())
                     resp = {
                         "type": "CHAT_RESPONSE",
                         "reply": "🧹 [Python Core]: Neural brain wiped to Tabula Rasa (Random Gaussian Noise).",

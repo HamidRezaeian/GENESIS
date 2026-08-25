@@ -460,12 +460,11 @@
                     <span class="badge badge-purple" id="key-status-tag">KEY: NOT COLLECTED</span>
                 </div>
                 <div class="controls-bar" style="margin-bottom: 2px;">
-                    <span style="font-size: 11px; font-weight:700; color:var(--text-muted); align-self:center;">CURRICULUM:</span>
-                    <button class="btn btn-active" id="btn-lvl-1" onclick="setLevel(1)">🍼 Lvl 1: Infant (6x6)</button>
-                    <button class="btn" id="btn-lvl-2" onclick="setLevel(2)">🚶 Lvl 2: Toddler</button>
-                    <button class="btn" id="btn-lvl-3" onclick="setLevel(3)">🏃 Lvl 3: Chambers</button>
-                    <button class="btn" id="btn-lvl-4" onclick="setLevel(4)">🔑 Lvl 4: Key & Lock</button>
-                    <button class="btn" id="btn-lvl-5" onclick="setLevel(5)">🏆 Lvl 5: Master</button>
+                    <span style="font-size: 11px; font-weight:700; color:var(--text-muted); align-self:center;" id="difficulty-lbl">DIFFICULTY:</span>
+                    <button class="btn btn-active" onclick="sendCommand('SET_DIFFICULTY', {'size': 8, 'lock': false})">🍼 Infant (8x8)</button>
+                    <button class="btn" onclick="sendCommand('SET_DIFFICULTY', {'size': 12, 'lock': false})">🚶 Toddler (12x12)</button>
+                    <button class="btn" onclick="sendCommand('SET_DIFFICULTY', {'size': 16, 'lock': true})">🏃 Chambers (16x16 Lock)</button>
+                    <button class="btn" onclick="sendCommand('SET_DIFFICULTY', {'size': 24, 'lock': true})">🏆 Master (24x24 Lock)</button>
                 </div>
                 <div class="canvas-wrapper">
                     <div class="sleep-overlay" id="sleep-overlay">🌙 NEURAL SLEEP CONSOLIDATION ACTIVE...</div>
@@ -571,13 +570,12 @@
         let ws = null;
         let isRunning = true;
         let currentSpeed = 1;
-        let currentLevel = 1;
         let policyMode = 'DIRECTED';
         let latestState = null;
         let autoTrainerEnabled = false;
         let lastTrainerMsg = "";
         let knownDoors = new Set();
-        let lastLevel = -1;
+        let lastDifficultyStr = "";
 
         function connectWebSocket() {
             let wsUrl;
@@ -627,9 +625,10 @@
         }
 
         function renderState(s) {
-            if (s.level !== lastLevel) {
+            let currentDifficultyStr = JSON.stringify(s.difficulty) + "_" + s.seed;
+            if (currentDifficultyStr !== lastDifficultyStr) {
                 knownDoors.clear();
-                lastLevel = s.level;
+                lastDifficultyStr = currentDifficultyStr;
             }
 
             // Track doors for memory
@@ -667,10 +666,10 @@
                 }
             }
 
-            // Update level buttons
-            for (let l = 1; l <= 5; l++) {
-                const btn = document.getElementById(`btn-lvl-${l}`);
-                if (btn) btn.classList.toggle('btn-active', l === s.level);
+            // Update UI elements based on current difficulty
+            const lbl = document.getElementById('difficulty-lbl');
+            if (lbl && s.difficulty) {
+                lbl.innerText = `SEED: ${s.seed} | SIZE: ${s.difficulty.size}x${s.difficulty.size} | LOCK: ${s.difficulty.lock}`;
             }
 
             // Update Policy Softmax Bars
@@ -741,10 +740,7 @@
             sendChatMessage();
         }
 
-        function setLevel(lvl) {
-            currentLevel = lvl;
-            sendCommand('SET_LEVEL', lvl);
-        }
+
 
         function setPolicyMode(mode) {
             policyMode = mode;
