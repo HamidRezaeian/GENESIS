@@ -81,13 +81,13 @@ def numba_get_visual_observation(grid: np.ndarray, chem: np.ndarray, agent_x: in
             gx = agent_x
             gy = agent_y
             if agent_dir == 0:
-                gx += vx; gy += vy
+                gx += vy; gy += vx
             elif agent_dir == 1:
-                gx -= vy; gy += vx
+                gx += vx; gy -= vy
             elif agent_dir == 2:
-                gx -= vx; gy -= vy
+                gx -= vy; gy -= vx
             elif agent_dir == 3:
-                gx += vy; gy -= vx
+                gx -= vx; gy += vy
             
             if 0 <= gx < 24 and 0 <= gy < 24:
                 cell = grid[gx, gy]
@@ -496,27 +496,35 @@ class GenesisEnvironment:
         for _ in range(GEN_MAX_ATTEMPTS):
             g = np.ones((GRID_SIZE, GRID_SIZE), dtype=np.int32)
             g[:S, :S] = 0                                   # playable island in fixed 24×24 buffer
-            for _ in range(int(S * S * d["wall_density"])): # scattered segments
+            
+            # Border walls at active S x S boundaries
+            g[0, :S] = 1
+            g[S-1, :S] = 1
+            g[:S, 0] = 1
+            g[:S, S-1] = 1
+
+            for _ in range(int(S * S * d.get("wall_density", 0.02))): # scattered segments
                 y, x = rng.integers(1, S - 1, 2)
                 vert = rng.random() < 0.5
                 for k in range(int(rng.integers(2, max(3, S // 4)))):
                     yy, xx = (y + k, x) if vert else (y, x + k)
                     if 0 < yy < S - 1 and 0 < xx < S - 1:
                         g[yy, xx] = 1
+
             # partition wall + openings (generalizes the Level-3/4 bottleneck)
             axis = int(rng.integers(2))
             cut = int(rng.integers(S // 3, max(S // 3 + 1, 2 * S // 3)))
             if axis == 0: g[cut, :S] = 1
             else:         g[:S, cut] = 1
-            gaps = rng.choice(np.arange(1, S - 1), size=int(d["gaps"]), replace=False)
+            gaps = rng.choice(np.arange(1, S - 1), size=int(d.get("gaps", 1)), replace=False)
             for i, gc in enumerate(gaps):
                 if axis == 0: g[cut, int(gc)] = 0
                 else:         g[int(gc), cut] = 0
             locked_gap = None
-            if d["lock"]:                                    # seal one opening with a keyed door
+            if d.get("lock", False):                                    # seal one opening with a keyed door
                 li = int(rng.integers(len(gaps))); locked_gap = int(gaps[li])
-                if axis == 0: g[cut, locked_gap] = 2
-                else:         g[locked_gap, cut] = 2
+                if axis == 0: g[cut, locked_gap] = 5                   # 5 = Lock / Door
+                else:         g[locked_gap, cut] = 5
 
             free = np.argwhere(g[:S, :S] == 0)
             if len(free) < 8: continue
@@ -537,7 +545,7 @@ class GenesisEnvironment:
             if (dist_locked[:S, :S][free[:, 0], free[:, 1]] < 0).any():
                 continue                                     # disconnected pocket → reject
 
-            # goal at deep-BFS cell (post-unlock reachability implied by open gaps)
+            # goal at deep-BFS cell
             probe.grid = g
             probe.agent_pos = [int(spawn[0]), int(spawn[1])]
             d_open = probe._bfs_open_all()
@@ -546,38 +554,45 @@ class GenesisEnvironment:
                 d_open[free[:, 0], free[:, 1]], 0.75)]
             if len(far) == 0: continue
             goal = far[int(rng.integers(len(far)))]
-            g[int(goal[0]), int(goal[1])] = 6
+            g[int(goal[0]), int(goal[1])] = 3                # 3 = Food / Goal
             if locked_gap is not None and not key_cands: continue
             if key_cands:
                 kc = key_cands[int(rng.integers(len(key_cands)))]
-                g[int(kc[0]), int(kc[1])] = 3
-            # hazards: فقط خانههای خارج از کریدور کوتاهترین مسیر (مسیر معتبر همیشه بدون تله)
+                g[int(kc[0]), int(kc[1])] = 4                # 4 = Key
+            
+            # hazards (2)
             corridor = set()
-            y, x = int(goal[0]), int(goal[1])
-            dd = d_open
-            cy, cx = y, x
-            while dd[cy, cx] > 0:                            # descent along decreasing distance
+            cy, cx = int(goal[0]), int(goal[1])
+            while d_open[cy, cx] > 0:
                 corridor.add((cy, cx))
                 for dy, dx in ((0,-1),(0,1),(-1,0),(1,0)):
                     ny, nx_ = cy+dy, cx+dx
-                    if 0 <= ny < S and 0 <= nx_ < S and dd[ny, nx_] == dd[cy, cx] - 1:
+                    if 0 <= ny < S and 0 <= nx_ < S and d_open[ny, nx_] == d_open[cy, cx] - 1:
                         cy, cx = ny, nx_; break
             hz_pool = [(y, x) for y, x in free
                        if g[y, x] == 0 and (y, x) != tuple(spawn) and (y, x) not in corridor]
-            n_hz = min(len(hz_pool), int(round(d["hazard_density"] * S * S)))
+            n_hz = min(len(hz_pool), int(round(d.get("hazard_density", 0.01) * S * S)))
             for hy, hx in rng.permutation(hz_pool)[:n_hz]:
-                g[hy, hx] = 5
+                g[hy, hx] = 2                                # 2 = Hazard
+            
+            # food (3)
             fd_pool = [(y, x) for y, x in free if g[y, x] == 0 and (y,x) != tuple(spawn)]
-            for fy, fx in rng.permutation(fd_pool)[:int(d["food"])]:
-                g[fy, fx] = 4
-            direction = int(np.argmax([g[spawn[0]-1, spawn[1]] == 0, g[spawn[0], spawn[1]+1] == 0,
-                                       g[spawn[0]+1, spawn[1]] == 0, g[spawn[0], spawn[1]-1] == 0]))
+            for fy, fx in rng.permutation(fd_pool)[:int(d.get("food", 2))]:
+                g[fy, fx] = 3                                # 3 = Food
+
+            direction = int(np.argmax([
+                g[spawn[0]-1, spawn[1]] == 0 if spawn[0] > 0 else False,
+                g[spawn[0], spawn[1]+1] == 0 if spawn[1] < S - 1 else False,
+                g[spawn[0]+1, spawn[1]] == 0 if spawn[0] < S - 1 else False,
+                g[spawn[0], spawn[1]-1] == 0 if spawn[1] > 0 else False
+            ]))
             return {"grid": g, "spawn": [int(spawn[0]), int(spawn[1])], "dir": direction}
         return None
 
     def _fallback(self, rng, S):
         g = np.ones((GRID_SIZE, GRID_SIZE), dtype=np.int32); g[:S, :S] = 0
-        g[S-3, S-3] = 6
+        g[0, :S] = 1; g[S-1, :S] = 1; g[:S, 0] = 1; g[:S, S-1] = 1
+        g[S-3, S-3] = 3
         return {"grid": g, "spawn": [2, 2], "dir": 1}
 
     def get_visual_observation(self) -> np.ndarray:
@@ -590,8 +605,8 @@ class GenesisEnvironment:
         numba_diffuse_chem(self.chem, self.grid, np.float32(0.5), np.float32(1.0/8192.0))
 
     def step(self, action: int) -> tuple:
-        dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)]
-        reward = 0.0                      # time is priced by passive drain — NO game penalty
+        dirs = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        reward = 0.0
         event = None
 
         if action == 0:  # FORWARD
@@ -601,7 +616,7 @@ class GenesisEnvironment:
                 cell = self.grid[nx, ny]
                 if cell == 1:
                     reward = -self.tick_cost * COLLISION_K       # [E] wasted motion budget
-                elif cell == 2:
+                elif cell == 5:                                  # 5 = Lock / Door
                     if self.has_key:
                         before = self._reachable_count(*self.agent_pos)
                         self.grid[nx, ny] = 0; self.door_opened = True
@@ -612,30 +627,39 @@ class GenesisEnvironment:
                         event = "DOOR_UNLOCKED"
                     else:
                         reward = -self.tick_cost                  # blocked attempt = burned budget
-                elif cell == 5:
+                elif cell == 2:                                  # 2 = Hazard
                     self.agent_pos = [nx, ny]
                     reward -= self.hazard_dose()                  # [E] dose, not spike
                     if not self.on_hazard:
                         event = "HAZARD_HIT"
                     self.on_hazard = True
-                else:
+                elif cell == 3:                                  # 3 = Food / Goal
+                    self.grid[nx, ny] = 0
                     self.agent_pos = [nx, ny]
                     self.on_hazard = False
-                    if cell == 4:
-                        self.grid[nx, ny] = 0
-                        reward += U_QUANTUM                       # [H] unchanged provenance
-                        event = "FOOD_HARVESTED"
+                    reward += U_QUANTUM
+                    event = "FOOD_HARVESTED"
+                elif cell == 4:                                  # 4 = Key
+                    self.grid[nx, ny] = 0
+                    self.has_key = True
+                    self.agent_pos = [nx, ny]
+                    self.on_hazard = False
+                    reward += U_QUANTUM
+                    event = "KEY_PICKED"
+                else:                                            # 0 = Floor
+                    self.agent_pos = [nx, ny]
+                    self.on_hazard = False
         elif action in (1, 2):
             self.agent_dir = (self.agent_dir + (-1 if action == 1 else 1)) % 4
             self.on_hazard = False
         elif action == 3:  # INTERACT
             self.on_hazard = False
             cell = self.grid[self.agent_pos[0], self.agent_pos[1]]
-            if cell == 3 and not self.has_key:
+            if cell == 4 and not self.has_key:
                 self.has_key = True; self.grid[self.agent_pos[0], self.agent_pos[1]] = 0
                 reward += U_QUANTUM; event = "KEY_PICKED"
-            elif cell == 6:
-                reward += U_QUANTUM * math.ceil(math.log2(self.size ** 2))  # [H] freed arena address bits
+            elif cell == 3:
+                reward += U_QUANTUM * math.ceil(math.log2(self.size ** 2))
                 event = "GOAL_SOLVED"
             elif cell == 0:
                 self.chem[self.agent_pos[0], self.agent_pos[1]] = min(1000.0, self.chem[self.agent_pos[0], self.agent_pos[1]] + 256.0)
@@ -789,43 +813,106 @@ class GenesisEngineRunner:
             save_path = BRAIN_DIR / "canonical_brain.npz"
             self.brain.save_checkpoint(save_path)
 
-        state_payload = {
+        return self._build_payload(obs, mcts_info, metrics, is_sleeping)
+
+    def _build_payload(self, obs, mcts_info, metrics, is_sleeping=False) -> dict:
+        s = self.env.size
+        grid_flat = self.env.grid[:s, :s].flatten().tolist()
+        chem_flat = self.env.chem[:s, :s].flatten().tolist()
+        v_curr = float(metrics.get("vCurr", 0.0))
+        loss_val = float(metrics.get("loss", 0.0))
+        energy_ratio = float(max(0.0, min(1.0, self.energy / max(1.0, self.max_energy))))
+        
+        opt_id = int(mcts_info.get("selected_option", 0))
+        opt_names = ["EXPLORE", "EXPLOIT", "FORAGE", "AVOID", "SEEK-KEY", "FOLLOW-GRAD", "PATROL", "RETREAT"]
+        opt_label = opt_names[opt_id % len(opt_names)]
+
+        def sanitize_floats(obj):
+            if isinstance(obj, float):
+                if math.isnan(obj) or math.isinf(obj): return 0.0
+                return obj
+            elif isinstance(obj, dict):
+                return {k: sanitize_floats(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [sanitize_floats(v) for v in obj]
+            return obj
+
+        payload = {
             "type": "STATE_UPDATE",
-            "tick": self.tick_count,
-            "energy": max(0.0, self.energy),
+            "tick": int(self.tick_count),
+            "energy": max(0.0, float(self.energy)),
+            "generation": int(self.episode_seed + 1),
             "difficulty": self.env.difficulty,
-            "seed": self.env.episode_seed,
-            "goals": self.goals_solved,
-            "food": self.food_harvested,
-            "doors": self.doors_unlocked,
-            "hazards": self.hazard_collisions,
-            "hasKey": self.env.has_key,
-            "agentPos": self.env.agent_pos,
-            "agentDir": self.env.agent_dir,
-            "grid": self.env.grid[:12, :12].flatten().tolist(),
-            "chem": self.env.chem[:12, :12].flatten().tolist(),
-            "obs": obs.tolist(),
+            "seed": int(self.env.episode_seed),
+            "goals": int(self.goals_solved),
+            "food": int(self.food_harvested),
+            "doors": int(self.doors_unlocked),
+            "hazards": int(self.hazard_collisions),
+            "hasKey": bool(self.env.has_key),
+            "agentPos": [int(self.env.agent_pos[0]), int(self.env.agent_pos[1])],
+            "agentDir": int(self.env.agent_dir),
+            "grid": grid_flat,
+            "chem": chem_flat,
+            "obs": obs.tolist() if hasattr(obs, 'tolist') else list(obs),
             "mcts": mcts_info,
-            "vVal": metrics["vCurr"],
-            "loss": metrics["loss"],
-            "hippoCount": len(self.brain.hippocampus),
-            "policyMode": self.policy_mode,
-            "activeTask": self.active_task_text,
-            "isSleeping": is_sleeping
+            "vVal": v_curr,
+            "loss": loss_val,
+            "hippoCount": int(len(self.brain.hippocampus)),
+            "policyMode": str(self.policy_mode),
+            "activeTask": str(self.active_task_text),
+            "isSleeping": bool(is_sleeping),
+            # Nested schema matching the observation deck perfectly
+            "env": {
+                "w": s, "h": s,
+                "grid": grid_flat,
+                "chem": chem_flat,
+                "agent": {
+                    "x": int(self.env.agent_pos[1]),
+                    "y": int(self.env.agent_pos[0]),
+                    "dir": int(self.env.agent_dir)
+                },
+                "hasKey": bool(self.env.has_key)
+            },
+            "meta": {
+                "energy": energy_ratio,
+                "hippo": {
+                    "count": int(len(self.brain.hippocampus)),
+                    "cap": 5000
+                },
+                "entropyIncome": float(abs(v_curr))
+            },
+            "cog": {
+                "symbol": int(mcts_info.get("emitted_symbol", 0)),
+                "optionId": opt_id,
+                "optionLabel": opt_label,
+                "actionProbs": [float(p) for p in mcts_info.get("action_probs", [0.25, 0.25, 0.25, 0.25])],
+                "concepts": [float(c) for c in self.brain.state_history[-1][:16]] if self.brain.state_history else [0.0]*16,
+                "tree": mcts_info
+            }
         }
-        return state_payload
+        return sanitize_floats(payload)
 
     async def broadcast_state(self, payload: dict):
         if not self.connected_websockets:
             return
-        msg = json.dumps(payload)
+        try:
+            msg = json.dumps(payload)
+        except Exception as e:
+            print(f"[GENESIS SERVER] Payload JSON dump error: {e}", flush=True)
+            return
+
         dead_ws = set()
-        for ws in self.connected_websockets:
+        for ws in list(self.connected_websockets):
             try:
-                await ws.send_str(msg)
-            except Exception:
+                if not ws.closed:
+                    await ws.send_str(msg)
+                else:
+                    dead_ws.add(ws)
+            except Exception as e:
+                print(f"[GENESIS SERVER] WS send error: {e}", flush=True)
                 dead_ws.add(ws)
-        self.connected_websockets -= dead_ws
+        if dead_ws:
+            self.connected_websockets -= dead_ws
 
     def handle_user_dialogue(self, user_msg: str) -> dict:
         self.active_task_text = user_msg.upper()[:MAX_TEXT_LEN]
@@ -856,14 +943,13 @@ async def ws_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     runner.connected_websockets.add(ws)
+    runner.is_running = True
     print(f"[GENESIS SERVER] Client connected via WebSocket. Active clients: {len(runner.connected_websockets)}", flush=True)
 
-    # Always ensure simulation is actively running when a client connects
-    runner.is_running = True
-
-    # Send initial full state immediately
+    # Send current state immediately without blocking
     try:
-        init_state = runner.step_once()
+        init_obs = runner.env.get_visual_observation()
+        init_state = runner._build_payload(init_obs, {}, {"vCurr": 0.0, "loss": 0.0})
         await ws.send_str(json.dumps(init_state))
     except Exception as e:
         print(f"[GENESIS SERVER] Initial state error: {e}", flush=True)
@@ -872,7 +958,7 @@ async def ws_handler(request):
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
                 data = json.loads(msg.data)
-                cmd = data.get("action")
+                cmd = data.get("action") or data.get("type")
                 if cmd == "SET_SPEED":
                     runner.speed = int(data.get("value", 1))
                 elif cmd == "SET_DIFFICULTY":
@@ -887,7 +973,7 @@ async def ws_handler(request):
                         "activeTask": runner.active_task_text
                     }
                     await ws.send_str(json.dumps(resp))
-                elif cmd == "USER_CHAT":
+                elif cmd in ("USER_CHAT", "chat"):
                     resp = runner.handle_user_dialogue(data.get("text", ""))
                     await ws.send_str(json.dumps(resp))
                 elif cmd == "TOGGLE_PLAY":
@@ -918,52 +1004,37 @@ async def ws_handler(request):
     return ws
 
 async def simulation_loop():
-    last_broadcast = time.perf_counter()
-    st = None
+    loop = asyncio.get_running_loop()
     while True:
         try:
-            if runner.is_running:
-                target_speed = runner.speed
-                if target_speed <= 5:
-                    st = runner.step_once()
-                    await runner.broadcast_state(st)
-                    delay = 0.08 / max(1, target_speed)
-                    await asyncio.sleep(delay)
-                elif target_speed <= 25:
-                    for _ in range(5):
-                        st = runner.step_once()
-                    await runner.broadcast_state(st)
-                    await asyncio.sleep(0.015)
-                else:
-                    # Ultra-High-Speed Numba JIT Batching (100x, 250x, 500x, 1000x)
-                    batch_size = max(20, target_speed)
-                    for _ in range(batch_size):
-                        st = runner.step_once()
-                    
-                    # Decoupled Observer Broadcast: 50 Hz streaming for smooth 60 FPS display
-                    now = time.perf_counter()
-                    if now - last_broadcast >= 0.02:
-                        if st is not None:
-                            await runner.broadcast_state(st)
-                        last_broadcast = now
-                    await asyncio.sleep(0)
+            if runner.is_running and runner.connected_websockets:
+                # Offload heavy PyTorch/Numba computation to thread pool so WebSocket never starves
+                st = await loop.run_in_executor(None, runner.step_once)
+                await runner.broadcast_state(st)
+                delay = 0.08 / max(1, runner.speed)
+                await asyncio.sleep(delay)
             else:
                 await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            break
         except Exception as e:
             import traceback
-            print(f"[GENESIS LOOP ERROR]: {e}", flush=True)
+            print(f"[GENESIS SIM LOOP ERROR]: {e}", flush=True)
             traceback.print_exc()
             await asyncio.sleep(0.5)
 
-async def start_background_tasks(app):
+async def on_startup(app):
     print("[GENESIS SERVER] Starting background simulation loop...", flush=True)
-    sim_task = asyncio.create_task(simulation_loop())
-    yield
-    sim_task.cancel()
-    try:
-        await sim_task
-    except asyncio.CancelledError:
-        pass
+    app['sim_task'] = asyncio.create_task(simulation_loop())
+
+async def on_cleanup(app):
+    sim_task = app.get('sim_task')
+    if sim_task:
+        sim_task.cancel()
+        try:
+            await sim_task
+        except asyncio.CancelledError:
+            pass
 
 async def index_handler(request):
     return web.FileResponse(PUBLIC_DIR / "embodied_deck.html")
@@ -977,7 +1048,8 @@ async def static_file_handler(request):
 
 def init_app():
     app = web.Application()
-    app.cleanup_ctx.append(start_background_tasks)
+    app.on_startup.append(on_startup)
+    app.on_cleanup.append(on_cleanup)
     app.router.add_get("/ws", ws_handler)
     app.router.add_get("/", index_handler)
     app.router.add_get("/embodied_deck.html", index_handler)

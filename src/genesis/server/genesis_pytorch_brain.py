@@ -71,6 +71,10 @@ class GenesisPyTorchBrain:
         val = (self.rng.uniform(-1.0, 1.0, (rows, cols)) * math.sqrt(3) * std)
         return torch.tensor(val, dtype=self.dtype, device=self.device)
 
+    def _sanitize(self, t: torch.Tensor, fill: float = 0.0) -> torch.Tensor:
+        """Replace NaN/Inf with fill value. Prevents NaN-poisoning in MCTS."""
+        return torch.nan_to_num(t, nan=fill, posinf=fill, neginf=fill)
+
     def get_footprint_bytes(self) -> int:
         total_bytes = 0
         for attr_name in dir(self):
@@ -157,7 +161,7 @@ class GenesisPyTorchBrain:
         
         ff1 = torch.relu(torch.matmul(mixed, self.W_ff1))
         ff2 = torch.matmul(ff1, self.W_ff2)
-        out = mixed + ff2
+        out = self._sanitize(mixed + ff2)
         return out.cpu().numpy().astype(np.float32)
 
     @torch.no_grad()
@@ -237,11 +241,14 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def run_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED") -> dict:
-        root_state = torch.tensor(root_state_np, dtype=self.dtype, device=self.device)
+        root_state = self._sanitize(torch.tensor(root_state_np, dtype=self.dtype, device=self.device))
         
-        logits = torch.matmul(root_state, self.W_policy)
+        logits = self._sanitize(torch.matmul(root_state, self.W_policy))
         exp_l = torch.exp(logits - torch.max(logits))
         priors = exp_l / (torch.sum(exp_l) + 1e-9)
+        # If priors are NaN (all-NaN logits), fall back to uniform
+        if torch.any(torch.isnan(priors)):
+            priors = torch.ones(N_ACTIONS, dtype=self.dtype, device=self.device) / N_ACTIONS
         
         noise = -torch.log(torch.clamp(torch.rand(N_ACTIONS, device=self.device), min=1e-6))
         noise /= (torch.sum(noise) + 1e-9)
@@ -265,7 +272,7 @@ class GenesisPyTorchBrain:
         
         for sim_idx in range(sims):
             sims_conducted += 1
-            q_mean = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+            q_mean = self._sanitize(torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
             q_min = torch.min(q_mean)
             q_max = torch.max(q_mean)
             if q_max > q_min:
@@ -275,6 +282,8 @@ class GenesisPyTorchBrain:
                 
             N_parent = torch.sum(n_visits)
             puct_scores = q_norm + cpuct * noisy_priors * torch.sqrt(N_parent + 1.0) / (1.0 + n_visits)
+            # Replace any remaining NaN in PUCT with -inf so argmax skips them
+            puct_scores = torch.where(torch.isnan(puct_scores), torch.tensor(-1e9, dtype=self.dtype, device=self.device), puct_scores)
             a = torch.argmax(puct_scores).item()
             
             curr_s = root_state.clone()
@@ -286,8 +295,9 @@ class GenesisPyTorchBrain:
             path_return = 0.0
             
             for d in range(depth):
-                next_s = torch.tanh(torch.matmul(sa, self.W_dyn))
-                r = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item()
+                next_s = torch.tanh(self._sanitize(torch.matmul(sa, self.W_dyn)))
+                r_raw = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item()
+                r = r_raw if math.isfinite(r_raw) else 0.0
                 
                 # Substrate 14: Epistemic Information-Gain Reward
                 r_epi = self.epistemic_entropy(curr_s, a) / float(D_MODEL)
@@ -297,7 +307,8 @@ class GenesisPyTorchBrain:
                 if self.active_intrinsic_goal is not None:
                     dist_curr = torch.norm(curr_s - self.active_intrinsic_goal).item()
                     dist_next = torch.norm(next_s - self.active_intrinsic_goal).item()
-                    r += 0.1 * (dist_curr - dist_next)
+                    if math.isfinite(dist_curr) and math.isfinite(dist_next):
+                        r += 0.1 * (dist_curr - dist_next)
                     
                 path_return += discount * r
                 discount *= 0.95
@@ -310,25 +321,31 @@ class GenesisPyTorchBrain:
                     sa[32 + next_a] = 1.0
                     
             leaf_v = torch.matmul(curr_s, self.W_val.unsqueeze(-1)).squeeze(-1).item()
+            if not math.isfinite(leaf_v):
+                leaf_v = 0.0
             path_return += discount * leaf_v
+            
+            # Final guard: if path_return is still NaN, use 0
+            if not math.isfinite(path_return):
+                path_return = 0.0
             
             q_sum[a] += path_return
             n_visits[a] += 1.0
 
             # Metacognitive VOC Early-Stopping Gate (System 1)
             if sim_idx >= N_min and torch.min(n_visits).item() >= 2:
-                q_cur = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+                q_cur = self._sanitize(torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
                 top2 = torch.topk(q_cur, 2)
                 d_hat = float(top2.values[0] - top2.values[1])
                 ucb_bound = cpuct * math.sqrt(N_parent + 1.0) / (1.0 + torch.min(n_visits).item())
-                if d_hat > ucb_bound:  # Mathematically grounded decisive preference
+                if math.isfinite(d_hat) and d_hat > ucb_bound:
                     break
 
         temperature = 0.5 if policy_mode == "DIRECTED" else 1.5
         probs_tensor = n_visits ** (1.0 / temperature)
         probs_tensor /= (torch.sum(probs_tensor) + 1e-9)
         
-        q_values = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+        q_values = self._sanitize(torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
         
         return {
             "probs": probs_tensor.cpu().numpy().tolist(),
@@ -353,9 +370,9 @@ class GenesisPyTorchBrain:
     @torch.no_grad()
     def _simulate_concept_entropy(self, root_state, concept_id, depth):
         concept_emb = self.concept_embeddings[concept_id]
-        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
+        attn = torch.softmax(self._sanitize(torch.matmul(concept_emb, self.W_opt_q.T)), dim=-1)
         option_context = torch.matmul(attn, self.W_opt_q)
-        curr_s = root_state + option_context
+        curr_s = self._sanitize(root_state + option_context)
         
         entropy_estimate = 0.0
         discount = 1.0
@@ -366,8 +383,10 @@ class GenesisPyTorchBrain:
             next_a = torch.randint(0, N_ACTIONS, (1,), device=self.device).item()
             sa[32 + next_a] = 1.0
             
-            next_s = torch.tanh(torch.matmul(sa, self.W_dyn))
+            next_s = torch.tanh(self._sanitize(torch.matmul(sa, self.W_dyn)))
             gain = self._calculate_entropy_gain(curr_s, next_s)
+            if not math.isfinite(gain):
+                gain = 0.0
             
             entropy_estimate += discount * gain
             discount *= 0.95
@@ -377,8 +396,10 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def _high_level_mcts(self, root_state, policy_mode):
-        logits = torch.matmul(root_state, self.W_concept_policy)
+        logits = self._sanitize(torch.matmul(root_state, self.W_concept_policy))
         priors = torch.softmax(logits, dim=-1)
+        if torch.any(torch.isnan(priors)):
+            priors = torch.ones(self.num_concepts, dtype=self.dtype, device=self.device) / self.num_concepts
         
         noise = -torch.log(torch.clamp(torch.rand(self.num_concepts, device=self.device), min=1e-6))
         noise /= (torch.sum(noise) + 1e-9)
@@ -393,7 +414,7 @@ class GenesisPyTorchBrain:
         n_visits = torch.zeros(self.num_concepts, dtype=self.dtype, device=self.device)
         
         for _ in range(sims):
-            q_mean = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+            q_mean = self._sanitize(torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
             q_min = torch.min(q_mean)
             q_max = torch.max(q_mean)
             if q_max > q_min:
@@ -403,9 +424,12 @@ class GenesisPyTorchBrain:
                 
             N_parent = torch.sum(n_visits)
             puct_scores = q_norm + cpuct * noisy_priors * torch.sqrt(N_parent + 1.0) / (1.0 + n_visits)
+            puct_scores = torch.where(torch.isnan(puct_scores), torch.tensor(-1e9, dtype=self.dtype, device=self.device), puct_scores)
             option = torch.argmax(puct_scores).item()
             
             ent_est = self._simulate_concept_entropy(root_state, option, depth)
+            if not math.isfinite(ent_est):
+                ent_est = 0.0
             
             q_sum[option] += ent_est
             n_visits[option] += 1.0
@@ -414,13 +438,37 @@ class GenesisPyTorchBrain:
         probs = n_visits ** (1.0 / temperature)
         probs /= (torch.sum(probs) + 1e-9)
         
-        q_values = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+        q_values = self._sanitize(torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
         
         return {
             "probs": probs.cpu().numpy().tolist(),
             "qValues": q_values.cpu().numpy().tolist(),
             "visitCounts": n_visits.cpu().numpy().astype(int).tolist(),
             "selected_option": torch.argmax(probs).item()
+        }
+
+    @torch.no_grad()
+    def synthesize_autotelic_goal(self, opt_id: int):
+        concept_emb = self.concept_embeddings[opt_id]
+        self.active_intrinsic_goal = torch.tanh(torch.matmul(concept_emb, self.W_goal))
+
+    @torch.no_grad()
+    def evaluate_counterfactual(self, root_state: torch.Tensor, selected_action: int, selected_q: float) -> dict:
+        alt_actions = [a for a in range(N_ACTIONS) if a != selected_action]
+        best_alt_q = -1e9
+        best_alt_a = selected_action
+        for a in alt_actions:
+            onehot = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
+            onehot[a] = 1.0
+            phi = torch.cat([root_state, onehot])
+            q_est = float(torch.matmul(phi, self.W_rew).item())
+            if q_est > best_alt_q:
+                best_alt_q = q_est
+                best_alt_a = a
+        regret = max(0.0, best_alt_q - float(selected_q))
+        return {
+            "counterfactual_regret": float(regret),
+            "best_alt_action": int(best_alt_a)
         }
 
     @torch.no_grad()
@@ -454,7 +502,6 @@ class GenesisPyTorchBrain:
             
         sym_emb = self.W_lang[emitted_symbol]
 
-        
         enriched_state = root_state + opt_ctx + sym_emb
         
         # Run MCTS on enriched state with Substrate 14 Epistemic Budget
@@ -533,31 +580,33 @@ class GenesisPyTorchBrain:
         if len(self.state_history) > 1:
             s_prev = self.state_history[-2]
             grad_causal = torch.outer(err_dyn, s_prev)
-            self.W_causal += 0.005 * grad_causal - 1e-6 * self.W_causal
+            self.W_causal = self._sanitize(self.W_causal + 0.005 * grad_causal - 1e-6 * self.W_causal)
 
         # Substrate 14: True Fisher precision accumulation & Chi-Square calibration
         if not is_replay:
             J = 1.0 - pred_next.float() ** 2
             fisher_obs = torch.outer(sa.float() ** 2, J ** 2) / (self.tau2_hat + 1e-9)
-            self.I_dyn += self.ETA_F * fisher_obs
+            self.I_dyn = torch.nan_to_num(self.I_dyn + self.ETA_F * fisher_obs, nan=0.0, posinf=0.0, neginf=0.0)
             err2 = err_dyn.float() ** 2
-            self.tau2_hat = (1.0 - self.ETA_F) * self.tau2_hat + self.ETA_F * err2
+            self.tau2_hat = torch.nan_to_num((1.0 - self.ETA_F) * self.tau2_hat + self.ETA_F * err2, nan=0.05, posinf=1.0, neginf=0.05)
             
             param_cov = 1.0 / (self.I_dyn + self.LAMBDA)
             sigma2_pred = J ** 2 * torch.matmul(sa.float() ** 2, param_cov)
             e_calib = float((err2 / (sigma2_pred + self.tau2_hat + 1e-9)).sum().item())
+            if not math.isfinite(e_calib):
+                e_calib = float(D_MODEL)
             self.calib_ema = 0.99 * self.calib_ema + 0.01 * e_calib
             if self.calib_ema > D_MODEL:
                 self.I_dyn *= (D_MODEL / self.calib_ema)
         
         # EWC Regularization for Zero Forgetting (Rule 24)
         ewc_penalty = 0.5 * self.fisher_diag["W_dyn"] * (self.W_dyn - self.anchor_weights["W_dyn"])
-        self.W_dyn += 0.005 * grad_dyn - 1e-6 * self.W_dyn - 0.005 * ewc_penalty
+        self.W_dyn = self._sanitize(self.W_dyn + 0.005 * grad_dyn - 1e-6 * self.W_dyn - 0.005 * ewc_penalty)
         
         # Reward Prediction
         pred_rew = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1)
         err_rew = rew_val - pred_rew
-        self.W_rew += 0.005 * (sa * err_rew) - 1e-6 * self.W_rew
+        self.W_rew = self._sanitize(self.W_rew + 0.005 * (sa * err_rew) - 1e-6 * self.W_rew)
         
         # Value Function (TD Learning)
         v_curr = torch.matmul(s_curr, self.W_val.unsqueeze(-1)).squeeze(-1)
@@ -565,8 +614,8 @@ class GenesisPyTorchBrain:
         target_v = rew_val + 0.95 * v_next
         td_err = target_v - v_curr
         
-        self.W_val += 0.005 * (s_curr * td_err) - 1e-6 * self.W_val
-        self.W_val_target = 0.995 * self.W_val_target + 0.005 * self.W_val
+        self.W_val = self._sanitize(self.W_val + 0.005 * (s_curr * td_err) - 1e-6 * self.W_val)
+        self.W_val_target = self._sanitize(0.995 * self.W_val_target + 0.005 * self.W_val)
         
         # Policy Gradient Update
         logits = torch.matmul(s_curr, self.W_policy)
@@ -574,7 +623,7 @@ class GenesisPyTorchBrain:
         target_policy = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
         target_policy[action] = 1.0
         grad_pol = torch.outer(s_curr, target_policy - probs)
-        self.W_policy += 0.005 * grad_pol - 1e-6 * self.W_policy
+        self.W_policy = self._sanitize(self.W_policy + 0.005 * grad_pol - 1e-6 * self.W_policy)
         
         surprise = float(torch.abs(td_err).item())
         if not math.isfinite(surprise):
@@ -775,6 +824,22 @@ class GenesisPyTorchBrain:
                 self.W_forget = torch.tensor(data["W_forget"], dtype=self.dtype, device=self.device)
                 self.W_import = torch.tensor(data["W_import"], dtype=self.dtype, device=self.device)
         
+        # Sanitize ALL weight matrices — purge NaN/Inf baked into checkpoint
+        nan_count = 0
+        for attr_name in dir(self):
+            if attr_name.startswith("W_"):
+                attr = getattr(self, attr_name)
+                if isinstance(attr, torch.Tensor):
+                    bad = torch.isnan(attr) | torch.isinf(attr)
+                    if torch.any(bad):
+                        nan_count += int(bad.sum().item())
+                        setattr(self, attr_name, self._sanitize(attr))
+        if nan_count > 0:
+            print(f"[GENESIS CORE] Sanitized {nan_count} NaN/Inf values in weight matrices")
+
+        self.I_dyn = torch.nan_to_num(self.I_dyn, nan=0.0, posinf=0.0, neginf=0.0)
+        self.tau2_hat = torch.nan_to_num(self.tau2_hat, nan=0.05, posinf=1.0, neginf=0.05)
+
         self.anchor_weights["W_dyn"] = self.W_dyn.clone()
         self.anchor_weights["W_causal"] = self.W_causal.clone()
         self.anchor_weights["W_goal"] = self.W_goal.clone()
