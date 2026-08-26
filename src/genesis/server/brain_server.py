@@ -735,7 +735,7 @@ class GenesisEngineRunner:
         self.prev_symbol = mcts_info.get("emitted_symbol", 0)
 
         reward, event = self.env.step(action)
-        self.energy += reward
+        self.energy = min(self.max_energy, max(0.0, self.energy + reward))
 
         if event == "FOOD_HARVESTED":
             self.food_harvested += 1

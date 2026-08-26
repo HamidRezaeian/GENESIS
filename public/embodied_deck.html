@@ -613,7 +613,11 @@ function normalize(d){
   if(d.difficulty!=null) o.difficulty=typeof d.difficulty==='object'?(d.difficulty.size>12?2:1):+d.difficulty;
 
   // Metabolic
-  if(meta.energy!=null||d.energy!=null) o.meta={energy:clamp01(+(meta.energy??(d.energy!=null?d.energy/100.0:1)))};
+  if(meta.energy!=null){
+    o.meta={energy:clamp01(+meta.energy)};
+  } else if(d.energy!=null){
+    o.meta={energy:clamp01(+d.energy <= 1.0 ? +d.energy : +d.energy / 70.0)};
+  }
   const hp=meta.hippocampus||meta.hippo||{};
   if(hp.count!=null||d.hippoCount!=null){
     o.meta=o.meta||{};
@@ -697,6 +701,7 @@ function normVis(v){
   if(!v)return null;
   if(Array.isArray(v)){
     const flat = v.flat ? v.flat(Infinity) : [].concat(...v);
+    if(flat.length >= 343) return flat.slice(0, 343).map(x => +x || 0);
     if(flat.length >= 49) return flat.slice(0, 49).map(x => clamp01(+x || 0));
     return flat.map(x => clamp01(+x || 0));
   }
@@ -921,25 +926,58 @@ function drawCortex(time){
   const ctx=visCtx,W=COR_LW,c=COR.cell,p=COR.pad;
   ctx.clearRect(0,0,W,W);
   ctx.fillStyle='#0a0b10';ctx.fillRect(0,0,W,W);
-  const A=S.env.agent,f=DIRS[A.dir],r=DIRS[(A.dir+1)%4];
-  const useArr=Array.isArray(S.vis)&&S.vis.length>=49;
+  const A=S.env.agent;
+  const is343 = Array.isArray(S.vis) && S.vis.length >= 343;
+  const is49 = Array.isArray(S.vis) && S.vis.length >= 49;
+  
   for(let wy=0;wy<7;wy++)for(let wx=0;wx<7;wx++){
     const px=p+wx*c,py=p+wy*c,cx=px+c/2,cy=py+c/2;
-    const fo=3-wy,ro=wx-3;
-    const gx=A.x+ro*r[0]+fo*f[0],gy=A.y+ro*r[1]+fo*f[1];
-    const fall=1-(Math.hypot(wx-3,wy-3)/4.6)*0.45;
+    const fall=1-(Math.hypot(wx-3,wy-3)/4.6)*0.35;
     let fill='rgba(255,255,255,.02)';
-    if(useArr){
+    let chemVal = 0;
+    
+    if(is343){
+      const k = wy * 7 + wx;
+      const base = k * 7;
+      const chFloor = S.vis[base + 0] || 0;
+      const chWall  = S.vis[base + 1] || 0;
+      const chHaz   = S.vis[base + 2] || 0;
+      const chFood  = S.vis[base + 3] || 0;
+      const chKey   = S.vis[base + 4] || 0;
+      const chLock  = S.vis[base + 5] || 0;
+      chemVal       = S.vis[base + 6] || 0;
+      
+      if(chWall > 0.5){
+        fill = `rgba(82,82,102,${0.75 * fall})`;
+      } else if(chHaz > 0.5){
+        fill = `rgba(244,63,94,${0.85 * fall})`;
+      } else if(chFood > 0.5){
+        fill = `rgba(52,211,153,${0.85 * fall})`;
+      } else if(chKey > 0.5){
+        fill = `rgba(251,191,36,${0.85 * fall})`;
+      } else if(chLock > 0.5){
+        fill = `rgba(245,158,11,${0.85 * fall})`;
+      } else {
+        fill = `rgba(255,255,255,${0.03 * fall})`;
+      }
+    } else if(is49){
       const v=S.vis[wy*7+wx];
       fill=v>0?`rgba(34,211,238,${(0.05+v*0.65)*fall})`:'rgba(255,255,255,.02)';
-    }else if(inB(gx,gy)){
-      const t=S.env.grid[idx(gx,gy)],ch=S.env.chem[idx(gx,gy)];
-      const col={0:[40,42,54],1:[86,86,110],2:[244,63,94],3:[52,211,153],4:[251,191,36],5:[245,158,11]}[t]||[40,42,54];
-      fill=`rgba(${col[0]},${col[1]},${col[2]},${(t===0?0.16:0.6)*fall})`;
-      if(ch>0.03){ctx.fillStyle=`rgba(168,85,247,${Math.min(0.75,ch)*fall})`;ctx.fillRect(px+1,py+1,c-2,c-2);}
     }
-    ctx.fillStyle=fill;ctx.fillRect(px+1,py+1,c-2,c-2);
-    ctx.strokeStyle='rgba(255,255,255,.05)';ctx.strokeRect(px+.5,py+.5,c-1,c-1);
+    
+    ctx.fillStyle=fill;
+    ctx.fillRect(px+1,py+1,c-2,c-2);
+    
+    // Draw chem glow if present in cortex channel 6
+    if(chemVal > 0.02){
+      ctx.fillStyle = `rgba(168,85,247,${Math.min(0.8, chemVal * 2.0) * fall})`;
+      ctx.fillRect(px+1,py+1,c-2,c-2);
+    }
+    
+    ctx.strokeStyle='rgba(255,255,255,.05)';
+    ctx.strokeRect(px+.5,py+.5,c-1,c-1);
+    
+    // Center cell (Agent egocentric self position)
     if(wx===3&&wy===3){
       ctx.strokeStyle='rgba(34,211,238,.9)';ctx.lineWidth=1.6;
       ctx.beginPath();ctx.arc(cx,cy,c*0.32,0,7);ctx.stroke();
