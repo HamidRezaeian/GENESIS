@@ -49,3 +49,10 @@
 - [HARDWARE_AWARE_CAPACITY_DESIGN.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/HARDWARE_AWARE_CAPACITY_DESIGN.md): Rule 21.6 specification for dynamic runtime population ceilings based on host CGroup/RAM limits.
 - [RULE21_2_ENGINE_REFACTOR_DESIGN.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md): Rule 21.2 specification for Tier-1 evolvable constants (`PARAM_MARKER`) and hardware-derived parameters.
 - [RULE21_INCOME_REFACTOR_DESIGN.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/RULE21_INCOME_REFACTOR_DESIGN.md): Rule 21.5 specification for measured work-unit income accounting and metabolic cost balancing.
+
+## Rule 27: Substrate-to-UI Serialization & Observation Deck Purity (Learned 2026-08-26)
+
+1. **Dimensional Integrity in Serialization:** When sending 2D numpy arrays (e.g., `grid`, `chem`) from the Python backend to the JavaScript frontend, the array MUST first be strictly sliced to the active physical bounds (`self.size`) before being flattened. Never send the full padded buffer (e.g., `GRID_SIZE x GRID_SIZE`) as a flat list, as the frontend `normGrid` renderer will misalign the 1D slice into the wrong 2D coordinate space, causing blank or corrupted renders. 
+   - *Correct:* `self.env.grid[:self.env.size, :self.env.size].flatten().tolist()`
+   - *Incorrect:* `self.env.grid.flatten().tolist()` or `self.env.grid.tolist()`
+2. **Observation Deck Purity (Zero Synthetic Fallbacks):** The frontend UI (`embodied_deck.html`) is strictly an observation tool. It MUST NEVER contain fallback simulators, "demo loops", or synthetic agent behaviors. If the WebSocket connection fails or the server is offline, the UI must simply enter an `AWAITING TELEMETRY` loop and retry the connection. No game mechanics or localized JS simulations are permitted under any circumstances (enforcing Rule 21).

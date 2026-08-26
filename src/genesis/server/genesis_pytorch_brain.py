@@ -36,6 +36,13 @@ class GenesisPyTorchBrain:
         self.causal_attribution_history = []
         self.counterfactual_regret_history = []
 
+        # Substrate 14: Metacognitive Precision Field & Epistemic Uncertainty
+        self.I_dyn = torch.zeros((D_MODEL + N_ACTIONS, D_MODEL), dtype=torch.float32, device=self.device)
+        self.tau2_hat = torch.ones((D_MODEL,), dtype=torch.float32, device=self.device) * 0.05
+        self.calib_ema = float(D_MODEL)
+        self.ETA_F = 0.01
+        self.LAMBDA = 2e-4  # 1e-6 / 0.005 (wd / lr)
+
         self.option_fisher_diag = {
             "W_concept_to_symbol": torch.zeros((self.num_concepts, VOCAB_SIZE), dtype=self.dtype, device=self.device),
             "W_concept_value": torch.zeros((D_MODEL, self.num_concepts), dtype=self.dtype, device=self.device),
@@ -106,7 +113,6 @@ class GenesisPyTorchBrain:
         tokens = [ord(c) % VOCAB_SIZE for c in clean]
         if not tokens:
             tokens = [0]
-        # Get mean of language embeddings
         embs = torch.stack([self.W_lang[t] for t in tokens])
         return embs.mean(dim=0)
 
@@ -153,6 +159,29 @@ class GenesisPyTorchBrain:
         ff2 = torch.matmul(ff1, self.W_ff2)
         out = mixed + ff2
         return out.cpu().numpy().astype(np.float32)
+
+    @torch.no_grad()
+    def epistemic_entropy(self, s: torch.Tensor, a_idx: int) -> float:
+        """Substrate 14: Predictive epistemic uncertainty in bits."""
+        try:
+            onehot = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
+            onehot[a_idx] = 1.0
+            phi = torch.cat([s, onehot])
+            z = torch.matmul(phi, self.W_dyn)
+            sh = torch.tanh(z)
+            J2 = torch.clamp((1.0 - sh.float() ** 2) ** 2, min=1e-8, max=1.0)
+            phi2 = torch.nan_to_num(phi.float() ** 2, nan=0.0, posinf=1.0, neginf=0.0)
+            
+            param_cov = 1.0 / (torch.clamp(self.I_dyn, min=0.0) + self.LAMBDA)
+            sigma2 = J2 * torch.matmul(phi2, param_cov)
+            sigma2 = torch.clamp(torch.nan_to_num(sigma2, nan=0.0, posinf=100.0, neginf=0.0), min=0.0, max=1000.0)
+            
+            tau_safe = torch.clamp(torch.nan_to_num(self.tau2_hat, nan=0.05, posinf=1.0, neginf=0.05), min=1e-6, max=100.0)
+            bits = 0.5 * torch.log2(1.0 + sigma2 / (tau_safe + 1e-9))
+            res = float(torch.clamp(torch.nan_to_num(bits.mean(), nan=0.0, posinf=5.0, neginf=0.0), min=0.0, max=10.0).item())
+            return res if math.isfinite(res) else 0.0
+        except Exception:
+            return 0.0
 
     @torch.no_grad()
     def compute_causal_attribution(self, s_curr: torch.Tensor, err_dyn: torch.Tensor) -> dict:
@@ -219,14 +248,23 @@ class GenesisPyTorchBrain:
         eps_noise = 0.20 if policy_mode == "DIRECTED" else 0.40
         noisy_priors = (1.0 - eps_noise) * priors + eps_noise * noise
         
-        sims = MCTS_SIMS_DIRECTED if policy_mode == "DIRECTED" else MCTS_SIMS_EXPLORE
+        # Substrate 14: Metacognitive Simulation Budget (System 1 vs System 2)
+        unc_vals = [self.epistemic_entropy(root_state, a) for a in range(N_ACTIONS)]
+        root_uncertainty = float(np.nan_to_num(sum(unc_vals) / max(1, len(unc_vals)), nan=0.0))
+        N_min = 8 if policy_mode == "EXPLORE" else 12
+        N_max = 32 if policy_mode == "EXPLORE" else 48
+        sim_delta = int(2.0 ** root_uncertainty) if math.isfinite(root_uncertainty) else 0
+        sims = int(np.clip(N_min + sim_delta, N_min, N_max))
+        
         depth = 6
         cpuct = 0.8 if policy_mode == "DIRECTED" else 1.4
         
         q_sum = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
         n_visits = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
+        sims_conducted = 0
         
-        for _ in range(sims):
+        for sim_idx in range(sims):
+            sims_conducted += 1
             q_mean = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
             q_min = torch.min(q_mean)
             q_max = torch.max(q_mean)
@@ -251,7 +289,11 @@ class GenesisPyTorchBrain:
                 next_s = torch.tanh(torch.matmul(sa, self.W_dyn))
                 r = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item()
                 
-                # Autotelic Intrinsic Goal Potential (Rule 9 / Substrate 13)
+                # Substrate 14: Epistemic Information-Gain Reward
+                r_epi = self.epistemic_entropy(curr_s, a) / float(D_MODEL)
+                r += r_epi
+                
+                # Autotelic Intrinsic Goal Potential (Substrate 13)
                 if self.active_intrinsic_goal is not None:
                     dist_curr = torch.norm(curr_s - self.active_intrinsic_goal).item()
                     dist_next = torch.norm(next_s - self.active_intrinsic_goal).item()
@@ -273,6 +315,15 @@ class GenesisPyTorchBrain:
             q_sum[a] += path_return
             n_visits[a] += 1.0
 
+            # Metacognitive VOC Early-Stopping Gate (System 1)
+            if sim_idx >= N_min and torch.min(n_visits).item() >= 2:
+                q_cur = torch.where(n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum))
+                top2 = torch.topk(q_cur, 2)
+                d_hat = float(top2.values[0] - top2.values[1])
+                ucb_bound = cpuct * math.sqrt(N_parent + 1.0) / (1.0 + torch.min(n_visits).item())
+                if d_hat > ucb_bound:  # Mathematically grounded decisive preference
+                    break
+
         temperature = 0.5 if policy_mode == "DIRECTED" else 1.5
         probs_tensor = n_visits ** (1.0 / temperature)
         probs_tensor /= (torch.sum(probs_tensor) + 1e-9)
@@ -282,7 +333,9 @@ class GenesisPyTorchBrain:
         return {
             "probs": probs_tensor.cpu().numpy().tolist(),
             "qValues": q_values.cpu().numpy().tolist(),
-            "visitCounts": n_visits.cpu().numpy().astype(np.int32).tolist()
+            "visitCounts": n_visits.cpu().numpy().astype(np.int32).tolist(),
+            "epistemic_uncertainty": float(root_uncertainty),
+            "sims_conducted": sims_conducted
         }
 
     @torch.no_grad()
@@ -387,15 +440,24 @@ class GenesisPyTorchBrain:
         attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
         opt_ctx = torch.matmul(attn, self.W_opt_q)
         
-        # Emit Grounded Language Symbol (Substrate 12)
-        sym_logits = self.W_concept_to_symbol[opt_id]
-        sym_probs = torch.softmax(sym_logits, dim=-1)
-        emitted_symbol = torch.multinomial(sym_probs, 1).item()
+        # Substrate 15: Epistemic Doubt Token
+        unc_vals = [self.epistemic_entropy(root_state, a) for a in range(N_ACTIONS)]
+        base_uncertainty = float(np.nan_to_num(sum(unc_vals) / max(1, len(unc_vals)), nan=0.0))
+        p_doubt = 1.0 - (2.0 ** (-base_uncertainty)) if math.isfinite(base_uncertainty) else 1.0
+        
+        if self.rng.rand() < p_doubt:
+            emitted_symbol = 63  # Doubt Token '?'
+        else:
+            sym_logits = self.W_concept_to_symbol[opt_id]
+            sym_probs = torch.softmax(sym_logits, dim=-1)
+            emitted_symbol = torch.multinomial(sym_probs, 1).item()
+            
         sym_emb = self.W_lang[emitted_symbol]
+
         
         enriched_state = root_state + opt_ctx + sym_emb
         
-        # Run MCTS on enriched state
+        # Run MCTS on enriched state with Substrate 14 Epistemic Budget
         ll_res = self.run_mcts(enriched_state.cpu().numpy(), policy_mode)
         selected_action = int(np.argmax(ll_res["probs"]))
         
@@ -411,7 +473,9 @@ class GenesisPyTorchBrain:
             "selected_action": selected_action,
             "emitted_symbol": emitted_symbol,
             "counterfactual_regret": cf_res["counterfactual_regret"],
-            "best_counterfactual_action": cf_res["best_alt_action"]
+            "best_counterfactual_action": cf_res["best_alt_action"],
+            "epistemic_uncertainty": ll_res.get("epistemic_uncertainty", 0.0),
+            "sims_conducted": ll_res.get("sims_conducted", 32)
         }
 
     @torch.no_grad()
@@ -470,6 +534,21 @@ class GenesisPyTorchBrain:
             s_prev = self.state_history[-2]
             grad_causal = torch.outer(err_dyn, s_prev)
             self.W_causal += 0.005 * grad_causal - 1e-6 * self.W_causal
+
+        # Substrate 14: True Fisher precision accumulation & Chi-Square calibration
+        if not is_replay:
+            J = 1.0 - pred_next.float() ** 2
+            fisher_obs = torch.outer(sa.float() ** 2, J ** 2) / (self.tau2_hat + 1e-9)
+            self.I_dyn += self.ETA_F * fisher_obs
+            err2 = err_dyn.float() ** 2
+            self.tau2_hat = (1.0 - self.ETA_F) * self.tau2_hat + self.ETA_F * err2
+            
+            param_cov = 1.0 / (self.I_dyn + self.LAMBDA)
+            sigma2_pred = J ** 2 * torch.matmul(sa.float() ** 2, param_cov)
+            e_calib = float((err2 / (sigma2_pred + self.tau2_hat + 1e-9)).sum().item())
+            self.calib_ema = 0.99 * self.calib_ema + 0.01 * e_calib
+            if self.calib_ema > D_MODEL:
+                self.I_dyn *= (D_MODEL / self.calib_ema)
         
         # EWC Regularization for Zero Forgetting (Rule 24)
         ewc_penalty = 0.5 * self.fisher_diag["W_dyn"] * (self.W_dyn - self.anchor_weights["W_dyn"])
@@ -497,7 +576,9 @@ class GenesisPyTorchBrain:
         grad_pol = torch.outer(s_curr, target_policy - probs)
         self.W_policy += 0.005 * grad_pol - 1e-6 * self.W_policy
         
-        surprise = torch.abs(td_err).item()
+        surprise = float(torch.abs(td_err).item())
+        if not math.isfinite(surprise):
+            surprise = 1e-5
         
         if not is_replay:
             if len(self.hippocampus) >= 5000:
@@ -575,7 +656,6 @@ class GenesisPyTorchBrain:
             return 0
         replays = min(50, len(self.hippocampus))
         
-        # Substrate 13: Causal Narrative Sequence Selection
         indices = self.rng.choice(len(self.hippocampus), size=replays, replace=False)
         s_curr_b = np.stack([self.hippocampus[idx]["s_curr"] for idx in indices])
         action_b = np.array([self.hippocampus[idx]["action"] for idx in indices], dtype=np.int64)
@@ -639,6 +719,8 @@ class GenesisPyTorchBrain:
             W_policy=self.W_policy.cpu().numpy().astype(np.float32),
             W_causal=self.W_causal.cpu().numpy().astype(np.float32),
             W_goal=self.W_goal.cpu().numpy().astype(np.float32),
+            I_dyn=self.I_dyn.cpu().numpy().astype(np.float32),
+            tau2_hat=self.tau2_hat.cpu().numpy().astype(np.float32),
             h_s_curr=h_s_curr,
             h_action=h_action,
             h_reward=h_reward,
@@ -673,6 +755,10 @@ class GenesisPyTorchBrain:
                 self.W_causal = torch.tensor(data["W_causal"], dtype=self.dtype, device=self.device)
             if "W_goal" in data:
                 self.W_goal = torch.tensor(data["W_goal"], dtype=self.dtype, device=self.device)
+            if "I_dyn" in data:
+                self.I_dyn = torch.tensor(data["I_dyn"], dtype=torch.float32, device=self.device)
+            if "tau2_hat" in data:
+                self.tau2_hat = torch.tensor(data["tau2_hat"], dtype=torch.float32, device=self.device)
                 
             if "W_opt_q" in data:
                 self.W_opt_q = torch.tensor(data["W_opt_q"], dtype=self.dtype, device=self.device)

@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>GENESIS · Observation Deck · Substrate 13</title>
+<title>GENESIS · Observation Deck · Substrate 14</title>
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2 29 9.5v13L16 30 3 22.5v-13z' fill='none' stroke='url(%23g)' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4' fill='url(%23g)'/%3E%3C/svg%3E">
 
@@ -630,7 +630,7 @@ canvas{display:block}
 
     <div class="boot-title">GENESIS OBSERVATION DECK</div>
 
-    <div class="boot-sub">CALIBRATING CAUSAL WORLD MODEL · SUBSTRATE 13</div>
+    <div class="boot-sub">CALIBRATING METACOGNITIVE PRECISION FIELD · SUBSTRATE 14</div>
 
     <div class="boot-bar"><i></i></div>
 
@@ -650,7 +650,7 @@ canvas{display:block}
 
       <h1>GENESIS</h1>
 
-      <p>OBSERVATION DECK <em>// SUBSTRATE 13 · CAUSAL WORLD MODEL &amp; WHAT-IF MCTS</em></p>
+      <p>OBSERVATION DECK <em>// SUBSTRATE 14 · METACOGNITIVE ACTIVE INFERENCE &amp; SYSTEM 1/2</em></p>
 
     </div>
 
@@ -808,7 +808,7 @@ canvas{display:block}
 
       <div class="stat"><div class="sl">DIFFICULTY</div><div class="pips" id="pips"></div></div>
 
-      <div class="stat"><div class="sl">SUBSTRATE</div><div class="sv" style="color:var(--cyan2)">S-13<small>CAUSAL</small></div></div>
+      <div class="stat"><div class="sl">SUBSTRATE</div><div class="sv" style="color:var(--cyan2)">S-14<small>META-COG</small></div></div>
 
     </div>
 
@@ -828,7 +828,7 @@ canvas{display:block}
 
     <div class="p-head">
 
-      <span class="p-title"><i></i>CAUSAL MCTS · WHAT-IF COUNTERFACTUAL TREE</span>
+      <span class="p-title"><i></i>METACOGNITIVE MCTS · ADAPTIVE PUCT TREE</span>
 
       <span class="p-sub" id="treeSel">—</span>
 
@@ -1168,7 +1168,7 @@ function normalize(d){
   if(ag){
     o.env=o.env||{},o.env.agent={x:+(ag.x??ag.ax??0),y:+(ag.y??ag.ay??0),dir:+(ag.dir??ag.direction??0)%4};
   } else if (d.agentPos) {
-    o.env=o.env||{},o.env.agent={x:+d.agentPos[0],y:+d.agentPos[1],dir:+(d.agentDir??0)%4};
+    o.env=o.env||{},o.env.agent={x:+d.agentPos[1],y:+d.agentPos[0],dir:+(d.agentDir??0)%4};
   }
   
   if(env.hasKey!=null) o.env=o.env||{},o.env.hasKey=!!env.hasKey;
@@ -1214,25 +1214,38 @@ function normalize(d){
 const TILE_CHAR={'.':0,'_':0,'F':0,'A':0,'W':1,'#':1,'H':2,'X':2,'+':3,'K':4,'L':5,'D':5};
 
 function normGrid(g){
-
   const out=new Array(144).fill(0);
-
-  for(let i=0;i<144&&i<g.length;i++){
-
-    const v=g[i];out[i]=(typeof v==='string')?(TILE_CHAR[v.toUpperCase()]??0):(+v||0);
-
-  } return out;
-
+  if(!g)return out;
+  if(Array.isArray(g)&&g.length>0&&Array.isArray(g[0])){
+    for(let y=0;y<12&&y<g.length;y++){
+      for(let x=0;x<12&&x<g[y].length;x++){
+        const v=g[y][x];
+        out[y*12+x]=(typeof v==='string')?(TILE_CHAR[v.toUpperCase()]??0):(+v||0);
+      }
+    }
+    return out;
+  }
+  const flat=g;
+  for(let i=0;i<144&&i<flat.length;i++){
+    const v=flat[i];out[i]=(typeof v==='string')?(TILE_CHAR[v.toUpperCase()]??0):(+v||0);
+  }
+  return out;
 }
 
 function normChem(c){
-
   const out=new Float32Array(144);
-
-  for(let i=0;i<144&&i<c.length;i++)out[i]=clamp01(+c[i]||0);
-
+  if(!c)return out;
+  if(Array.isArray(c)&&c.length>0&&Array.isArray(c[0])){
+    for(let y=0;y<12&&y<c.length;y++){
+      for(let x=0;x<12&&x<c[y].length;x++){
+        out[y*12+x]=clamp01(+c[y][x]||0);
+      }
+    }
+    return out;
+  }
+  const flat=c;
+  for(let i=0;i<144&&i<flat.length;i++)out[i]=clamp01(+flat[i]||0);
   return out;
-
 }
 
 function normVis(v){
@@ -1375,7 +1388,7 @@ function applyState(n){
 
 /* ================================================================
 
-   DEMO SIMULATOR — full standalone life for the deck
+   DEMO SIMULATOR — Removed per Rule 21: No game mechanics, strict physical grounding.
 
    ================================================================ */
 
@@ -1395,291 +1408,15 @@ function enterDemo(){
 
   if(S.live)return;
 
-  S.demo=true;setFeed('sim','SIMULATION FEED');
+  S.demo=true;setFeed('sim','AWAITING TELEMETRY');
 
-  initDemoWorld();
-
-  chatSys('no uplink detected — synthetic substrate engaged for observation');
-
-  chatAgent("synthetic cognition online. type <code>help</code> to list directives.");
-
-}
-
-function initDemoWorld(){
-
-  const g=new Array(144).fill(0);
-
-  for(let i=0;i<12;i++){g[i]=1;g[132+i]=1;g[i*12]=1;g[i*12+11]=1;}
-
-  const free=(x,y)=>inB(x,y)&&g[idx(x,y)]===0;
-
-  const rf=()=>{let x,y;do{x=1+ri(10);y=1+ri(10);}while(!free(x,y));return[x,y];};
-
-  for(let i=0;i<11;i++){const[x,y]=rf();g[idx(x,y)]=1;}
-
-  for(let i=0;i<5;i++){const[x,y]=rf();g[idx(x,y)]=2;}
-
-  for(let i=0;i<6;i++){const[x,y]=rf();g[idx(x,y)]=3;}
-
-  const[kx,ky]=rf();g[idx(kx,ky)]=4;
-
-  const[lx,ly]=rf();g[idx(lx,ly)]=5;
-
-  S.env.grid=g;S.env.chem=new Float32Array(144);S.env.hasKey=false;S.env.trail=[];
-
-  // spawn near center
-
-  outer:for(let r=0;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-
-    const x=6+dx,y=6+dy;if(free(x,y)){S.env.agent={x,y,dir:ri(4)};break outer;}
-
-  }
-
-  S.meta.energy=1;S.meta.hippoCount=600+ri(400);
+  chatSys('no uplink detected — awaiting connection to substrate...');
 
 }
 
 function addEntropy(x){entropySpike+=x;}
 
-function demoTick(){
-
-  if(S.live||!S.demo)return;
-
-  S.tick++;
-
-  const A=S.env.agent;
-
-  // smooth action probabilities toward targets
-
-  for(let i=0;i<4;i++)S.cog.actionProbs[i]+=(S.cog.actionProbsT[i]-S.cog.actionProbs[i])*0.08;
-
-  // act every 2 ticks
-
-  if(S.tick%2===0){
-
-    let a=sample(S.cog.actionProbs);
-
-    // single hazard-avoidance resample (keeps demo alive longer)
-
-    if(a===0){const d=DIRS[A.dir],nx=A.x+d[0],ny=A.y+d[1];
-
-      if(inB(nx,ny)&&S.env.grid[idx(nx,ny)]===2)a=1+ri(3);}
-
-    execAction(a);
-
-  }
-
-  // concepts drift
-
-  const t=S.tick*0.013;
-
-  for(let i=0;i<16;i++){
-
-    const base=0.5+0.5*Math.sin(t*(0.7+((i*7)%5)*0.11)+i*1.7);
-
-    const boost=(i===S.cog.optionId*2%16)?0.55:0;
-
-    S.cog.concepts[i]=lerp(S.cog.concepts[i],clamp01(base*0.55+boost),0.15);
-
-  }
-
-  // hierarchical replan
-
-  if(S.tick%24===0)replanDemo();
-
-  if(S.tick%40===0)emitDemoSymbol();
-
-  // metabolism
-
-  S.meta.energy=Math.max(0,S.meta.energy-0.0012);
-
-  if(Math.random()<0.06)S.meta.hippoCount=Math.min(S.meta.hippoCap,S.meta.hippoCount+1);
-
-  if(S.tick%3000===0&&S.difficulty<5)S.difficulty++;
-
-  if(S.meta.energy<=0)demoDeath();
-
-  // chemical diffusion (explicit 5-point Laplacian step)
-
-  const ch=S.env.chem,c2=chemScratch;
-
-  for(let y=0;y<12;y++)for(let x=0;x<12;x++){
-
-    const i=idx(x,y);let s=0,n=0;
-
-    if(x>0){s+=ch[i-1];n++;}if(x<11){s+=ch[i+1];n++;}
-
-    if(y>0){s+=ch[i-12];n++;}if(y<11){s+=ch[i+12];n++;}
-
-    c2[i]=(ch[i]+0.16*((s/n)-ch[i]))*0.997;
-
-  }
-
-  ch.set(c2);
-
-  // entropy income stream
-
-  entropySpike*=0.75;
-
-  const base=0.04+Math.random()*0.05;
-
-  entropyEMA=lerp(entropyEMA,base+entropySpike,0.2);
-
-  entropyHist.push(base+entropySpike);entropyHist.shift();
-
-}
-
 function sample(p){let r=Math.random(),s=0;for(let i=0;i<4;i++){s+=p[i];if(r<=s)return i;}return 3;}
-
-function execAction(a){
-
-  const A=S.env.agent;
-
-  if(a===1){A.dir=(A.dir+3)%4;return;}
-
-  if(a===2){A.dir=(A.dir+1)%4;return;}
-
-  if(a===0){
-
-    const d=DIRS[A.dir],nx=A.x+d[0],ny=A.y+d[1];
-
-    if(!inB(nx,ny)||S.env.grid[idx(nx,ny)]===1)return; // bump
-
-    A.x=nx;A.y=ny;
-
-    S.env.trail.push({x:nx,y:ny});if(S.env.trail.length>14)S.env.trail.shift();
-
-    const t=S.env.grid[idx(nx,ny)];
-
-    if(t===2){S.meta.energy=Math.max(0,S.meta.energy-0.16);addEntropy(0.3);flashEnv();}
-
-    if(t===3){S.env.grid[idx(nx,ny)]=0;S.meta.energy=Math.min(1,S.meta.energy+0.22);
-
-      addEntropy(0.7);respawnFood();}
-
-    if(t===4){S.env.grid[idx(nx,ny)]=0;S.env.hasKey=true;addEntropy(1.4);
-
-      chatSys('key fragment acquired — lock referent bound');}
-
-    return;
-
-  }
-
-  if(a===3){ // INTERACT: quantum injection + facing-lock resolution
-
-    const i=idx(A.x,A.y);
-
-    S.env.chem[i]=Math.min(1,S.env.chem[i]+0.85);
-
-    addEntropy(0.18);
-
-    const d=DIRS[A.dir],fx=A.x+d[0],fy=A.y+d[1];
-
-    if(inB(fx,fy)){
-
-      const ft=S.env.grid[idx(fx,fy)];
-
-      if(ft===5&&S.env.hasKey){
-
-        S.env.grid[idx(fx,fy)]=0;S.env.hasKey=false;addEntropy(2.6);
-
-        S.meta.hippoCount=Math.min(S.meta.hippoCap,S.meta.hippoCount+25);
-
-        chatSys('lock dissolved — ΔS spike +2.6 bits · reachability manifold expanded');
-
-      }else if(ft===5){chatSys('lock detected — no key referent in working memory');}
-
-    }
-
-  }
-
-}
-
-function respawnFood(){
-
-  for(let t=0;t<200;t++){const x=1+ri(10),y=1+ri(10);
-
-    if(S.env.grid[idx(x,y)]===0&&!(x===S.env.agent.x&&y===S.env.agent.y)){
-
-      S.env.grid[idx(x,y)]=3;return;}}
-
-}
-
-function replanDemo(){
-
-  const weights=Array.from({length:8},()=>0.2+Math.random());
-
-  const tot=weights.reduce((a,b)=>a+b,0);
-
-  const root={label:'ROOT',visits:0,value:0.5,children:[],key:'ROOT'};
-
-  let selO=null,best=-1;
-
-  weights.forEach((w,i)=>{
-
-    const visits=Math.max(1,Math.round(32*w/tot));
-
-    const o={label:'O'+i,visits,value:+(0.2+Math.random()*0.8).toFixed(2),children:[],key:'O'+i};
-
-    root.children.push(o);root.visits+=visits;
-
-    const sc=visits*o.value;if(sc>best){best=sc;selO=o;}
-
-  });
-
-  const top=[...root.children].sort((a,b)=>b.visits-a.visits).slice(0,3);
-
-  top.forEach(o=>{
-
-    const aw=Array.from({length:4},()=>Math.random()),at=aw.reduce((a,b)=>a+b,0);
-
-    ['FWD','LFT','RGT','ACT'].forEach((nm,i)=>{
-
-      o.children.push({label:nm,visits:Math.max(0,Math.round(o.visits*aw[i]/at)),
-
-        value:+(0.15+Math.random()*0.85).toFixed(2),children:[],key:o.key+'/'+nm});
-
-    });
-
-  });
-
-  let selA=null;selO.children.forEach(a=>{if(!selA||a.visits>selA.visits)selA=a;});
-
-  const selPath=new Set(['ROOT',selO.key,selA.key]);
-
-  S.cog.tree={root,selO,selA,selPath};
-
-  S.cog.optionId=+selO.label.slice(1);
-
-  S.cog.optionLabel=OPTION_NAMES[S.cog.optionId]+DIR_SUF[S.env.agent.dir];
-
-  // fresh low-level policy
-
-  const lg=Array.from({length:4},()=>Math.random()*3);
-
-  const mx=Math.max(...lg);
-
-  const ex=lg.map(v=>Math.exp(v-mx)),sm=ex.reduce((a,b)=>a+b,0);
-
-  S.cog.actionProbsT=ex.map(v=>v/sm);
-
-}
-
-function emitDemoSymbol(){
-
-  const ci=S.cog.optionId*2%16;
-
-  const tok=(ci*4+ri(4))%64;
-
-  S.cog.symbol=tok;
-
-  S.cog.symbolHistory.unshift(tok);
-
-  if(S.cog.symbolHistory.length>10)S.cog.symbolHistory.length=10;
-
-  flashSymbol();
-
-}
 
 function demoDeath(){
 
@@ -1765,7 +1502,7 @@ function drawEnv(time){
 
     if(t===1){ // wall — beveled slab
 
-      ctx.fillStyle='#191922';ctx.fillRect(px+2,py+2,c-4,c-4);
+      ctx.fillStyle='#525266';ctx.fillRect(px+2,py+2,c-4,c-4);
 
       ctx.fillStyle='rgba(255,255,255,.055)';ctx.fillRect(px+2,py+2,c-4,3);
 
@@ -2606,7 +2343,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
-setInterval(demoTick,110);
+
 
 setInterval(updateDOM,140);
 
@@ -2620,13 +2357,13 @@ requestAnimationFrame(frame);
 
 connectWS();
 
-setTimeout(()=>{if(!S.live&&!S.demo)enterDemo();},2700);
+
 
 setTimeout(()=>document.getElementById('boot').classList.add('done'),1250);
 
 setTimeout(()=>{
 
-  chatSys('OBSERVATION DECK ONLINE — substrate 13 · causal world model · counterfactual MCTS active');
+  chatSys('OBSERVATION DECK ONLINE — substrate 14 · metacognitive precision field · active inference active');
 
 },1500);
 

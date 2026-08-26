@@ -650,7 +650,7 @@ class GenesisEngineRunner:
     def __init__(self):
         self.brain = GenesisPyTorchBrain()
         self.env = GenesisEnvironment()
-        self.is_running = True
+        self.is_running = False  # Changed to False so simulation waits for UI
         self.speed = 1
         self.tick_count = 0
         
@@ -802,8 +802,8 @@ class GenesisEngineRunner:
             "hasKey": self.env.has_key,
             "agentPos": self.env.agent_pos,
             "agentDir": self.env.agent_dir,
-            "grid": self.env.grid.tolist(),
-            "chem": self.env.chem.tolist(),
+            "grid": self.env.grid[:12, :12].flatten().tolist(),
+            "chem": self.env.chem[:12, :12].flatten().tolist(),
             "obs": obs.tolist(),
             "mcts": mcts_info,
             "vVal": metrics["vCurr"],
@@ -856,11 +856,17 @@ async def ws_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     runner.connected_websockets.add(ws)
-    print(f"[GENESIS SERVER] Client connected via WebSocket. Active clients: {len(runner.connected_websockets)}")
+    print(f"[GENESIS SERVER] Client connected via WebSocket. Active clients: {len(runner.connected_websockets)}", flush=True)
+
+    # Always ensure simulation is actively running when a client connects
+    runner.is_running = True
 
     # Send initial full state immediately
-    init_state = runner.step_once()
-    await ws.send_str(json.dumps(init_state))
+    try:
+        init_state = runner.step_once()
+        await ws.send_str(json.dumps(init_state))
+    except Exception as e:
+        print(f"[GENESIS SERVER] Initial state error: {e}", flush=True)
 
     try:
         async for msg in ws:
@@ -915,33 +921,39 @@ async def simulation_loop():
     last_broadcast = time.perf_counter()
     st = None
     while True:
-        if runner.is_running:
-            target_speed = runner.speed
-            if target_speed <= 5:
-                st = runner.step_once()
-                await runner.broadcast_state(st)
-                delay = 0.08 / max(1, target_speed)
-                await asyncio.sleep(delay)
-            elif target_speed <= 25:
-                for _ in range(5):
+        try:
+            if runner.is_running:
+                target_speed = runner.speed
+                if target_speed <= 5:
                     st = runner.step_once()
-                await runner.broadcast_state(st)
-                await asyncio.sleep(0.015)
+                    await runner.broadcast_state(st)
+                    delay = 0.08 / max(1, target_speed)
+                    await asyncio.sleep(delay)
+                elif target_speed <= 25:
+                    for _ in range(5):
+                        st = runner.step_once()
+                    await runner.broadcast_state(st)
+                    await asyncio.sleep(0.015)
+                else:
+                    # Ultra-High-Speed Numba JIT Batching (100x, 250x, 500x, 1000x)
+                    batch_size = max(20, target_speed)
+                    for _ in range(batch_size):
+                        st = runner.step_once()
+                    
+                    # Decoupled Observer Broadcast: 50 Hz streaming for smooth 60 FPS display
+                    now = time.perf_counter()
+                    if now - last_broadcast >= 0.02:
+                        if st is not None:
+                            await runner.broadcast_state(st)
+                        last_broadcast = now
+                    await asyncio.sleep(0)
             else:
-                # Ultra-High-Speed Numba JIT Batching (100x, 250x, 500x, 1000x)
-                batch_size = max(20, target_speed)
-                for _ in range(batch_size):
-                    st = runner.step_once()
-                
-                # Decoupled Observer Broadcast: 50 Hz streaming for smooth 60 FPS display
-                now = time.perf_counter()
-                if now - last_broadcast >= 0.02:
-                    if st is not None:
-                        await runner.broadcast_state(st)
-                    last_broadcast = now
-                await asyncio.sleep(0)
-        else:
-            await asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)
+        except Exception as e:
+            import traceback
+            print(f"[GENESIS LOOP ERROR]: {e}", flush=True)
+            traceback.print_exc()
+            await asyncio.sleep(0.5)
 
 async def start_background_tasks(app):
     print("[GENESIS SERVER] Starting background simulation loop...", flush=True)
