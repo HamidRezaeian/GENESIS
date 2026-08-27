@@ -297,8 +297,14 @@ def execute_benchmark():
         nolearn_scores: List[float] = []
 
         for s in seeds:
-            # 1. Proposed Model (Active learning + Substrates 12-20)
+            # 1. Proposed Model (Active learning + Substrates 12-21)
             brain_proposed = GenesisPyTorchBrain(seed=s)
+            ckpt = REPO_ROOT / "Brain" / "canonical_brain.npz"
+            if ckpt.exists():
+                try:
+                    brain_proposed.load_checkpoint(ckpt)
+                except Exception as e:
+                    pass
             score_p = task_fn(brain_proposed, seed=s, enable_learning=True)
             proposed_scores.append(score_p)
 

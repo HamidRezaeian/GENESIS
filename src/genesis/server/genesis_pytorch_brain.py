@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 from .substrate19_engine import Substrate19Engine
 from .substrate20_engine import Substrate20Engine
+from .substrate21_engine import Substrate21Engine
 
 VISUAL_DIM = 7 * 7 * 7  # 343
 D_MODEL = 32
@@ -207,6 +208,17 @@ class GenesisPyTorchBrain:
         self.substrate20 = Substrate20Engine(dim=D_MODEL, device=str(self.device))
         self.last_vocal_in = torch.zeros(64, dtype=torch.float16, device=self.device)
         self.last_peer_obs = torch.zeros(4, 73, dtype=torch.float16, device=self.device)
+
+        # Substrate 21: Deep-Time Continual Learning & Meta-Plasticity Engine
+        self.substrate21 = Substrate21Engine(
+            dim=D_MODEL,
+            n_actions=N_ACTIONS,
+            n_symbols=VOCAB_SIZE,
+            buffer_capacity=5000,
+            replay_batch=32,
+            consolidation_period=2000,
+            device=str(self.device)
+        )
 
     def _snapshot_initial_params(self):
         self.initial_params = {}
@@ -957,12 +969,12 @@ class GenesisPyTorchBrain:
         si_penalty_dyn = 0.5 * \
             self.si_omega["W_dyn"] * \
             (self.W_dyn - self.si_theta_star["W_dyn"])
-        self.W_dyn += 0.005 * batch_grad - 1e-6 * self.W_dyn - 0.005 * si_penalty_dyn
+        self.W_dyn = self._sanitize(self.W_dyn + 0.005 * batch_grad - 1e-6 * self.W_dyn - 0.005 * si_penalty_dyn)
 
         pred_rew = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1)
         err_rew = reward - pred_rew
         grad_rew = torch.matmul(sa.T, err_rew) / B
-        self.W_rew += 0.005 * grad_rew - 1e-6 * self.W_rew
+        self.W_rew = self._sanitize(self.W_rew + 0.005 * grad_rew - 1e-6 * self.W_rew)
 
         v_curr = torch.matmul(s_curr, self.W_val.unsqueeze(-1)).squeeze(-1)
         v_next = torch.matmul(
@@ -971,8 +983,8 @@ class GenesisPyTorchBrain:
         target_v = reward + 0.95 * v_next
         td_err = target_v - v_curr
         grad_val = torch.matmul(s_curr.T, td_err) / B
-        self.W_val += 0.005 * grad_val - 1e-6 * self.W_val
-        self.W_val_target = 0.995 * self.W_val_target + 0.005 * self.W_val
+        self.W_val = self._sanitize(self.W_val + 0.005 * grad_val - 1e-6 * self.W_val)
+        self.W_val_target = self._sanitize(0.995 * self.W_val_target + 0.005 * self.W_val)
 
         logits = torch.matmul(s_curr, self.W_policy)
         probs = torch.softmax(logits, dim=-1)
@@ -980,7 +992,7 @@ class GenesisPyTorchBrain:
             (B, N_ACTIONS), dtype=self.dtype, device=self.device)
         target_pol[torch.arange(B), action] = 1.0
         grad_pol = torch.matmul(s_curr.T, target_pol - probs) / B
-        self.W_policy += 0.005 * grad_pol - 1e-6 * self.W_policy
+        self.W_policy = self._sanitize(self.W_policy + 0.005 * grad_pol - 1e-6 * self.W_policy)
 
         # Rule 21: Replay operational cost
         replay_cost = sum(p.numel() * 4 for p in [self.W_dyn, self.W_rew, self.W_val, self.W_policy]) * self.CPU_COST_PER_FLOP
@@ -1025,12 +1037,11 @@ class GenesisPyTorchBrain:
             delta = W_current - self.si_theta_start[k]
             normalized = self.si_W[k] / (delta.pow(2) + 0.1)
             
-            fisher_seed = 0.0
+            fisher_seed = torch.zeros_like(self.si_omega[k])
             if k == "W_dyn":
-                # Inject Fisher precision from Substrate 14
                 fisher_seed = (0.5 * self.I_dyn).to(self.dtype)
                 
-            self.si_omega[k] = self.si_omega[k] + normalized + fisher_seed
+            self.si_omega[k] = self._sanitize(self.si_omega[k] + normalized + fisher_seed)
             self.si_theta_star[k] = W_current.clone()
             self.si_theta_start[k] = W_current.clone()
             self.si_W[k].zero_()
