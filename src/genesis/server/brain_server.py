@@ -6,7 +6,7 @@ import math
 import time
 import json
 from numba import njit
-from genesis_pytorch_brain import GenesisPyTorchBrain
+from genesis.server.genesis_pytorch_brain import GenesisPyTorchBrain
 import os
 import sys
 from pathlib import Path
@@ -851,21 +851,21 @@ class GenesisEngineRunner:
             s_curr, action, reward, s_next, is_terminal=is_term, is_replay=False)
 
         # Prioritized Mini-batch replay
-        if len(self.brain.hippocampus) >= 32:
+        if self.brain.hippocampus.size >= 32:
             surprises = np.array([m.get("surprise", 1e-5)
-                                 for m in self.brain.hippocampus], dtype=np.float32)
+                                 for m in self.brain.hippocampus.transitions], dtype=np.float32)
             np.nan_to_num(surprises, nan=1e-5, posinf=1.0,
                           neginf=1e-5, copy=False)
             np.maximum(surprises, 1e-6, out=surprises)
             s_sum = float(np.sum(surprises))
             if s_sum <= 0.0 or not np.isfinite(s_sum):
-                probs = np.ones(len(self.brain.hippocampus),
-                                dtype=np.float64) / len(self.brain.hippocampus)
+                probs = np.ones(self.brain.hippocampus.size,
+                                dtype=np.float64) / self.brain.hippocampus.size
             else:
                 probs = (surprises / s_sum).astype(np.float64)
                 probs /= np.sum(probs)
             indices = self.brain.rng.choice(
-                len(self.brain.hippocampus), size=32, p=probs)
+                self.brain.hippocampus.size, size=32, p=probs)
 
             s_curr_b = np.stack(
                 [self.brain.hippocampus[idx]["s_curr"] for idx in indices])
@@ -890,7 +890,7 @@ class GenesisEngineRunner:
             self._end_episode(False)
 
         is_sleeping = False
-        if self.tick_count > 0 and self.tick_count % 2000 == 0 and len(self.brain.hippocampus) > 100:
+        if self.tick_count > 0 and self.tick_count % 2000 == 0 and self.brain.hippocampus.size > 100:
             print(
                 f"[GENESIS CORE] Circadian Rhythm Triggered: Sleep Consolidation (Tick {self.tick_count})")
             self.brain.sleep_consolidation()
@@ -947,7 +947,7 @@ class GenesisEngineRunner:
             "mcts": mcts_info,
             "vVal": v_curr,
             "loss": loss_val,
-            "hippoCount": int(len(self.brain.hippocampus)),
+            "hippoCount": int(self.brain.hippocampus.size),
             "policyMode": str(self.policy_mode),
             "activeTask": str(self.active_task_text),
             "isSleeping": bool(is_sleeping),
@@ -966,7 +966,7 @@ class GenesisEngineRunner:
             "meta": {
                 "energy": energy_ratio,
                 "hippo": {
-                    "count": int(len(self.brain.hippocampus)),
+                    "count": int(self.brain.hippocampus.size),
                     "cap": 5000
                 },
                 "entropyIncome": float(abs(v_curr))

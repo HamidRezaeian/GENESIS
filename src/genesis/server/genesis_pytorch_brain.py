@@ -182,6 +182,12 @@ class GenesisPyTorchBrain:
         self.is_bored = False
         self.wm_loss_ema = 1.0
 
+        # Substrate 17: Memory-Energy Grounding (Rule 21)
+        self.RAM_COST_PER_BYTE_TICK = 1e-7
+        self.CPU_COST_PER_FLOP = 1e-10
+        self.MEMORY_MAINTENANCE_RATE = 1e-6
+        self.last_memory_cost = 0.0
+
     def _snapshot_initial_params(self):
         self.initial_params = {}
         for attr in dir(self):
@@ -206,6 +212,23 @@ class GenesisPyTorchBrain:
                 if isinstance(attr, torch.Tensor):
                     total_bytes += attr.element_size() * attr.numel()
         return total_bytes
+
+    def compute_memory_metabolic_cost(self) -> float:
+        """
+        Rule 21: Compute exact metabolic cost of memory maintenance.
+        """
+        cost = 0.0
+        
+        # 1. Episodic Buffer Maintenance
+        buffer_bytes = self.hippocampus.ram_bytes_per_transition * self.hippocampus.size
+        cost += buffer_bytes * self.MEMORY_MAINTENANCE_RATE
+        
+        # 2. SI State Maintenance (omega, theta_star)
+        si_bytes = sum(o.nelement() * o.element_size() for o in self.si_omega.values())
+        si_bytes += sum(t.nelement() * t.element_size() for t in self.si_theta_star.values())
+        cost += si_bytes * self.MEMORY_MAINTENANCE_RATE
+        
+        return cost
 
     def init_weights(self):
         self.W_vis = self._rand_mat(VISUAL_DIM, D_MODEL, 0.05)
@@ -865,6 +888,11 @@ class GenesisPyTorchBrain:
                 td_error=td_err.item(),
                 epistemic_entropy=epistemic_entropy_val
             )
+            
+            # Rule 21: Memory storage operational cost
+            add_cost = 32 * self.CPU_COST_PER_FLOP
+            add_cost += self.hippocampus.ram_bytes_per_transition * self.RAM_COST_PER_BYTE_TICK
+            self.last_memory_cost += add_cost
 
         return {
             "loss": loss_dyn.item() / 32.0,
@@ -920,6 +948,10 @@ class GenesisPyTorchBrain:
         grad_pol = torch.matmul(s_curr.T, target_pol - probs) / B
         self.W_policy += 0.005 * grad_pol - 1e-6 * self.W_policy
 
+        # Rule 21: Replay operational cost
+        replay_cost = sum(p.numel() * 4 for p in [self.W_dyn, self.W_rew, self.W_val, self.W_policy]) * self.CPU_COST_PER_FLOP
+        self.last_memory_cost += replay_cost
+
         return {
             "loss": loss_dyn_b.mean().item() / 32.0,
             "vCurr": v_curr.mean().item(),
@@ -962,12 +994,16 @@ class GenesisPyTorchBrain:
             fisher_seed = 0.0
             if k == "W_dyn":
                 # Inject Fisher precision from Substrate 14
-                fisher_seed = 0.5 * self.I_dyn.clone()
+                fisher_seed = (0.5 * self.I_dyn).to(self.dtype)
                 
             self.si_omega[k] = self.si_omega[k] + normalized + fisher_seed
             self.si_theta_star[k] = W_current.clone()
             self.si_theta_start[k] = W_current.clone()
             self.si_W[k].zero_()
+
+        # Rule 21: Consolidation operational cost
+        consolidation_flops = sum(o.numel() * 5 for o in self.si_omega.values())
+        self.last_memory_cost += consolidation_flops * self.CPU_COST_PER_FLOP
 
         self.consolidation_count += 1
         return replays
@@ -980,7 +1016,7 @@ class GenesisPyTorchBrain:
                 if isinstance(p, torch.Tensor):
                     param_drift += float(torch.norm(p - init_p).item())
 
-        fisher_norm = float(torch.norm(self.fisher_diag.get(
+        fisher_norm = float(torch.norm(self.si_omega.get(
             "W_dyn", torch.zeros(1, device=self.device))).item())
 
         return {
@@ -998,8 +1034,9 @@ class GenesisPyTorchBrain:
             "grad_norm": float(self.last_grad_norm),
             "param_drift": float(param_drift),
             "learn_steps": int(self.learn_step_count),
-            "hippo_size": int(len(self.hippocampus)),
-            "option_hippo_size": int(len(self.option_hippocampus))
+            "hippo_size": int(self.hippocampus.size),
+            "option_hippo_size": int(len(self.option_hippocampus)),
+            "last_memory_cost": float(self.last_memory_cost)
         }
 
     @torch.no_grad()
@@ -1019,16 +1056,16 @@ class GenesisPyTorchBrain:
         }
 
     def save_checkpoint(self, path: Path):
-        h_s_curr = np.array([m["s_curr"] for m in self.hippocampus],
-                            dtype=np.float32) if self.hippocampus else np.empty((0, 32), dtype=np.float32)
-        h_action = np.array([m["action"] for m in self.hippocampus],
-                            dtype=np.int32) if self.hippocampus else np.empty((0,), dtype=np.int32)
-        h_reward = np.array([m["reward"] for m in self.hippocampus],
-                            dtype=np.float32) if self.hippocampus else np.empty((0,), dtype=np.float32)
-        h_s_next = np.array([m["s_next"] for m in self.hippocampus],
-                            dtype=np.float32) if self.hippocampus else np.empty((0, 32), dtype=np.float32)
-        h_surprise = np.array([m["surprise"] for m in self.hippocampus],
-                              dtype=np.float32) if self.hippocampus else np.empty((0,), dtype=np.float32)
+        h_s_curr = np.array([m["s_curr"] for m in self.hippocampus.transitions[:self.hippocampus.size]],
+                            dtype=np.float32) if self.hippocampus.size > 0 else np.empty((0, 32), dtype=np.float32)
+        h_action = np.array([m["action"] for m in self.hippocampus.transitions[:self.hippocampus.size]],
+                            dtype=np.int32) if self.hippocampus.size > 0 else np.empty((0,), dtype=np.int32)
+        h_reward = np.array([m["reward"] for m in self.hippocampus.transitions[:self.hippocampus.size]],
+                            dtype=np.float32) if self.hippocampus.size > 0 else np.empty((0,), dtype=np.float32)
+        h_s_next = np.array([m["s_next"] for m in self.hippocampus.transitions[:self.hippocampus.size]],
+                            dtype=np.float32) if self.hippocampus.size > 0 else np.empty((0, 32), dtype=np.float32)
+        h_surprise = np.array([m.get("surprise", 1e-5) for m in self.hippocampus.transitions[:self.hippocampus.size]],
+                              dtype=np.float32) if self.hippocampus.size > 0 else np.empty((0,), dtype=np.float32)
 
         np.savez_compressed(
             path,
