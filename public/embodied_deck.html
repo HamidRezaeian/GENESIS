@@ -1544,6 +1544,44 @@
           <div class="sv" id="statMemTax" style="color:var(--red)">—</div>
         </div>
       </div>
+      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
+        <span class="p-title"><i></i>BEHAVIORAL EMERGENCE (SUBSTRATE 18)</span>
+        <span class="p-sub" id="statEmergenceBadge" style="font-weight:700; color:var(--amber)">AWAITING DEEP TIME</span>
+      </div>
+      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
+        <div class="stat">
+          <div class="sl">LATENT CLUSTERS (k*)</div>
+          <div class="sv" id="statLatentK" style="color:var(--cyan)">1</div>
+        </div>
+        <div class="stat">
+          <div class="sl">SILHOUETTE SCORE</div>
+          <div class="sv" id="statLatentSil" style="color:var(--blue)">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="sl">GOAL DIVERSITY (D)</div>
+          <div class="sv" id="statGoalDiv" style="color:var(--purple2)">1</div>
+        </div>
+        <div class="stat">
+          <div class="sl">ACTION ENTROPY (H)</div>
+          <div class="sv" id="statActEntropy" style="color:var(--emerald)">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="sl">BEHAVIORAL MODES (M*)</div>
+          <div class="sv" id="statBehModes" style="color:var(--yellow)">1</div>
+        </div>
+        <div class="stat">
+          <div class="sl">COMPLEXITY C(g)</div>
+          <div class="sv" id="statComplexity" style="color:var(--cyan)">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="sl">MANN-KENDALL (Z)</div>
+          <div class="sv" id="statMannKendall" style="color:var(--amber)">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="sl">PROBE METABOLIC TAX</div>
+          <div class="sv" id="statEmergenceTax" style="color:var(--red)">0.00</div>
+        </div>
+      </div>
     </section>
 
     <!-- 4 · MCTS -->
@@ -1636,7 +1674,9 @@
       'energyPct', 'energyFill', 'hippoTxt', 'memseg', 'statTicks', 'statGen', 'pips', 'entropyVal',
       'chatLog', 'chatForm', 'chatInput', 'metaPanel', 'visRot', 'visKey', 'actRows',
       'statTd', 'statWm', 'statWmEma', 'statCuriosity', 'statBoredom',
-      'statConsolidation', 'statFisher', 'statMemTax'
+      'statConsolidation', 'statFisher', 'statMemTax',
+      'statEmergenceBadge', 'statLatentK', 'statLatentSil', 'statGoalDiv',
+      'statActEntropy', 'statBehModes', 'statComplexity', 'statMannKendall', 'statEmergenceTax'
     ].forEach(id => el[id] = document.getElementById(id));
 
     /* ================================================================
@@ -1942,6 +1982,9 @@
       }
       if (n.learning) {
         S.learning = n.learning;
+      }
+      if (n.emergence) {
+        S.emergence = n.emergence;
       }
     }
 
@@ -2317,6 +2360,29 @@
         }
         if (el.statMemTax && S.learning.last_memory_cost != null) {
           el.statMemTax.textContent = S.learning.last_memory_cost.toExponential(2);
+        }
+      }
+
+      if (S.emergence) {
+        const em = S.emergence;
+        if (el.statLatentK) el.statLatentK.textContent = em.latent_cluster_count ?? 1;
+        if (el.statLatentSil) el.statLatentSil.textContent = (em.latent_silhouette ?? 0.0).toFixed(2);
+        if (el.statGoalDiv) el.statGoalDiv.textContent = em.goal_diversity ?? 1;
+        if (el.statActEntropy) el.statActEntropy.textContent = (em.action_entropy ?? 0.0).toFixed(2);
+        if (el.statBehModes) el.statBehModes.textContent = em.behavioral_modes ?? 1;
+        if (el.statComplexity) el.statComplexity.textContent = (em.complexity_score ?? 0.0).toFixed(2);
+        if (el.statMannKendall) el.statMannKendall.textContent = (em.mann_kendall_z ?? 0.0).toFixed(2);
+        if (el.statEmergenceTax) el.statEmergenceTax.textContent = (em.metabolic_cost ?? 0.0).toExponential(2);
+
+        if (el.statEmergenceBadge) {
+          if (em.emergence_detected) {
+            el.statEmergenceBadge.textContent = 'EMERGENCE DETECTED';
+            el.statEmergenceBadge.style.color = 'var(--emerald)';
+          } else {
+            const fails = (em.failing_probes && em.failing_probes.length > 0) ? em.failing_probes.join(', ') : 'AWAITING DEEP TIME';
+            el.statEmergenceBadge.textContent = `FALSIFIED (${fails})`;
+            el.statEmergenceBadge.style.color = 'var(--amber)';
+          }
         }
       }
 

@@ -1,3 +1,17 @@
+import os
+import sys
+from pathlib import Path
+
+# Repository Root & Paths
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+SRC_DIR = REPO_ROOT / "src"
+SERVER_DIR = Path(__file__).resolve().parent
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+if str(SERVER_DIR) not in sys.path:
+    sys.path.insert(0, str(SERVER_DIR))
+
 from aiohttp import web, WSMsgType
 import numpy as np
 import asyncio
@@ -7,18 +21,8 @@ import time
 import json
 from numba import njit
 from genesis.server.genesis_pytorch_brain import GenesisPyTorchBrain
-import os
-import sys
-from pathlib import Path
+from genesis.server.behavioral_emergence_suite import BehavioralEmergenceSuite
 
-# Ensure local server directory is discoverable on sys.path
-SERVER_DIR = Path(__file__).resolve().parent
-if str(SERVER_DIR) not in sys.path:
-    sys.path.insert(0, str(SERVER_DIR))
-
-
-# Repository Root & Paths
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 BRAIN_DIR = REPO_ROOT / "Brain"
 PUBLIC_DIR = REPO_ROOT / "public"
 BRAIN_DIR.mkdir(exist_ok=True, parents=True)
@@ -772,6 +776,7 @@ class GenesisEngineRunner:
         self.env.max_energy_hint = self.max_energy
         self.env.reset_episode(seed=self.episode_seed)
         self.brain.state_history.clear()
+        self.emergence_suite = BehavioralEmergenceSuite()
 
         # Load existing brain if available
         ckpt_path = BRAIN_DIR / "canonical_brain.npz"
@@ -889,6 +894,25 @@ class GenesisEngineRunner:
             self.energy = self.max_energy
             self._end_episode(False)
 
+        # Substrate 18: Behavioral Emergence Suite (Observer Mode under Rule 9 & Rule 21)
+        goal_vec = getattr(self.brain, "active_intrinsic_goal", None)
+        if goal_vec is not None and hasattr(goal_vec, "cpu"):
+            goal_np = goal_vec.detach().cpu().numpy().astype(np.float32)
+        elif isinstance(goal_vec, np.ndarray):
+            goal_np = goal_vec
+        else:
+            goal_np = np.zeros(16, dtype=np.float32)
+
+        probe_cost = self.emergence_suite.observe_tick(
+            latent_state=s_curr,
+            concept_vector=s_curr[:16],
+            goal_vector=goal_np,
+            action=action,
+            reward=reward,
+            is_generation_end=is_term
+        )
+        self.energy = max(0.0, self.energy - probe_cost)
+
         is_sleeping = False
         if self.tick_count > 0 and self.tick_count % 2000 == 0 and self.brain.hippocampus.size > 100:
             print(
@@ -979,7 +1003,8 @@ class GenesisEngineRunner:
                 "concepts": [float(c) for c in self.brain.state_history[-1][:16]] if self.brain.state_history else [0.0]*16,
                 "tree": mcts_info
             },
-            "learning": self.brain.get_learning_telemetry()
+            "learning": self.brain.get_learning_telemetry(),
+            "emergence": self.emergence_suite.get_telemetry().to_dict()
         }
         return sanitize_floats(payload)
 

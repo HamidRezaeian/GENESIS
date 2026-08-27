@@ -30,6 +30,15 @@ class EpisodicBuffer:
         self.size = 0
         self.ram_bytes_per_transition = 0
 
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, idx):
+        return self.transitions[idx]
+
+    def __iter__(self):
+        return iter(self.transitions)
+
     def add(self, state, action, reward, next_state, done, td_error, epistemic_entropy):
         td_clipped = min(abs(float(td_error)), self.td_clip)
         gate = 1.0 / (1.0 + math.exp(-self.alpha * (float(epistemic_entropy) - self.tau)))

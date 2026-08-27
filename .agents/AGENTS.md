@@ -41,6 +41,28 @@
 2. **No Silent Simplifications:** When implementing, optimizing, or porting code to a new framework or UI, the agent MUST NOT downgrade, simplify, or alter the core architecture (e.g., reducing Deep MCTS depth, changing layer dimensions, omitting algorithms) just to make it run faster or compile easier. 
 3. **Spec Alignment:** Any new code or UI wrapper must mathematically match the specifications outlined in the authoritative `Docs/` (e.g., `PHASE5_MULTIMODAL_DUAL_MEMORY_SPEC.md` and `Roadmap_Advanced_AI.md`). If a port is impossible under these strict constraints, the agent must fail explicitly and inform the user rather than providing a fractured or simplified model.
 
+## Rule 27: Substrate-to-UI Serialization & Observation Deck Purity (Learned 2026-08-26)
+
+1. **Dimensional Integrity in Serialization:** When sending 2D numpy arrays (e.g., `grid`, `chem`) from the Python backend to the JavaScript frontend, the array MUST first be strictly sliced to the active physical bounds (`self.size`) before being flattened. Never send the full padded buffer (e.g., `GRID_SIZE x GRID_SIZE`) as a flat list, as the frontend `normGrid` renderer will misalign the 1D slice into the wrong 2D coordinate space, causing blank or corrupted renders. 
+   - *Correct:* `self.env.grid[:self.env.size, :self.env.size].flatten().tolist()`
+   - *Incorrect:* `self.env.grid.flatten().tolist()` or `self.env.grid.tolist()`
+2. **Observation Deck Purity (Zero Synthetic Fallbacks):** The frontend UI (`embodied_deck.html`) is strictly an observation tool. It MUST NEVER contain fallback simulators, "demo loops", or synthetic agent behaviors. If the WebSocket connection fails or the server is offline, the UI must simply enter an `AWAITING TELEMETRY` loop and retry the connection. No game mechanics or localized JS simulations are permitted under any circumstances (enforcing Rule 21).
+
+## Rule 28: Graphify Freshness Invariant & Mandatory Graph Synchronization (Learned 2026-08-27)
+
+1. **Mandatory Freshness Check:** Before performing any architecture queries, dependency traces, or codebase comprehension via `graphify`, the agent MUST ensure `graphify-out/` is completely up-to-date with all recent codebase modifications (running `/graphify . --update` or verifying cache freshness).
+2. **Graph-First Architecture Navigation:** For cross-module relationships, god nodes, and community boundaries, prioritize querying the up-to-date knowledge graph (`graphify query`) to avoid hallucinated dependencies.
+
+## Rule 29: Mandatory Standing Context & GLM Consultation Protocol (Learned 2026-08-27)
+
+1. **Standing Context & Docs Sync:** Before major implementations, read current documentation in `Docs/` (`Docs/ARD.md`, `Docs/PRD.md`, `Docs/Roadmap.md`, `Docs/Article_Draft.md`, `Docs/Result.md`). At the end of every completed task or milestone, update `Docs/` to keep documentation synchronized with the live codebase state.
+2. **GLM Oracle Protocol:** Before making major architectural changes, tensor formulations, or entering new substrate milestones, the agent MUST explicitly specify and format the exact prompt for the user to consult with **GLM 5.3** (Mandate: "از این به بعد دقیقا مشخص کن چیو باید از glm بپرسم"). Await the authoritative response before executing.
+
+## Rule 30: Fan-Out Exploration & Multi-Facet Analysis (Learned 2026-08-27)
+
+1. **Parallel Terrain Gathering:** For non-trivial research, code auditing, and multi-file exploration, use parallel subagents to inspect independent facets concurrently before synthesizing plans or code.
+2. **Resilient Execution:** If transient errors (e.g. rate limits) occur, retry systematically rather than abandoning thorough terrain analysis.
+
 ## Core Architectural Specifications (Organized under `Docs/Architecture/`)
 
 - [Ascent.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/Ascent.md): Deep Time evolution, cognitive probes, and binding finish line criteria.
@@ -49,10 +71,3 @@
 - [HARDWARE_AWARE_CAPACITY_DESIGN.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/HARDWARE_AWARE_CAPACITY_DESIGN.md): Rule 21.6 specification for dynamic runtime population ceilings based on host CGroup/RAM limits.
 - [RULE21_2_ENGINE_REFACTOR_DESIGN.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/RULE21_2_ENGINE_REFACTOR_DESIGN.md): Rule 21.2 specification for Tier-1 evolvable constants (`PARAM_MARKER`) and hardware-derived parameters.
 - [RULE21_INCOME_REFACTOR_DESIGN.md](file:///C:/Users/Hamid/source/repos/GENESIS/Docs/Architecture/RULE21_INCOME_REFACTOR_DESIGN.md): Rule 21.5 specification for measured work-unit income accounting and metabolic cost balancing.
-
-## Rule 27: Substrate-to-UI Serialization & Observation Deck Purity (Learned 2026-08-26)
-
-1. **Dimensional Integrity in Serialization:** When sending 2D numpy arrays (e.g., `grid`, `chem`) from the Python backend to the JavaScript frontend, the array MUST first be strictly sliced to the active physical bounds (`self.size`) before being flattened. Never send the full padded buffer (e.g., `GRID_SIZE x GRID_SIZE`) as a flat list, as the frontend `normGrid` renderer will misalign the 1D slice into the wrong 2D coordinate space, causing blank or corrupted renders. 
-   - *Correct:* `self.env.grid[:self.env.size, :self.env.size].flatten().tolist()`
-   - *Incorrect:* `self.env.grid.flatten().tolist()` or `self.env.grid.tolist()`
-2. **Observation Deck Purity (Zero Synthetic Fallbacks):** The frontend UI (`embodied_deck.html`) is strictly an observation tool. It MUST NEVER contain fallback simulators, "demo loops", or synthetic agent behaviors. If the WebSocket connection fails or the server is offline, the UI must simply enter an `AWAITING TELEMETRY` loop and retry the connection. No game mechanics or localized JS simulations are permitted under any circumstances (enforcing Rule 21).
