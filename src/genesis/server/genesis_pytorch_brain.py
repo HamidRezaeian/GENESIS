@@ -87,6 +87,11 @@ class GenesisPyTorchBrain:
         self.learn_step_count = 0
         self._snapshot_initial_params()
 
+        # Substrate 16: Autotelic Dynamics & Curiosity (Rule 9)
+        self.curiosity_alpha = 0.2
+        self.is_bored = False
+        self.wm_loss_ema = 1.0
+
     def _snapshot_initial_params(self):
         self.initial_params = {}
         for attr in dir(self):
@@ -689,11 +694,17 @@ class GenesisPyTorchBrain:
         self.W_rew = self._sanitize(
             self.W_rew + 0.005 * (sa * err_rew) - 1e-6 * self.W_rew)
 
-        # Value Function (TD Learning)
+        # Value Function (TD Learning) with Substrate 16 Autotelic Reward
         v_curr = torch.matmul(s_curr, self.W_val.unsqueeze(-1)).squeeze(-1)
         v_next = torch.matmul(s_next, self.W_val_target.unsqueeze(
             -1)).squeeze(-1) if not is_terminal else torch.tensor(0.0, dtype=self.dtype, device=self.device)
-        target_v = rew_val + 0.95 * v_next
+
+        intrinsic_reward = self.curiosity_alpha * float(loss_dyn.item())
+        composite_reward = rew_val + \
+            torch.tensor(intrinsic_reward, dtype=self.dtype,
+                         device=self.device)
+
+        target_v = composite_reward + 0.95 * v_next
         td_err = target_v - v_curr
 
         self.W_val = self._sanitize(
@@ -721,7 +732,19 @@ class GenesisPyTorchBrain:
         self.last_value_loss = float((td_err ** 2).item())
         self.last_policy_loss = float(-torch.log(
             torch.clamp(probs[action], min=1e-6)).item())
-        self.last_wm_loss = float(loss_dyn.item() / 32.0)
+
+        l_dyn = float(loss_dyn.item() / 32.0)
+        self.last_wm_loss = l_dyn
+
+        # Substrate 16: Boredom / Curiosity Dynamics
+        self.wm_loss_ema = 0.99 * self.wm_loss_ema + 0.01 * l_dyn
+        if self.wm_loss_ema < 0.002:
+            self.is_bored = True
+            self.curiosity_alpha = 1.0  # Spike intrinsic drive
+        elif self.wm_loss_ema > 0.03:
+            self.is_bored = False
+            self.curiosity_alpha = 0.2  # Return to baseline
+
         self.last_ewc_penalty = float(torch.norm(ewc_penalty).item())
         self.last_grad_norm = float(torch.norm(
             grad_dyn).item() + torch.norm(grad_pol).item())
@@ -849,6 +872,9 @@ class GenesisPyTorchBrain:
             "value_loss": float(self.last_value_loss),
             "policy_loss": float(self.last_policy_loss),
             "world_model_loss": float(self.last_wm_loss),
+            "wm_loss_ema": float(self.wm_loss_ema),
+            "is_bored": bool(self.is_bored),
+            "curiosity_alpha": float(self.curiosity_alpha),
             "consolidation_count": int(self.consolidation_count),
             "ewc_penalty": float(self.last_ewc_penalty),
             "fisher_norm": float(fisher_norm),

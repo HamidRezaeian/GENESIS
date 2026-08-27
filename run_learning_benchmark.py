@@ -1,4 +1,3 @@
-from brain_server import GenesisEngineRunner
 import sys
 import time
 import math
@@ -7,6 +6,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "src" / "genesis" / "server"))
+
+from brain_server import GenesisEngineRunner
 
 
 def main():

@@ -1502,6 +1502,27 @@
           <div class="sv" style="color:var(--purple2)">S-15<small>STABLE</small></div>
         </div>
       </div>
+      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
+        <span class="p-title"><i></i>CONTINUAL LEARNING (SUBSTRATE 16)</span>
+      </div>
+      <div class="statgrid">
+        <div class="stat">
+          <div class="sl">TD ERROR (EMA)</div>
+          <div class="sv" id="statTd" style="color:var(--cyan2)">—</div>
+        </div>
+        <div class="stat">
+          <div class="sl">WM LOSS (MSE)</div>
+          <div class="sv" id="statWm" style="color:var(--emerald)">—</div>
+        </div>
+        <div class="stat">
+          <div class="sl">WM LOSS (EMA)</div>
+          <div class="sv" id="statWmEma" style="color:#fcd34d">—</div>
+        </div>
+        <div class="stat">
+          <div class="sl">INTRINSIC DRIVE</div>
+          <div class="sv" id="statCuriosity" style="color:#fbbf24">0.2<small id="statBoredom">STABLE</small></div>
+        </div>
+      </div>
       <div class="spark-row">
         <div class="spark-wrap"><canvas id="sparkCanvas" aria-label="entropy income history"></canvas></div>
         <div class="spark-val"><span id="entropyVal">0.00</span><small>BITS / TICK · ΔH</small></div>
@@ -1586,7 +1607,8 @@
         actionProbs: [.25, .25, .25, .25], actionProbsT: [.25, .25, .25, .25],
         concepts: new Array(16).fill(0).map(() => Math.random() * .3), tree: null, selPath: new Set()
       },
-      meta: { energy: 1, hippoCount: 0, hippoCap: 5000, entropyIncome: 0 }
+      meta: { energy: 1, hippoCount: 0, hippoCap: 5000, entropyIncome: 0 },
+      learning: null
     };
     const entropyHist = new Array(140).fill(0); let entropySpike = 0, entropyEMA = 0;
 
@@ -1595,7 +1617,8 @@
     ['tickTop', 'genTop', 'fpsTop', 'feedPill', 'feedLabel', 'envHud', 'envHud2', 'envPanel',
       'symChar', 'symToken', 'symHex', 'symOption', 'hexwrap', 'concepts', 'symhist', 'treeSel',
       'energyPct', 'energyFill', 'hippoTxt', 'memseg', 'statTicks', 'statGen', 'pips', 'entropyVal',
-      'chatLog', 'chatForm', 'chatInput', 'metaPanel', 'visRot', 'visKey', 'actRows'
+      'chatLog', 'chatForm', 'chatInput', 'metaPanel', 'visRot', 'visKey', 'actRows',
+      'statTd', 'statWm', 'statWmEma', 'statCuriosity', 'statBoredom'
     ].forEach(id => el[id] = document.getElementById(id));
 
     /* ================================================================
@@ -1736,6 +1759,9 @@
         if (ap) o.cog.actionProbs = normProbs(ap);
         if (cp) o.cog.concepts = Array.from(cp).map(v => clamp01(+v || 0));
         if (tr) o.cog.tree = normTree(tr);
+      }
+      if (d.learning) {
+        o.learning = d.learning;
       }
       return o;
     }
@@ -1895,6 +1921,9 @@
         if (m.hippoCount != null) S.meta.hippoCount = m.hippoCount;
         if (m.hippoCap) S.meta.hippoCap = m.hippoCap;
         if (m.entropyIncome != null) S.meta.entropyIncome = m.entropyIncome;
+      }
+      if (n.learning) {
+        S.learning = n.learning;
       }
     }
 
@@ -2250,6 +2279,19 @@
 
       el.entropyVal.textContent = (S.live ? S.meta.entropyIncome : entropyEMA).toFixed(2);
       if (S.live) { entropyHist.push(S.meta.entropyIncome); entropyHist.shift(); }
+
+      if (el.statTd && S.learning) {
+        el.statTd.textContent = S.learning.td_error_ema.toFixed(4);
+        if (el.statWm) el.statWm.textContent = S.learning.world_model_loss.toFixed(4);
+        if (el.statWmEma) el.statWmEma.textContent = (S.learning.wm_loss_ema || 0).toFixed(4);
+        if (el.statCuriosity) {
+          el.statCuriosity.innerHTML = `${(S.learning.curiosity_alpha || 0).toFixed(2)}<small id="statBoredom">${S.learning.is_bored ? 'BORED' : 'STABLE'}</small>`;
+          const boredomEl = document.getElementById('statBoredom');
+          if (boredomEl) {
+             boredomEl.style.color = S.learning.is_bored ? 'var(--red2)' : 'var(--faint)';
+          }
+        }
+      }
 
       const p = S.cog.actionProbs; let mxI = 0;
       p.forEach((v, i) => { if (v > p[mxI]) mxI = i; });
