@@ -33,7 +33,7 @@ class Substrate21Engine(nn.Module):
         dim: int = 32,
         n_actions: int = 4,
         n_symbols: int = 64,
-        buffer_capacity: int = 5000,
+        buffer_capacity: int = 50000,
         replay_batch: int = 32,
         consolidation_period: int = 2000,
         n_cpc_negatives: int = 8,
@@ -152,7 +152,7 @@ class Substrate21Engine(nn.Module):
         self.eps = 1e-6
         
         # --- SI hyperparameters ---
-        self.xi = 0.1
+        self.xi = 0.05
         self.gamma_f = 0.5
         
         # --- Temp buffers for meta-state ---

@@ -81,9 +81,8 @@ def run_dmts_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning: bool,
         test_obs[:, :, distractor_id] = 0.8
 
         state = brain.forward_transformer(test_obs, "MATCH")
-        state_t = torch.tensor(state, dtype=brain.dtype, device=brain.device)
-        logits = torch.matmul(state_t, brain.W_policy)
-        action = int(torch.argmax(logits).item())
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        action = int(mcts_res["selected_action"])
 
         chosen_match = action % 4
         reward = 1.0 if (chosen_match == sample_id) else -0.5
@@ -117,9 +116,8 @@ def run_bit_parity_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
         query_obs = np.zeros((7, 7, 7), dtype=np.float32)
         query_obs[:, :, 4] = 1.0
         state = brain.forward_transformer(query_obs, "PARITY?")
-        state_t = torch.tensor(state, dtype=brain.dtype, device=brain.device)
-        logits = torch.matmul(state_t, brain.W_policy)
-        action = int(torch.argmax(logits).item())
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        action = int(mcts_res["selected_action"])
         predicted_parity = action % 2
 
         reward = 1.0 if (predicted_parity == true_parity) else -0.5
@@ -156,9 +154,8 @@ def run_arithmetic_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
         query_obs = np.zeros((7, 7, 7), dtype=np.float32)
         query_obs[:, :, 5] = 1.0
         state = brain.forward_transformer(query_obs, "ADD")
-        state_t = torch.tensor(state, dtype=brain.dtype, device=brain.device)
-        logits = torch.matmul(state_t, brain.W_policy)
-        action = int(torch.argmax(logits).item())
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        action = int(mcts_res["selected_action"])
         pred_sum = action % 4
 
         reward = 1.0 if (pred_sum == (true_sum % 4)) else -0.5
@@ -195,9 +192,8 @@ def run_navigation_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
             obs[3, 3, 3] = math.tanh(dy)
 
             state = brain.forward_transformer(obs, "NAV_GOAL")
-            state_t = torch.tensor(state, dtype=brain.dtype, device=brain.device)
-            logits = torch.matmul(state_t, brain.W_policy)
-            action = int(torch.argmax(logits).item())
+            mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+            action = int(mcts_res["selected_action"])
 
             if action == 0 and agent_pos[0] > 0:
                 agent_pos[0] -= 1
@@ -208,15 +204,27 @@ def run_navigation_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
             elif action == 3 and agent_pos[1] > 0:
                 agent_pos[1] -= 1
 
-            reward = 2.0 if np.array_equal(agent_pos, goal_pos) else -0.05
+            is_goal = np.array_equal(agent_pos, goal_pos)
+            
+            # Grounded Intrinsic Curiosity Reward (Rule 21 World Model prediction error)
+            sa_check = torch.zeros(36, dtype=brain.dtype, device=brain.device)
+            sa_check[:32] = torch.tensor(state, dtype=brain.dtype, device=brain.device)
+            sa_check[32 + action] = 1.0
+            pred_next = torch.tanh(torch.matmul(sa_check, brain.W_dyn))
+            
+            next_obs = np.zeros((7, 7, 7), dtype=np.float32)
+            next_obs[3, 3, 0] = float(agent_pos[0]) / 5.0
+            next_obs[3, 3, 1] = float(agent_pos[1]) / 5.0
+            next_state = brain.forward_transformer(next_obs, "NAV_STEP")
+            next_state_t = torch.tensor(next_state, dtype=brain.dtype, device=brain.device)
+            pred_err = torch.mean((next_state_t - pred_next) ** 2).item()
+            r_intrinsic = 0.5 * math.exp(-pred_err)
+
+            reward = (2.0 if is_goal else -0.05) + r_intrinsic
             if enable_learning:
-                next_obs = np.zeros((7, 7, 7), dtype=np.float32)
-                next_obs[3, 3, 0] = float(agent_pos[0]) / 5.0
-                next_obs[3, 3, 1] = float(agent_pos[1]) / 5.0
-                next_state = brain.forward_transformer(next_obs, "NAV_STEP")
                 brain.update_neural_weights(state, action, reward, next_state)
 
-            if np.array_equal(agent_pos, goal_pos):
+            if is_goal:
                 reached = True
                 break
 
@@ -251,9 +259,8 @@ def run_causal_intervention_trial(brain: GenesisPyTorchBrain, seed: int, enable_
         obs_intervene[:, :, 6] = 1.0
         state = brain.forward_transformer(obs_intervene, f"DO_Y_{intervene_Y}")
 
-        state_t = torch.tensor(state, dtype=brain.dtype, device=brain.device)
-        logits = torch.matmul(state_t, brain.W_policy)
-        action = int(torch.argmax(logits).item())
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        action = int(mcts_res["selected_action"])
         pred_W = action % 2
 
         reward = 1.0 if (pred_W == true_W) else -0.5

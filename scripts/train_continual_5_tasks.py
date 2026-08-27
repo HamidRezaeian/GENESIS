@@ -163,12 +163,22 @@ def train_navigation_episode(brain: GenesisPyTorchBrain, rng: np.random.RandomSt
             agent_pos[1] -= 1
 
         is_goal = np.array_equal(agent_pos, goal_pos)
-        reward = 2.0 if is_goal else -0.05
-
+        
+        # Grounded Intrinsic Curiosity Reward (Rule 21 World Model prediction error)
+        sa_check = torch.zeros(36, dtype=brain.dtype, device=brain.device)
+        sa_check[:32] = torch.tensor(state, dtype=brain.dtype, device=brain.device)
+        sa_check[32 + action] = 1.0
+        pred_next = torch.tanh(torch.matmul(sa_check, brain.W_dyn))
+        
         next_obs = np.zeros((7, 7, 7), dtype=np.float32)
         next_obs[3, 3, 0] = float(agent_pos[0]) / 5.0
         next_obs[3, 3, 1] = float(agent_pos[1]) / 5.0
         next_state = brain.forward_transformer(next_obs, "NAV_STEP")
+        next_state_t = torch.tensor(next_state, dtype=brain.dtype, device=brain.device)
+        pred_err = torch.mean((next_state_t - pred_next) ** 2).item()
+        r_intrinsic = 0.5 * math.exp(-pred_err)
+
+        reward = (2.0 if is_goal else -0.05) + r_intrinsic
         brain.update_neural_weights(state, action, reward, next_state)
 
         if is_goal:
@@ -231,9 +241,9 @@ def main():
     brain_dir = REPO_ROOT / "Brain"
     brain_dir.mkdir(exist_ok=True, parents=True)
 
-    # Training Hyperparameters
-    N_EPOCHS = 20
-    EPISODES_PER_TASK_PER_EPOCH = 10
+    # Training Hyperparameters (GLM 5.3 Optimal Guidance)
+    N_EPOCHS = 60
+    EPISODES_PER_TASK_PER_EPOCH = 25
     rng = np.random.RandomState(42)
 
     task_names = ["DMTS", "Bit Parity", "Arithmetic", "Navigation", "Causal Intervention"]
@@ -260,8 +270,8 @@ def main():
                 scores.append(score)
                 total_ticks += 1
 
-                # Periodic sleep consolidation every 200 ticks
-                if total_ticks % 200 == 0 and brain.hippocampus.size >= 10:
+                # Periodic sleep consolidation every 100 ticks
+                if total_ticks % 100 == 0 and brain.hippocampus.size >= 10:
                     brain.sleep_consolidation()
 
             epoch_scores[task_idx] = float(np.mean(scores))
@@ -270,9 +280,9 @@ def main():
         scores_str = " | ".join([f"{name[:4]}: {score*100:.1f}%" for name, score in zip(task_names, epoch_scores)])
         print(f"Epoch {epoch:2d}/{N_EPOCHS:2d} ({elapsed:.1f}s) | Hippo: {brain.hippocampus.size:4d} | {scores_str}", flush=True)
 
-    # Final Sleep Consolidation
+    # Final Sleep Consolidation (10 cycles)
     print("\nTriggering final circadian sleep consolidation...", flush=True)
-    for _ in range(5):
+    for _ in range(10):
         brain.sleep_consolidation()
 
     # Save trained checkpoint to canonical brain

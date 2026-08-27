@@ -17,7 +17,7 @@ MCTS_SIMS_EXPLORE = 16  # Number of PUCT simulations in Explore mode
 
 
 class EpisodicBuffer:
-    def __init__(self, capacity=5000, alpha=2.0, tau=0.3, beta=0.4, beta_is=0.6, td_clip=10.0, ema_decay=0.95, eps=1e-6):
+    def __init__(self, capacity=50000, alpha=2.0, tau=0.3, beta=0.6, beta_is=0.6, td_clip=10.0, ema_decay=0.95, eps=1e-6):
         self.capacity = capacity
         self.alpha = alpha
         self.tau = tau
@@ -107,7 +107,7 @@ class GenesisPyTorchBrain:
 
         self.seed = seed
         self.rng = np.random.RandomState(seed)
-        self.hippocampus = EpisodicBuffer(capacity=5000)
+        self.hippocampus = EpisodicBuffer(capacity=50000, beta=0.6)
 
         # Symbolic Abstraction (Substrate 11) & Grounding (Substrate 12)
         self.num_concepts = 16
@@ -214,7 +214,7 @@ class GenesisPyTorchBrain:
             dim=D_MODEL,
             n_actions=N_ACTIONS,
             n_symbols=VOCAB_SIZE,
-            buffer_capacity=5000,
+            buffer_capacity=50000,
             replay_batch=32,
             consolidation_period=2000,
             device=str(self.device)
