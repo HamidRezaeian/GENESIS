@@ -13,6 +13,80 @@ MCTS_SIMS_DIRECTED = 32  # Number of PUCT simulations in Directed mode
 MCTS_SIMS_EXPLORE = 16  # Number of PUCT simulations in Explore mode
 
 
+class EpisodicBuffer:
+    def __init__(self, capacity=5000, alpha=2.0, tau=0.3, beta=0.4, beta_is=0.6, td_clip=10.0, ema_decay=0.95, eps=1e-6):
+        self.capacity = capacity
+        self.alpha = alpha
+        self.tau = tau
+        self.beta = beta
+        self.beta_is = beta_is
+        self.beta_is_anneal = 1e-5
+        self.td_clip = td_clip
+        self.ema_decay = ema_decay
+        self.eps = eps
+        self.transitions = []
+        self.priorities = np.zeros(capacity, dtype=np.float32)
+        self.position = 0
+        self.size = 0
+        self.ram_bytes_per_transition = 0
+
+    def add(self, state, action, reward, next_state, done, td_error, epistemic_entropy):
+        td_clipped = min(abs(float(td_error)), self.td_clip)
+        gate = 1.0 / (1.0 + math.exp(-self.alpha * (float(epistemic_entropy) - self.tau)))
+        raw_priority = td_clipped * gate
+        
+        if self.size > 0:
+            old_p = self.priorities[self.position]
+            priority = self.ema_decay * old_p + (1 - self.ema_decay) * raw_priority
+        else:
+            priority = raw_priority
+            
+        priority = max(self.eps, min(priority, self.td_clip))
+        
+        transition = {
+            's_curr': state,
+            'action': action,
+            'reward': reward,
+            's_next': next_state,
+            'is_terminal': done,
+            'epistemic_entropy': float(epistemic_entropy)
+        }
+        
+        if self.size < self.capacity:
+            self.transitions.append(transition)
+            self.size += 1
+        else:
+            self.transitions[self.position] = transition
+            
+        self.ram_bytes_per_transition = state.nbytes + next_state.nbytes + 64
+            
+        self.priorities[self.position] = priority
+        self.position = (self.position + 1) % self.capacity
+
+    def sample(self, batch_size):
+        if self.size == 0:
+            return None, None, None
+            
+        self.beta_is = min(1.0, self.beta_is + self.beta_is_anneal)
+        priorities = self.priorities[:self.size] ** self.beta
+        probs = priorities / (priorities.sum() + self.eps)
+        
+        indices = np.random.choice(self.size, batch_size, p=probs, replace=True)
+        is_weights = (1.0 / (self.size * probs[indices] + self.eps)) ** self.beta_is
+        is_weights = is_weights / is_weights.max()
+        
+        batch = [self.transitions[idx] for idx in indices]
+        return batch, indices, is_weights
+
+    def update_priorities(self, indices, new_td_errors, new_epistemic_entropies):
+        for i, idx in enumerate(indices):
+            td_clipped = min(abs(float(new_td_errors[i])), self.td_clip)
+            gate = 1.0 / (1.0 + math.exp(-self.alpha * (float(new_epistemic_entropies[i]) - self.tau)))
+            raw = td_clipped * gate
+            old = self.priorities[idx]
+            new_p = self.ema_decay * old + (1 - self.ema_decay) * raw
+            self.priorities[idx] = max(self.eps, min(new_p, self.td_clip))
+
 class GenesisPyTorchBrain:
     def __init__(self, device="cuda"):
         self.device = torch.device(
@@ -20,7 +94,7 @@ class GenesisPyTorchBrain:
         self.dtype = torch.float16 if self.device.type == "cuda" else torch.float32
 
         self.rng = np.random.RandomState(42)
-        self.hippocampus = []
+        self.hippocampus = EpisodicBuffer(capacity=5000)
 
         # Symbolic Abstraction (Substrate 11) & Grounding (Substrate 12)
         self.num_concepts = 16
@@ -64,15 +138,31 @@ class GenesisPyTorchBrain:
 
         self.state_history = []
         self.init_weights()
-        self.fisher_diag = {
-            "W_dyn": torch.zeros((D_MODEL + N_ACTIONS, D_MODEL), dtype=self.dtype, device=self.device),
-            "W_causal": torch.zeros((D_MODEL, D_MODEL), dtype=self.dtype, device=self.device),
-            "W_goal": torch.zeros((D_MODEL, D_MODEL), dtype=self.dtype, device=self.device)
+        
+        # Substrate 17: Synaptic Intelligence (SI) Accumulators
+        self.si_W = {
+            "W_dyn": torch.zeros_like(self.W_dyn),
+            "W_rew": torch.zeros_like(self.W_rew),
+            "W_val": torch.zeros_like(self.W_val),
+            "W_policy": torch.zeros_like(self.W_policy)
         }
-        self.anchor_weights = {
+        self.si_omega = {
+            "W_dyn": torch.zeros_like(self.W_dyn),
+            "W_rew": torch.zeros_like(self.W_rew),
+            "W_val": torch.zeros_like(self.W_val),
+            "W_policy": torch.zeros_like(self.W_policy)
+        }
+        self.si_theta_star = {
             "W_dyn": self.W_dyn.clone(),
-            "W_causal": self.W_causal.clone(),
-            "W_goal": self.W_goal.clone()
+            "W_rew": self.W_rew.clone(),
+            "W_val": self.W_val.clone(),
+            "W_policy": self.W_policy.clone()
+        }
+        self.si_theta_start = {
+            "W_dyn": self.W_dyn.clone(),
+            "W_rew": self.W_rew.clone(),
+            "W_val": self.W_val.clone(),
+            "W_policy": self.W_policy.clone()
         }
 
         # Continual Learning Instrumentation (Milestone 1)
@@ -681,18 +771,23 @@ class GenesisPyTorchBrain:
             if self.calib_ema > D_MODEL:
                 self.I_dyn *= (D_MODEL / self.calib_ema)
 
-        # EWC Regularization for Zero Forgetting (Rule 24)
-        ewc_penalty = 0.5 * \
-            self.fisher_diag["W_dyn"] * \
-            (self.W_dyn - self.anchor_weights["W_dyn"])
-        self.W_dyn = self._sanitize(
-            self.W_dyn + 0.005 * grad_dyn - 1e-6 * self.W_dyn - 0.005 * ewc_penalty)
+        # Substrate 17: Synaptic Intelligence Regularization
+        si_penalty_dyn = 0.5 * self.si_omega["W_dyn"] * (self.W_dyn - self.si_theta_star["W_dyn"])
+        delta_W_dyn = 0.005 * grad_dyn - 1e-6 * self.W_dyn - 0.005 * si_penalty_dyn
+        self.W_dyn = self._sanitize(self.W_dyn + delta_W_dyn)
+        if not is_replay:
+            self.si_W["W_dyn"] += grad_dyn * delta_W_dyn
 
         # Reward Prediction
         pred_rew = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1)
         err_rew = rew_val - pred_rew
-        self.W_rew = self._sanitize(
-            self.W_rew + 0.005 * (sa * err_rew) - 1e-6 * self.W_rew)
+        
+        grad_rew = sa * err_rew
+        si_penalty_rew = 0.5 * self.si_omega["W_rew"] * (self.W_rew - self.si_theta_star["W_rew"])
+        delta_W_rew = 0.005 * grad_rew - 1e-6 * self.W_rew - 0.005 * si_penalty_rew
+        self.W_rew = self._sanitize(self.W_rew + delta_W_rew)
+        if not is_replay:
+            self.si_W["W_rew"] += grad_rew * delta_W_rew
 
         # Value Function (TD Learning) with Substrate 16 Autotelic Reward
         v_curr = torch.matmul(s_curr, self.W_val.unsqueeze(-1)).squeeze(-1)
@@ -707,8 +802,13 @@ class GenesisPyTorchBrain:
         target_v = composite_reward + 0.95 * v_next
         td_err = target_v - v_curr
 
-        self.W_val = self._sanitize(
-            self.W_val + 0.005 * (s_curr * td_err) - 1e-6 * self.W_val)
+        grad_val = s_curr * td_err
+        si_penalty_val = 0.5 * self.si_omega["W_val"] * (self.W_val - self.si_theta_star["W_val"])
+        delta_W_val = 0.005 * grad_val - 1e-6 * self.W_val - 0.005 * si_penalty_val
+        self.W_val = self._sanitize(self.W_val + delta_W_val)
+        if not is_replay:
+            self.si_W["W_val"] += grad_val * delta_W_val
+            
         self.W_val_target = self._sanitize(
             0.995 * self.W_val_target + 0.005 * self.W_val)
 
@@ -719,8 +819,12 @@ class GenesisPyTorchBrain:
             N_ACTIONS, dtype=self.dtype, device=self.device)
         target_policy[action] = 1.0
         grad_pol = torch.outer(s_curr, target_policy - probs)
-        self.W_policy = self._sanitize(
-            self.W_policy + 0.005 * grad_pol - 1e-6 * self.W_policy)
+        
+        si_penalty_pol = 0.5 * self.si_omega["W_policy"] * (self.W_policy - self.si_theta_star["W_policy"])
+        delta_W_pol = 0.005 * grad_pol - 1e-6 * self.W_policy - 0.005 * si_penalty_pol
+        self.W_policy = self._sanitize(self.W_policy + delta_W_pol)
+        if not is_replay:
+            self.si_W["W_policy"] += grad_pol * delta_W_pol
 
         surprise = float(torch.abs(td_err).item())
         if not math.isfinite(surprise):
@@ -745,22 +849,22 @@ class GenesisPyTorchBrain:
             self.is_bored = False
             self.curiosity_alpha = 0.2  # Return to baseline
 
-        self.last_ewc_penalty = float(torch.norm(ewc_penalty).item())
+        self.last_ewc_penalty = float(torch.norm(si_penalty_dyn).item())
         self.last_grad_norm = float(torch.norm(
             grad_dyn).item() + torch.norm(grad_pol).item())
         self.learn_step_count += 1
 
         if not is_replay:
-            if len(self.hippocampus) >= 5000:
-                self.hippocampus.pop(0)
-            self.hippocampus.append({
-                "s_curr": s_curr_np.copy(),
-                "action": action,
-                "reward": reward,
-                "s_next": s_next_np.copy(),
-                "is_terminal": is_terminal,
-                "surprise": surprise + 1e-5
-            })
+            epistemic_entropy_val = self.epistemic_entropy(s_curr, action)
+            self.hippocampus.add(
+                state=s_curr_np.copy(),
+                action=action,
+                reward=reward,
+                next_state=s_next_np.copy(),
+                done=is_terminal,
+                td_error=td_err.item(),
+                epistemic_entropy=epistemic_entropy_val
+            )
 
         return {
             "loss": loss_dyn.item() / 32.0,
@@ -788,13 +892,10 @@ class GenesisPyTorchBrain:
         grad_dyn = (1.0 - pred_next ** 2) * err_dyn
         batch_grad = torch.matmul(sa.T, grad_dyn) / B
 
-        G = batch_grad ** 2
-        self.fisher_diag["W_dyn"] += 0.01 * G
-
-        ewc_penalty = 0.5 * \
-            self.fisher_diag["W_dyn"] * \
-            (self.W_dyn - self.anchor_weights["W_dyn"])
-        self.W_dyn += 0.005 * batch_grad - 1e-6 * self.W_dyn - 0.005 * ewc_penalty
+        si_penalty_dyn = 0.5 * \
+            self.si_omega["W_dyn"] * \
+            (self.W_dyn - self.si_theta_star["W_dyn"])
+        self.W_dyn += 0.005 * batch_grad - 1e-6 * self.W_dyn - 0.005 * si_penalty_dyn
 
         pred_rew = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1)
         err_rew = reward - pred_rew
@@ -826,32 +927,48 @@ class GenesisPyTorchBrain:
         }
 
     def sleep_consolidation(self) -> int:
-        if len(self.hippocampus) < 10:
+        if self.hippocampus.size < 10:
             return 0
-        replays = min(50, len(self.hippocampus))
+        replays = min(50, self.hippocampus.size)
 
-        indices = self.rng.choice(
-            len(self.hippocampus), size=replays, replace=False)
-        s_curr_b = np.stack([self.hippocampus[idx]["s_curr"]
-                            for idx in indices])
-        action_b = np.array([self.hippocampus[idx]["action"]
-                            for idx in indices], dtype=np.int64)
-        reward_b = np.array([self.hippocampus[idx]["reward"]
-                            for idx in indices], dtype=np.float32)
-        s_next_b = np.stack([self.hippocampus[idx]["s_next"]
-                            for idx in indices])
-        term_b = np.array([self.hippocampus[idx].get(
-            "is_terminal", False) for idx in indices], dtype=bool)
+        batch, indices, is_weights = self.hippocampus.sample(replays)
+        if batch is None:
+            return 0
+            
+        s_curr_b = np.stack([t["s_curr"] for t in batch])
+        action_b = np.array([t["action"] for t in batch], dtype=np.int64)
+        reward_b = np.array([t["reward"] for t in batch], dtype=np.float32)
+        s_next_b = np.stack([t["s_next"] for t in batch])
+        term_b = np.array([t.get("is_terminal", False) for t in batch], dtype=bool)
 
         batch_metrics = self.update_neural_weights_batch(
             s_curr_b, action_b, reward_b, s_next_b, term_b)
 
-        for i, idx in enumerate(indices):
-            self.hippocampus[idx]["surprise"] = float(
-                batch_metrics["td_errs"][i]) + 1e-5
+        # Update priorities in EpisodicBuffer
+        # We need epistemic entropy for each replayed transition
+        new_epistemic_entropies = []
+        for i in range(replays):
+            s_curr_t = torch.tensor(s_curr_b[i], dtype=self.dtype, device=self.device)
+            new_epistemic_entropies.append(self.epistemic_entropy(s_curr_t, int(action_b[i])))
+            
+        self.hippocampus.update_priorities(indices, batch_metrics["td_errs"], new_epistemic_entropies)
 
-        self.anchor_weights["W_dyn"] = self.W_dyn.clone()
-        self.anchor_weights["W_causal"] = self.W_causal.clone()
+        # Substrate 17: SI Consolidation and Fisher Injection
+        for k in ["W_dyn", "W_rew", "W_val", "W_policy"]:
+            W_current = getattr(self, k)
+            delta = W_current - self.si_theta_start[k]
+            normalized = self.si_W[k] / (delta.pow(2) + 0.1)
+            
+            fisher_seed = 0.0
+            if k == "W_dyn":
+                # Inject Fisher precision from Substrate 14
+                fisher_seed = 0.5 * self.I_dyn.clone()
+                
+            self.si_omega[k] = self.si_omega[k] + normalized + fisher_seed
+            self.si_theta_star[k] = W_current.clone()
+            self.si_theta_start[k] = W_current.clone()
+            self.si_W[k].zero_()
+
         self.consolidation_count += 1
         return replays
 
