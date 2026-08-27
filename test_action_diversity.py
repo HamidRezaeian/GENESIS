@@ -1,4 +1,7 @@
-import asyncio, aiohttp, json
+import asyncio
+import aiohttp
+import json
+
 
 async def main():
     session = aiohttp.ClientSession()
@@ -11,8 +14,8 @@ async def main():
             sa = d.get("mcts", {}).get("selected_action", -1)
             pos = d.get("agentPos", [])
             tick = d.get("tick", 0)
-            print(f"Tick {tick}: probs={[round(p,3) for p in ap]}  action={sa}  pos={pos}")
+            print(
+                f"Tick {tick}: probs={[round(p, 3) for p in ap]}  action={sa}  pos={pos}")
     await session.close()
 
 asyncio.run(main())
-
