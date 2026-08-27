@@ -99,12 +99,13 @@ class EpisodicBuffer:
             self.priorities[idx] = max(self.eps, min(new_p, self.td_clip))
 
 class GenesisPyTorchBrain:
-    def __init__(self, device="cuda"):
+    def __init__(self, device="cuda", seed=42):
         self.device = torch.device(
             device if torch.cuda.is_available() else "cpu")
         self.dtype = torch.float16 if self.device.type == "cuda" else torch.float32
 
-        self.rng = np.random.RandomState(42)
+        self.seed = seed
+        self.rng = np.random.RandomState(seed)
         self.hippocampus = EpisodicBuffer(capacity=5000)
 
         # Symbolic Abstraction (Substrate 11) & Grounding (Substrate 12)
@@ -287,7 +288,7 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def forward_transformer(self, obs_vis: np.ndarray, text_str: str) -> np.ndarray:
-        obs = torch.tensor(obs_vis, dtype=self.dtype, device=self.device)
+        obs = torch.tensor(obs_vis, dtype=self.dtype, device=self.device).flatten()
         text_emb = self.encode_text(text_str)
 
         z_vis = torch.matmul(obs, self.W_vis)
