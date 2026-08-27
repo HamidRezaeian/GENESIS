@@ -1527,6 +1527,23 @@
         <div class="spark-wrap"><canvas id="sparkCanvas" aria-label="entropy income history"></canvas></div>
         <div class="spark-val"><span id="entropyVal">0.00</span><small>BITS / TICK · ΔH</small></div>
       </div>
+      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
+        <span class="p-title"><i></i>EPISODIC MEMORY (SUBSTRATE 18)</span>
+      </div>
+      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="stat">
+          <div class="sl">CONSOLIDATIONS</div>
+          <div class="sv" id="statConsolidation" style="color:var(--purple2)">—</div>
+        </div>
+        <div class="stat">
+          <div class="sl">FISHER NORM (SI)</div>
+          <div class="sv" id="statFisher" style="color:var(--emerald)">—</div>
+        </div>
+        <div class="stat">
+          <div class="sl">MEM TAX (ENERGY)</div>
+          <div class="sv" id="statMemTax" style="color:var(--red)">—</div>
+        </div>
+      </div>
     </section>
 
     <!-- 4 · MCTS -->
@@ -1618,7 +1635,8 @@
       'symChar', 'symToken', 'symHex', 'symOption', 'hexwrap', 'concepts', 'symhist', 'treeSel',
       'energyPct', 'energyFill', 'hippoTxt', 'memseg', 'statTicks', 'statGen', 'pips', 'entropyVal',
       'chatLog', 'chatForm', 'chatInput', 'metaPanel', 'visRot', 'visKey', 'actRows',
-      'statTd', 'statWm', 'statWmEma', 'statCuriosity', 'statBoredom'
+      'statTd', 'statWm', 'statWmEma', 'statCuriosity', 'statBoredom',
+      'statConsolidation', 'statFisher', 'statMemTax'
     ].forEach(id => el[id] = document.getElementById(id));
 
     /* ================================================================
@@ -2290,6 +2308,15 @@
           if (boredomEl) {
              boredomEl.style.color = S.learning.is_bored ? 'var(--red2)' : 'var(--faint)';
           }
+        }
+        if (el.statConsolidation && S.learning.consolidation_count != null) {
+          el.statConsolidation.textContent = S.learning.consolidation_count;
+        }
+        if (el.statFisher && S.learning.fisher_norm != null) {
+          el.statFisher.textContent = S.learning.fisher_norm.toFixed(4);
+        }
+        if (el.statMemTax && S.learning.last_memory_cost != null) {
+          el.statMemTax.textContent = S.learning.last_memory_cost.toExponential(2);
         }
       }
 
