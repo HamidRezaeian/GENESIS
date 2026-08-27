@@ -1546,7 +1546,8 @@
       </div>
       <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
         <span class="p-title"><i></i>BEHAVIORAL EMERGENCE (SUBSTRATE 18)</span>
-        <span class="p-sub" id="statEmergenceBadge" style="font-weight:700; color:var(--amber)">AWAITING DEEP TIME</span>
+        <span class="p-sub" id="statEmergenceBadge" style="font-weight:700; color:var(--amber)">AWAITING DEEP
+          TIME</span>
       </div>
       <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
         <div class="stat">
@@ -1580,6 +1581,50 @@
         <div class="stat">
           <div class="sl">PROBE METABOLIC TAX</div>
           <div class="sv" id="statEmergenceTax" style="color:var(--red)">0.00</div>
+        </div>
+      </div>
+      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
+        <span class="p-title"><i></i>NEUROGENESIS & REASONING (SUBSTRATE 19)</span>
+        <span class="p-sub" id="statSub19Badge" style="font-weight:700; color:var(--cyan)">OSCILLATOR ACTIVE</span>
+      </div>
+      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
+        <div class="stat">
+          <div class="sl">CLOCK PHASE (φ)</div>
+          <div class="sv" id="statClockPhase" style="color:var(--cyan)">0.0°</div>
+        </div>
+        <div class="stat">
+          <div class="sl">PLL GATES (W/R/C)</div>
+          <div class="sv" id="statGates" style="color:var(--purple2)">—</div>
+        </div>
+        <div class="stat">
+          <div class="sl">STRUCT SPARSITY (ρ)</div>
+          <div class="sv" id="statSparsity" style="color:var(--emerald)">70.0%</div>
+        </div>
+        <div class="stat">
+          <div class="sl">BINDING ENTROPY</div>
+          <div class="sv" id="statBindingEntropy" style="color:var(--amber)">0.00</div>
+        </div>
+      </div>
+      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
+        <span class="p-title"><i></i>COUNTERFACTUAL & TOM (SUBSTRATE 20)</span>
+        <span class="p-sub" id="statSub20Badge" style="font-weight:700; color:var(--purple2)">SEMIOGENESIS ACTIVE</span>
+      </div>
+      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
+        <div class="stat">
+          <div class="sl">IMAG BRANCH (Beff)</div>
+          <div class="sv" id="statImagEff" style="color:var(--cyan)">4.0</div>
+        </div>
+        <div class="stat">
+          <div class="sl">TOM PRED ERROR</div>
+          <div class="sv" id="statTomError" style="color:var(--red)">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="sl">GROUNDING (||G||)</div>
+          <div class="sv" id="statGroundingNorm" style="color:var(--emerald)">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="sl">MUTUAL INFO (Î)</div>
+          <div class="sv" id="statSymMi" style="color:var(--amber)">0.00</div>
         </div>
       </div>
     </section>
@@ -1676,7 +1721,9 @@
       'statTd', 'statWm', 'statWmEma', 'statCuriosity', 'statBoredom',
       'statConsolidation', 'statFisher', 'statMemTax',
       'statEmergenceBadge', 'statLatentK', 'statLatentSil', 'statGoalDiv',
-      'statActEntropy', 'statBehModes', 'statComplexity', 'statMannKendall', 'statEmergenceTax'
+      'statActEntropy', 'statBehModes', 'statComplexity', 'statMannKendall', 'statEmergenceTax',
+      'statSub19Badge', 'statClockPhase', 'statGates', 'statSparsity', 'statBindingEntropy',
+      'statSub20Badge', 'statImagEff', 'statTomError', 'statGroundingNorm', 'statSymMi'
     ].forEach(id => el[id] = document.getElementById(id));
 
     /* ================================================================
@@ -1985,6 +2032,12 @@
       }
       if (n.emergence) {
         S.emergence = n.emergence;
+      }
+      if (n.substrate19) {
+        S.substrate19 = n.substrate19;
+      }
+      if (n.substrate20) {
+        S.substrate20 = n.substrate20;
       }
     }
 
@@ -2349,7 +2402,7 @@
           el.statCuriosity.innerHTML = `${(S.learning.curiosity_alpha || 0).toFixed(2)}<small id="statBoredom">${S.learning.is_bored ? 'BORED' : 'STABLE'}</small>`;
           const boredomEl = document.getElementById('statBoredom');
           if (boredomEl) {
-             boredomEl.style.color = S.learning.is_bored ? 'var(--red2)' : 'var(--faint)';
+            boredomEl.style.color = S.learning.is_bored ? 'var(--red2)' : 'var(--faint)';
           }
         }
         if (el.statConsolidation && S.learning.consolidation_count != null) {
@@ -2384,6 +2437,27 @@
             el.statEmergenceBadge.style.color = 'var(--amber)';
           }
         }
+      }
+
+      if (S.substrate19) {
+        const s19 = S.substrate19;
+        if (el.statClockPhase) el.statClockPhase.textContent = `${(s19.clock_phase_deg ?? 0.0).toFixed(0)}°`;
+        if (el.statGates) {
+          const w = (s19.write_gate ?? 0.0).toFixed(2);
+          const r = (s19.read_gate ?? 0.0).toFixed(2);
+          const c = (s19.chain_gate ?? 0.0).toFixed(2);
+          el.statGates.textContent = `${w}/${r}/${c}`;
+        }
+        if (el.statSparsity) el.statSparsity.textContent = `${((s19.structural_sparsity ?? 0.70) * 100).toFixed(1)}%`;
+        if (el.statBindingEntropy) el.statBindingEntropy.textContent = (s19.binding_entropy ?? 0.0).toFixed(2);
+      }
+
+      if (S.substrate20) {
+        const s20 = S.substrate20;
+        if (el.statImagEff) el.statImagEff.textContent = (s20.imag_branch_eff ?? 4.0).toFixed(1);
+        if (el.statTomError) el.statTomError.textContent = (s20.tom_pred_error ?? 0.0).toFixed(3);
+        if (el.statGroundingNorm) el.statGroundingNorm.textContent = (s20.sym_grounding_norm ?? 0.0).toFixed(2);
+        if (el.statSymMi) el.statSymMi.textContent = (s20.sym_mi ?? 0.0).toFixed(3);
       }
 
       const p = S.cog.actionProbs; let mxI = 0;

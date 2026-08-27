@@ -1004,7 +1004,9 @@ class GenesisEngineRunner:
                 "tree": mcts_info
             },
             "learning": self.brain.get_learning_telemetry(),
-            "emergence": self.emergence_suite.get_telemetry().to_dict()
+            "emergence": self.emergence_suite.get_telemetry().to_dict(),
+            "substrate19": self.brain.substrate19.get_telemetry(),
+            "substrate20": self.brain.substrate20.get_telemetry()
         }
         return sanitize_floats(payload)
 

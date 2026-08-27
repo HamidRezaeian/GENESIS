@@ -3,6 +3,8 @@ import torch.nn.functional as F
 import numpy as np
 import math
 from pathlib import Path
+from .substrate19_engine import Substrate19Engine
+from .substrate20_engine import Substrate20Engine
 
 VISUAL_DIM = 7 * 7 * 7  # 343
 D_MODEL = 32
@@ -197,6 +199,14 @@ class GenesisPyTorchBrain:
         self.MEMORY_MAINTENANCE_RATE = 1e-6
         self.last_memory_cost = 0.0
 
+        # Substrate 19: Structural Neurogenesis & Compositional Reasoning Engine
+        self.substrate19 = Substrate19Engine(dim=D_MODEL, device=str(self.device))
+
+        # Substrate 20: Counterfactual Imagination, Latent ToM & Emergent Symbolic Communication
+        self.substrate20 = Substrate20Engine(dim=D_MODEL, device=str(self.device))
+        self.last_vocal_in = torch.zeros(64, dtype=torch.float16, device=self.device)
+        self.last_peer_obs = torch.zeros(4, 73, dtype=torch.float16, device=self.device)
+
     def _snapshot_initial_params(self):
         self.initial_params = {}
         for attr in dir(self):
@@ -316,7 +326,21 @@ class GenesisPyTorchBrain:
 
         ff1 = torch.relu(torch.matmul(mixed, self.W_ff1))
         ff2 = torch.matmul(ff1, self.W_ff2)
-        out = self._sanitize(mixed + ff2)
+
+        # Substrate 19: Phase-Locked Compositional Memory & Structural Neurogenesis
+        r_t, _ = self.substrate19(fused.unsqueeze(0), fused_v.unsqueeze(0))
+
+        # Substrate 20: Counterfactual World Modeling, Latent ToM & Emergent Communication
+        s20_out = self.substrate20(
+            h_t=fused.unsqueeze(0),
+            v_t=fused_v.unsqueeze(0),
+            peer_obs=self.last_peer_obs,
+            vocal_in=self.last_vocal_in,
+            phase=self.substrate19.T_phase,
+        )
+        h_s20 = s20_out["h_next"].squeeze(0).to(self.dtype)
+
+        out = self._sanitize(mixed + ff2 + r_t.squeeze(0).to(self.dtype) + h_s20)
         return out.cpu().numpy().astype(np.float32)
 
     @torch.no_grad()
