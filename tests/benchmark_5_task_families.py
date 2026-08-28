@@ -81,7 +81,7 @@ def run_dmts_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning: bool,
         test_obs[:, :, distractor_id] = 0.8
 
         state = brain.forward_transformer(test_obs, "MATCH")
-        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED", task_id=0)
         probs = np.array(mcts_res["action_probs"])
         chosen_match = int(np.argmax(probs))
         action = chosen_match
@@ -92,7 +92,7 @@ def run_dmts_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning: bool,
 
         if enable_learning:
             next_state = state + np.random.randn(32).astype(np.float32) * 0.01
-            brain.update_neural_weights(state, action, reward, next_state)
+            brain.update_neural_weights(state, action, reward, next_state, task_id=0)
 
     return correct / n_trials
 
@@ -117,7 +117,7 @@ def run_bit_parity_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
         query_obs = np.zeros((7, 7, 7), dtype=np.float32)
         query_obs[:, :, 4] = 1.0
         state = brain.forward_transformer(query_obs, "PARITY?")
-        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED", task_id=1)
         probs = np.array(mcts_res["action_probs"])
         predicted_parity = int(np.argmax(probs)) % 2
         action = predicted_parity
@@ -128,7 +128,7 @@ def run_bit_parity_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
 
         if enable_learning:
             next_state = state + np.random.randn(32).astype(np.float32) * 0.01
-            brain.update_neural_weights(state, action, reward, next_state)
+            brain.update_neural_weights(state, action, reward, next_state, task_id=1)
 
     return correct / n_trials
 
@@ -156,7 +156,7 @@ def run_arithmetic_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
         query_obs = np.zeros((7, 7, 7), dtype=np.float32)
         query_obs[:, :, 5] = 1.0
         state = brain.forward_transformer(query_obs, "ADD")
-        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED", task_id=2)
         probs = np.array(mcts_res["action_probs"])
         
         # Modulo-Decoupled MCTS class accumulation (GLM 5.3 Option 1)
@@ -172,7 +172,7 @@ def run_arithmetic_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
 
         if enable_learning:
             next_state = state + np.random.randn(32).astype(np.float32) * 0.01
-            brain.update_neural_weights(state, action, reward, next_state)
+            brain.update_neural_weights(state, action, reward, next_state, task_id=2)
 
     return correct / n_trials
 
@@ -200,7 +200,7 @@ def run_navigation_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
             obs[3, 3, 3] = math.tanh(dy)
 
             state = brain.forward_transformer(obs, "NAV_GOAL")
-            mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+            mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED", task_id=3)
             action = int(mcts_res["selected_action"])
 
             if action == 0 and agent_pos[0] > 0:
@@ -218,7 +218,7 @@ def run_navigation_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
             sa_check = torch.zeros(36, dtype=brain.dtype, device=brain.device)
             sa_check[:32] = torch.tensor(state, dtype=brain.dtype, device=brain.device)
             sa_check[32 + action] = 1.0
-            pred_next = torch.tanh(torch.matmul(sa_check, brain.W_dyn))
+            pred_next = brain.substrate22.world_model(sa_check, task_id=3)
             
             next_obs = np.zeros((7, 7, 7), dtype=np.float32)
             next_obs[3, 3, 0] = float(agent_pos[0]) / 5.0
@@ -230,7 +230,7 @@ def run_navigation_trial(brain: GenesisPyTorchBrain, seed: int, enable_learning:
 
             reward = (2.0 if is_goal else -0.05) + r_intrinsic
             if enable_learning:
-                brain.update_neural_weights(state, action, reward, next_state)
+                brain.update_neural_weights(state, action, reward, next_state, task_id=3)
 
             if is_goal:
                 reached = True
@@ -267,7 +267,7 @@ def run_causal_intervention_trial(brain: GenesisPyTorchBrain, seed: int, enable_
         obs_intervene[:, :, 6] = 1.0
         state = brain.forward_transformer(obs_intervene, f"DO_Y_{intervene_Y}")
 
-        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED")
+        mcts_res = brain.run_hierarchical_mcts(state, policy_mode="DIRECTED", task_id=4)
         probs = np.array(mcts_res["action_probs"])
         
         # Modulo-Decoupled MCTS class accumulation (GLM 5.3 Option 1)
@@ -283,7 +283,7 @@ def run_causal_intervention_trial(brain: GenesisPyTorchBrain, seed: int, enable_
 
         if enable_learning:
             next_state = state + np.random.randn(32).astype(np.float32) * 0.01
-            brain.update_neural_weights(state, action, reward, next_state)
+            brain.update_neural_weights(state, action, reward, next_state, task_id=4)
 
     return correct / n_trials
 

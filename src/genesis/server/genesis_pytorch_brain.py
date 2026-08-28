@@ -2,10 +2,12 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import math
+from typing import Optional, Dict, List, Tuple, Any
 from pathlib import Path
 from .substrate19_engine import Substrate19Engine
 from .substrate20_engine import Substrate20Engine
 from .substrate21_engine import Substrate21Engine
+from .substrate22_engine import Substrate22Engine
 
 VISUAL_DIM = 7 * 7 * 7  # 343
 D_MODEL = 32
@@ -252,6 +254,15 @@ class GenesisPyTorchBrain:
             device=str(self.device)
         )
 
+        # Substrate 22: Multi-Task Conditional World Model & Adaptive Policy Distillation
+        self.substrate22 = Substrate22Engine(
+            dim=D_MODEL,
+            n_actions=N_ACTIONS,
+            n_symbols=VOCAB_SIZE,
+            n_tasks=5,
+            device=str(self.device)
+        )
+
     def _snapshot_initial_params(self):
         self.initial_params = {}
         for attr in dir(self):
@@ -482,9 +493,9 @@ class GenesisPyTorchBrain:
         return np.ascontiguousarray(state_np).tobytes().hex()[:16]
 
     @torch.no_grad()
-    def run_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED") -> dict:
+    def run_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED", task_id: int = 0) -> dict:
         """
-        AlphaZero-Style PUCT with trained weights W_policy, W_dyn, W_val (Clean MCTS).
+        AlphaZero-Style PUCT with trained weights W_policy, Substrate 22 W_dyn(tau), W_val (Clean MCTS).
         Bounded depth (max_depth=6) with GPU Tensor Core acceleration and zero infinite-loop risk.
         """
         n_sims = 16 if policy_mode == "DIRECTED" else 8
@@ -509,7 +520,7 @@ class GenesisPyTorchBrain:
             puct_scores = q_mean + u_score
             selected_a = int(torch.argmax(puct_scores).item())
             
-            # 2. Rollout using World Model W_dyn up to max_depth
+            # 2. Rollout using Substrate 22 Task-Conditioned World Model up to max_depth
             curr_s = root_state.clone()
             discount = 1.0
             path_return = 0.0
@@ -519,7 +530,8 @@ class GenesisPyTorchBrain:
                 sa[:32] = curr_s
                 sa[32 + (selected_a if d == 0 else torch.randint(0, N_ACTIONS, (1,), device=self.device).item())] = 1.0
                 
-                next_s = torch.tanh(self._sanitize(torch.matmul(sa, self.W_dyn)))
+                # Substrate 22 Task-Conditioned World Model (FiLM + Bottleneck Residual)
+                next_s = self.substrate22.world_model(sa, task_id)
                 
                 # Intermediate reward prediction
                 r_step = float(torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item())
@@ -682,15 +694,15 @@ class GenesisPyTorchBrain:
         }
 
     @torch.no_grad()
-    def run_hierarchical_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED") -> dict:
+    def run_hierarchical_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED", task_id: int = 0) -> dict:
         """
-        Clean MCTS on root_state directly using trained W_dyn, W_val, W_policy.
+        Clean MCTS on root_state directly using trained Substrate 22 W_dyn(tau), W_val, W_policy.
         Eliminates untrained random symbol and option embedding distortion.
         """
         root_state = torch.tensor(
             root_state_np, dtype=self.dtype, device=self.device)
 
-        ll_res = self.run_mcts(root_state_np, policy_mode)
+        ll_res = self.run_mcts(root_state_np, policy_mode, task_id=task_id)
         selected_action = int(np.argmax(ll_res["probs"]))
 
         cf_res = self.evaluate_counterfactual(
@@ -745,7 +757,7 @@ class GenesisPyTorchBrain:
         })
 
     @torch.no_grad()
-    def update_neural_weights(self, s_curr_np: np.ndarray, action: int, reward: float, s_next_np: np.ndarray, is_terminal: bool = False, is_replay: bool = False) -> dict:
+    def update_neural_weights(self, s_curr_np: np.ndarray, action: int, reward: float, s_next_np: np.ndarray, is_terminal: bool = False, is_replay: bool = False, mcts_target_probs: Optional[np.ndarray] = None, task_id: int = 0) -> dict:
         s_curr = torch.tensor(s_curr_np, dtype=self.dtype, device=self.device)
         s_next = torch.tensor(s_next_np, dtype=self.dtype, device=self.device)
         rew_val = torch.tensor(reward, dtype=self.dtype, device=self.device)
@@ -788,15 +800,16 @@ class GenesisPyTorchBrain:
             if self.calib_ema > D_MODEL:
                 self.I_dyn *= (D_MODEL / self.calib_ema)
 
-        # Substrate 17: Synaptic Intelligence Regularization
-        si_penalty_dyn = 0.5 * self.si_omega["W_dyn"] * (self.W_dyn - self.si_theta_star["W_dyn"])
+        si_penalty_dyn = 0.5 * \
+            self.si_omega["W_dyn"] * \
+            (self.W_dyn - self.si_theta_star["W_dyn"])
         delta_W_dyn = 0.005 * grad_dyn - 1e-6 * self.W_dyn - 0.005 * si_penalty_dyn
         self.W_dyn = self._sanitize(self.W_dyn + delta_W_dyn)
         if not is_replay:
             self.si_W["W_dyn"] += grad_dyn * delta_W_dyn
 
-        # Reward Prediction
-        pred_rew = torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1)
+        # Reward Model Plasticity
+        pred_rew = torch.dot(sa, self.W_rew)
         err_rew = rew_val - pred_rew
         
         grad_rew = sa * err_rew
@@ -829,13 +842,20 @@ class GenesisPyTorchBrain:
         self.W_val_target = self._sanitize(
             0.995 * self.W_val_target + 0.005 * self.W_val)
 
-        # Policy Gradient Update
+        # Policy Gradient & Substrate 22 MCTS Distillation Update
         logits = torch.matmul(s_curr, self.W_policy)
         probs = torch.softmax(logits, dim=-1)
         target_policy = torch.zeros(
             N_ACTIONS, dtype=self.dtype, device=self.device)
         target_policy[action] = 1.0
         grad_pol = torch.outer(s_curr, target_policy - probs)
+
+        if mcts_target_probs is not None:
+            mcts_p = torch.tensor(mcts_target_probs, dtype=self.dtype, device=self.device)
+            grad_distill = torch.outer(s_curr, mcts_p - probs)
+            phase = self.substrate22.get_phase_coefficients()
+            l2 = phase.get("lambda_2", 0.40)
+            grad_pol = (1.0 - l2) * grad_pol + l2 * grad_distill
         
         si_penalty_pol = 0.5 * self.si_omega["W_policy"] * (self.W_policy - self.si_theta_star["W_policy"])
         delta_W_pol = 0.005 * grad_pol - 1e-6 * self.W_policy - 0.005 * si_penalty_pol
@@ -1029,7 +1049,8 @@ class GenesisPyTorchBrain:
             "learn_steps": int(self.learn_step_count),
             "hippo_size": int(self.hippocampus.size),
             "option_hippo_size": int(len(self.option_hippocampus)),
-            "last_memory_cost": float(self.last_memory_cost)
+            "last_memory_cost": float(self.last_memory_cost),
+            "substrate22": self.substrate22.get_telemetry()
         }
 
     @torch.no_grad()
@@ -1078,6 +1099,8 @@ class GenesisPyTorchBrain:
             W_forget=self.W_forget.cpu().numpy().astype(np.float32),
             W_import=self.W_import.cpu().numpy().astype(np.float32),
             W_dyn=self.W_dyn.cpu().numpy().astype(np.float32),
+            W_gamma=self.substrate22.world_model.W_gamma.detach().cpu().numpy().astype(np.float32),
+            W_beta=self.substrate22.world_model.W_beta.detach().cpu().numpy().astype(np.float32),
             W_rew=self.W_rew.cpu().numpy().astype(np.float32),
             W_val=self.W_val.cpu().numpy().astype(np.float32),
             W_val_target=self.W_val_target.cpu().numpy().astype(np.float32),
@@ -1167,6 +1190,12 @@ class GenesisPyTorchBrain:
                     data["W_forget"], dtype=self.dtype, device=self.device)
                 self.W_import = torch.tensor(
                     data["W_import"], dtype=self.dtype, device=self.device)
+
+            if "W_gamma" in data and hasattr(self, "substrate22"):
+                self.substrate22.world_model.W_gamma.data = torch.tensor(
+                    data["W_gamma"], dtype=self.dtype, device=self.device)
+                self.substrate22.world_model.W_beta.data = torch.tensor(
+                    data["W_beta"], dtype=self.dtype, device=self.device)
 
         # Sanitize ALL weight matrices — purge NaN/Inf baked into checkpoint
         nan_count = 0
