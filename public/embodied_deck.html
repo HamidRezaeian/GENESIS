@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GENESIS · Observation Deck · Substrate 21</title>
+  <title>GENESIS · Observation Deck · Substrate 22</title>
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2 29 9.5v13L16 30 3 22.5v-13z' fill='none' stroke='url(%23g)' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4' fill='url(%23g)'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,7 +14,7 @@
     rel="stylesheet">
   <style>
     /* ============================================================
-   GENESIS OBSERVATION DECK — Substrate 21
+   GENESIS OBSERVATION DECK — Substrate 22
    Design system: deep dark (#09090b) · glassmorphism ·
    cyan / neon-purple / emerald accents · mono telemetry
    ============================================================ */
@@ -1649,6 +1649,28 @@
           <div class="sv" id="statRule24" style="color:var(--amber)">LEVEL 1</div>
         </div>
       </div>
+      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
+        <span class="p-title"><i></i>FiLM WORLD MODEL & DISTILLATION (SUBSTRATE 22)</span>
+        <span class="p-sub" id="statSub22Badge" style="font-weight:700; color:var(--cyan)">MCTS DISTILLATION ACTIVE</span>
+      </div>
+      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
+        <div class="stat">
+          <div class="sl">DISTILL TEMP (τ)</div>
+          <div class="sv" id="statDistillTau" style="color:var(--cyan)">1.50</div>
+        </div>
+        <div class="stat">
+          <div class="sl">DYN LOSS (MSE)</div>
+          <div class="sv" id="statDynLoss" style="color:var(--emerald)">0.0000</div>
+        </div>
+        <div class="stat">
+          <div class="sl">DISTILL LOSS</div>
+          <div class="sv" id="statDistillLoss" style="color:var(--purple2)">0.0000</div>
+        </div>
+        <div class="stat">
+          <div class="sl">PHASE / LOSS W</div>
+          <div class="sv" id="statPhase" style="color:var(--amber)">P1 (λ2=0.20)</div>
+        </div>
+      </div>
     </section>
 
     <!-- 4 · MCTS -->
@@ -1746,7 +1768,8 @@
       'statActEntropy', 'statBehModes', 'statComplexity', 'statMannKendall', 'statEmergenceTax',
       'statSub19Badge', 'statClockPhase', 'statGates', 'statSparsity', 'statBindingEntropy',
       'statSub20Badge', 'statImagEff', 'statTomError', 'statGroundingNorm', 'statSymMi',
-      'statSub21Badge', 'statS21Hippo', 'statMetaLoss', 'statSiOmega', 'statRule24'
+      'statSub21Badge', 'statS21Hippo', 'statMetaLoss', 'statSiOmega', 'statRule24',
+      'statSub22Badge', 'statDistillTau', 'statDynLoss', 'statDistillLoss', 'statPhase'
     ].forEach(id => el[id] = document.getElementById(id));
 
     /* ================================================================
@@ -1890,6 +1913,9 @@
       }
       if (d.learning) {
         o.learning = d.learning;
+      }
+      if (d.substrate22) {
+        o.substrate22 = d.substrate22;
       }
       return o;
     }
@@ -2064,6 +2090,9 @@
       }
       if (n.substrate21) {
         S.substrate21 = n.substrate21;
+      }
+      if (n.substrate22) {
+        S.substrate22 = n.substrate22;
       }
     }
 
@@ -2492,6 +2521,17 @@
         if (el.statMetaLoss) el.statMetaLoss.textContent = (s21.meta_loss ?? 0.0).toFixed(4);
         if (el.statSiOmega) el.statSiOmega.textContent = (s21.si_omega_mean ?? 0.05).toFixed(3);
         if (el.statRule24) el.statRule24.textContent = s21.is_certified ? 'CERTIFIED' : 'LEVEL 1';
+      }
+
+      if (S.substrate22) {
+        const s22 = S.substrate22;
+        if (el.statDistillTau) el.statDistillTau.textContent = (s22.distill_tau ?? 1.5).toFixed(2);
+        if (el.statDynLoss) el.statDynLoss.textContent = (s22.last_dyn_loss ?? 0.0).toFixed(4);
+        if (el.statDistillLoss) el.statDistillLoss.textContent = (s22.last_distill_loss ?? 0.0).toFixed(4);
+        if (el.statPhase && s22.phase_coeffs) {
+          const p = s22.current_epoch <= 20 ? 'P1' : (s22.current_epoch <= 40 ? 'P2' : 'P3');
+          el.statPhase.textContent = `${p} (λ2=${s22.phase_coeffs.lambda_2.toFixed(2)})`;
+        }
       }
 
       const p = S.cog.actionProbs; let mxI = 0;

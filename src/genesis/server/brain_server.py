@@ -1007,7 +1007,8 @@ class GenesisEngineRunner:
             "emergence": self.emergence_suite.get_telemetry().to_dict(),
             "substrate19": self.brain.substrate19.get_telemetry(),
             "substrate20": self.brain.substrate20.get_telemetry(),
-            "substrate21": self.brain.substrate21.get_telemetry()
+            "substrate21": self.brain.substrate21.get_telemetry(),
+            "substrate22": self.brain.substrate22.get_telemetry()
         }
         return sanitize_floats(payload)
 
@@ -1201,7 +1202,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8088))
     print("=" * 70, flush=True)
     print(
-        f"🚀 GENESIS Python Brain Server (Substrate 21) Online on Port {port}", flush=True)
+        f"🚀 GENESIS Python Brain Server (Substrate 22) Online on Port {port}", flush=True)
     print(
         f"📡 WebSocket & HTTP UI serving at: http://localhost:{port}/embodied_deck.html", flush=True)
     print("=" * 70, flush=True)

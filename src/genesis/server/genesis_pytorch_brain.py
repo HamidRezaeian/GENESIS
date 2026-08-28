@@ -696,12 +696,22 @@ class GenesisPyTorchBrain:
     @torch.no_grad()
     def run_hierarchical_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED", task_id: int = 0) -> dict:
         """
-        Clean MCTS on root_state directly using trained Substrate 22 W_dyn(tau), W_val, W_policy.
-        Eliminates untrained random symbol and option embedding distortion.
+        Hierarchical MCTS with direct concept alignment and semiogenesis symbol emission.
         """
         root_state = torch.tensor(
             root_state_np, dtype=self.dtype, device=self.device)
 
+        # 1. Direct concept scoring via W_concept_policy
+        c_logits = torch.matmul(root_state.view(1, -1), self.W_concept_policy)
+        c_probs = torch.softmax(c_logits, dim=-1)
+        selected_option = int(torch.argmax(c_probs).item()) % 8
+        self.synthesize_autotelic_goal(selected_option)
+
+        # 2. Grounded symbolic emission via Semiogenesis projection matrix (Substrate 20)
+        sym_logits = torch.matmul(c_probs, self.W_concept_to_symbol)
+        emitted_symbol = int(torch.argmax(sym_logits).item()) % VOCAB_SIZE
+
+        # 3. Clean MCTS for low-level primitive actions
         ll_res = self.run_mcts(root_state_np, policy_mode, task_id=task_id)
         selected_action = int(np.argmax(ll_res["probs"]))
 
@@ -711,9 +721,9 @@ class GenesisPyTorchBrain:
         return {
             "action_probs": ll_res["probs"],
             "action_qValues": ll_res["qValues"],
-            "selected_option": 0,
+            "selected_option": selected_option,
             "selected_action": selected_action,
-            "emitted_symbol": 0,
+            "emitted_symbol": emitted_symbol,
             "counterfactual_regret": cf_res["counterfactual_regret"],
             "best_counterfactual_action": cf_res["best_alt_action"],
             "epistemic_uncertainty": ll_res.get("epistemic_uncertainty", 0.0),
