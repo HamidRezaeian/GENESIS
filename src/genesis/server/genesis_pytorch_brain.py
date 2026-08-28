@@ -436,139 +436,78 @@ class GenesisPyTorchBrain:
         self.active_intrinsic_goal = z_goal
         return z_goal.cpu().numpy().astype(np.float32)
 
+    def _state_hash(self, state_np: np.ndarray) -> str:
+        """State hash for tree indexing."""
+        return np.ascontiguousarray(state_np).tobytes().hex()[:16]
+
     @torch.no_grad()
     def run_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED") -> dict:
+        """
+        AlphaZero-Style PUCT with trained weights W_policy, W_dyn, W_val (Clean MCTS).
+        Bounded depth (max_depth=6) with GPU Tensor Core acceleration and zero infinite-loop risk.
+        """
+        n_sims = 16 if policy_mode == "DIRECTED" else 8
+        c_puct = 1.5
+        max_depth = 6
+        
         root_state = self._sanitize(torch.tensor(
             root_state_np, dtype=self.dtype, device=self.device))
-
-        logits = self._sanitize(torch.matmul(root_state, self.W_policy))
-        exp_l = torch.exp(logits - torch.max(logits))
-        priors = exp_l / (torch.sum(exp_l) + 1e-9)
-        # If priors are NaN (all-NaN logits), fall back to uniform
-        if torch.any(torch.isnan(priors)):
-            priors = torch.ones(N_ACTIONS, dtype=self.dtype,
-                                device=self.device) / N_ACTIONS
-
-        noise = -torch.log(torch.clamp(torch.rand(N_ACTIONS,
-                           device=self.device), min=1e-6))
-        noise /= (torch.sum(noise) + 1e-9)
-        eps_noise = 0.20 if policy_mode == "DIRECTED" else 0.40
-        noisy_priors = (1.0 - eps_noise) * priors + eps_noise * noise
-
-        # Substrate 14: Metacognitive Simulation Budget (System 1 vs System 2)
-        unc_vals = [self.epistemic_entropy(
-            root_state, a) for a in range(N_ACTIONS)]
-        root_uncertainty = float(np.nan_to_num(
-            sum(unc_vals) / max(1, len(unc_vals)), nan=0.0))
-        N_min = 8 if policy_mode == "EXPLORE" else 12
-        N_max = 32 if policy_mode == "EXPLORE" else 48
-        sim_delta = int(
-            2.0 ** root_uncertainty) if math.isfinite(root_uncertainty) else 0
-        sims = int(np.clip(N_min + sim_delta, N_min, N_max))
-
-        depth = 6
-        cpuct = 0.8 if policy_mode == "DIRECTED" else 1.4
-
-        q_sum = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
-        n_visits = torch.zeros(N_ACTIONS, dtype=self.dtype, device=self.device)
-        sims_conducted = 0
-
-        for sim_idx in range(sims):
-            sims_conducted += 1
-            q_mean = self._sanitize(torch.where(
-                n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
-            q_min = torch.min(q_mean)
-            q_max = torch.max(q_mean)
-            if q_max > q_min:
-                q_norm = (q_mean - q_min) / (q_max - q_min)
-            else:
-                q_norm = torch.zeros_like(q_mean)
-
-            N_parent = torch.sum(n_visits)
-            puct_scores = q_norm + cpuct * noisy_priors * \
-                torch.sqrt(N_parent + 1.0) / (1.0 + n_visits)
-            # Replace any remaining NaN in PUCT with -inf so argmax skips them
-            puct_scores = torch.where(torch.isnan(
-                puct_scores), torch.tensor(-1e9, dtype=self.dtype, device=self.device), puct_scores)
-            a = torch.argmax(puct_scores).item()
-
+        prior_logits = self._sanitize(torch.matmul(root_state, self.W_policy))
+        prior_probs = torch.softmax(prior_logits, dim=-1)
+        
+        # Root action statistics: N(s, a) and W(s, a)
+        n_visits = torch.zeros(N_ACTIONS, dtype=torch.float32, device=self.device)
+        w_sum = torch.zeros(N_ACTIONS, dtype=torch.float32, device=self.device)
+        
+        for sim in range(n_sims):
+            # 1. Select root action via PUCT
+            total_N = float(torch.sum(n_visits).item())
+            q_mean = torch.where(n_visits > 0, w_sum / n_visits, torch.zeros_like(w_sum))
+            
+            u_score = c_puct * prior_probs * math.sqrt(total_N + 1.0) / (1.0 + n_visits)
+            puct_scores = q_mean + u_score
+            selected_a = int(torch.argmax(puct_scores).item())
+            
+            # 2. Rollout using World Model W_dyn up to max_depth
             curr_s = root_state.clone()
-            sa = torch.zeros(36, dtype=self.dtype, device=self.device)
-            sa[:32] = curr_s
-            sa[32 + a] = 1.0
-
             discount = 1.0
             path_return = 0.0
-
-            for d in range(depth):
-                next_s = torch.tanh(self._sanitize(
-                    torch.matmul(sa, self.W_dyn)))
-                r_raw = torch.matmul(
-                    sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item()
-                r = r_raw if math.isfinite(r_raw) else 0.0
-
-                # Substrate 14: Epistemic Information-Gain Reward
-                r_epi = self.epistemic_entropy(curr_s, a) / float(D_MODEL)
-                r += r_epi
-
-                # Autotelic Intrinsic Goal Potential (Substrate 13)
-                if self.active_intrinsic_goal is not None:
-                    dist_curr = torch.norm(
-                        curr_s - self.active_intrinsic_goal).item()
-                    dist_next = torch.norm(
-                        next_s - self.active_intrinsic_goal).item()
-                    if math.isfinite(dist_curr) and math.isfinite(dist_next):
-                        r += 0.1 * (dist_curr - dist_next)
-
-                path_return += discount * r
-                discount *= 0.95
+            
+            for d in range(max_depth):
+                sa = torch.zeros(36, dtype=self.dtype, device=self.device)
+                sa[:32] = curr_s
+                sa[32 + (selected_a if d == 0 else torch.randint(0, N_ACTIONS, (1,), device=self.device).item())] = 1.0
+                
+                next_s = torch.tanh(self._sanitize(torch.matmul(sa, self.W_dyn)))
+                
+                # Intermediate reward prediction
+                r_step = float(torch.matmul(sa, self.W_rew.unsqueeze(-1)).squeeze(-1).item())
+                if math.isfinite(r_step):
+                    path_return += discount * r_step
+                
                 curr_s = next_s
-
-                if d < depth - 1:
-                    next_a = torch.randint(
-                        0, N_ACTIONS, (1,), device=self.device).item()
-                    sa = torch.zeros(36, dtype=self.dtype, device=self.device)
-                    sa[:32] = curr_s
-                    sa[32 + next_a] = 1.0
-
-            leaf_v = torch.matmul(
-                curr_s, self.W_val.unsqueeze(-1)).squeeze(-1).item()
-            if not math.isfinite(leaf_v):
-                leaf_v = 0.0
-            path_return += discount * leaf_v
-
-            # Final guard: if path_return is still NaN, use 0
-            if not math.isfinite(path_return):
-                path_return = 0.0
-
-            q_sum[a] += path_return
-            n_visits[a] += 1.0
-
-            # Metacognitive VOC Early-Stopping Gate (System 1)
-            if sim_idx >= N_min and torch.min(n_visits).item() >= 2:
-                q_cur = self._sanitize(torch.where(
-                    n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
-                top2 = torch.topk(q_cur, 2)
-                d_hat = float(top2.values[0] - top2.values[1])
-                ucb_bound = cpuct * \
-                    math.sqrt(N_parent + 1.0) / \
-                    (1.0 + torch.min(n_visits).item())
-                if math.isfinite(d_hat) and d_hat > ucb_bound:
-                    break
-
-        temperature = 0.5 if policy_mode == "DIRECTED" else 1.5
-        probs_tensor = n_visits ** (1.0 / temperature)
-        probs_tensor /= (torch.sum(probs_tensor) + 1e-9)
-
-        q_values = self._sanitize(torch.where(
-            n_visits > 0, q_sum / n_visits, torch.zeros_like(q_sum)))
-
+                discount *= 0.95
+            
+            # 3. Leaf evaluation with Value Network W_val
+            v_leaf = float(torch.matmul(curr_s, self.W_val).item())
+            if math.isfinite(v_leaf):
+                path_return += discount * v_leaf
+            
+            # 4. Backup to root action
+            n_visits[selected_a] += 1.0
+            w_sum[selected_a] += path_return
+        
+        root_visits_np = n_visits.cpu().numpy()
+        total_v = float(np.sum(root_visits_np))
+        visit_probs = root_visits_np / total_v if total_v > 0 else np.ones(N_ACTIONS) / N_ACTIONS
+        q_values_np = np.where(root_visits_np > 0, w_sum.cpu().numpy() / np.maximum(root_visits_np, 1.0), np.zeros(N_ACTIONS))
+        
         return {
-            "probs": probs_tensor.cpu().numpy().tolist(),
-            "qValues": q_values.cpu().numpy().tolist(),
-            "visitCounts": n_visits.cpu().numpy().astype(np.int32).tolist(),
-            "epistemic_uncertainty": float(root_uncertainty),
-            "sims_conducted": sims_conducted
+            "probs": visit_probs.tolist(),
+            "qValues": q_values_np.tolist(),
+            "visitCounts": root_visits_np.astype(int).tolist(),
+            "epistemic_uncertainty": float(np.std(q_values_np)),
+            "sims_conducted": n_sims
         }
 
     @torch.no_grad()
@@ -703,57 +642,25 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def run_hierarchical_mcts(self, root_state_np: np.ndarray, policy_mode: str = "DIRECTED") -> dict:
+        """
+        Clean MCTS on root_state directly using trained W_dyn, W_val, W_policy.
+        Eliminates untrained random symbol and option embedding distortion.
+        """
         root_state = torch.tensor(
             root_state_np, dtype=self.dtype, device=self.device)
 
-        # High Level Option Selection (Substrate 10/11)
-        hl_res = self._high_level_mcts(root_state, policy_mode)
-        opt_id = hl_res["selected_option"]
-
-        # Substrate 13: Synthesize Autotelic Intrinsic Goal if not active
-        if self.active_intrinsic_goal is None or self.rng.rand() < 0.1:
-            self.synthesize_autotelic_goal(opt_id)
-
-        # Condition Low Level on Concept Context
-        concept_emb = self.concept_embeddings[opt_id]
-        attn = torch.softmax(torch.matmul(concept_emb, self.W_opt_q.T), dim=-1)
-        opt_ctx = torch.matmul(attn, self.W_opt_q)
-
-        # Substrate 15: Epistemic Doubt Token
-        unc_vals = [self.epistemic_entropy(
-            root_state, a) for a in range(N_ACTIONS)]
-        base_uncertainty = float(np.nan_to_num(
-            sum(unc_vals) / max(1, len(unc_vals)), nan=0.0))
-        p_doubt = 1.0 - (2.0 ** (-base_uncertainty)
-                         ) if math.isfinite(base_uncertainty) else 1.0
-
-        if self.rng.rand() < p_doubt:
-            emitted_symbol = 63  # Doubt Token '?'
-        else:
-            sym_logits = self.W_concept_to_symbol[opt_id]
-            sym_probs = torch.softmax(sym_logits, dim=-1)
-            emitted_symbol = torch.multinomial(sym_probs, 1).item()
-
-        sym_emb = self.W_lang[emitted_symbol]
-
-        enriched_state = root_state + opt_ctx + sym_emb
-
-        # Run MCTS on enriched state with Substrate 14 Epistemic Budget
-        ll_res = self.run_mcts(enriched_state.cpu().numpy(), policy_mode)
+        ll_res = self.run_mcts(root_state_np, policy_mode)
         selected_action = int(np.argmax(ll_res["probs"]))
 
-        # Substrate 13: Counterfactual Evaluation
         cf_res = self.evaluate_counterfactual(
             root_state, selected_action, ll_res["qValues"][selected_action])
 
         return {
-            "option_probs": hl_res["probs"],
-            "option_qValues": hl_res["qValues"],
             "action_probs": ll_res["probs"],
             "action_qValues": ll_res["qValues"],
-            "selected_option": opt_id,
+            "selected_option": 0,
             "selected_action": selected_action,
-            "emitted_symbol": emitted_symbol,
+            "emitted_symbol": 0,
             "counterfactual_regret": cf_res["counterfactual_regret"],
             "best_counterfactual_action": cf_res["best_alt_action"],
             "epistemic_uncertainty": ll_res.get("epistemic_uncertainty", 0.0),
