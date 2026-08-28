@@ -97,7 +97,37 @@ class EpisodicBuffer:
             raw = td_clipped * gate
             old = self.priorities[idx]
             new_p = self.ema_decay * old + (1 - self.ema_decay) * raw
-            self.priorities[idx] = max(self.eps, min(new_p, self.td_clip))
+class WorkingMemoryBuffer:
+    """
+    Persistent Activity Working Memory Buffer for sustaining contextual sample representations
+    across delay intervals (Substrate 21 Persistent Working Memory).
+    """
+    def __init__(self, capacity: int = 8, decay: float = 0.92):
+        self.capacity = capacity
+        self.decay = decay
+        self.states = []
+
+    def push(self, state: torch.Tensor, tick: int = 0):
+        self.states.append((state.clone().detach(), tick))
+        if len(self.states) > self.capacity:
+            self.states.pop(0)
+
+    def get_context(self, current_tick: int = 0) -> torch.Tensor:
+        if not self.states:
+            return None
+        dev = self.states[0][0].device
+        dtype = self.states[0][0].dtype
+        ctx = torch.zeros(D_MODEL, dtype=dtype, device=dev)
+        total_w = 0.0
+        for s, t in self.states:
+            age = max(0, current_tick - t)
+            w = self.decay ** age
+            ctx += w * s
+            total_w += w
+        return ctx / max(1e-6, total_w)
+
+    def clear(self):
+        self.states.clear()
 
 class GenesisPyTorchBrain:
     def __init__(self, device="cuda", seed=42):
@@ -108,6 +138,8 @@ class GenesisPyTorchBrain:
         self.seed = seed
         self.rng = np.random.RandomState(seed)
         self.hippocampus = EpisodicBuffer(capacity=50000, beta=0.6)
+        self.working_memory = WorkingMemoryBuffer(capacity=8, decay=0.92)
+        self.current_tick = 0
 
         # Symbolic Abstraction (Substrate 11) & Grounding (Substrate 12)
         self.num_concepts = 16
@@ -300,6 +332,7 @@ class GenesisPyTorchBrain:
 
     @torch.no_grad()
     def forward_transformer(self, obs_vis: np.ndarray, text_str: str) -> np.ndarray:
+        self.current_tick += 1
         obs = torch.tensor(obs_vis, dtype=self.dtype, device=self.device).flatten()
         text_emb = self.encode_text(text_str)
 
@@ -307,6 +340,14 @@ class GenesisPyTorchBrain:
         fused_v = torch.matmul(z_vis, self.W_fuse_vis)
         fused_l = torch.matmul(text_emb, self.W_fuse_lang)
         fused = torch.tanh(fused_v + fused_l)
+
+        # Substrate 21: Persistent Working Memory context
+        if float(torch.norm(obs).item()) > 1e-3:
+            self.working_memory.push(fused, self.current_tick)
+        
+        wm_ctx = self.working_memory.get_context(self.current_tick)
+        if wm_ctx is not None:
+            fused = fused + 0.3 * wm_ctx
 
         self.state_history.append(fused)
         if len(self.state_history) > 16:
@@ -1146,6 +1187,12 @@ class GenesisPyTorchBrain:
         self.tau2_hat = torch.nan_to_num(
             self.tau2_hat, nan=0.05, posinf=1.0, neginf=0.05)
 
-        self.anchor_weights["W_dyn"] = self.W_dyn.clone()
-        self.anchor_weights["W_causal"] = self.W_causal.clone()
-        self.anchor_weights["W_goal"] = self.W_goal.clone()
+        if hasattr(self, "anchor_weights"):
+            self.anchor_weights["W_dyn"] = self.W_dyn.clone()
+            self.anchor_weights["W_causal"] = self.W_causal.clone()
+            self.anchor_weights["W_goal"] = self.W_goal.clone()
+
+        if hasattr(self, "si_theta_star"):
+            for k in self.si_theta_star:
+                if hasattr(self, k):
+                    self.si_theta_star[k] = getattr(self, k).clone()

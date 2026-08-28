@@ -1201,7 +1201,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8088))
     print("=" * 70, flush=True)
     print(
-        f"🚀 GENESIS Python Brain Server (Substrate 8) Online on Port {port}", flush=True)
+        f"🚀 GENESIS Python Brain Server (Substrate 21) Online on Port {port}", flush=True)
     print(
         f"📡 WebSocket & HTTP UI serving at: http://localhost:{port}/embodied_deck.html", flush=True)
     print("=" * 70, flush=True)

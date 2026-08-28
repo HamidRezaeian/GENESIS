@@ -190,27 +190,22 @@ def train_navigation_episode(brain: GenesisPyTorchBrain, rng: np.random.RandomSt
 
 def train_causal_episode(brain: GenesisPyTorchBrain, rng: np.random.RandomState) -> float:
     """Train 1 episode on Task 5: Causal Intervention & Do-Calculus."""
-    z_confounder = rng.randint(0, 2)
-    p_x = 0.8 if z_confounder == 1 else 0.2
-    is_intervention = (rng.rand() < 0.5)
+    X_val = rng.randint(0, 2)
+    Z_val = X_val if rng.rand() > 0.1 else 1 - X_val
+    intervene_Y = rng.randint(0, 2)
+    true_W = intervene_Y ^ Z_val
 
-    if is_intervention:
-        x_val = rng.randint(0, 2)
-    else:
-        x_val = 1 if (rng.rand() < p_x) else 0
-
-    p_y = 0.75 if x_val == 1 else 0.25
-    y_val = 1 if (rng.rand() < p_y) else 0
-
+    # Stage 1: Passive context
     obs_context = np.zeros((7, 7, 7), dtype=np.float32)
-    obs_context[:, :, 0] = float(z_confounder)
-    obs_context[:, :, 1] = float(x_val)
-    mode_text = f"DO_X_{x_val}" if is_intervention else f"OBS_X_{x_val}"
-    state_ctx = brain.forward_transformer(obs_context, mode_text)
+    obs_context[:, :, 0] = float(X_val)
+    obs_context[:, :, 1] = float(Z_val)
+    brain.forward_transformer(obs_context, "PASSIVE_DAG")
 
-    query_obs = np.zeros((7, 7, 7), dtype=np.float32)
-    query_obs[:, :, 6] = 1.0
-    state = brain.forward_transformer(query_obs, "PRED_Y?")
+    # Stage 2: Active intervention do(Y)
+    obs_intervene = np.zeros((7, 7, 7), dtype=np.float32)
+    obs_intervene[:, :, 2] = float(intervene_Y)
+    obs_intervene[:, :, 6] = 1.0
+    state = brain.forward_transformer(obs_intervene, f"DO_Y_{intervene_Y}")
     state_t = torch.tensor(state, dtype=brain.dtype, device=brain.device)
     logits = torch.matmul(state_t, brain.W_policy)
 
@@ -219,8 +214,8 @@ def train_causal_episode(brain: GenesisPyTorchBrain, rng: np.random.RandomState)
     else:
         action = int(torch.argmax(logits).item())
 
-    pred_y = action % 2
-    is_correct = (pred_y == y_val)
+    pred_W = action % 2
+    is_correct = (pred_W == true_W)
     reward = 1.0 if is_correct else -0.5
 
     next_state = state + np.random.randn(32).astype(np.float32) * 0.01
