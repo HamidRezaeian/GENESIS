@@ -172,8 +172,8 @@ class BatchedPopulation(nn.Module):
         pop_size: int = 128,
         max_neurons: int = 64,
         max_synapses: int = 512,
-        input_neurons: int = 16,
-        output_neurons: int = 4,
+        input_neurons: int = 20,
+        output_neurons: int = 5,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         seed: int = 42
     ):
@@ -309,7 +309,7 @@ class BatchedPopulation(nn.Module):
         new_states[:, :self.input_neurons] = self.states[:, :self.input_neurons]
         self.states.copy_(new_states)
 
-        # Output motor action decisions (last 4 neurons: [0: Fwd, 1: TurnL, 2: TurnR, 3: Harvest])
+        # Output motor action decisions (last 5 neurons: [0: Fwd, 1: TurnL, 2: TurnR, 3: Harvest, 4: Emit])
         motor_logits = self.states[:, self.max_neurons - self.output_neurons:]
         self.actions = torch.argmax(motor_logits, dim=-1)
 
@@ -340,7 +340,10 @@ class BatchedPopulation(nn.Module):
         traffic_cost = (n_syn_active * 2.0 + self.max_neurons * 2.0) * self.E_traffic
         base_cost = self.metabolic_rate + self.E_base
         
-        total_metabolic_cost = (base_cost + flops_cost + traffic_cost) * active_alive.to(self.dtype)
+        # Additional cost for stigmergy emission (action 4)
+        emit_cost = (self.actions == 4).to(self.dtype) * 0.015
+        
+        total_metabolic_cost = (base_cost + flops_cost + traffic_cost + emit_cost) * active_alive.to(self.dtype)
         
         # Energy update: Intake from environment - Metabolic Cost
         intake = harvested_resources.to(self.dtype) * active_alive.to(self.dtype)
