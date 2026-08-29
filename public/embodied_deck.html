@@ -4,37 +4,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GENESIS · Observation Deck · Substrate 22</title>
+  <title>GENESIS · Observation Deck · Phase-E ALife</title>
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2 29 9.5v13L16 30 3 22.5v-13z' fill='none' stroke='url(%23g)' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4' fill='url(%23g)'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet">
   <style>
     /* ============================================================
-   GENESIS OBSERVATION DECK — Substrate 22
-   Design system: deep dark (#09090b) · glassmorphism ·
-   cyan / neon-purple / emerald accents · mono telemetry
-   ============================================================ */
+       GENESIS OBSERVATION DECK — Phase-E ALife Substrate
+       Design system: Ultra-deep dark (#08090d) · Glassmorphism ·
+       Cyan / Neon Purple / Emerald / Amber accents · Mono Telemetry
+       ============================================================ */
     :root {
-      --bg: #09090b;
-      --bg2: #0c0d12;
+      --bg: #07080c;
+      --bg2: #0b0d14;
       --panel: rgba(255, 255, 255, .035);
       --panel2: rgba(255, 255, 255, .06);
-      --stroke: rgba(255, 255, 255, .09);
+      --stroke: rgba(255, 255, 255, .08);
       --stroke2: rgba(255, 255, 255, .14);
-      --text: #e4e4e7;
-      --dim: #8b8b96;
-      --faint: #565661;
+      --text: #e2e8f0;
+      --dim: #94a3b8;
+      --faint: #64748b;
       --cyan: #22d3ee;
       --cyan2: #67e8f9;
       --purple: #a855f7;
       --purple2: #c084fc;
       --emerald: #34d399;
       --amber: #fbbf24;
-      --red: #fb7185;
+      --red: #f87171;
       --blue: #60a5fa;
       --ui: 'Inter', system-ui, sans-serif;
       --disp: 'Outfit', var(--ui);
@@ -45,12 +45,11 @@
     * {
       margin: 0;
       padding: 0;
-      box-sizing: border-box
+      box-sizing: border-box;
     }
 
-    html,
-    body {
-      height: 100%
+    html, body {
+      height: 100%;
     }
 
     body {
@@ -62,24 +61,16 @@
     }
 
     ::selection {
-      background: rgba(34, 211, 238, .25)
+      background: rgba(34, 211, 238, .25);
     }
 
-    button {
-      font-family: inherit
-    }
-
-    canvas {
-      display: block
-    }
-
-    /* ---------- ambient background ---------- */
+    /* Ambient background glowing gradients */
     .bgfx {
       position: fixed;
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      overflow: hidden
+      overflow: hidden;
     }
 
     .bgfx::before {
@@ -87,2550 +78,906 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(900px 600px at 12% -10%, rgba(34, 211, 238, .07), transparent 60%),
-        radial-gradient(900px 700px at 105% 110%, rgba(168, 85, 247, .08), transparent 60%),
-        radial-gradient(600px 400px at 80% 0%, rgba(52, 211, 153, .04), transparent 60%);
+        radial-gradient(1000px 700px at 10% -10%, rgba(34, 211, 238, .07), transparent 60%),
+        radial-gradient(1100px 800px at 100% 105%, rgba(168, 85, 247, .08), transparent 60%),
+        radial-gradient(700px 500px at 80% -5%, rgba(52, 211, 153, .05), transparent 60%);
     }
 
     .bgfx::after {
       content: '';
       position: absolute;
       inset: 0;
-      opacity: .5;
+      opacity: .4;
       background-image:
-        linear-gradient(rgba(255, 255, 255, .022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, .022) 1px, transparent 1px);
-      background-size: 52px 52px;
-      mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 80%);
-      -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 80%);
+        linear-gradient(rgba(255, 255, 255, .02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 85%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 85%);
     }
 
-    /* ---------- boot overlay ---------- */
-    #boot {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: var(--bg);
-      display: grid;
-      place-items: center;
-      transition: opacity .6s ease .1s;
-    }
-
-    #boot.done {
-      opacity: 0;
-      pointer-events: none
-    }
-
-    .boot-card {
-      text-align: center
-    }
-
-    .boot-logo {
-      width: 64px;
-      height: 72px;
-      margin: 0 auto 18px;
-      position: relative;
-      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-      background: linear-gradient(160deg, var(--cyan), var(--purple));
-      animation: bootPulse 1.2s ease-in-out infinite;
-    }
-
-    .boot-logo::after {
-      content: '';
-      position: absolute;
-      inset: 2.5px;
-      background: var(--bg)
-    }
-
-    .boot-title {
-      font: 600 13px/1 var(--mono);
-      letter-spacing: .35em;
-      color: var(--text)
-    }
-
-    .boot-sub {
-      font: 400 10px/1 var(--mono);
-      letter-spacing: .2em;
-      color: var(--faint);
-      margin-top: 10px
-    }
-
-    .boot-bar {
-      width: 210px;
-      height: 2px;
-      margin: 20px auto 0;
-      background: rgba(255, 255, 255, .07);
-      border-radius: 2px;
-      overflow: hidden
-    }
-
-    .boot-bar i {
-      display: block;
-      height: 100%;
-      width: 40%;
-      border-radius: 2px;
-      background: linear-gradient(90deg, var(--cyan), var(--purple));
-      animation: bootScan 1.1s var(--ease) infinite
-    }
-
-    @keyframes bootPulse {
-
-      0%,
-      100% {
-        filter: brightness(1)
-      }
-
-      50% {
-        filter: brightness(1.7)
-      }
-    }
-
-    @keyframes bootScan {
-      0% {
-        transform: translateX(-110%)
-      }
-
-      100% {
-        transform: translateX(300%)
-      }
-    }
-
-    /* ---------- top bar ---------- */
+    /* Top Bar */
     .topbar {
       position: relative;
-      z-index: 5;
+      z-index: 10;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      padding: 16px 26px 14px;
-      flex-wrap: wrap
-    }
-
-    .topbar::after {
-      content: '';
-      position: absolute;
-      left: 26px;
-      right: 26px;
-      bottom: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .5), rgba(168, 85, 247, .5), transparent);
-      background-size: 200% 100%;
-      animation: gline 7s linear infinite
-    }
-
-    @keyframes gline {
-      to {
-        background-position: 200% 0
-      }
+      align-items: center;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--stroke);
+      background: rgba(7, 8, 12, .75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px
+      gap: 14px;
     }
 
     .brand-mark {
-      width: 40px;
-      height: 45px;
-      position: relative;
-      flex: none;
-      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-      background: linear-gradient(160deg, var(--cyan), var(--purple));
-      filter: drop-shadow(0 0 14px rgba(34, 211, 238, .35))
-    }
-
-    .brand-mark::after {
-      content: '';
-      position: absolute;
-      inset: 2px;
-      background: var(--bg)
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 20px rgba(34, 211, 238, .35);
     }
 
     .brand-mark i {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      z-index: 2;
-      font: 700 13px var(--disp);
-      background: none;
-      background-clip: initial;
-      -webkit-background-clip: initial;
-      color: var(--cyan2)
+      font: 800 19px/1 var(--disp);
+      color: #07080c;
+      font-style: normal;
     }
 
     .brand h1 {
-      font: 700 21px/1 var(--disp);
-      letter-spacing: .14em;
-      background: linear-gradient(90deg, #e4e4e7, var(--cyan2) 45%, var(--purple2));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent
+      font: 700 18px/1.1 var(--disp);
+      letter-spacing: .12em;
+      color: #fff;
     }
 
     .brand p {
-      font: 500 9px/1 var(--mono);
-      letter-spacing: .28em;
+      font: 500 10.5px/1.2 var(--mono);
+      letter-spacing: .15em;
       color: var(--faint);
-      margin-top: 5px
+      margin-top: 2px;
     }
 
     .brand p em {
-      color: var(--purple2);
-      font-style: normal
+      font-style: normal;
+      color: var(--cyan);
     }
 
     .top-stats {
       display: flex;
+      align-items: center;
       gap: 10px;
-      flex-wrap: wrap
     }
 
     .pill {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 14px;
-      border-radius: 99px;
+      padding: 6px 12px;
+      border-radius: 8px;
       background: var(--panel);
       border: 1px solid var(--stroke);
-      backdrop-filter: blur(12px)
-    }
-
-    .pill .lbl {
-      font: 600 8.5px/1 var(--mono);
-      letter-spacing: .18em;
-      color: var(--faint)
+      font: 500 11px/1 var(--mono);
+      color: var(--dim);
     }
 
     .pill b {
-      font: 600 13px/1 var(--mono);
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
-      min-width: 52px;
-      text-align: right
-    }
-
-    .pill b.wide {
-      min-width: 86px
+      color: #fff;
+      font-weight: 700;
     }
 
     .pill .dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--amber);
-      animation: dotPulse 1.6s infinite
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 1.6s ease-in-out infinite;
     }
 
-    .pill.live .dot {
-      background: var(--emerald)
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .4; transform: scale(.85); }
     }
 
-    .pill.sim .dot {
-      background: var(--purple)
-    }
-
-    .pill.live {
-      border-color: rgba(52, 211, 153, .35)
-    }
-
-    .pill.live span.fd {
-      color: var(--emerald)
-    }
-
-    .pill.sim span.fd {
-      color: var(--purple2)
-    }
-
-    @keyframes dotPulse {
-
-      0%,
-      100% {
-        box-shadow: 0 0 0 0 rgba(52, 211, 153, .45)
-      }
-
-      50% {
-        box-shadow: 0 0 0 5px rgba(52, 211, 153, 0)
-      }
-    }
-
-    /* ---------- deck grid ---------- */
+    /* Main Deck 3-Column Layout */
     .deck {
       position: relative;
-      z-index: 5;
+      z-index: 1;
       display: grid;
-      gap: 16px;
-      padding: 18px 26px 30px;
-      grid-template-columns: minmax(320px, 440px) minmax(420px, 1fr) minmax(300px, 390px);
-      grid-template-rows: auto auto 1fr;
-      grid-template-areas:
-        "env  sym  meta"
-        "env  tree chat"
-        "vis  act  chat";
-      align-items: stretch;
-      max-width: 1780px;
-      margin: 0 auto
+      grid-template-columns: 460px 1fr 420px;
+      gap: 18px;
+      padding: 20px 24px;
+      max-width: 1920px;
+      margin: 0 auto;
     }
 
-    /* ---------- panel chrome ---------- */
+    /* Glass Panels */
     .panel {
       position: relative;
       border-radius: 16px;
-      padding: 16px 18px 18px;
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      background: linear-gradient(165deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012));
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 24px 50px -24px rgba(0, 0, 0, .75), inset 0 1px 0 rgba(255, 255, 255, .04);
-      animation: panelIn .8s var(--ease) both
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
     }
 
     .panel::before {
       content: '';
       position: absolute;
-      left: 14px;
-      right: 14px;
       top: 0;
+      left: 24px;
+      right: 24px;
       height: 1px;
-      background: linear-gradient(90deg, transparent, var(--topline, rgba(255, 255, 255, .18)), transparent)
-    }
-
-    .panel:nth-of-type(1) {
-      animation-delay: .05s
-    }
-
-    .panel:nth-of-type(2) {
-      animation-delay: .12s
-    }
-
-    .panel:nth-of-type(3) {
-      animation-delay: .19s
-    }
-
-    .panel:nth-of-type(4) {
-      animation-delay: .26s
-    }
-
-    .panel:nth-of-type(5) {
-      animation-delay: .33s
-    }
-
-    .panel:nth-of-type(6) {
-      animation-delay: .4s
-    }
-
-    .panel:nth-of-type(7) {
-      animation-delay: .47s
-    }
-
-    @keyframes panelIn {
-      from {
-        opacity: 0;
-        transform: translateY(16px) scale(.985)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    .panel.alert {
-      animation: alertFlash .5s ease-out
-    }
-
-    @keyframes alertFlash {
-      0% {
-        box-shadow: 0 0 0 1px rgba(244, 63, 94, .8), 0 0 46px rgba(244, 63, 94, .3)
-      }
-
-      100% {
-        box-shadow: 0 24px 50px -24px rgba(0, 0, 0, .75)
-      }
+      background: linear-gradient(90deg, transparent, var(--topline, rgba(255, 255, 255, .15)), transparent);
     }
 
     .p-head {
       display: flex;
-      align-items: baseline;
       justify-content: space-between;
-      gap: 10px;
-      min-height: 16px
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--stroke);
     }
 
     .p-title {
+      font: 700 12.5px/1 var(--disp);
+      letter-spacing: .15em;
+      color: #fff;
       display: flex;
       align-items: center;
       gap: 8px;
-      font: 600 10.5px/1 var(--mono);
-      letter-spacing: .22em;
-      color: var(--dim)
     }
 
     .p-title i {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
       background: var(--accent, var(--cyan));
-      box-shadow: 0 0 8px var(--accent, var(--cyan))
+      box-shadow: 0 0 8px var(--accent, var(--cyan));
+      display: inline-block;
     }
 
     .p-sub {
-      font: 500 9px/1 var(--mono);
-      letter-spacing: .1em;
+      font: 500 10px/1 var(--mono);
+      letter-spacing: .12em;
       color: var(--faint);
-      font-variant-numeric: tabular-nums;
-      text-align: right
     }
 
-    /* ---------- env panel ---------- */
+    /* Column 1: Ecology Substrate Grid */
     .env-panel {
-      grid-area: env;
       --accent: var(--cyan);
-      --topline: rgba(34, 211, 238, .35)
+      --topline: rgba(34, 211, 238, .4);
     }
 
-    .env-wrap {
+    .canvas-wrap {
       position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
       border-radius: 12px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .06);
-      background: #0a0b10
+      border: 1px solid var(--stroke);
+      background: #06070a;
     }
 
     #envCanvas {
       width: 100%;
-      height: auto;
-      aspect-ratio: 532/532
+      height: 100%;
+      display: block;
     }
 
-    .env-hud {
+    .hud-overlay {
       position: absolute;
       top: 10px;
-      left: 12px;
-      font: 500 9px/1.7 var(--mono);
-      letter-spacing: .12em;
-      color: rgba(228, 228, 231, .55);
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(7, 8, 12, .85);
+      border: 1px solid rgba(255, 255, 255, .08);
+      font: 600 10px/1.2 var(--mono);
+      color: var(--dim);
       pointer-events: none;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, .8)
     }
 
-    .env-hud b {
-      color: var(--cyan2)
+    .hud-overlay b {
+      color: var(--cyan);
     }
 
-    .legend {
+    .legend-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px 14px
+      gap: 12px;
+      padding-top: 4px;
     }
 
-    .lg {
+    .lg-tag {
       display: flex;
       align-items: center;
       gap: 6px;
-      font: 500 8.5px/1 var(--mono);
-      letter-spacing: .14em;
-      color: var(--dim)
-    }
-
-    .lg i {
-      width: 9px;
-      height: 9px;
-      border-radius: 3px;
-      flex: none
-    }
-
-    .lg.agent i {
-      background: var(--cyan);
-      box-shadow: 0 0 7px var(--cyan)
-    }
-
-    .lg.wall i {
-      background: #525266;
-      border: 1px solid var(--stroke2)
-    }
-
-    .lg.haz i {
-      background: rgba(244, 63, 94, .75);
-      box-shadow: 0 0 7px rgba(244, 63, 94, .5)
-    }
-
-    .lg.food i {
-      background: var(--emerald);
-      box-shadow: 0 0 7px rgba(52, 211, 153, .5);
-      border-radius: 50%
-    }
-
-    .lg.key i {
-      background: var(--amber);
-      box-shadow: 0 0 7px rgba(251, 191, 36, .45)
-    }
-
-    .lg.lock i {
-      background: transparent;
-      border: 1.5px solid var(--amber)
-    }
-
-    .lg.chem i {
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      box-shadow: 0 0 7px rgba(168, 85, 247, .5)
-    }
-
-    /* ---------- cortex panel ---------- */
-    .cortex-panel {
-      grid-area: vis;
-      --accent: var(--cyan2);
-      --topline: rgba(103, 232, 249, .3)
-    }
-
-    .cortex-body {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      justify-content: center;
-      flex: 1
-    }
-
-    .cortex-wrap {
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .06);
-      background: #0a0b10;
-      flex: none;
-      max-width: 230px
-    }
-
-    #visCanvas {
-      width: 100%;
-      height: auto;
-      aspect-ratio: 276/276
-    }
-
-    .cortex-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0
-    }
-
-    .kv {
-      font: 500 9px/1.5 var(--mono);
-      letter-spacing: .08em;
-      color: var(--faint)
-    }
-
-    .kv b {
-      color: var(--text);
-      font-weight: 500
-    }
-
-    .kv .ok {
-      color: var(--emerald)
-    }
-
-    .kv .no {
-      color: var(--faint)
-    }
-
-    /* ---------- symbol panel ---------- */
-    .symbol-panel {
-      grid-area: sym;
-      --accent: var(--purple);
-      --topline: rgba(168, 85, 247, .4)
-    }
-
-    .sym-hero {
-      display: flex;
-      align-items: center;
-      gap: 20px
-    }
-
-    .hexwrap {
-      width: 96px;
-      height: 108px;
-      flex: none;
-      position: relative;
-      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-      background: linear-gradient(160deg, var(--cyan) 0%, var(--purple) 55%, var(--cyan) 100%);
-      filter: drop-shadow(0 0 20px rgba(168, 85, 247, .4));
-      transition: filter .3s
-    }
-
-    .hex {
-      position: absolute;
-      inset: 2px;
-      background: radial-gradient(circle at 50% 32%, #17131f, #0b0b10 75%);
-      display: grid;
-      place-items: center;
-      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)
-    }
-
-    .hex span {
-      font: 700 40px/1 var(--mono);
-      color: #f3e8ff;
-      text-shadow: 0 0 18px rgba(192, 132, 252, .9), 0 0 42px rgba(168, 85, 247, .55)
-    }
-
-    .hexwrap.flash {
-      animation: symFlash .7s var(--ease)
-    }
-
-    .hexring {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 96px;
-      height: 96px;
-      margin: -48px 0 0 -48px;
-      border-radius: 50%;
-      border: 2px solid var(--purple2);
-      opacity: 0;
-      pointer-events: none
-    }
-
-    .hexwrap.flash .hexring {
-      animation: ringOut .8s ease-out
-    }
-
-    @keyframes symFlash {
-      0% {
-        transform: scale(1)
-      }
-
-      30% {
-        transform: scale(1.09);
-        filter: drop-shadow(0 0 34px rgba(168, 85, 247, .85)) brightness(1.5)
-      }
-
-      100% {
-        transform: scale(1)
-      }
-    }
-
-    @keyframes ringOut {
-      from {
-        transform: scale(.55);
-        opacity: .8
-      }
-
-      to {
-        transform: scale(1.6);
-        opacity: 0
-      }
-    }
-
-    .sym-info {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      min-width: 0;
-      flex: 1
-    }
-
-    .sym-token {
-      font: 600 11px/1 var(--mono);
-      letter-spacing: .2em;
-      color: var(--dim)
-    }
-
-    .sym-token b {
-      color: var(--purple2);
-      font-size: 15px;
-      text-shadow: 0 0 12px rgba(168, 85, 247, .5)
-    }
-
-    .sym-token small {
-      color: var(--faint);
-      font-weight: 500;
-      margin-left: 8px
-    }
-
-    .sym-opt {
-      font: 500 10px/1.4 var(--mono);
+      font: 500 9.5px/1 var(--mono);
       letter-spacing: .1em;
-      color: var(--faint)
+      color: var(--dim);
     }
 
-    .sym-opt b {
-      color: var(--cyan2);
-      font-weight: 600
+    .lg-tag i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
     }
 
-    .loopline {
-      height: 14px;
-      border-radius: 3px;
-      position: relative;
-      overflow: hidden;
-      background: rgba(255, 255, 255, .03);
-      border: 1px solid var(--stroke)
+    .lg-org i { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+    .lg-nut i { background: var(--emerald); box-shadow: 0 0 6px var(--emerald); }
+    .lg-dif i { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+    .lg-obs i { background: #525266; }
+
+    /* Column 2: Neuro-Phylogeny & STDP */
+    .phylo-panel {
+      --accent: var(--purple);
+      --topline: rgba(168, 85, 247, .4);
     }
 
-    .loopline::before {
-      content: '';
-      position: absolute;
-      inset: 3px;
-      border-radius: 2px;
-      background: repeating-linear-gradient(90deg, rgba(34, 211, 238, .55) 0 8px, transparent 8px 20px, rgba(168, 85, 247, .55) 20px 28px, transparent 28px 40px);
-      animation: dashFlow 1.4s linear infinite;
-      opacity: .7
-    }
-
-    .loop-cap {
-      font: 500 7.5px/1 var(--mono);
-      letter-spacing: .16em;
-      color: var(--faint);
-      text-align: center
-    }
-
-    @keyframes dashFlow {
-      to {
-        transform: translateX(40px)
-      }
-    }
-
-    .sym-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: end
-    }
-
-    .concepts-cap {
-      font: 600 8.5px/1 var(--mono);
-      letter-spacing: .2em;
-      color: var(--faint);
-      margin-bottom: 6px
-    }
-
-    .concepts {
-      display: flex;
-      gap: 3px;
-      align-items: flex-end;
-      height: 46px;
-      padding: 5px 7px;
+    .cladogram-wrap {
+      width: 100%;
+      height: 190px;
       border-radius: 10px;
       background: rgba(0, 0, 0, .3);
-      border: 1px solid var(--stroke)
+      border: 1px solid var(--stroke);
+      overflow: hidden;
+      position: relative;
     }
 
-    .cbar {
-      flex: 1;
-      min-height: 3px;
-      border-radius: 2px;
-      background: linear-gradient(180deg, rgba(168, 85, 247, .55), rgba(168, 85, 247, .1));
-      transition: height .45s var(--ease)
+    #phyloCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
-    .cbar.hot {
-      background: linear-gradient(180deg, #e9d5ff, var(--purple));
-      box-shadow: 0 0 10px rgba(168, 85, 247, .65)
+    .stat-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
     }
 
-    .symhist {
-      display: flex;
-      gap: 5px
-    }
-
-    .chip {
-      width: 30px;
-      height: 36px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .03);
+    .stat-card {
+      border-radius: 10px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, .28);
       border: 1px solid var(--stroke);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      flex: none
+      gap: 6px;
     }
 
-    .chip b {
-      font: 600 13px/1 var(--mono);
-      color: var(--dim)
-    }
-
-    .chip span {
-      font: 500 7.5px/1 var(--mono);
-      color: var(--faint)
-    }
-
-    .chip.first {
-      border-color: rgba(168, 85, 247, .55);
-      box-shadow: 0 0 12px rgba(168, 85, 247, .25)
-    }
-
-    .chip.first b {
-      color: #e9d5ff
-    }
-
-    /* ---------- mcts panel ---------- */
-    .mcts-panel {
-      grid-area: tree;
-      --accent: var(--purple);
-      --topline: rgba(168, 85, 247, .3);
-      flex: 1
-    }
-
-    .tree-wrap {
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .06);
-      background: rgba(0, 0, 0, .22);
-      flex: 1
-    }
-
-    #treeCanvas {
-      width: 100%;
-      height: auto;
-      aspect-ratio: 680/320
-    }
-
-    /* ---------- actions panel ---------- */
-    .actions-panel {
-      grid-area: act;
-      --accent: var(--blue);
-      --topline: rgba(96, 165, 250, .3)
-    }
-
-    .act-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-      flex: 1;
-      justify-content: center
-    }
-
-    .arow {
-      display: grid;
-      grid-template-columns: 118px 1fr 52px;
-      gap: 12px;
-      align-items: center
-    }
-
-    .aname {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font: 600 9.5px/1 var(--mono);
+    .sc-lbl {
+      font: 600 8.5px/1 var(--mono);
       letter-spacing: .16em;
-      color: var(--dim)
-    }
-
-    .aname i {
-      width: 16px;
-      height: 16px;
-      border-radius: 5px;
-      display: grid;
-      place-items: center;
-      flex: none;
-      font: 600 9px var(--mono);
-      color: #0b0b10;
-      background: var(--c, var(--cyan))
-    }
-
-    .atrack {
-      height: 11px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, .045);
-      overflow: hidden;
-      position: relative;
-      border: 1px solid rgba(255, 255, 255, .05)
-    }
-
-    .afill {
-      height: 100%;
-      border-radius: 6px;
-      width: 0%;
-      position: relative;
-      transition: width .55s var(--ease);
-      background: linear-gradient(90deg, color-mix(in srgb, var(--c) 55%, transparent), var(--c));
-      box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent)
-    }
-
-    .arow.win .aname {
-      color: var(--text)
-    }
-
-    .arow.win .afill {
-      box-shadow: 0 0 16px color-mix(in srgb, var(--c) 75%, transparent)
-    }
-
-    .arow.win .aname i {
-      box-shadow: 0 0 10px var(--c)
-    }
-
-    .aval {
-      font: 600 11px/1 var(--mono);
-      color: var(--dim);
-      text-align: right;
-      font-variant-numeric: tabular-nums
-    }
-
-    .arow.win .aval {
-      color: var(--c)
-    }
-
-    /* ---------- metabolic panel ---------- */
-    .meta-panel {
-      grid-area: meta;
-      --accent: var(--emerald);
-      --topline: rgba(52, 211, 153, .35)
-    }
-
-    .met-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline
-    }
-
-    .met-label span {
-      font: 600 9px/1 var(--mono);
-      letter-spacing: .2em;
-      color: var(--dim)
-    }
-
-    .met-label b {
-      font: 600 13px/1 var(--mono);
-      color: var(--text);
-      font-variant-numeric: tabular-nums
-    }
-
-    .ebar {
-      height: 13px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, .045);
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .05)
-    }
-
-    .efill {
-      height: 100%;
-      border-radius: 7px;
-      width: 100%;
-      transition: width .6s var(--ease), background .4s
-    }
-
-    .meta-panel.critical .efill {
-      animation: barPulse .8s infinite
-    }
-
-    @keyframes barPulse {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: .5
-      }
-    }
-
-    .memseg {
-      display: flex;
-      gap: 3px;
-      height: 16px;
-      align-items: stretch
-    }
-
-    .memseg i {
-      flex: 1;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, .05);
-      transition: background .3s
-    }
-
-    .memseg i.on {
-      background: linear-gradient(180deg, var(--emerald), rgba(52, 211, 153, .4));
-      box-shadow: 0 0 6px rgba(52, 211, 153, .3)
-    }
-
-    .memseg i.hot {
-      background: linear-gradient(180deg, var(--amber), rgba(251, 191, 36, .4))
-    }
-
-    .statgrid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px
-    }
-
-    .stat {
-      border-radius: 11px;
-      padding: 11px 13px;
-      background: rgba(0, 0, 0, .24);
-      border: 1px solid var(--stroke)
-    }
-
-    .stat .sl {
-      font: 600 8px/1 var(--mono);
-      letter-spacing: .2em;
       color: var(--faint);
-      margin-bottom: 7px
     }
 
-    .stat .sv {
-      font: 700 19px/1 var(--mono);
-      color: var(--text);
-      font-variant-numeric: tabular-nums
+    .sc-val {
+      font: 700 17px/1 var(--mono);
+      color: #fff;
+      font-variant-numeric: tabular-nums;
     }
 
-    .stat .sv small {
+    .sc-val small {
       font-size: 10px;
       color: var(--faint);
-      font-weight: 500;
-      margin-left: 4px
+      margin-left: 4px;
     }
 
-    .pips {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      height: 19px
+    .bar-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, .05);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .06);
     }
 
-    .pips i {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, .06);
-      border: 1px solid var(--stroke)
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width .4s var(--ease);
     }
 
-    .pips i.on {
-      background: var(--amber);
-      box-shadow: 0 0 8px rgba(251, 191, 36, .5);
-      border-color: transparent
+    .fill-cyan { background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+    .fill-emerald { background: linear-gradient(90deg, var(--emerald), var(--cyan)); }
+    .fill-amber { background: linear-gradient(90deg, var(--amber), var(--red)); }
+
+    /* Column 3: Cognitive Emergence & Thermodynamics */
+    .thermo-panel {
+      --accent: var(--emerald);
+      --topline: rgba(52, 211, 153, .4);
     }
 
-    .spark-row {
-      display: flex;
-      align-items: center;
-      gap: 10px
-    }
-
-    .spark-wrap {
-      flex: 1;
-      border-radius: 9px;
+    .sparkline-wrap {
+      width: 100%;
+      height: 130px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .3);
       border: 1px solid var(--stroke);
-      background: rgba(0, 0, 0, .24);
-      overflow: hidden
+      overflow: hidden;
+      position: relative;
     }
 
     #sparkCanvas {
       width: 100%;
-      height: 54px
-    }
-
-    .spark-val {
-      font: 700 15px/1.2 var(--mono);
-      color: var(--cyan2);
-      text-align: right;
-      font-variant-numeric: tabular-nums
-    }
-
-    .spark-val small {
+      height: 100%;
       display: block;
-      font: 500 7.5px/1 var(--mono);
-      letter-spacing: .14em;
-      color: var(--faint);
-      margin-top: 4px
     }
 
-    /* ---------- chat panel ---------- */
-    .chat-panel {
-      grid-area: chat;
-      --accent: var(--cyan);
-      --topline: rgba(34, 211, 238, .3)
+    .badge-certified {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font: 700 9px/1 var(--mono);
+      letter-spacing: .12em;
+      background: rgba(52, 211, 153, .15);
+      border: 1px solid rgba(52, 211, 153, .4);
+      color: var(--emerald);
     }
 
-    .chat-log {
-      flex: 1;
-      min-height: 220px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-      padding-right: 4px;
-      mask-image: linear-gradient(180deg, transparent 0, black 14px);
-      -webkit-mask-image: linear-gradient(180deg, transparent 0, black 14px)
+    .badge-pending {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font: 700 9px/1 var(--mono);
+      letter-spacing: .12em;
+      background: rgba(251, 191, 36, .15);
+      border: 1px solid rgba(251, 191, 36, .4);
+      color: var(--amber);
     }
 
-    .chat-log::-webkit-scrollbar {
-      width: 7px
-    }
-
-    .chat-log::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, .09);
-      border-radius: 4px
-    }
-
-    .chat-log::-webkit-scrollbar-track {
-      background: transparent
-    }
-
-    .msg {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 10px 13px;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      animation: msgIn .35s var(--ease)
-    }
-
-    @keyframes msgIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    .msg .who {
-      font: 700 8.5px/1 var(--mono);
-      letter-spacing: .2em;
-      color: var(--faint)
-    }
-
-    .msg p {
-      font: 400 12.5px/1.6 var(--ui);
-      color: var(--text);
-      word-break: break-word
-    }
-
-    .msg p code {
-      font: 500 11px var(--mono);
-      color: var(--cyan2);
-      background: rgba(34, 211, 238, .08);
-      padding: 1px 5px;
-      border-radius: 4px
-    }
-
-    .msg.user {
-      background: rgba(34, 211, 238, .055);
-      border-color: rgba(34, 211, 238, .16)
-    }
-
-    .msg.user .who {
-      color: var(--cyan)
-    }
-
-    .msg.agent {
-      background: rgba(168, 85, 247, .055);
-      border-color: rgba(168, 85, 247, .16)
-    }
-
-    .msg.agent .who {
-      color: var(--purple2)
-    }
-
-    .msg.sys {
-      background: rgba(251, 191, 36, .045);
-      border-color: rgba(251, 191, 36, .18)
-    }
-
-    .msg.sys .who {
-      color: var(--amber)
-    }
-
-    .msg.typing p {
-      display: flex;
-      gap: 5px;
-      padding-top: 2px
-    }
-
-    .msg.typing p i {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--purple2);
-      animation: tdots 1.1s infinite
-    }
-
-    .msg.typing p i:nth-child(2) {
-      animation-delay: .18s
-    }
-
-    .msg.typing p i:nth-child(3) {
-      animation-delay: .36s
-    }
-
-    @keyframes tdots {
-
-      0%,
-      60%,
-      100% {
-        transform: translateY(0);
-        opacity: .35
-      }
-
-      30% {
-        transform: translateY(-4px);
-        opacity: 1
-      }
-    }
-
-    .chat-form {
-      display: flex;
-      gap: 9px;
-      padding-top: 12px;
-      border-top: 1px solid var(--stroke)
-    }
-
-    .chat-form .prompt {
-      display: grid;
-      place-items: center;
-      color: var(--cyan);
-      font: 700 14px var(--mono);
-      text-shadow: 0 0 8px rgba(34, 211, 238, .5)
-    }
-
-    .chat-form input {
-      flex: 1;
-      min-width: 0;
-      background: rgba(255, 255, 255, .04);
-      border: 1px solid var(--stroke);
-      border-radius: 10px;
-      padding: 10px 13px;
-      color: var(--text);
-      font: 400 12.5px var(--ui);
-      outline: none;
-      transition: border-color .2s, box-shadow .2s
-    }
-
-    .chat-form input::placeholder {
-      color: var(--faint)
-    }
-
-    .chat-form input:focus {
-      border-color: rgba(34, 211, 238, .45);
-      box-shadow: 0 0 0 3px rgba(34, 211, 238, .08)
-    }
-
-    .chat-form button {
-      padding: 0 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      color: #08080c;
-      font: 700 10px var(--mono);
-      letter-spacing: .16em;
-      transition: transform .15s var(--ease), box-shadow .2s
-    }
-
-    .chat-form button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(34, 211, 238, .3)
-    }
-
-    .chat-form button:active {
-      transform: translateY(0)
-    }
-
-    /* ---------- responsive ---------- */
-    @media (max-width:1240px) {
+    /* Responsive Design */
+    @media (max-width: 1380px) {
       .deck {
-        grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.25fr);
-        grid-template-rows: auto auto auto 1fr;
-        grid-template-areas: "env sym" "env tree" "vis act" "meta chat"
+        grid-template-columns: 420px 1fr;
+      }
+      .thermo-panel {
+        grid-column: 1 / -1;
       }
     }
 
-    @media (max-width:820px) {
+    @media (max-width: 900px) {
       .deck {
         grid-template-columns: 1fr;
-        grid-template-rows: none;
-        grid-template-areas: "env" "sym" "tree" "meta" "vis" "act" "chat"
-      }
-
-      .topbar {
-        padding: 14px 16px 12px
-      }
-
-      .topbar::after {
-        left: 16px;
-        right: 16px
-      }
-
-      .deck {
-        padding: 16px 14px 26px
-      }
-    }
-
-    @media (prefers-reduced-motion:reduce) {
-
-      *,
-      *::before,
-      *::after {
-        animation-duration: .01ms !important;
-        transition-duration: .01ms !important
+        padding: 12px;
       }
     }
   </style>
 </head>
 
 <body>
-
   <div class="bgfx"></div>
 
-  <!-- ======== BOOT ======== -->
-  <div id="boot">
-    <div class="boot-card">
-      <div class="boot-logo"></div>
-      <div class="boot-title">GENESIS OBSERVATION DECK</div>
-      <div class="boot-sub">CALIBRATING PHYSICAL SUBSTRATE · SUBSTRATE 21</div>
-      <div class="boot-bar"><i></i></div>
-    </div>
-  </div>
-
-  <!-- ======== TOP BAR ======== -->
+  <!-- Top Bar -->
   <header class="topbar">
     <div class="brand">
       <div class="brand-mark"><i>G</i></div>
       <div>
         <h1>GENESIS</h1>
-        <p>OBSERVATION DECK <em>// SUBSTRATE 21 · CONTINUAL META-PLASTICITY</em></p>
+        <p>OBSERVATION DECK <em>// PHASE-E · OPEN-ENDED EVOLUTIONARY ALIFE</em></p>
       </div>
     </div>
     <div class="top-stats">
-      <div class="pill" id="feedPill"><i class="dot"></i><span class="lbl">FEED</span><span class="fd" id="feedLabel"
-          style="font:600 10px var(--mono);letter-spacing:.14em">CONNECTING</span></div>
-      <div class="pill"><span class="lbl">TICK</span><b class="wide" id="tickTop">0</b></div>
-      <div class="pill"><span class="lbl">GEN</span><b id="genTop">1</b></div>
-      <div class="pill"><span class="lbl">FPS</span><b id="fpsTop">—</b></div>
+      <div class="pill"><i class="dot"></i><span id="feedStatus">LIVE TELEMETRY</span></div>
+      <div class="pill">TICK: <b id="topTick">0</b></div>
+      <div class="pill">POPULATION: <b id="topPop">0</b></div>
+      <div class="pill">BIRTHS: <b id="topBirths" style="color:var(--emerald)">0</b></div>
+      <div class="pill">DEATHS: <b id="topDeaths" style="color:var(--red)">0</b></div>
+      <div class="pill">FPS: <b id="topFps">0</b></div>
+      <div class="pill">MK-Z: <b id="topMkZ" style="color:var(--cyan)">+0.00</b></div>
     </div>
   </header>
 
-  <!-- ======== DECK ======== -->
+  <!-- Main Deck -->
   <main class="deck">
 
-    <!-- 1 · PHYSICAL SUBSTRATE -->
-    <section class="panel env-panel" id="envPanel">
+    <!-- 1 · 2D PHYSICAL SUBSTRATE & ECOLOGY -->
+    <section class="panel env-panel">
       <div class="p-head">
-        <span class="p-title"><i></i>PHYSICAL SUBSTRATE</span>
-        <span class="p-sub" id="envHud2">THERMO FIELD · ∂c/∂t = D∇²c</span>
+        <span class="p-title"><i></i>PHYSICAL SUBSTRATE &amp; ECOLOGY</span>
+        <span class="p-sub">LANDAUER FIELD · D∇²c</span>
       </div>
-      <div class="env-wrap">
-        <canvas id="envCanvas" aria-label="thermodynamic environment grid"></canvas>
-        <div class="env-hud" id="envHud"></div>
-      </div>
-      <div class="legend">
-        <span class="lg agent"><i></i>AGENT</span>
-        <span class="lg wall"><i></i>WALL</span>
-        <span class="lg haz"><i></i>HAZARD</span>
-        <span class="lg food"><i></i>FOOD</span>
-        <span class="lg key"><i></i>KEY</span>
-        <span class="lg lock"><i></i>LOCK</span>
-        <span class="lg chem"><i></i>CHEM FIELD</span>
-      </div>
-    </section>
 
-    <!-- 2 · SYMBOLIC LANGUAGE -->
-    <section class="panel symbol-panel">
-      <div class="p-head">
-        <span class="p-title"><i></i>SYMBOLIC LANGUAGE · INNER MONOLOGUE</span>
-        <span class="p-sub">VOCAB 64 · GROUNDED</span>
-      </div>
-      <div class="sym-hero">
-        <div class="hexwrap" id="hexwrap">
-          <div class="hex"><span id="symChar">·</span></div>
-          <div class="hexring"></div>
-        </div>
-        <div class="sym-info">
-          <div class="sym-token">TOKEN <b id="symToken">#—</b><small id="symHex">0x—</small></div>
-          <div class="sym-opt">BOUND OPTION <b id="symOption">—</b></div>
-          <div class="loop-cap">SYMBOL → ENCODE_TEXT → FUSED LATENT STATE</div>
-          <div class="loopline"></div>
+      <div class="canvas-wrap">
+        <canvas id="envCanvas" width="400" height="400"></canvas>
+        <div class="hud-overlay" id="hudOverlay">
+          <span>POPULATION: <b id="hudPop">0</b> · MAX LINEAGE: <b id="hudDepth">0</b></span>
+          <span>CHEM PEAK: <b id="hudChem">0.00</b></span>
         </div>
       </div>
-      <div class="sym-grid">
-        <div>
-          <div class="concepts-cap">CONCEPT ACTIVATIONS · 16D ABSTRACT SPACE</div>
-          <div class="concepts" id="concepts"></div>
+
+      <div class="legend-row">
+        <span class="lg-tag lg-org"><i></i>ORGANISM SWARM</span>
+        <span class="lg-tag lg-nut"><i></i>NUTRIENT PATCH</span>
+        <span class="lg-tag lg-dif"><i></i>CHEMICAL DIFFUSION</span>
+        <span class="lg-tag lg-obs"><i></i>BARRIER</span>
+      </div>
+
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <div class="sc-lbl">ACTIVE SWARM POPULATION</div>
+          <div class="sc-val" id="cardPop">0<small>AGENTS</small></div>
         </div>
-        <div>
-          <div class="concepts-cap" style="text-align:right">EMISSION LOG</div>
-          <div class="symhist" id="symhist"></div>
+        <div class="stat-card">
+          <div class="sc-lbl">MAX GENERATION DEPTH</div>
+          <div class="sc-val" id="cardDepth" style="color:var(--purple2)">0<small>GENS</small></div>
         </div>
       </div>
     </section>
 
-    <!-- 3 · METABOLIC -->
-    <section class="panel meta-panel" id="metaPanel">
+    <!-- 2 · NEURO-EVOLUTION & CLADOGRAM -->
+    <section class="panel phylo-panel">
       <div class="p-head">
-        <span class="p-title"><i></i>METABOLIC &amp; RESOURCE MONITOR</span>
-        <span class="p-sub">RULE 21 · PHYSICAL INCOME</span>
+        <span class="p-title"><i></i>NEURO-EVOLUTION &amp; LINEAGE PHYLOGENY</span>
+        <span class="p-sub">CPPN TOPOLOGY · 3-FACTOR STDP</span>
       </div>
+
+      <div class="cladogram-wrap">
+        <canvas id="phyloCanvas" width="600" height="190"></canvas>
+      </div>
+
+      <div class="p-head" style="margin-top:4px; padding-bottom:8px;">
+        <span class="p-title" style="font-size:11.5px;"><i></i>SYNAPSE COMPLEXITY &amp; LOCAL PLASTICITY</span>
+      </div>
+
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <div class="sc-lbl">MEAN ACTIVE SYNAPSES</div>
+          <div class="sc-val" id="cardSyn" style="color:var(--cyan)">0.0<small>CONN/ORG</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">WEIGHT NORM (||W||)</div>
+          <div class="sc-val" id="cardWNorm" style="color:var(--purple2)">0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">INTERNAL NEUROMODULATOR M(t)</div>
+          <div class="sc-val" id="cardMod" style="color:var(--amber)">0.00<small>HOMEOSTASIS</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">STDP ELIGIBILITY TRACE</div>
+          <div class="sc-val" id="cardElig" style="color:var(--emerald)">0.00<small>AMPLITUDE</small></div>
+        </div>
+      </div>
+
       <div>
-        <div class="met-label"><span>ENERGY RESERVE</span><b id="energyPct">—</b></div>
-        <div class="ebar" style="margin-top:7px">
-          <div class="efill" id="energyFill"></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font:600 10px var(--mono); color:var(--dim)">
+          <span>SYNAPSE HOMEOSTASIS DAMPING</span>
+          <span id="txtHomeo">ACTIVE CLAMPING [-4.0, +4.0]</span>
         </div>
-      </div>
-      <div>
-        <div class="met-label"><span>HIPPOCAMPAL MEMORY</span><b id="hippoTxt">0 / 5,000</b></div>
-        <div class="memseg" id="memseg" style="margin-top:7px"></div>
-      </div>
-      <div class="statgrid">
-        <div class="stat">
-          <div class="sl">TICKS SURVIVED</div>
-          <div class="sv" id="statTicks">0</div>
-        </div>
-        <div class="stat">
-          <div class="sl">GENERATION</div>
-          <div class="sv" id="statGen">1<small>LINEAGE</small></div>
-        </div>
-        <div class="stat">
-          <div class="sl">DIFFICULTY</div>
-          <div class="pips" id="pips"></div>
-        </div>
-        <div class="stat">
-          <div class="sl">SUBSTRATE</div>
-          <div class="sv" style="color:var(--purple2)">S-15<small>STABLE</small></div>
-        </div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>CONTINUAL LEARNING (SUBSTRATE 16)</span>
-      </div>
-      <div class="statgrid">
-        <div class="stat">
-          <div class="sl">TD ERROR (EMA)</div>
-          <div class="sv" id="statTd" style="color:var(--cyan2)">—</div>
-        </div>
-        <div class="stat">
-          <div class="sl">WM LOSS (MSE)</div>
-          <div class="sv" id="statWm" style="color:var(--emerald)">—</div>
-        </div>
-        <div class="stat">
-          <div class="sl">WM LOSS (EMA)</div>
-          <div class="sv" id="statWmEma" style="color:#fcd34d">—</div>
-        </div>
-        <div class="stat">
-          <div class="sl">INTRINSIC DRIVE</div>
-          <div class="sv" id="statCuriosity" style="color:#fbbf24">0.2<small id="statBoredom">STABLE</small></div>
-        </div>
-      </div>
-      <div class="spark-row">
-        <div class="spark-wrap"><canvas id="sparkCanvas" aria-label="entropy income history"></canvas></div>
-        <div class="spark-val"><span id="entropyVal">0.00</span><small>BITS / TICK · ΔH</small></div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>EPISODIC MEMORY (SUBSTRATE 18)</span>
-      </div>
-      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr;">
-        <div class="stat">
-          <div class="sl">CONSOLIDATIONS</div>
-          <div class="sv" id="statConsolidation" style="color:var(--purple2)">—</div>
-        </div>
-        <div class="stat">
-          <div class="sl">FISHER NORM (SI)</div>
-          <div class="sv" id="statFisher" style="color:var(--emerald)">—</div>
-        </div>
-        <div class="stat">
-          <div class="sl">MEM TAX (ENERGY)</div>
-          <div class="sv" id="statMemTax" style="color:var(--red)">—</div>
-        </div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>BEHAVIORAL EMERGENCE (SUBSTRATE 18)</span>
-        <span class="p-sub" id="statEmergenceBadge" style="font-weight:700; color:var(--amber)">AWAITING DEEP
-          TIME</span>
-      </div>
-      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
-        <div class="stat">
-          <div class="sl">LATENT CLUSTERS (k*)</div>
-          <div class="sv" id="statLatentK" style="color:var(--cyan)">1</div>
-        </div>
-        <div class="stat">
-          <div class="sl">SILHOUETTE SCORE</div>
-          <div class="sv" id="statLatentSil" style="color:var(--blue)">0.00</div>
-        </div>
-        <div class="stat">
-          <div class="sl">GOAL DIVERSITY (D)</div>
-          <div class="sv" id="statGoalDiv" style="color:var(--purple2)">1</div>
-        </div>
-        <div class="stat">
-          <div class="sl">ACTION ENTROPY (H)</div>
-          <div class="sv" id="statActEntropy" style="color:var(--emerald)">0.00</div>
-        </div>
-        <div class="stat">
-          <div class="sl">BEHAVIORAL MODES (M*)</div>
-          <div class="sv" id="statBehModes" style="color:var(--yellow)">1</div>
-        </div>
-        <div class="stat">
-          <div class="sl">COMPLEXITY C(g)</div>
-          <div class="sv" id="statComplexity" style="color:var(--cyan)">0.00</div>
-        </div>
-        <div class="stat">
-          <div class="sl">MANN-KENDALL (Z)</div>
-          <div class="sv" id="statMannKendall" style="color:var(--amber)">0.00</div>
-        </div>
-        <div class="stat">
-          <div class="sl">PROBE METABOLIC TAX</div>
-          <div class="sv" id="statEmergenceTax" style="color:var(--red)">0.00</div>
-        </div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>NEUROGENESIS & REASONING (SUBSTRATE 19)</span>
-        <span class="p-sub" id="statSub19Badge" style="font-weight:700; color:var(--cyan)">OSCILLATOR ACTIVE</span>
-      </div>
-      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
-        <div class="stat">
-          <div class="sl">CLOCK PHASE (φ)</div>
-          <div class="sv" id="statClockPhase" style="color:var(--cyan)">0.0°</div>
-        </div>
-        <div class="stat">
-          <div class="sl">PLL GATES (W/R/C)</div>
-          <div class="sv" id="statGates" style="color:var(--purple2)">—</div>
-        </div>
-        <div class="stat">
-          <div class="sl">STRUCT SPARSITY (ρ)</div>
-          <div class="sv" id="statSparsity" style="color:var(--emerald)">70.0%</div>
-        </div>
-        <div class="stat">
-          <div class="sl">BINDING ENTROPY</div>
-          <div class="sv" id="statBindingEntropy" style="color:var(--amber)">0.00</div>
-        </div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>COUNTERFACTUAL & TOM (SUBSTRATE 20)</span>
-        <span class="p-sub" id="statSub20Badge" style="font-weight:700; color:var(--purple2)">SEMIOGENESIS ACTIVE</span>
-      </div>
-      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
-        <div class="stat">
-          <div class="sl">IMAG BRANCH (Beff)</div>
-          <div class="sv" id="statImagEff" style="color:var(--cyan)">4.0</div>
-        </div>
-        <div class="stat">
-          <div class="sl">TOM PRED ERROR</div>
-          <div class="sv" id="statTomError" style="color:var(--red)">0.00</div>
-        </div>
-        <div class="stat">
-          <div class="sl">GROUNDING (||G||)</div>
-          <div class="sv" id="statGroundingNorm" style="color:var(--emerald)">0.00</div>
-        </div>
-        <div class="stat">
-          <div class="sl">MUTUAL INFO (Î)</div>
-          <div class="sv" id="statSymMi" style="color:var(--amber)">0.00</div>
-        </div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>CONTINUAL META-PLASTICITY (SUBSTRATE 21)</span>
-        <span class="p-sub" id="statSub21Badge" style="font-weight:700; color:var(--emerald)">TASK 4 CERTIFIED (dz=+1.04)</span>
-      </div>
-      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
-        <div class="stat">
-          <div class="sl">REPLAY BUFFER</div>
-          <div class="sv" id="statS21Hippo" style="color:var(--cyan)">28.5k / 50k</div>
-        </div>
-        <div class="stat">
-          <div class="sl">META-LOSS (Lmeta)</div>
-          <div class="sv" id="statMetaLoss" style="color:var(--emerald)">0.0000</div>
-        </div>
-        <div class="stat">
-          <div class="sl">SYNAPTIC INTEL (Ω)</div>
-          <div class="sv" id="statSiOmega" style="color:var(--purple2)">0.050</div>
-        </div>
-        <div class="stat">
-          <div class="sl">RULE 24 STATUS</div>
-          <div class="sv" id="statRule24" style="color:var(--amber)">LEVEL 1</div>
-        </div>
-      </div>
-      <div class="p-head" style="margin-top:16px; border-top:1px solid var(--stroke); padding-top:12px;">
-        <span class="p-title"><i></i>FiLM WORLD MODEL & DISTILLATION (SUBSTRATE 22)</span>
-        <span class="p-sub" id="statSub22Badge" style="font-weight:700; color:var(--cyan)">MCTS DISTILLATION ACTIVE</span>
-      </div>
-      <div class="statgrid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
-        <div class="stat">
-          <div class="sl">DISTILL TEMP (τ)</div>
-          <div class="sv" id="statDistillTau" style="color:var(--cyan)">1.50</div>
-        </div>
-        <div class="stat">
-          <div class="sl">DYN LOSS (MSE)</div>
-          <div class="sv" id="statDynLoss" style="color:var(--emerald)">0.0000</div>
-        </div>
-        <div class="stat">
-          <div class="sl">DISTILL LOSS</div>
-          <div class="sv" id="statDistillLoss" style="color:var(--purple2)">0.0000</div>
-        </div>
-        <div class="stat">
-          <div class="sl">PHASE / LOSS W</div>
-          <div class="sv" id="statPhase" style="color:var(--amber)">P1 (λ2=0.20)</div>
+        <div class="bar-track">
+          <div class="bar-fill fill-cyan" id="fillHomeo" style="width: 75%"></div>
         </div>
       </div>
     </section>
 
-    <!-- 4 · MCTS -->
-    <section class="panel mcts-panel">
+    <!-- 3 · COGNITIVE EMERGENCE & THERMODYNAMICS -->
+    <section class="panel thermo-panel">
       <div class="p-head">
-        <span class="p-title"><i></i>HIERARCHICAL MCTS · PLANNING TREE</span>
-        <span class="p-sub" id="treeSel">—</span>
+        <span class="p-title"><i></i>COGNITIVE EMERGENCE &amp; THERMODYNAMICS</span>
+        <span class="p-sub">RULE 18 · RULE 21</span>
       </div>
-      <div class="tree-wrap"><canvas id="treeCanvas" aria-label="hierarchical mcts tree"></canvas></div>
-    </section>
 
-    <!-- 5 · VISUAL CORTEX -->
-    <section class="panel cortex-panel">
-      <div class="p-head">
-        <span class="p-title"><i></i>VISUAL CORTEX</span>
-        <span class="p-sub">7×7 EGOCENTRIC</span>
-      </div>
-      <div class="cortex-body">
-        <div class="cortex-wrap"><canvas id="visCanvas" aria-label="agent egocentric receptive field"></canvas></div>
-        <div class="cortex-meta">
-          <div class="kv">RECEPTIVE FIELD<br><b>7 × 7 · 343D</b></div>
-          <div class="kv">CHEM CHANNEL<br><b>CH-7 · CONTINUOUS</b></div>
-          <div class="kv">ROTATION<br><b id="visRot">DIR 0 · N</b></div>
-          <div class="kv">KEY STATE<br><b id="visKey" class="no">UNBOUND</b></div>
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <div class="sc-lbl">MANN-KENDALL TREND (Z)</div>
+          <div class="sc-val" id="cardMkZ" style="color:var(--cyan)">+0.00</div>
+          <div style="margin-top:4px">
+            <span class="badge-pending" id="badgeAscent">TESTING ASCENT</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">RULE 18 EMERGENCE INDEX</div>
+          <div class="sc-val" id="cardEmergence" style="color:var(--emerald)">0.000</div>
+          <div class="sc-lbl" style="margin-top:6px">H_traj × D_beh / (1 + MSE)</div>
         </div>
       </div>
-    </section>
 
-    <!-- 6 · ACTION PROBABILITIES -->
-    <section class="panel actions-panel">
-      <div class="p-head">
-        <span class="p-title"><i></i>LOW-LEVEL POLICY · P(a | s, option)</span>
-        <span class="p-sub">SOFTMAX · τ=0.5</span>
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <div class="sc-lbl">TRAJECTORY SPATIAL ENTROPY</div>
+          <div class="sc-val" id="cardEntropy">0.00<small>BITS</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">ACTION BEHAVIORAL DIVERSITY</div>
+          <div class="sc-val" id="cardDiversity">0.00<small>BITS</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">MEAN ORGANISM ENERGY</div>
+          <div class="sc-val" id="cardEnergy" style="color:var(--amber)">0.0<small>JOULES</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-lbl">METABOLIC FLOP DISSIPATION</div>
+          <div class="sc-val" id="cardMetabolic" style="color:var(--red)">0.00<small>COST/TICK</small></div>
+        </div>
       </div>
-      <div class="act-rows" id="actRows"></div>
-    </section>
 
-    <!-- 7 · DIALOGUE -->
-    <section class="panel chat-panel">
-      <div class="p-head">
-        <span class="p-title"><i></i>GROUNDED DIALOGUE INTERFACE</span>
-        <span class="p-sub">UPLINK · TEXT ⇄ LATENT</span>
+      <div class="p-head" style="margin-top:2px; padding-bottom:6px;">
+        <span class="p-title" style="font-size:11.5px;"><i></i>DEMOGRAPHIC HISTORY (POPULATION DYNAMICS)</span>
       </div>
-      <div class="chat-log" id="chatLog"></div>
-      <form class="chat-form" id="chatForm" autocomplete="off">
-        <span class="prompt">❯</span>
-        <input id="chatInput" type="text" placeholder="transmit directive to agent…" maxlength="240">
-        <button type="submit">SEND</button>
-      </form>
+
+      <div class="sparkline-wrap">
+        <canvas id="sparkCanvas" width="400" height="130"></canvas>
+      </div>
     </section>
 
   </main>
 
   <script>
-    'use strict';
-    /* ---------------- utils ---------------- */
-    const $ = s => document.querySelector(s);
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const clamp01 = v => clamp(v, 0, 1);
-    const lerp = (a, b, t) => a + (b - a) * t;
-    const ri = n => Math.floor(Math.random() * n);
-    const fmt = n => Math.round(n).toLocaleString('en-US');
-    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N E S W
-    const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    /* ---------------- canonical state ---------------- */
+    /* ============================================================
+       GENESIS Phase-E ALife Telemetry & Rendering Engine
+       ============================================================ */
     const S = {
-      live: false, demo: false,
-      tick: 0, generation: 1, difficulty: 1,
-      env: {
-        w: 12, h: 12, grid: new Array(144).fill(0), chem: new Float32Array(144),
-        agent: { x: 6, y: 6, dir: 0 }, hasKey: false, trail: []
+      tick: 0,
+      fps: 0,
+      phase_e: {
+        population: [],
+        telemetry: {},
+        resource_grid: []
       },
-      vis: null,
-      cog: {
-        symbol: null, symbolHistory: [], optionId: 0, optionLabel: '—',
-        actionProbs: [.25, .25, .25, .25], actionProbsT: [.25, .25, .25, .25],
-        concepts: new Array(16).fill(0).map(() => Math.random() * .3), tree: null, selPath: new Set()
-      },
-      meta: { energy: 1, hippoCount: 0, hippoCap: 5000, entropyIncome: 0 },
-      learning: null
+      history: {
+        pop: [],
+        births: [],
+        deaths: [],
+        emergence: []
+      }
     };
-    const entropyHist = new Array(140).fill(0); let entropySpike = 0, entropyEMA = 0;
 
-    /* ---------------- element cache ---------------- */
-    const el = {};
-    ['tickTop', 'genTop', 'fpsTop', 'feedPill', 'feedLabel', 'envHud', 'envHud2', 'envPanel',
-      'symChar', 'symToken', 'symHex', 'symOption', 'hexwrap', 'concepts', 'symhist', 'treeSel',
-      'energyPct', 'energyFill', 'hippoTxt', 'memseg', 'statTicks', 'statGen', 'pips', 'entropyVal',
-      'chatLog', 'chatForm', 'chatInput', 'metaPanel', 'visRot', 'visKey', 'actRows',
-      'statTd', 'statWm', 'statWmEma', 'statCuriosity', 'statBoredom',
-      'statConsolidation', 'statFisher', 'statMemTax',
-      'statEmergenceBadge', 'statLatentK', 'statLatentSil', 'statGoalDiv',
-      'statActEntropy', 'statBehModes', 'statComplexity', 'statMannKendall', 'statEmergenceTax',
-      'statSub19Badge', 'statClockPhase', 'statGates', 'statSparsity', 'statBindingEntropy',
-      'statSub20Badge', 'statImagEff', 'statTomError', 'statGroundingNorm', 'statSymMi',
-      'statSub21Badge', 'statS21Hippo', 'statMetaLoss', 'statSiOmega', 'statRule24',
-      'statSub22Badge', 'statDistillTau', 'statDynLoss', 'statDistillLoss', 'statPhase'
-    ].forEach(id => el[id] = document.getElementById(id));
-
-    /* ================================================================
-       CANVAS SETUP (fixed logical size, DPR-aware, CSS-scaled)
-       ================================================================ */
-    function mkCanvas(id, lw, lh) {
-      const c = document.getElementById(id), dpr = Math.min(2, window.devicePixelRatio || 1);
-      c.width = lw * dpr; c.height = lh * dpr; c.style.width = '100%'; c.style.aspectRatio = `${lw}/${lh}`;
-      const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return ctx;
-    }
-    const ENV = { cell: 42, pad: 14 }, ENV_LW = 12 * ENV.cell + ENV.pad * 2;
-    const envCtx = mkCanvas('envCanvas', ENV_LW, ENV_LW);
-    const COR = { cell: 34, pad: 10 }, COR_LW = 7 * COR.cell + COR.pad * 2;
-    const visCtx = mkCanvas('visCanvas', COR_LW, COR_LW);
-    const TREE_W = 680, TREE_H = 320;
-    const treeCtx = mkCanvas('treeCanvas', TREE_W, TREE_H);
-    const sparkCtx = mkCanvas('sparkCanvas', 260, 54);
-
-    const chemCanvas = document.createElement('canvas'); chemCanvas.width = 12; chemCanvas.height = 12;
-    const chemCtx2 = chemCanvas.getContext('2d'); const chemImg = chemCtx2.createImageData(12, 12);
-    const chemScratch = new Float32Array(144);
-
-    /* ================================================================
-       WEBSOCKET — connect, normalize, merge
-       ================================================================ */
     let ws = null;
-    function setFeed(mode, label) {
-      el.feedPill.classList.toggle('live', mode === 'live');
-      el.feedPill.classList.toggle('sim', mode === 'sim');
-      el.feedLabel.textContent = label;
-    }
-    function connectWS() {
-      const over = new URLSearchParams(location.search).get('ws');
+    let lastFrameTime = performance.now();
+    let frameCount = 0;
+    let fpsTimer = performance.now();
+
+    // DOM Elements
+    const el = {
+      feedStatus: document.getElementById('feedStatus'),
+      topTick: document.getElementById('topTick'),
+      topPop: document.getElementById('topPop'),
+      topBirths: document.getElementById('topBirths'),
+      topDeaths: document.getElementById('topDeaths'),
+      topFps: document.getElementById('topFps'),
+      topMkZ: document.getElementById('topMkZ'),
+      hudPop: document.getElementById('hudPop'),
+      hudDepth: document.getElementById('hudDepth'),
+      hudChem: document.getElementById('hudChem'),
+      cardPop: document.getElementById('cardPop'),
+      cardDepth: document.getElementById('cardDepth'),
+      cardSyn: document.getElementById('cardSyn'),
+      cardWNorm: document.getElementById('cardWNorm'),
+      cardMod: document.getElementById('cardMod'),
+      cardElig: document.getElementById('cardElig'),
+      cardMkZ: document.getElementById('cardMkZ'),
+      cardEmergence: document.getElementById('cardEmergence'),
+      cardEntropy: document.getElementById('cardEntropy'),
+      cardDiversity: document.getElementById('cardDiversity'),
+      cardEnergy: document.getElementById('cardEnergy'),
+      cardMetabolic: document.getElementById('cardMetabolic'),
+      badgeAscent: document.getElementById('badgeAscent'),
+      envCanvas: document.getElementById('envCanvas'),
+      phyloCanvas: document.getElementById('phyloCanvas'),
+      sparkCanvas: document.getElementById('sparkCanvas')
+    };
+
+    const envCtx = el.envCanvas.getContext('2d');
+    const phyloCtx = el.phyloCanvas.getContext('2d');
+    const sparkCtx = el.sparkCanvas.getContext('2d');
+
+    // Connect WebSocket
+    function connect() {
       const defaultHost = (!location.host || location.protocol === 'file:') ? 'localhost:8088' : location.host;
-      const url = over || ((location.protocol === 'https:' ? 'wss://' : 'ws://') + defaultHost + '/ws');
-      try { ws = new WebSocket(url); } catch (e) { enterDemo(); return; }
-      let opened = false;
-      ws.onopen = () => {
-        opened = true; S.live = true; S.demo = false; setFeed('live', 'LIVE FEED');
-        chatSys('uplink established — live telemetry streaming from substrate');
-      };
-      ws.onmessage = e => {
-        try {
-          const d = JSON.parse(e.data);
-          handleMsg(d);
-        } catch (err) {
-          console.error("[DECK TELEMETRY ERROR]", err);
-        }
-      };
-      ws.onclose = () => {
-        if (opened) {
-          S.live = false; setFeed('sim', 'AWAITING TELEMETRY');
-          setTimeout(connectWS, 3000);
-        } else enterDemo();
-      };
-      ws.onerror = (err) => { console.error("[WS ERROR]", err); };
-    }
-    function handleMsg(d) {
-      if (d.type === 'chat' || d.reply || d.response) {
-        const t = d.text || d.reply || d.response; if (t) chatAgent(String(t)); return;
-      }
-      if (d.type === 'state' || d.type === 'STATE_UPDATE' || d.env || d.grid || d.tick != null || d.cog || d.meta) {
-        applyState(normalize(d));
-      }
-    }
+      const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + defaultHost + '/ws';
 
-    /* -------- defensive normalizer: accepts both nested and flat schemas -------- */
-    function normalize(d) {
-      const o = {};
-      const env = d.env || d.environment || d.world || {};
-      const meta = d.meta || d.metabolic || d.stats || {};
-
-      // Grid
-      const grid = env.grid || env.tiles || d.grid || d.tiles;
-      const chem = env.chem || env.chemical || env.field || d.chem || d.chemical;
-      const w = env.w || d.w || 12;
-      const h = env.h || d.h || 12;
-
-      if (grid) o.env = { grid: normGrid(grid, w) };
-      if (chem) o.env = o.env || {}, o.env.chem = normChem(chem, w);
-
-      // Agent
-      const ag = env.agent || d.agent;
-      if (ag) {
-        o.env = o.env || {};
-        o.env.agent = { x: +(ag.x ?? 0), y: +(ag.y ?? 0), dir: +(ag.dir ?? 0) % 4 };
-      } else if (d.agentPos || d.agent_pos) {
-        const pos = d.agentPos || d.agent_pos;
-        o.env = o.env || {};
-        o.env.agent = { x: +(pos[1] ?? 0), y: +(pos[0] ?? 0), dir: +(d.agentDir ?? 0) % 4 };
-      }
-      if (env.hasKey != null || d.hasKey != null) o.env = o.env || {}, o.env.hasKey = !!(env.hasKey ?? d.hasKey);
-
-      o.env = o.env || {};
-      o.env.w = w;
-      o.env.h = h;
-
-      // Tick / gen / difficulty
-      if (d.tick != null || d.t != null) o.tick = +(d.tick ?? d.t);
-      if (d.generation != null) o.generation = +d.generation;
-      if (d.difficulty != null) o.difficulty = typeof d.difficulty === 'object' ? (d.difficulty.size > 12 ? 2 : 1) : +d.difficulty;
-
-      // Metabolic
-      if (meta.energy != null) {
-        o.meta = { energy: clamp01(+meta.energy) };
-      } else if (d.energy != null) {
-        o.meta = { energy: clamp01(+d.energy <= 1.0 ? +d.energy : +d.energy / 70.0) };
-      }
-      const hp = meta.hippocampus || meta.hippo || {};
-      if (hp.count != null || d.hippoCount != null) {
-        o.meta = o.meta || {};
-        o.meta.hippoCount = +(hp.count ?? d.hippoCount ?? 0);
-        o.meta.hippoCap = +(hp.cap ?? hp.capacity ?? d.hippoCap ?? 5000);
-      }
-      if (meta.entropyIncome != null || d.entropyIncome != null || d.vVal != null) {
-        o.meta = o.meta || {};
-        o.meta.entropyIncome = +(meta.entropyIncome ?? d.entropyIncome ?? Math.abs(+d.vVal || 0));
-      }
-
-      // Vision
-      if (d.vis || d.visual) o.vis = normVis(d.vis || d.visual);
-      else if (d.obs) o.vis = normVis(d.obs);
-
-      // Cognitive
-      const cog = d.cog || d.cognitive || d.brain || d.mcts || {};
-      const sym = cog.symbol ?? cog.emittedSymbol ?? cog.emitted_symbol ?? d.symbol;
-      const ap = cog.actionProbs || cog.action_probs || cog.policy || d.actionProbs;
-      const tr = cog.tree || d.tree || cog;
-      const cp = cog.concepts || d.concepts;
-      const optId = cog.optionId ?? cog.selected_option;
-      const optLbl = cog.optionLabel ?? (optId != null ? OPTION_NAMES[optId % 8] : null);
-
-      if (sym != null || ap || tr || cp || optId != null || optLbl) {
-        o.cog = {};
-        if (sym != null) o.cog.symbol = clamp(+sym, 0, 63);
-        if (optId != null) o.cog.optionId = +optId;
-        if (optLbl != null) o.cog.optionLabel = String(optLbl);
-        if (ap) o.cog.actionProbs = normProbs(ap);
-        if (cp) o.cog.concepts = Array.from(cp).map(v => clamp01(+v || 0));
-        if (tr) o.cog.tree = normTree(tr);
-      }
-      if (d.learning) {
-        o.learning = d.learning;
-      }
-      if (d.substrate22) {
-        o.substrate22 = d.substrate22;
-      }
-      return o;
-    }
-
-    const TILE_CHAR = { '.': 0, '_': 0, 'F': 3, 'A': 0, 'W': 1, '#': 1, 'H': 2, 'X': 2, '+': 3, 'K': 4, 'L': 5, 'D': 5 };
-    function normGrid(g, w) {
-      w = w || 12;
-      const out = new Array(144).fill(0);
-      if (!g) return out;
-      if (Array.isArray(g) && g.length > 0 && Array.isArray(g[0])) {
-        for (let y = 0; y < 12 && y < g.length; y++) {
-          for (let x = 0; x < 12 && x < g[y].length; x++) {
-            const v = g[y][x];
-            out[y * 12 + x] = (typeof v === 'string') ? (TILE_CHAR[v.toUpperCase()] ?? 0) : (+v || 0);
-          }
-        }
-      } else if (Array.isArray(g)) {
-        for (let i = 0; i < g.length; i++) {
-          const r = Math.floor(i / w);
-          const c = i % w;
-          if (r < 12 && c < 12) {
-            const v = g[i];
-            out[r * 12 + c] = (typeof v === 'string') ? (TILE_CHAR[v.toUpperCase()] ?? 0) : (+v || 0);
-          }
-        }
-      }
-      return out;
-    }
-    function normChem(c, w) {
-      w = w || 12;
-      const out = new Float32Array(144);
-      if (!c) return out;
-      if (Array.isArray(c) && c.length > 0 && Array.isArray(c[0])) {
-        for (let y = 0; y < 12 && y < c.length; y++) {
-          for (let x = 0; x < 12 && x < c[y].length; x++)out[y * 12 + x] = clamp01(+c[y][x] || 0);
-        }
-      } else if (Array.isArray(c) || ArrayBuffer.isView(c)) {
-        for (let i = 0; i < c.length; i++) {
-          const r = Math.floor(i / w);
-          const col = i % w;
-          if (r < 12 && col < 12) {
-            out[r * 12 + col] = clamp01(+c[i] || 0);
-          }
-        }
-      }
-      return out;
-    }
-    function normVis(v) {
-      if (!v) return null;
-      if (Array.isArray(v)) {
-        const flat = v.flat ? v.flat(Infinity) : [].concat(...v);
-        if (flat.length >= 343) return flat.slice(0, 343).map(x => +x || 0);
-        if (flat.length >= 49) return flat.slice(0, 49).map(x => clamp01(+x || 0));
-        return flat.map(x => clamp01(+x || 0));
-      }
-      return null;
-    }
-    function normProbs(p) {
-      const a = Array.from(p).map(x => Math.max(0, +x || 0)).slice(0, 4);
-      while (a.length < 4) a.push(0);
-      const s = a.reduce((x, y) => x + y, 0) || 1; return a.map(x => x / s);
-    }
-    function normTree(t) {
-      if (!t) return null;
-      if (!t.children && (t.action_probs || t.visitCounts || t.action_qValues || t.option_probs)) {
-        const root = { label: 'ROOT', visits: 32, value: 0.5, children: [], key: 'ROOT' };
-        const optProbs = t.option_probs || [0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125];
-        const optQ = t.option_qValues || [0, 0, 0, 0, 0, 0, 0, 0];
-        const actProbs = t.action_probs || [0.25, 0.25, 0.25, 0.25];
-        const actQ = t.action_qValues || [0, 0, 0, 0];
-        const selOptId = t.selected_option != null ? t.selected_option : 0;
-        const selActId = t.selected_action != null ? t.selected_action : 0;
-
-        for (let i = 0; i < Math.min(8, optProbs.length); i++) {
-          const vCount = Math.max(1, Math.round(optProbs[i] * 32));
-          const optNode = {
-            label: (OPTION_NAMES[i % 8] || ('O' + i)),
-            visits: vCount,
-            value: clamp01(optQ[i] > 0 ? optQ[i] / 2.0 : (optProbs[i] || 0.5)),
-            children: [],
-            key: 'O' + i
-          };
-          if (i === selOptId) {
-            ['FORWARD', 'LEFT', 'RIGHT', 'ACT'].forEach((aname, ai) => {
-              optNode.children.push({
-                label: aname,
-                visits: Math.max(1, Math.round((actProbs[ai] || 0.25) * vCount)),
-                value: clamp01(actQ[ai] > 0 ? actQ[ai] / 2.0 : (actProbs[ai] || 0.5)),
-                children: [],
-                key: 'O' + i + '/' + aname
-              });
-            });
-          }
-          root.children.push(optNode);
-        }
-        const selO = root.children[selOptId] || root.children[0];
-        const selA = selO && selO.children && selO.children[selActId] ? selO.children[selActId] : (selO && selO.children ? selO.children[0] : null);
-        const selPath = new Set(['ROOT']);
-        if (selO) selPath.add(selO.key);
-        if (selA) selPath.add(selA.key);
-        return { root, selO, selA, selPath };
-      }
-
-      const mk = (n, key) => ({
-        label: String(n.label ?? n.name ?? '?'), visits: +n.visits || 0,
-        value: clamp01(+n.value || 0), children: [], key
-      });
-      const root = mk(t, 'ROOT'); root.label = 'ROOT';
-      (t.children || []).slice(0, 8).forEach((c, i) => {
-        const o = mk(c, 'O' + i); o.label = String(c.label ?? ('O' + i));
-        (c.children || []).slice(0, 5).forEach(k => {
-          const a = mk(k, o.key + '/' + String(k.label ?? k.name ?? '?'));
-          o.children.push(a);
-        });
-        root.children.push(o);
-      });
-      let selO = null; root.children.forEach(o => { if (!selO || o.visits > selO.visits) selO = o; });
-      let selA = null; if (selO) selO.children.forEach(a => { if (!selA || a.visits > selA.visits) selA = a; });
-      const selPath = new Set(['ROOT']); if (selO) selPath.add(selO.key); if (selA) selPath.add(selA.key);
-      return { root, selO, selA, selPath };
-    }
-
-    function applyState(n) {
-      if (n.tick != null) S.tick = n.tick;
-      if (n.generation != null) S.generation = n.generation;
-      if (n.difficulty != null) S.difficulty = n.difficulty;
-      if (n.env) {
-        const e = n.env;
-        if (e.grid) S.env.grid = e.grid;
-        if (e.chem) S.env.chem = e.chem;
-        if (e.agent) {
-          Object.assign(S.env.agent, e.agent);
-          if (!S.env.trail) S.env.trail = [];
-          S.env.trail.push({ x: e.agent.x, y: e.agent.y });
-          if (S.env.trail.length > 24) S.env.trail.shift();
-        }
-        if (e.hasKey != null) S.env.hasKey = e.hasKey;
-        if (e.w) S.env.w = e.w; if (e.h) S.env.h = e.h;
-      }
-      if (n.vis) S.vis = n.vis;
-      if (n.cog) {
-        const c = n.cog;
-        if (c.symbol != null && c.symbol !== S.cog.symbol) {
-          S.cog.symbol = c.symbol;
-          S.cog.symbolHistory.unshift(c.symbol); S.cog.symbolHistory.length = Math.min(10, S.cog.symbolHistory.length);
-          flashSymbol();
-        }
-        if (c.optionId != null) S.cog.optionId = c.optionId;
-        if (c.optionLabel != null) S.cog.optionLabel = c.optionLabel;
-        if (c.actionProbs) S.cog.actionProbs = c.actionProbs;
-        if (c.concepts) S.cog.concepts = c.concepts;
-        if (c.tree) { S.cog.tree = c.tree; S.cog.selPath = c.tree.selPath; }
-      }
-      if (n.meta) {
-        const m = n.meta;
-        if (m.energy != null) S.meta.energy = m.energy;
-        if (m.hippoCount != null) S.meta.hippoCount = m.hippoCount;
-        if (m.hippoCap) S.meta.hippoCap = m.hippoCap;
-        if (m.entropyIncome != null) S.meta.entropyIncome = m.entropyIncome;
-      }
-      if (n.learning) {
-        S.learning = n.learning;
-      }
-      if (n.emergence) {
-        S.emergence = n.emergence;
-      }
-      if (n.substrate19) {
-        S.substrate19 = n.substrate19;
-      }
-      if (n.substrate20) {
-        S.substrate20 = n.substrate20;
-      }
-      if (n.substrate21) {
-        S.substrate21 = n.substrate21;
-      }
-      if (n.substrate22) {
-        S.substrate22 = n.substrate22;
-      }
-    }
-
-    /* ================================================================
-       NO-OP DEMO (Strict Rule 21 Compliance)
-       ================================================================ */
-    const OPTION_NAMES = ['EXPLORE', 'EXPLOIT', 'FORAGE', 'AVOID', 'SEEK-KEY', 'FOLLOW-GRAD', 'PATROL', 'RETREAT'];
-    const DIR_SUF = ['-N', '-E', '-S', '-W'];
-    const GLYPHS = ['◆', '◇', '◉', '◎', '∆', '∇', '⋈', '⌬', '⊕', '⊗', '◈', '▣', '▤', '▥', '⌖', '⊶'];
-    const symChar = t => (t >= 32 && t < 127) ? String.fromCharCode(t) : GLYPHS[t % 16];
-    const idx = (x, y) => y * 12 + x;
-    const inB = (x, y) => x >= 0 && x < 12 && y >= 0 && y < 12;
-
-    function enterDemo() {
-      if (S.live) return;
-      S.demo = true; setFeed('sim', 'AWAITING TELEMETRY');
-      chatSys('no uplink detected — awaiting connection to substrate...');
-    }
-
-    /* ================================================================
-       RENDERER · PHYSICAL SUBSTRATE
-       ================================================================ */
-    let anim = { x: 6, y: 6, dir: 0 };
-    function drawEnv(time) {
-      const ctx = envCtx, W = ENV_LW, c = ENV.cell, p = ENV.pad, g = S.env.grid, A = S.env.agent;
-      anim.x = lerp(anim.x, A.x, 0.16); anim.y = lerp(anim.y, A.y, 0.16);
-      let dd = ((A.dir - anim.dir + 540) % 360) - 180; anim.dir += dd * 0.18;
-      ctx.clearRect(0, 0, W, W);
-      ctx.fillStyle = '#0a0b10'; ctx.fillRect(0, 0, W, W);
-
-      /* chemical diffusion field */
-      for (let i = 0; i < 144; i++) {
-        const v = clamp01(S.env.chem[i]); let r, gr, b;
-        if (v < 0.45) { const t = v / 0.45; r = lerp(34, 168, t); gr = lerp(211, 85, t); b = lerp(238, 247, t); }
-        else { const t = (v - 0.45) / 0.55; r = lerp(168, 232, t); gr = lerp(85, 180, t); b = lerp(247, 255, t); }
-        chemImg.data[i * 4] = r; chemImg.data[i * 4 + 1] = gr; chemImg.data[i * 4 + 2] = b;
-        chemImg.data[i * 4 + 3] = Math.round(clamp01(v * 1.5) * 190);
-      }
-      chemCtx2.putImageData(chemImg, 0, 0);
-      ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      try { ctx.filter = 'blur(7px)'; } catch (_) { }
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(chemCanvas, p, p, 12 * c, 12 * c);
-      ctx.filter = 'none'; ctx.restore();
-
-      /* faint grid */
-      ctx.strokeStyle = 'rgba(255,255,255,.045)'; ctx.lineWidth = 1; ctx.beginPath();
-      for (let i = 0; i <= 12; i++) { ctx.moveTo(p + i * c, p); ctx.lineTo(p + i * c, p + 12 * c); ctx.moveTo(p, p + i * c); ctx.lineTo(p + 12 * c, p + i * c); }
-      ctx.stroke();
-
-      /* tiles: 0=floor 1=wall 2=hazard 3=food 4=key 5=lock */
-      for (let y = 0; y < 12; y++)for (let x = 0; x < 12; x++) {
-        const t = g[idx(x, y)], px = p + x * c, py = p + y * c, cx = px + c / 2, cy = py + c / 2;
-        if (t === 0 && ((x + y) & 1) === 0) { ctx.fillStyle = 'rgba(255,255,255,.014)'; ctx.fillRect(px + 1, py + 1, c - 2, c - 2); }
-        if (t === 1) { // wall — beveled slab
-          ctx.fillStyle = '#525266'; ctx.fillRect(px + 2, py + 2, c - 4, c - 4);
-          ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(px + 2, py + 2, c - 4, 3);
-          ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.strokeRect(px + 2.5, py + 2.5, c - 5, c - 5);
-        }
-        if (t === 2) { // hazard — pulsing red core
-          const pu = RM ? 0.5 : (0.5 + 0.5 * Math.sin(time * 3 + (x * 7 + y * 13) % 10));
-          ctx.fillStyle = `rgba(244,63,94,${0.12 + pu * 0.16})`; ctx.fillRect(px + 3, py + 3, c - 6, c - 6);
-          ctx.strokeStyle = 'rgba(244,63,94,.65)'; ctx.lineWidth = 1.4; ctx.strokeRect(px + 3.5, py + 3.5, c - 7, c - 7);
-          ctx.save(); ctx.shadowColor = 'rgba(244,63,94,.9)'; ctx.shadowBlur = 8 + pu * 8;
-          ctx.fillStyle = 'rgba(253,164,175,.95)'; ctx.beginPath(); ctx.arc(cx, cy, 2.4, 0, 7); ctx.fill(); ctx.restore();
-        }
-        if (t === 3) { // food — bobbing emerald orb
-          const bob = RM ? 0 : Math.sin(time * 2.2 + x * 3.1 + y * 1.7) * 2.2;
-          ctx.save(); ctx.shadowColor = 'rgba(52,211,153,.8)'; ctx.shadowBlur = 10;
-          ctx.fillStyle = '#34d399'; ctx.beginPath(); ctx.arc(cx, cy + bob, 5.2, 0, 7); ctx.fill();
-          ctx.fillStyle = 'rgba(209,250,229,.9)'; ctx.beginPath(); ctx.arc(cx - 1.4, cy + bob - 1.4, 1.7, 0, 7); ctx.fill();
-          ctx.restore();
-        }
-        if (t === 4) { // key — rotating amber sigil
-          ctx.save(); ctx.translate(cx, cy); ctx.rotate(RM ? 0.6 : time * 1.1);
-          ctx.shadowColor = 'rgba(251,191,36,.7)'; ctx.shadowBlur = 9;
-          ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2.2;
-          ctx.beginPath(); ctx.arc(-2.5, 0, 4, 0, 7); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(1.5, 0); ctx.lineTo(9, 0); ctx.moveTo(6, 0); ctx.lineTo(6, 3.4); ctx.moveTo(9, 0); ctx.lineTo(9, 3.4); ctx.stroke();
-          ctx.restore();
-        }
-        if (t === 5) { // lock — amber gate
-          ctx.strokeStyle = 'rgba(251,191,36,.75)'; ctx.lineWidth = 2;
-          ctx.strokeRect(px + 7, py + 7, c - 14, c - 14);
-          ctx.strokeStyle = 'rgba(251,191,36,.4)';
-          ctx.beginPath(); ctx.moveTo(cx, py + 10); ctx.lineTo(cx, py + c - 10); ctx.stroke();
-          ctx.fillStyle = 'rgba(251,191,36,.9)'; ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, 7); ctx.fill();
-        }
-      }
-
-      /* agent trail */
-      S.env.trail.forEach((t, i) => {
-        const a = (i + 1) / S.env.trail.length * 0.22;
-        ctx.fillStyle = `rgba(34,211,238,${a})`;
-        ctx.beginPath(); ctx.arc(p + t.x * c + c / 2, p + t.y * c + c / 2, 2.6, 0, 7); ctx.fill();
-      });
-
-      /* agent */
-      const ax = p + anim.x * c + c / 2, ay = p + anim.y * c + c / 2;
-      if (!RM) {
-        const pp = (time / 1.6) % 1;
-        ctx.strokeStyle = `rgba(34,211,238,${(1 - pp) * 0.35})`; ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.arc(ax, ay, 10 + pp * 17, 0, 7); ctx.stroke();
-      }
-      ctx.save(); ctx.translate(ax, ay); ctx.rotate(anim.dir * Math.PI / 2);
-      ctx.shadowColor = 'rgba(34,211,238,.95)'; ctx.shadowBlur = 16;
-      ctx.fillStyle = '#e0faff';
-      ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(8, 8); ctx.lineTo(0, 4); ctx.lineTo(-8, 8); ctx.closePath(); ctx.fill();
-      ctx.restore();
-
-      /* HUD text */
-      const peak = Math.max(0, ...S.env.chem);
-      el.envHud.innerHTML = `AGENT <b>${A.x},${A.y}</b> · DIR <b>${'NESW'[A.dir]}</b><br>CHEM PEAK <b>${peak.toFixed(2)}</b>`;
-    }
-
-    /* ================================================================
-       RENDERER · VISUAL CORTEX (7×7 egocentric)
-       ================================================================ */
-    function drawCortex(time) {
-      const ctx = visCtx, W = COR_LW, c = COR.cell, p = COR.pad;
-      ctx.clearRect(0, 0, W, W);
-      ctx.fillStyle = '#0a0b10'; ctx.fillRect(0, 0, W, W);
-      const A = S.env.agent;
-      const is343 = Array.isArray(S.vis) && S.vis.length >= 343;
-      const is49 = Array.isArray(S.vis) && S.vis.length >= 49;
-
-      for (let wy = 0; wy < 7; wy++)for (let wx = 0; wx < 7; wx++) {
-        const px = p + wx * c, py = p + wy * c, cx = px + c / 2, cy = py + c / 2;
-        const fall = 1 - (Math.hypot(wx - 3, wy - 3) / 4.6) * 0.35;
-        let fill = 'rgba(255,255,255,.02)';
-        let chemVal = 0;
-
-        if (is343) {
-          const k = wy * 7 + wx;
-          const base = k * 7;
-          const chFloor = S.vis[base + 0] || 0;
-          const chWall = S.vis[base + 1] || 0;
-          const chHaz = S.vis[base + 2] || 0;
-          const chFood = S.vis[base + 3] || 0;
-          const chKey = S.vis[base + 4] || 0;
-          const chLock = S.vis[base + 5] || 0;
-          chemVal = S.vis[base + 6] || 0;
-
-          if (chWall > 0.5) {
-            fill = `rgba(82,82,102,${0.75 * fall})`;
-          } else if (chHaz > 0.5) {
-            fill = `rgba(244,63,94,${0.85 * fall})`;
-          } else if (chFood > 0.5) {
-            fill = `rgba(52,211,153,${0.85 * fall})`;
-          } else if (chKey > 0.5) {
-            fill = `rgba(251,191,36,${0.85 * fall})`;
-          } else if (chLock > 0.5) {
-            fill = `rgba(245,158,11,${0.85 * fall})`;
-          } else {
-            fill = `rgba(255,255,255,${0.03 * fall})`;
-          }
-        } else if (is49) {
-          const v = S.vis[wy * 7 + wx];
-          fill = v > 0 ? `rgba(34,211,238,${(0.05 + v * 0.65) * fall})` : 'rgba(255,255,255,.02)';
-        }
-
-        ctx.fillStyle = fill;
-        ctx.fillRect(px + 1, py + 1, c - 2, c - 2);
-
-        // Draw chem glow if present in cortex channel 6
-        if (chemVal > 0.02) {
-          ctx.fillStyle = `rgba(168,85,247,${Math.min(0.8, chemVal * 2.0) * fall})`;
-          ctx.fillRect(px + 1, py + 1, c - 2, c - 2);
-        }
-
-        ctx.strokeStyle = 'rgba(255,255,255,.05)';
-        ctx.strokeRect(px + .5, py + .5, c - 1, c - 1);
-
-        // Center cell (Agent egocentric self position)
-        if (wx === 3 && wy === 3) {
-          ctx.strokeStyle = 'rgba(34,211,238,.9)'; ctx.lineWidth = 1.6;
-          ctx.beginPath(); ctx.arc(cx, cy, c * 0.32, 0, 7); ctx.stroke();
-          ctx.fillStyle = '#e0faff'; ctx.beginPath(); ctx.arc(cx, cy, 2.6, 0, 7); ctx.fill();
-        }
-      }
-      ctx.strokeStyle = 'rgba(103,232,249,.14)'; ctx.lineWidth = 1;
-      ctx.strokeRect(p + .5, p + .5, W - 2 * p - 1, W - 2 * p - 1);
-    }
-
-    /* ================================================================
-       RENDERER · HIERARCHICAL MCTS TREE
-       ================================================================ */
-    const treeAnim = new Map(); let treeEdges = [], treeTargets = new Map();
-    function layoutTree() {
-      treeTargets = new Map(); treeEdges = [];
-      const t = S.cog.tree; if (!t || !t.root) return;
-      const xs = [46, TREE_W * 0.37, TREE_W - 64];
-      const put = (key, x, y, r, parentKey) => {
-        const prev = treeAnim.get(key);
-        if (!prev) {
-          const pp = parentKey && treeAnim.get(parentKey);
-          treeAnim.set(key, { x: pp ? pp.x : x, y: pp ? pp.y : y, r: r, a: 0, tx: x, ty: y, tr: r, ta: 1 });
-        }
-        treeTargets.set(key, { x, y, r });
-        return treeAnim.get(key);
-      };
-      put('ROOT', xs[0], TREE_H / 2, 7 + Math.sqrt(t.root.visits || 1) * 2.0, null);
-      const opts = t.root.children || [], n = Math.max(1, opts.length);
-      opts.forEach((o, i) => {
-        const y = 36 + (i / (n - 1 || 1)) * (TREE_H - 72);
-        put(o.key, xs[1], y, clamp(6 + Math.sqrt(o.visits || 1) * 2.2, 6, 17), 'ROOT');
-        treeEdges.push({ from: 'ROOT', to: o.key, visits: o.visits || 1, depth: 1 });
-        (o.children || []).forEach((k, j) => {
-          const ky = clamp(y + (j - ((o.children.length || 1) - 1) / 2) * 34, 26, TREE_H - 26);
-          put(k.key, xs[2], ky, clamp(5 + Math.sqrt(k.visits || 1) * 2.2, 5, 14), o.key);
-          treeEdges.push({ from: o.key, to: k.key, visits: k.visits || 1, depth: 2 });
-        });
-      });
-    }
-    function drawTree(time) {
-      const ctx = treeCtx;
-      ctx.clearRect(0, 0, TREE_W, TREE_H);
-      if (!S.cog.tree) {
-        ctx.fillStyle = 'rgba(139,139,150,.5)'; ctx.font = '500 11px JetBrains Mono';
-        ctx.textAlign = 'center'; ctx.fillText('AWAITING MCTS TELEMETRY…', TREE_W / 2, TREE_H / 2);
+      try {
+        ws = new WebSocket(url);
+      } catch (e) {
+        console.error("[WS CONNECT ERROR]", e);
+        setTimeout(connect, 3000);
         return;
       }
-      layoutTree();
-      for (const [k, n] of treeAnim) {
-        const t = treeTargets.get(k);
-        if (!t) { n.ta = 0; } else { n.tx = t.x; n.ty = t.y; n.tr = t.r; n.ta = 1; }
-        n.x += (n.tx - n.x) * 0.14; n.y += (n.ty - n.y) * 0.14; n.r += (n.tr - n.r) * 0.14; n.a += (n.ta - n.a) * 0.12;
-        if (n.ta === 0 && n.a < 0.03) treeAnim.delete(k);
-      }
-      const sel = S.cog.selPath || new Set();
-      const nodeType = k => k === 'ROOT' ? 0 : (k.indexOf('/') < 0 ? 1 : 2);
-      const bez = (x1, y1, x2, y2) => { const mx = (x1 + x2) / 2; ctx.moveTo(x1, y1); ctx.bezierCurveTo(mx, y1, mx, y2, x2, y2); };
-      const bezPt = (x1, y1, x2, y2, t) => {
-        const mx = (x1 + x2) / 2, u = 1 - t;
-        return {
-          x: u * u * u * x1 + 3 * u * u * t * mx + 3 * u * t * t * mx + t * t * t * x2,
-          y: u * u * u * y1 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y2
-        };
+
+      ws.onopen = () => {
+        el.feedStatus.textContent = "LIVE TELEMETRY";
+        el.feedStatus.style.color = "var(--emerald)";
       };
-      treeEdges.forEach(e => {
-        const a = treeAnim.get(e.from), b = treeAnim.get(e.to); if (!a || !b) return;
-        const on = sel.has(e.to) && sel.has(e.from);
-        const w = clamp(1 + Math.sqrt(e.visits || 1) * 0.32, 1, 4);
-        ctx.beginPath(); bez(a.x + a.r, a.y, b.x - b.r, b.y);
-        ctx.strokeStyle = on ? (e.depth === 1 ? 'rgba(192,132,252,.85)' : 'rgba(103,232,249,.85)')
-          : (e.depth === 1 ? 'rgba(168,85,247,.22)' : 'rgba(34,211,238,.18)');
-        ctx.lineWidth = on ? w + 1 : w;
-        ctx.globalAlpha = Math.min(a.a, b.a); ctx.stroke(); ctx.globalAlpha = 1;
-      });
-      for (const [k, n] of treeAnim) {
-        const ty = nodeType(k), on = sel.has(k);
-        const col = ty === 0 ? '#e4e4e7' : ty === 1 ? '#c084fc' : '#67e8f9';
-        const vn = findNode(k); const v = vn ? vn.value : 0.5;
-        const hue = Math.round(lerp(0, 150, clamp01(v)));
-        ctx.globalAlpha = n.a;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 7);
-        ctx.fillStyle = `hsla(${hue} 80% 55% / .30)`; ctx.fill();
-        ctx.strokeStyle = col; ctx.lineWidth = on ? 2.2 : 1.4;
-        ctx.stroke();
-        if (ty === 0) {
-          ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 4, 0, 7);
-          ctx.strokeStyle = 'rgba(228,228,231,.25)'; ctx.lineWidth = 1; ctx.stroke();
+
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "STATE_UPDATE" || msg.phase_e) {
+            applyState(msg);
+          }
+        } catch (err) {
+          console.error("[TELEMETRY PARSE ERROR]", err);
         }
-        ctx.font = '600 9.5px JetBrains Mono'; ctx.textAlign = 'center';
-        ctx.fillStyle = on ? 'rgba(228,228,231,.95)' : 'rgba(139,139,150,.75)';
-        const lbl = ty === 0 ? 'ROOT' : ty === 1 ? `${vn ? vn.label : k}·${vn ? vn.visits : ''}` : (vn ? vn.label : '');
-        ctx.fillText(lbl, n.x, ty === 2 ? n.y + n.r + 11 : n.y - n.r - 6);
-        ctx.globalAlpha = 1;
-      }
-    }
-    function findNode(key) {
-      const t = S.cog.tree; if (!t || !t.root) return null;
-      if (key === 'ROOT') return t.root;
-      const ok = (t.root.children || []).find(c => c.key === key); if (ok) return ok;
-      for (const o of t.root.children || []) { const a = (o.children || []).find(c => c.key === key); if (a) return a; }
-      return null;
+      };
+
+      ws.onclose = () => {
+        el.feedStatus.textContent = "DISCONNECTED · RETRYING";
+        el.feedStatus.style.color = "var(--amber)";
+        setTimeout(connect, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error("[WS ERROR]", err);
+      };
     }
 
-    /* ================================================================
-       RENDERER · ENTROPY SPARKLINE
-       ================================================================ */
-    function drawSpark() {
-      const ctx = sparkCtx, W = 260, H = 54;
+    function applyState(msg) {
+      if (msg.tick != null) S.tick = msg.tick;
+      if (msg.phase_e) {
+        S.phase_e = msg.phase_e;
+        const pt = msg.phase_e.telemetry || {};
+
+        // Update history buffers
+        S.history.pop.push(pt.population_size || 0);
+        S.history.births.push(pt.births_total || 0);
+        S.history.deaths.push(pt.deaths_total || 0);
+        S.history.emergence.push(pt.emergence_index || 0);
+
+        if (S.history.pop.length > 150) {
+          S.history.pop.shift();
+          S.history.births.shift();
+          S.history.deaths.shift();
+          S.history.emergence.shift();
+        }
+
+        // Update UI Topbar & Cards
+        el.topTick.textContent = Number(S.tick).toLocaleString();
+        el.topPop.textContent = pt.population_size || 0;
+        el.topBirths.textContent = pt.births_total || 0;
+        el.topDeaths.textContent = pt.deaths_total || 0;
+
+        const mkZ = (pt.mann_kendall_z || 0);
+        el.topMkZ.textContent = (mkZ >= 0 ? "+" : "") + mkZ.toFixed(2);
+        el.cardMkZ.textContent = (mkZ >= 0 ? "+" : "") + mkZ.toFixed(2);
+
+        if (pt.is_emergence_certified) {
+          el.badgeAscent.textContent = "CERTIFIED ASCENT (p < 0.01)";
+          el.badgeAscent.className = "badge-certified";
+        } else {
+          el.badgeAscent.textContent = "TESTING ASCENT";
+          el.badgeAscent.className = "badge-pending";
+        }
+
+        el.hudPop.textContent = pt.population_size || 0;
+        el.hudDepth.textContent = pt.max_lineage || 0;
+        el.cardPop.innerHTML = `${pt.population_size || 0}<small>AGENTS</small>`;
+        el.cardDepth.innerHTML = `${pt.max_lineage || 0}<small>GENS</small>`;
+        el.cardSyn.innerHTML = `${(pt.mean_synapses || 0).toFixed(1)}<small>CONN/ORG</small>`;
+        el.cardWNorm.textContent = (pt.weight_norm || 0).toFixed(2);
+        el.cardMod.innerHTML = `${(pt.neuromodulator_mean || 0).toFixed(3)}<small>HOMEOSTASIS</small>`;
+        el.cardElig.innerHTML = `${(pt.eligibility_mean || 0).toFixed(3)}<small>AMPLITUDE</small>`;
+
+        el.cardEmergence.textContent = (pt.emergence_index || 0).toFixed(3);
+        el.cardEntropy.innerHTML = `${(pt.traj_entropy || 0).toFixed(2)}<small>BITS</small>`;
+        el.cardDiversity.innerHTML = `${(pt.behavioral_diversity || 0).toFixed(2)}<small>BITS</small>`;
+        el.cardEnergy.innerHTML = `${(pt.mean_energy || 0).toFixed(1)}<small>JOULES</small>`;
+        el.cardMetabolic.innerHTML = `${(pt.mean_metabolic_cost || 0).toFixed(4)}<small>COST/TICK</small>`;
+      }
+    }
+
+    // Render Canvas Loop
+    function render(now) {
+      // FPS Counter
+      frameCount++;
+      if (now - fpsTimer >= 1000) {
+        S.fps = Math.round((frameCount * 1000) / (now - fpsTimer));
+        el.topFps.textContent = S.fps;
+        frameCount = 0;
+        fpsTimer = now;
+      }
+
+      drawEnvironment(now);
+      drawPhylogeny(now);
+      drawSparkline(now);
+
+      requestAnimationFrame(render);
+    }
+
+    /* ── 1. Draw 2D Physical Ecology Substrate ── */
+    function drawEnvironment(now) {
+      const ctx = envCtx;
+      const W = el.envCanvas.width;
+      const H = el.envCanvas.height;
       ctx.clearRect(0, 0, W, H);
-      const mx = Math.max(0.2, ...entropyHist);
-      ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(0, H - 10.5); ctx.lineTo(W, H - 10.5); ctx.stroke();
+
+      // Deep substrate background
+      ctx.fillStyle = '#06070a';
+      ctx.fillRect(0, 0, W, H);
+
+      // Render 2D Resource Field
+      const resGrid = S.phase_e.resource_grid;
+      if (Array.isArray(resGrid) && resGrid.length === 1024) {
+        const cellSize = W / 32;
+        let maxVal = 0;
+        for (let y = 0; y < 32; y++) {
+          for (let x = 0; x < 32; x++) {
+            const val = resGrid[y * 32 + x] || 0;
+            if (val > maxVal) maxVal = val;
+            if (val > 0.02) {
+              const alpha = Math.min(0.65, val * 0.7);
+              ctx.fillStyle = `rgba(52, 211, 153, ${alpha})`;
+              ctx.fillRect(x * cellSize, y * cellSize, cellSize + 0.5, cellSize + 0.5);
+            }
+          }
+        }
+        el.hudChem.textContent = maxVal.toFixed(2);
+      }
+
+      // Faint coordinate grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, .03)';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      entropyHist.forEach((v, i) => {
-        const x = i / (entropyHist.length - 1) * W, y = H - 10 - clamp01(v / mx) * (H - 18);
-        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-      });
-      ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1.6;
+      const step = W / 16;
+      for (let i = 0; i <= 16; i++) {
+        ctx.moveTo(i * step, 0); ctx.lineTo(i * step, H);
+        ctx.moveTo(0, i * step); ctx.lineTo(W, i * step);
+      }
       ctx.stroke();
-      ctx.lineTo(W, H - 10); ctx.lineTo(0, H - 10); ctx.closePath();
-      const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, 'rgba(34,211,238,.22)'); g.addColorStop(1, 'rgba(34,211,238,0)');
-      ctx.fillStyle = g; ctx.fill();
-      const last = entropyHist[entropyHist.length - 1];
-      ctx.beginPath(); ctx.arc(W - 1.5, H - 10 - clamp01(last / mx) * (H - 18), 2.6, 0, 7);
-      ctx.fillStyle = '#a5f3fc'; ctx.fill();
+
+      // Render Multi-Organism Swarm
+      const pop = S.phase_e.population || [];
+      pop.forEach((org) => {
+        const ox = org.x * W;
+        const oy = org.y * H;
+        const eRatio = Math.min(1.0, Math.max(0.1, org.energy / 160.0));
+        const hue = (org.lineage * 45) % 360;
+
+        // Energy Halo (Pulsing halo proportional to energy surplus)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(ox, oy, 4 + eRatio * 7, 0, 2 * Math.PI);
+        ctx.fillStyle = `hsla(${hue}, 85%, 60%, ${0.22 * eRatio})`;
+        ctx.fill();
+
+        // Organism Directional Heading Triangle
+        ctx.translate(ox, oy);
+        ctx.rotate(org.dir * Math.PI / 2);
+        ctx.beginPath();
+        ctx.moveTo(0, -6.5);
+        ctx.lineTo(4.5, 4.5);
+        ctx.lineTo(0, 2.5);
+        ctx.lineTo(-4.5, 4.5);
+        ctx.closePath();
+        ctx.fillStyle = `hsl(${hue}, 95%, 75%)`;
+        ctx.fill();
+        ctx.restore();
+      });
     }
 
-    /* ================================================================
-       DOM UPDATERS
-       ================================================================ */
-    const ACTIONS = [
-      { name: 'FORWARD', short: '▲', c: '#22d3ee' },
-      { name: 'ROTATE LEFT', short: '↰', c: '#a78bfa' },
-      { name: 'ROTATE RIGHT', short: '↱', c: '#60a5fa' },
-      { name: 'INTERACT', short: '◆', c: '#34d399' }
-    ];
-    const actRowsEls = ACTIONS.map(a => {
-      const row = document.createElement('div'); row.className = 'arow'; row.style.setProperty('--c', a.c);
-      row.innerHTML = `<span class="aname"><i>${a.short}</i>${a.name}</span>
-    <div class="atrack"><div class="afill"></div></div><span class="aval">0.00</span>`;
-      el.actRows.appendChild(row);
-      return { row, fill: row.querySelector('.afill'), val: row.querySelector('.aval') };
-    });
-    const conceptBars = Array.from({ length: 16 }, () => {
-      const b = document.createElement('div'); b.className = 'cbar'; el.concepts.appendChild(b); return b;
-    });
-    const memSegs = Array.from({ length: 40 }, () => {
-      const i = document.createElement('i'); el.memseg.appendChild(i); return i;
-    });
-    const pipEls = Array.from({ length: 5 }, () => {
-      const i = document.createElement('i'); el.pips.appendChild(i); return i;
-    });
-    let dispTick = 0, lastSymbol = null;
-    function flashSymbol() {
-      el.hexwrap.classList.remove('flash'); void el.hexwrap.offsetWidth; el.hexwrap.classList.add('flash');
-    }
-    function updateDOM() {
-      dispTick += (S.tick - dispTick) * 0.28;
-      if (Math.abs(S.tick - dispTick) < 1) dispTick = S.tick;
-      el.tickTop.textContent = fmt(dispTick);
-      el.statTicks.textContent = fmt(S.tick);
-      el.genTop.textContent = S.generation;
-      el.statGen.innerHTML = `${S.generation}<small>LINEAGE</small>`;
-      pipEls.forEach((p, i) => p.classList.toggle('on', i < S.difficulty));
+    /* ── 2. Draw Lineage Cladogram / Phylogeny Tree ── */
+    function drawPhylogeny(now) {
+      const ctx = phyloCtx;
+      const W = el.phyloCanvas.width;
+      const H = el.phyloCanvas.height;
+      ctx.clearRect(0, 0, W, H);
 
-      const e = S.meta.energy;
-      el.energyPct.textContent = (e * 100).toFixed(0) + '%';
-      const h = Math.round(lerp(0, 140, e));
-      el.energyFill.style.width = (e * 100).toFixed(1) + '%';
-      el.energyFill.style.background = `linear-gradient(90deg,hsl(${h} 85% 40%),hsl(${Math.min(150, h + 25)} 95% 60%))`;
-      el.metaPanel.classList.toggle('critical', e < 0.2);
+      ctx.fillStyle = 'rgba(0, 0, 0, .25)';
+      ctx.fillRect(0, 0, W, H);
 
-      const hc = S.meta.hippoCount, hcap = S.meta.hippoCap, r = clamp01(hc / hcap);
-      el.hippoTxt.textContent = `${fmt(hc)} / ${fmt(hcap)}`;
-      const on = Math.round(r * 40);
-      memSegs.forEach((m, i) => { m.className = i < on ? (r > 0.85 ? 'hot' : 'on') : ''; });
+      const pop = S.phase_e.population || [];
+      if (pop.length === 0) return;
 
-      el.entropyVal.textContent = (S.live ? S.meta.entropyIncome : entropyEMA).toFixed(2);
-      if (S.live) { entropyHist.push(S.meta.entropyIncome); entropyHist.shift(); }
-
-      if (el.statTd && S.learning) {
-        el.statTd.textContent = S.learning.td_error_ema.toFixed(4);
-        if (el.statWm) el.statWm.textContent = S.learning.world_model_loss.toFixed(4);
-        if (el.statWmEma) el.statWmEma.textContent = (S.learning.wm_loss_ema || 0).toFixed(4);
-        if (el.statCuriosity) {
-          el.statCuriosity.innerHTML = `${(S.learning.curiosity_alpha || 0).toFixed(2)}<small id="statBoredom">${S.learning.is_bored ? 'BORED' : 'STABLE'}</small>`;
-          const boredomEl = document.getElementById('statBoredom');
-          if (boredomEl) {
-            boredomEl.style.color = S.learning.is_bored ? 'var(--red2)' : 'var(--faint)';
-          }
-        }
-        if (el.statConsolidation && S.learning.consolidation_count != null) {
-          el.statConsolidation.textContent = S.learning.consolidation_count;
-        }
-        if (el.statFisher && S.learning.fisher_norm != null) {
-          el.statFisher.textContent = S.learning.fisher_norm.toFixed(4);
-        }
-        if (el.statMemTax && S.learning.last_memory_cost != null) {
-          el.statMemTax.textContent = S.learning.last_memory_cost.toExponential(2);
-        }
-      }
-
-      if (S.emergence) {
-        const em = S.emergence;
-        if (el.statLatentK) el.statLatentK.textContent = em.latent_cluster_count ?? 1;
-        if (el.statLatentSil) el.statLatentSil.textContent = (em.latent_silhouette ?? 0.0).toFixed(2);
-        if (el.statGoalDiv) el.statGoalDiv.textContent = em.goal_diversity ?? 1;
-        if (el.statActEntropy) el.statActEntropy.textContent = (em.action_entropy ?? 0.0).toFixed(2);
-        if (el.statBehModes) el.statBehModes.textContent = em.behavioral_modes ?? 1;
-        if (el.statComplexity) el.statComplexity.textContent = (em.complexity_score ?? 0.0).toFixed(2);
-        if (el.statMannKendall) el.statMannKendall.textContent = (em.mann_kendall_z ?? 0.0).toFixed(2);
-        if (el.statEmergenceTax) el.statEmergenceTax.textContent = (em.metabolic_cost ?? 0.0).toExponential(2);
-
-        if (el.statEmergenceBadge) {
-          if (em.emergence_detected) {
-            el.statEmergenceBadge.textContent = 'EMERGENCE DETECTED';
-            el.statEmergenceBadge.style.color = 'var(--emerald)';
-          } else {
-            const fails = (em.failing_probes && em.failing_probes.length > 0) ? em.failing_probes.join(', ') : 'AWAITING DEEP TIME';
-            el.statEmergenceBadge.textContent = `FALSIFIED (${fails})`;
-            el.statEmergenceBadge.style.color = 'var(--amber)';
-          }
-        }
-      }
-
-      if (S.substrate19) {
-        const s19 = S.substrate19;
-        if (el.statClockPhase) el.statClockPhase.textContent = `${(s19.clock_phase_deg ?? 0.0).toFixed(0)}°`;
-        if (el.statGates) {
-          const w = (s19.write_gate ?? 0.0).toFixed(2);
-          const r = (s19.read_gate ?? 0.0).toFixed(2);
-          const c = (s19.chain_gate ?? 0.0).toFixed(2);
-          el.statGates.textContent = `${w}/${r}/${c}`;
-        }
-        if (el.statSparsity) el.statSparsity.textContent = `${((s19.structural_sparsity ?? 0.70) * 100).toFixed(1)}%`;
-        if (el.statBindingEntropy) el.statBindingEntropy.textContent = (s19.binding_entropy ?? 0.0).toFixed(2);
-      }
-
-      if (S.substrate20) {
-        const s20 = S.substrate20;
-        if (el.statImagEff) el.statImagEff.textContent = (s20.imag_branch_eff ?? 4.0).toFixed(1);
-        if (el.statTomError) el.statTomError.textContent = (s20.tom_pred_error ?? 0.0).toFixed(3);
-        if (el.statGroundingNorm) el.statGroundingNorm.textContent = (s20.sym_grounding_norm ?? 0.0).toFixed(2);
-        if (el.statSymMi) el.statSymMi.textContent = (s20.sym_mi ?? 0.0).toFixed(3);
-      }
-
-      if (S.substrate21) {
-        const s21 = S.substrate21;
-        if (el.statS21Hippo) el.statS21Hippo.textContent = `${s21.buffer_size ?? S.meta.hippoCount ?? 0} / 50k`;
-        if (el.statMetaLoss) el.statMetaLoss.textContent = (s21.meta_loss ?? 0.0).toFixed(4);
-        if (el.statSiOmega) el.statSiOmega.textContent = (s21.si_omega_mean ?? 0.05).toFixed(3);
-        if (el.statRule24) el.statRule24.textContent = s21.is_certified ? 'CERTIFIED' : 'LEVEL 1';
-      }
-
-      if (S.substrate22) {
-        const s22 = S.substrate22;
-        if (el.statDistillTau) el.statDistillTau.textContent = (s22.distill_tau ?? 1.5).toFixed(2);
-        if (el.statDynLoss) el.statDynLoss.textContent = (s22.last_dyn_loss ?? 0.0).toFixed(4);
-        if (el.statDistillLoss) el.statDistillLoss.textContent = (s22.last_distill_loss ?? 0.0).toFixed(4);
-        if (el.statPhase && s22.phase_coeffs) {
-          const p = s22.current_epoch <= 20 ? 'P1' : (s22.current_epoch <= 40 ? 'P2' : 'P3');
-          el.statPhase.textContent = `${p} (λ2=${s22.phase_coeffs.lambda_2.toFixed(2)})`;
-        }
-      }
-
-      const p = S.cog.actionProbs; let mxI = 0;
-      p.forEach((v, i) => { if (v > p[mxI]) mxI = i; });
-      actRowsEls.forEach((a, i) => {
-        a.fill.style.width = (clamp01(p[i]) * 100).toFixed(1) + '%';
-        a.val.textContent = p[i].toFixed(2);
-        a.row.classList.toggle('win', i === mxI);
+      // Group organisms by lineage depth
+      const maxDepth = Math.max(1, ...pop.map(o => o.lineage || 0));
+      const depthGroups = {};
+      pop.forEach(o => {
+        const d = o.lineage || 0;
+        depthGroups[d] = (depthGroups[d] || 0) + 1;
       });
 
-      const tok = S.cog.symbol;
-      if (tok != null && tok !== lastSymbol) {
-        lastSymbol = tok;
-        el.symChar.textContent = symChar(tok);
-        el.symToken.textContent = '#' + tok;
-        el.symHex.textContent = '0x' + tok.toString(16).toUpperCase().padStart(2, '0');
-      }
-      el.symOption.textContent = S.cog.optionLabel;
+      // Draw branching cladogram stems
+      ctx.strokeStyle = 'rgba(168, 85, 247, .25)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(30, H / 2);
+      ctx.lineTo(W - 30, H / 2);
+      ctx.stroke();
 
-      const hist = S.cog.symbolHistory;
-      el.symhist.innerHTML = hist.map((t, i) =>
-        `<div class="chip${i === 0 ? ' first' : ''}"><b>${esc(symChar(t))}</b><span>${t}</span></div>`).join('');
+      const depths = Object.keys(depthGroups).map(Number).sort((a, b) => a - b);
+      depths.forEach((d) => {
+        const x = 40 + (d / maxDepth) * (W - 80);
+        const count = depthGroups[d];
+        const barH = Math.min(H - 30, count * 5);
+        const hue = (d * 45) % 360;
 
-      const ci = S.cog.optionId * 2 % 16;
-      conceptBars.forEach((b, i) => {
-        b.style.height = Math.max(6, clamp01(S.cog.concepts[i]) * 100) + '%';
-        b.classList.toggle('hot', i === ci);
+        // Lineage Node
+        ctx.save();
+        ctx.fillStyle = `hsl(${hue}, 90%, 65%)`;
+        ctx.beginPath();
+        ctx.arc(x, H / 2, 4, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Clade Abundance Bar
+        ctx.strokeStyle = `hsla(${hue}, 85%, 60%, .5)`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x, H / 2 - barH / 2);
+        ctx.lineTo(x, H / 2 + barH / 2);
+        ctx.stroke();
+
+        // Clade Label
+        ctx.fillStyle = 'var(--dim)';
+        ctx.font = '500 8.5px JetBrains Mono';
+        ctx.fillText(`G${d}`, x - 6, H - 8);
+        ctx.restore();
       });
+    }
 
-      el.visRot.textContent = `DIR ${S.env.agent.dir} · ${'NESW'[S.env.agent.dir]}`;
-      el.visKey.textContent = S.env.hasKey ? 'BOUND' : 'UNBOUND';
-      el.visKey.className = S.env.hasKey ? 'ok' : 'no';
+    /* ── 3. Draw Demographic Sparkline Chart ── */
+    function drawSparkline(now) {
+      const ctx = sparkCtx;
+      const W = el.sparkCanvas.width;
+      const H = el.sparkCanvas.height;
+      ctx.clearRect(0, 0, W, H);
 
-      if (S.cog.tree && S.cog.tree.selO) {
-        const q = S.cog.tree.selO.value;
-        el.treeSel.textContent = `${S.cog.tree.selO.label} (Q ${q >= 0 ? '+' : ''}${q.toFixed(2)})${S.cog.tree.selA ? ' ▸ ' + S.cog.tree.selA.label : ''}`;
+      const popHistory = S.history.pop;
+      if (popHistory.length < 2) return;
+
+      const maxPop = Math.max(128, ...popHistory);
+      const minPop = 0;
+      const len = popHistory.length;
+
+      // Draw Grid Lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, .04)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2);
+      ctx.moveTo(0, H / 4); ctx.lineTo(W, H / 4);
+      ctx.moveTo(0, (3 * H) / 4); ctx.lineTo(W, (3 * H) / 4);
+      ctx.stroke();
+
+      // Draw Gradient Area under Curve
+      ctx.beginPath();
+      for (let i = 0; i < len; i++) {
+        const x = (i / (len - 1)) * W;
+        const y = H - (popHistory[i] / maxPop) * (H - 16) - 8;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
-    }
+      ctx.lineTo(W, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
 
-    /* ================================================================
-       CHAT
-       ================================================================ */
-    const chatLog = el.chatLog;
-    function appendMsg(cls, who, html) {
-      const div = document.createElement('div'); div.className = 'msg ' + cls;
-      div.innerHTML = `<span class="who">${who}</span><p>${html}</p>`;
-      chatLog.appendChild(div);
-      while (chatLog.children.length > 80) chatLog.firstChild.remove();
-      chatLog.scrollTop = chatLog.scrollHeight;
-      return div;
-    }
-    const chatUser = t => appendMsg('user', 'OPERATOR', esc(t));
-    const chatAgent = t => appendMsg('agent', 'GENESIS', t);
-    const chatSys = t => appendMsg('sys', 'SUBSTRATE', esc(t));
-    let typingEl = null;
-    function showTyping() {
-      if (typingEl) return;
-      typingEl = appendMsg('agent typing', 'GENESIS', '<i></i><i></i><i></i>');
-    }
-    function hideTyping() { if (typingEl) { typingEl.remove(); typingEl = null; } }
-    function sendChat(text) {
-      chatUser(text);
-      if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ action: 'USER_CHAT', text }));
-        showTyping();
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(34, 211, 238, .35)');
+      grad.addColorStop(1, 'rgba(34, 211, 238, .0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Draw Population Line
+      ctx.beginPath();
+      for (let i = 0; i < len; i++) {
+        const x = (i / (len - 1)) * W;
+        const y = H - (popHistory[i] / maxPop) * (H - 16) - 8;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
+      ctx.strokeStyle = 'var(--cyan)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
     }
 
-    /* ================================================================
-       MAIN LOOP
-       ================================================================ */
-    let lastT = performance.now(), fpsFrames = 0, fpsLast = performance.now();
-    function frame(now) {
-      const time = now / 1000;
-      drawEnv(time); drawCortex(time); drawTree(time); drawSpark();
-      fpsFrames++;
-      if (now - fpsLast >= 1000) {
-        el.fpsTop.textContent = Math.round(fpsFrames * 1000 / (now - fpsLast));
-        fpsFrames = 0; fpsLast = now;
-      }
-      requestAnimationFrame(frame);
-    }
-    setInterval(updateDOM, 100);
-    requestAnimationFrame(frame);
-
-    /* ================================================================
-       BOOT
-       ================================================================ */
-    connectWS();
-    setTimeout(() => document.getElementById('boot').classList.add('done'), 1250);
-    setTimeout(() => {
-      chatSys('OBSERVATION DECK ONLINE — Substrate 21 · AlphaZero MCTS · Continual Meta-Plasticity');
-    }, 1500);
-    el.chatForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const v = el.chatInput.value.trim();
-      if (!v) return;
-      el.chatInput.value = '';
-      sendChat(v);
+    // Boot Sequence
+    window.addEventListener('load', () => {
+      connect();
+      requestAnimationFrame(render);
     });
   </script>
 </body>

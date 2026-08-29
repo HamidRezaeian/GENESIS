@@ -13,6 +13,7 @@ if str(SERVER_DIR) not in sys.path:
     sys.path.insert(0, str(SERVER_DIR))
 
 from aiohttp import web, WSMsgType
+import torch
 import numpy as np
 import asyncio
 from collections import deque
@@ -22,6 +23,9 @@ import json
 from numba import njit
 from genesis.server.genesis_pytorch_brain import GenesisPyTorchBrain
 from genesis.server.behavioral_emergence_suite import BehavioralEmergenceSuite
+from genesis.server.phase_e_substrate import BatchedPopulation
+from genesis.server.phase_e_ecology import EcologyField
+from genesis.server.phase_e_metrics import PhaseEEmergenceTracker
 
 BRAIN_DIR = REPO_ROOT / "Brain"
 PUBLIC_DIR = REPO_ROOT / "public"
@@ -746,7 +750,7 @@ class GenesisEngineRunner:
     def __init__(self):
         self.brain = GenesisPyTorchBrain()
         self.env = GenesisEnvironment()
-        self.is_running = False  # Changed to False so simulation waits for UI
+        self.is_running = True  # Autonomous live execution
         self.speed = 1
         self.tick_count = 0
 
@@ -777,6 +781,12 @@ class GenesisEngineRunner:
         self.env.reset_episode(seed=self.episode_seed)
         self.brain.state_history.clear()
         self.emergence_suite = BehavioralEmergenceSuite()
+        
+        # GENESIS Phase-E: Batched Open-Ended Evolutionary ALife Substrate (GLM 5.3)
+        self.phase_e_pop = BatchedPopulation(pop_size=128, seed=42)
+        self.phase_e_eco = EcologyField(grid_size=32, seed=42)
+        self.phase_e_metrics = PhaseEEmergenceTracker(history_len=500)
+        self.last_phase_e_telem = {}
 
         # Load existing brain if available
         ckpt_path = BRAIN_DIR / "canonical_brain.npz"
@@ -796,6 +806,24 @@ class GenesisEngineRunner:
     def step_once(self) -> dict:
         self.tick_count += 1
         self.energy -= self.metabolic_cost
+
+        # ── Step Phase-E Evolutionary ALife Substrate ──
+        p_sensory, p_harvested = self.phase_e_eco.process_interactions(
+            self.phase_e_pop.positions,
+            self.phase_e_pop.orientations,
+            self.phase_e_pop.actions,
+            self.phase_e_pop.alive_mask,
+            self.phase_e_pop.energy,
+            self.phase_e_pop.dev
+        )
+        p_actions, p_pop_telem = self.phase_e_pop.step_tick(p_sensory, p_harvested)
+        p_metric_telem = self.phase_e_metrics.observe_step(
+            self.phase_e_pop.positions,
+            self.phase_e_pop.actions,
+            self.phase_e_pop.states,
+            self.phase_e_pop.alive_mask
+        )
+        self.last_phase_e_telem = {**p_pop_telem, **p_metric_telem}
 
         obs = self.env.get_visual_observation()
         s_curr = self.brain.forward_transformer(obs, self.active_task_text)
@@ -951,6 +979,9 @@ class GenesisEngineRunner:
                 return [sanitize_floats(v) for v in obj]
             return obj
 
+        alive_raw = torch.nonzero(self.phase_e_pop.alive_mask).squeeze(-1).tolist()
+        alive_indices = [alive_raw] if isinstance(alive_raw, int) else (alive_raw if isinstance(alive_raw, list) else [])
+
         payload = {
             "type": "STATE_UPDATE",
             "tick": int(self.tick_count),
@@ -1008,7 +1039,22 @@ class GenesisEngineRunner:
             "substrate19": self.brain.substrate19.get_telemetry(),
             "substrate20": self.brain.substrate20.get_telemetry(),
             "substrate21": self.brain.substrate21.get_telemetry(),
-            "substrate22": self.brain.substrate22.get_telemetry()
+            "substrate22": self.brain.substrate22.get_telemetry(),
+            "phase_e": {
+                "telemetry": self.last_phase_e_telem,
+                "population": [
+                    {
+                        "id": int(i),
+                        "x": float(self.phase_e_pop.positions[i, 0].item()),
+                        "y": float(self.phase_e_pop.positions[i, 1].item()),
+                        "dir": int(self.phase_e_pop.orientations[i].item() % 4),
+                        "energy": float(self.phase_e_pop.energy[i].item()),
+                        "lineage": int(self.phase_e_pop.lineage_depth[i].item())
+                    }
+                    for i in alive_indices
+                ],
+                "resource_grid": self.phase_e_eco.get_render_grid().flatten().tolist()
+            }
         }
         return sanitize_floats(payload)
 
