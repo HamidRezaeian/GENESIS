@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENESIS — عرشه گفتگوی تله‌پاتیک با ارگانیسم‌ها</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@300;400;600;700;900&family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #06080d;
+            --bg-surface: rgba(14, 20, 32, 0.75);
+            --bg-surface-hover: rgba(22, 32, 51, 0.85);
+            --bg-card: rgba(18, 26, 43, 0.6);
+            --border-glow: rgba(0, 245, 212, 0.25);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            
+            --cyan-glow: #00f5d4;
+            --cyan-dim: rgba(0, 245, 212, 0.15);
+            --purple-glow: #8b5cf6;
+            --purple-dim: rgba(139, 92, 246, 0.15);
+            --emerald-glow: #10b981;
+            --amber-glow: #f59e0b;
+            --rose-glow: #f43f5e;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(0, 245, 212, 0.06) 0%, transparent 40%),
+                linear-gradient(180deg, rgba(6, 8, 13, 0.95) 0%, #06080d 100%);
+            color: var(--text-primary);
+            font-family: 'Vazirmatn', 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 28px;
+            background: rgba(10, 15, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00f5d4 0%, #8b5cf6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 245, 212, 0.4);
+            animation: pulseGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(0, 245, 212, 0.3); }
+            100% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
+        }
+
+        .brand-logo svg {
+            width: 24px;
+            height: 24px;
+            fill: #06080d;
+        }
+
+        .brand-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #00f5d4, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .header-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-pill .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--emerald-glow);
+            box-shadow: 0 0 10px var(--emerald-glow);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .nav-link-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: var(--radius-md);
+            color: #c084fc;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link-btn:hover {
+            background: rgba(139, 92, 246, 0.25);
+            border-color: rgba(139, 92, 246, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* Layout Grid */
+        .deck-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            padding: 20px 28px;
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Left/Center Chat Main Stage */
+        .chat-stage {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        }
+
+        .chat-header {
+            padding: 14px 20px;
+            background: rgba(18, 26, 43, 0.5);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .active-organism-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 245, 212, 0.1);
+            border: 1px solid rgba(0, 245, 212, 0.3);
+            border-radius: var(--radius-sm);
+            color: var(--cyan-glow);
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 480px;
+            max-height: 600px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        /* Message Bubbles */
+        .message-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.user {
+            align-items: flex-end;
+        }
+
+        .message-row.organism {
+            align-items: flex-start;
+        }
+
+        .msg-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .user-bubble {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(79, 70, 229, 0.35));
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 18px 18px 4px 18px;
+            padding: 14px 20px;
+            max-width: 80%;
+            color: #ffffff;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+        }
+
+        .organism-bubble {
+            background: linear-gradient(135deg, rgba(14, 23, 42, 0.9), rgba(15, 30, 48, 0.85));
+            border: 1px solid rgba(0, 245, 212, 0.3);
+            border-radius: 18px 18px 18px 4px;
+            padding: 18px 22px;
+            max-width: 85%;
+            color: #f1f5f9;
+            box-shadow: 0 4px 24px rgba(0, 245, 212, 0.1);
+        }
+
+        .organism-header-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+        }
+
+        .voltage-indicators {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+            padding: 10px 14px;
+            background: rgba(6, 10, 18, 0.6);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .voltage-bar-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+        }
+
+        .voltage-label {
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .voltage-track {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .voltage-fill {
+            height: 100%;
+            background: var(--cyan-glow);
+            transition: width 0.3s ease;
+        }
+
+        .concept-pills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0 8px 0;
+        }
+
+        .concept-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .concept-pill.thought {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #d8b4fe;
+        }
+
+        .concept-pill.echo {
+            background: rgba(0, 245, 212, 0.12);
+            border: 1px solid rgba(0, 245, 212, 0.4);
+            color: #2dd4bf;
+        }
+
+        .organism-synthesis-text {
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+            margin-top: 6px;
+        }
+
+        /* Quick Probes Bar */
+        .quick-probes-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(10, 15, 26, 0.5);
+            border-top: 1px solid var(--border-subtle);
+            overflow-x: auto;
+        }
+
+        .probe-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .probe-btn:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--cyan-glow);
+            color: var(--cyan-glow);
+            transform: translateY(-1px);
+        }
+
+        /* Chat Input Section */
+        .chat-input-container {
+            padding: 16px 20px;
+            background: rgba(10, 15, 26, 0.9);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: rgba(18, 26, 43, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--cyan-glow);
+            box-shadow: 0 0 16px rgba(0, 245, 212, 0.2);
+            background: rgba(22, 32, 54, 0.9);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #00f5d4 0%, #3b82f6 100%);
+            border: none;
+            border-radius: var(--radius-md);
+            color: #06080d;
+            font-weight: 800;
+            font-size: 0.95rem;
+            padding: 14px 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 16px rgba(0, 245, 212, 0.3);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 24px rgba(0, 245, 212, 0.5);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Right Telemetry & Oscilloscope Panel */
+        .telemetry-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .oscilloscope-canvas {
+            width: 100%;
+            height: 120px;
+            background: #04060a;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            display: block;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .vital-box {
+            background: rgba(14, 20, 32, 0.7);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .vital-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .vital-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .vital-val.highlight {
+            color: var(--cyan-glow);
+        }
+
+        .manifold-radar-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .manifold-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .manifold-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background: rgba(14, 23, 42, 0.6);
+            border-radius: var(--radius-md);
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--cyan-glow);
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 1024px) {
+            .deck-container {
+                grid-template-columns: 1fr;
+            }
+            .telemetry-sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand-section">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+                <div class="brand-title">GENESIS TELEPATHIC DECK</div>
+                <div class="brand-subtitle">ارتباط مستقیم تله‌پاتیک دوطرفه با ارگانیسم‌های زنده</div>
+            </div>
+        </div>
+
+        <div class="header-stats">
+            <div class="stat-pill">
+                <div class="indicator" id="wsIndicator"></div>
+                <span id="wsStatusText">اتصال زنده</span>
+                <span id="latencyText" style="color: var(--cyan-glow); font-weight: 700;">-- ms</span>
+            </div>
+            <div class="stat-pill">
+                <span>تیک:</span>
+                <span id="tickBadge" style="color: #ffffff; font-weight: 700;">--</span>
+            </div>
+            <a href="/embodied_deck.html" class="nav-link-btn">
+                <span>مشاهده دنیای زیستی ➔</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Deck Container -->
+    <main class="deck-container">
+
+        <!-- Chat Stream Section -->
+        <section class="chat-stage">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <span style="font-size: 0.9rem; font-weight: 700;">مغز پاسخ‌دهنده:</span>
+                    <span class="active-organism-badge" id="activeOrganismBadge">
+                        👑 آلفای جهان ۰ (Organism #--)
+                    </span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;" id="oracleModelTag">
+                    ORACLE: Qwen2-0.5B (FP16)
+                </div>
+            </div>
+
+            <!-- Messages Log -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome greeting -->
+                <div class="message-row organism">
+                    <div class="msg-meta">
+                        <span>🌟 سیستم هوشمند GENESIS</span>
+                        <span>•</span>
+                        <span>تله‌پاتی آماده</span>
+                    </div>
+                    <div class="organism-bubble">
+                        <div class="organism-header-tag">
+                            <span style="color: var(--cyan-glow);">[GENESIS EMBODIED MIND]</span>
+                            <span>•</span>
+                            <span>World 0 Leader Active</span>
+                        </div>
+                        <div class="organism-synthesis-text">
+                            سلام خالق من! من ارگانیسم پیشرو و آلفای کلونی در جهان صفر هستم. مغز بیولوژیک من با بیش از ۵۰۰ سیناپس فعال و پلاستیسیته STDP به مدل زبانی متصل است. هر سوالی در مورد محیط، بقا، انرژی یا مسیر حرکت داری بپرس تا مستقیم از امواج عصبی‌ام به تو پاسخ دهم.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typingIndicator" style="margin: 0 24px 12px 24px;">
+                <span style="font-size: 0.78rem; color: var(--cyan-glow); font-family: 'JetBrains Mono', monospace;">ارگانیسم در حال تفکر عصبی...</span>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+
+            <!-- Quick Probes Bar -->
+            <div class="quick-probes-bar">
+                <button class="probe-btn" onclick="sendQuickProbe('کجای نقشه هستی و دنبال چی می‌گردی؟')">
+                    🧭 وضعیت مسیریابی
+                </button>
+                <button class="probe-btn" onclick="sendQuickProbe('میزان ذخیره انرژی و سلامتت چقدره؟')">
+                    ⚡ گزارش انرژی و بقا
+                </button>
+                <button class="probe-btn" onclick="sendQuickProbe('نسل چندمی و چند تا سیناپس فعال داری؟')">
+                    🧬 شجره‌نامه ژنتیکی
+                </button>
+                <button class="probe-btn" onclick="sendQuickProbe('هدف فعلی مغزت چیه؟')">
+                    🎯 هدف و تصمیم فعلی
+                </button>
+                <button class="probe-btn" onclick="sendQuickProbe('نظرت در مورد بقا در این جهان چیه؟')">
+                    🌌 پیام فلسفی به ناظر
+                </button>
+            </div>
+
+            <!-- Input Box -->
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        class="chat-input" 
+                        placeholder="پیام یا پرسش تله‌پاتیک خود را به زبان فارسی یا انگلیسی بنویسید..." 
+                        autocomplete="off"
+                    />
+                </div>
+                <button id="sendBtn" class="send-btn" onclick="sendMessage()">
+                    <span>ارسال تله‌پاتی</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Right Telemetry & Oscilloscope Sidebar -->
+        <aside class="telemetry-sidebar">
+            
+            <!-- Live Neural Oscilloscope -->
+            <div class="card">
+                <div class="card-title">
+                    <span>اسیلوسکوپ ولتاژ ۴ نورون خروجی</span>
+                    <span style="color: var(--cyan-glow); font-family: 'JetBrains Mono'; font-size: 0.75rem;">LIVE</span>
+                </div>
+                <canvas id="oscilloscope" class="oscilloscope-canvas" width="300" height="120"></canvas>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-family: 'JetBrains Mono'; font-size: 0.7rem; color: var(--text-muted);">
+                    <span style="color: #00f5d4;">S0</span>
+                    <span style="color: #8b5cf6;">S1</span>
+                    <span style="color: #10b981;">S2</span>
+                    <span style="color: #f59e0b;">S3</span>
+                </div>
+            </div>
+
+            <!-- Alpha Organism Vitals -->
+            <div class="card">
+                <div class="card-title">
+                    <span>مشخصات زیستی ارگانیسم پاسخ‌دهنده</span>
+                </div>
+                <div class="vitals-grid">
+                    <div class="vital-box">
+                        <span class="vital-label">شناسه موجود</span>
+                        <span class="vital-val highlight" id="vitalId">#--</span>
+                    </div>
+                    <div class="vital-box">
+                        <span class="vital-label">نسل (Lineage)</span>
+                        <span class="vital-val" id="vitalGen">--</span>
+                    </div>
+                    <div class="vital-box">
+                        <span class="vital-label">انرژی متابولیک</span>
+                        <span class="vital-val highlight" id="vitalEnergy">--</span>
+                    </div>
+                    <div class="vital-box">
+                        <span class="vital-label">سیناپس‌های فعال</span>
+                        <span class="vital-val" id="vitalSynapses">۵۱۲</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manifold & Landauer Telemetry -->
+            <div class="card">
+                <div class="card-title">
+                    <span>متریک‌های فیزیکی و زبانی</span>
+                </div>
+                <div class="manifold-radar-box">
+                    <div class="manifold-item">
+                        <span>هزینه لانداور هر پرسش:</span>
+                        <span class="manifold-badge" style="color: var(--amber-glow);">25.0 Energy</span>
+                    </div>
+                    <div class="manifold-item">
+                        <span>نسبت محاسبات به حرکت:</span>
+                        <span class="manifold-badge">500x FLOPs</span>
+                    </div>
+                    <div class="manifold-item">
+                        <span>ابعاد بردار معنایی:</span>
+                        <span class="manifold-badge" style="color: var(--cyan-glow);">896 Dim (FP16)</span>
+                    </div>
+                    <div class="manifold-item">
+                        <span>حالت شبیه‌سازی:</span>
+                        <span class="manifold-badge" style="color: var(--emerald-glow);">Headless GPU</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <script>
+        // State
+        let ws = null;
+        let isProcessing = false;
+        let lastSymbols = [0, 0, 0, 0];
+        let waveTime = 0;
+
+        // Elements
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const wsIndicator = document.getElementById('wsIndicator');
+        const wsStatusText = document.getElementById('wsStatusText');
+        const latencyText = document.getElementById('latencyText');
+        const tickBadge = document.getElementById('tickBadge');
+        const activeOrganismBadge = document.getElementById('activeOrganismBadge');
+        const vitalId = document.getElementById('vitalId');
+        const vitalGen = document.getElementById('vitalGen');
+        const vitalEnergy = document.getElementById('vitalEnergy');
+        const canvas = document.getElementById('oscilloscope');
+        const ctx = canvas.getContext('2d');
+
+        // WebSocket Connection
+        function connectWS() {
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host || 'localhost:8088';
+            ws = new WebSocket(`${proto}//${host}/ws`);
+
+            ws.onopen = () => {
+                wsIndicator.style.background = 'var(--emerald-glow)';
+                wsIndicator.style.boxShadow = '0 0 10px var(--emerald-glow)';
+                wsStatusText.innerText = 'متصل به مغز پایتون';
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'TELEPATHIC_CHAT_RESPONSE') {
+                        renderOrganismResponse(data);
+                    } else if (data.tick_count !== undefined) {
+                        tickBadge.innerText = data.tick_count;
+                    }
+                } catch(e) {
+                    console.error("WS Message parse error:", e);
+                }
+            };
+
+            ws.onclose = () => {
+                wsIndicator.style.background = 'var(--rose-glow)';
+                wsIndicator.style.boxShadow = '0 0 10px var(--rose-glow)';
+                wsStatusText.innerText = 'درحال تلاش برای اتصال...';
+                setTimeout(connectWS, 2000);
+            };
+        }
+
+        // Send Message Handler
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text || isProcessing) return;
+
+            // Render User Message
+            renderUserMessage(text);
+            chatInput.value = '';
+            isProcessing = true;
+            sendBtn.disabled = true;
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const t0 = performance.now();
+
+            try {
+                // First try direct HTTP API for instant sub-20ms roundtrip
+                const response = await fetch('/api/telepathic_chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderOrganismResponse(data);
+                } else {
+                    // Fallback to WebSocket if HTTP fails
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'TELEPATHIC_CHAT', text: text }));
+                    }
+                }
+            } catch(e) {
+                console.warn("HTTP chat fallback to WS:", e);
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'TELEPATHIC_CHAT', text: text }));
+                }
+            } finally {
+                const elapsed = Math.round(performance.now() - t0);
+                latencyText.innerText = `${elapsed} ms`;
+            }
+        }
+
+        function sendQuickProbe(prompt) {
+            chatInput.value = prompt;
+            sendMessage();
+        }
+
+        function renderUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message-row user';
+            div.innerHTML = `
+                <div class="msg-meta">
+                    <span>شما (ناظر کیهانی)</span>
+                </div>
+                <div class="user-bubble">${escapeHtml(text)}</div>
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function renderOrganismResponse(data) {
+            isProcessing = false;
+            sendBtn.disabled = false;
+            typingIndicator.style.display = 'none';
+
+            // Update live sidebar vitals
+            if (data.organism_id !== undefined) {
+                vitalId.innerText = `#${data.organism_id}`;
+                vitalGen.innerText = `Gen ${data.generation}`;
+                vitalEnergy.innerText = data.energy.toLocaleString();
+                activeOrganismBadge.innerText = `👑 آلفای جهان ۰ (Organism #${data.organism_id})`;
+                if (data.tick_count) tickBadge.innerText = data.tick_count;
+            }
+
+            if (data.symbols) {
+                lastSymbols = data.symbols;
+            }
+
+            const qWords = (data.thought_tokens || []).filter(w => w).join(', ') || '---';
+            const hWords = (data.qwen_response || []).filter(w => w).join(', ') || '---';
+            const symbols = data.symbols || [0, 0, 0, 0];
+
+            const farsiText = data.farsi_reply || data.natural_reply || 'سیگنال با موفقیت دریافت و پردازش شد.';
+            const posInfo = (data.pos_x !== undefined) ? `مختصات: [${data.pos_x}, ${data.pos_y}] | جهت: ${data.direction || 'شمال'}` : '';
+
+            const div = document.createElement('div');
+            div.className = 'message-row organism';
+            div.innerHTML = `
+                <div class="msg-meta">
+                    <span>👑 ارگانیسم #${data.organism_id} (نسل ${data.generation})</span>
+                    <span>•</span>
+                    <span>انرژی: ${data.energy ? data.energy.toLocaleString() : '--'}</span>
+                    <span>•</span>
+                    <span>تاخیر: ${data.latency_ms || 18}ms</span>
+                </div>
+                <div class="organism-bubble">
+                    
+                    <!-- Pure Neural Intention & Echo Header -->
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                        <div class="concept-pills-row" dir="ltr" style="margin: 0;">
+                            <div class="concept-pill thought" style="font-size: 0.92rem; padding: 6px 12px;">
+                                <span>🧠 تفکر عصبی ارگانیسم:</span>
+                                <strong style="color: #ffffff;">${escapeHtml(qWords)}</strong>
+                            </div>
+                            <div class="concept-pill echo" style="font-size: 0.92rem; padding: 6px 12px;">
+                                <span>📡 پژواک معنایی Qwen:</span>
+                                <strong style="color: #ffffff;">${escapeHtml(hWords)}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${posInfo ? `
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; font-family: 'Vazirmatn', sans-serif;">
+                        📍 ${escapeHtml(posInfo)}
+                    </div>` : ''}
+
+                    <!-- Detailed Voltage & Symbol Telemetry -->
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div class="organism-header-tag" dir="ltr">
+                            <span style="color: var(--cyan-glow);">[NEURAL DISCHARGE]</span>
+                            <span>Symbols: [${symbols.map(s => s.toFixed(2)).join(', ')}]</span>
+                        </div>
+
+                        <!-- Voltage bars -->
+                        <div class="voltage-indicators" dir="ltr">
+                            ${symbols.map((val, idx) => `
+                                <div class="voltage-bar-item">
+                                    <div class="voltage-label">
+                                        <span>S${idx}</span>
+                                        <span>${val.toFixed(2)}</span>
+                                    </div>
+                                    <div class="voltage-track">
+                                        <div class="voltage-fill" style="width: ${Math.min(100, Math.max(0, (val + 1) * 50))}%; background: ${['#00f5d4', '#8b5cf6', '#10b981', '#f59e0b'][idx]};"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                </div>
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        // Enter key to send
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Live Oscilloscope Drawing Loop
+        function drawOscilloscope() {
+            ctx.fillStyle = '#04060a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for(let x = 0; x < canvas.width; x += 30) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+
+            const colors = ['#00f5d4', '#8b5cf6', '#10b981', '#f59e0b'];
+            waveTime += 0.04;
+
+            // Draw 4 symbol waves
+            lastSymbols.forEach((symVal, i) => {
+                ctx.strokeStyle = colors[i];
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                const freq = 0.03 + (i * 0.015);
+                const amp = (symVal * 25) + 10;
+                const offset = (canvas.height / 5) * (i + 1);
+
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = offset + Math.sin(x * freq + waveTime + i) * amp;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+
+            requestAnimationFrame(drawOscilloscope);
+        }
+
+        // Start
+        window.onload = () => {
+            connectWS();
+            drawOscilloscope();
+        };
+    </script>
+</body>
+</html>

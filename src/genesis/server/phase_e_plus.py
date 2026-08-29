@@ -68,7 +68,7 @@ class SymbolToQueryProjection(nn.Module):
 
 class LLMSensoryInterface:
     def __init__(self, model_name: str = "Qwen/Qwen2-0.5B", device: str = "cuda"):
-        from transformers import AutoModel, AutoConfig, AutoTokenizer
+        from transformers import AutoModelForCausalLM, AutoConfig, AutoTokenizer
         print(f"[GENESIS CORE] Initializing External Sensory Organ (LLM): {model_name}")
         
         self.dev = torch.device(device if torch.cuda.is_available() else "cpu")
@@ -76,7 +76,7 @@ class LLMSensoryInterface:
         self.d_model = self.config.hidden_size
         
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.llm = AutoModel.from_pretrained(
+        self.llm = AutoModelForCausalLM.from_pretrained(
             model_name, 
             dtype=torch.float16
         ).to(self.dev)
@@ -105,8 +105,8 @@ class LLMSensoryInterface:
         M, D = query.shape
         query_flat = query.view(M, 1, D)
         
-        # Pass ONLY the M querying organisms through the LLM (Sparse Sub-Batch)
-        outputs = self.llm(
+        # Pass ONLY the M querying organisms through the base LLM model (Sparse Sub-Batch)
+        outputs = self.llm.model(
             inputs_embeds=query_flat,
             output_hidden_states=True
         )
