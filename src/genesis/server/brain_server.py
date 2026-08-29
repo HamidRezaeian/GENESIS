@@ -24,6 +24,7 @@ from numba import njit
 from genesis.server.genesis_pytorch_brain import GenesisPyTorchBrain
 from genesis.server.behavioral_emergence_suite import BehavioralEmergenceSuite
 from genesis.server.phase_e_substrate import BatchedPopulation
+from genesis.server.phase_e_plus import PhaseEPlusInternetSensing
 from genesis.server.phase_e_ecology import EcologyField
 from genesis.server.phase_e_metrics import PhaseEEmergenceTracker
 
@@ -824,6 +825,13 @@ class GenesisEngineRunner:
         self.phase_e_eco = EcologyField(n_worlds=32, grid_size=32, seed=42)
         self.phase_e_metrics = PhaseEEmergenceTracker(history_len=500)
         self.world_migration = WorldMigration()
+        
+        self.phase_e_plus = PhaseEPlusInternetSensing(
+            population=self.phase_e_pop,
+            ecology=self.phase_e_eco,
+            llm_model_name="Qwen/Qwen2-0.5B",
+            device="cuda"
+        )
         self.last_phase_e_telem = {}
 
         # Load existing brain if available
@@ -883,24 +891,10 @@ class GenesisEngineRunner:
                 self.phase_e_pop.capture_tick_graph(sample_sensory, sample_harvested)
 
             self.phase_e_eco.update_environment()
-            p_sensory, p_harvested = self.phase_e_eco.process_interactions(
-                self.phase_e_pop.positions,
-                self.phase_e_pop.orientations,
-                self.phase_e_pop.actions,
-                self.phase_e_pop.alive_mask,
-                self.phase_e_pop.energy,
-                self.phase_e_pop.dev
-            )
-            p_actions, p_pop_telem = self.phase_e_pop.step_tick(p_sensory, p_harvested)
+            p_actions, p_pop_telem = self.phase_e_plus.step_tick(self.tick_count)
             self.world_migration.migrate(self.phase_e_pop, self.tick_count)
             
             if is_headless:
-                self.emergence_suite.observe_tick(
-                    latent_state=np.zeros(32, dtype=np.float32),
-                    concept_vector=np.zeros(16, dtype=np.float32),
-                    goal_vector=np.zeros(16, dtype=np.float32),
-                    action=0, reward=0.0, is_generation_end=False
-                )
                 if self.tick_count > 0 and self.tick_count % 1000 == 0:
                     self.brain.save_checkpoint(BRAIN_DIR / "canonical_brain.npz")
                     
@@ -919,7 +913,18 @@ class GenesisEngineRunner:
                     with open(BRAIN_DIR / "phase_e_state.pt", "wb") as f:
                         torch.save(phase_e_state, f, pickle_module=pickle)
                         
-                    print(f"[HEADLESS] Fast-forwarded to tick {self.tick_count}", flush=True)
+                    n_alive = int(self.phase_e_pop.alive_mask.sum().item())
+                    avg_energy = float(self.phase_e_pop.energy[self.phase_e_pop.alive_mask].mean().item()) if n_alive > 0 else 0.0
+                    total_queries = p_pop_telem.get("total_llm_queries", 0)
+                    latest_trans = p_pop_telem.get("latest_translation", None)
+                    
+                    status_line = f"🚀 [HEADLESS] Tick {self.tick_count:7d} | Alive: {n_alive:4d}/4096 | Avg Energy: {avg_energy:5.1f} | Qwen Queries: {total_queries}"
+                    if latest_trans:
+                        q_str = " ".join(latest_trans.get("query_words", []))
+                        r_str = " ".join(latest_trans.get("response_words", []))
+                        sym_str = str(latest_trans.get("symbols", []))
+                        status_line += f"\n   📡 [QWEN TRANSLATOR] Symbols {sym_str} ➔ Thought: '{q_str}' ➔ Qwen Echo: '{r_str}'"
+                    print(status_line, flush=True)
                     
         if is_headless:
             return {}
@@ -1357,11 +1362,19 @@ if __name__ == "__main__":
         sys.exit(0)
 
     app = init_app()
-    port = int(os.environ.get("PORT", 8088))
-    print("=" * 70, flush=True)
-    print(
-        f"🚀 GENESIS Python Brain Server (Substrate 22) Online on Port {port}", flush=True)
-    print(
-        f"📡 WebSocket & HTTP UI serving at: http://localhost:{port}/embodied_deck.html", flush=True)
-    print("=" * 70, flush=True)
-    web.run_app(app, host="0.0.0.0", port=port)
+    base_port = int(os.environ.get("PORT", 8088))
+    
+    for port in range(base_port, base_port + 10):
+        try:
+            print("=" * 70, flush=True)
+            print(f"🚀 GENESIS Python Brain Server (Substrate 22) Online on Port {port}", flush=True)
+            print(f"📡 WebSocket & HTTP UI serving at: http://localhost:{port}/embodied_deck.html", flush=True)
+            print("=" * 70, flush=True)
+            web.run_app(app, host="0.0.0.0", port=port)
+            break
+        except OSError as e:
+            if "10048" in str(e) or e.errno == 10048 or getattr(e, 'errno', None) == 98:
+                print(f"[GENESIS CORE] Port {port} occupied, trying port {port + 1}...", flush=True)
+                continue
+            else:
+                raise
