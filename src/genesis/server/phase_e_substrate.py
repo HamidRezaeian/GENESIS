@@ -1,6 +1,6 @@
 """
 GENESIS Phase-E: Batched Open-Ended Evolutionary ALife Substrate Core.
-Authoritative mathematical formulation by GLM 5.3.
+Authoritative mathematical formulation by GLM 5.3 (Ultimate Convergence Acceleration).
 
 Invariants:
 - Rule 6: Open-ended emergence from AGI to AXI without authored task shortcuts.
@@ -19,6 +19,84 @@ import torch.nn.functional as F
 import numpy as np
 
 
+class AdaptiveMutationScheduler:
+    """
+    Entropy-driven mutation rate controller.
+    Compliant with Rule 9: No external fitness, only emergent population statistics.
+    """
+    def __init__(
+        self,
+        n_worlds: int = 32,
+        entropy_floor: float = 0.3,     # Below this = stagnation
+        entropy_ceiling: float = 0.8,   # Above this = high diversity
+        mutation_boost: float = 5.0,    # Max mutation multiplier
+        mutation_floor: float = 0.2,    # Min mutation multiplier
+        smoothing: float = 0.95,        # EMA smoothing factor
+        device: str = "cuda"
+    ):
+        self.W = n_worlds
+        self.entropy_floor = entropy_floor
+        self.entropy_ceiling = entropy_ceiling
+        self.mutation_boost = mutation_boost
+        self.mutation_floor = mutation_floor
+        self.smoothing = smoothing
+        self.dev = torch.device(device)
+        
+        # Per-world mutation scale [W]
+        self.mutation_scale = torch.ones(n_worlds, dtype=torch.float32, device=self.dev)
+        self.entropy_history = torch.zeros(n_worlds, dtype=torch.float32, device=self.dev)
+    
+    @torch.no_grad()
+    def compute_population_entropy(
+        self, 
+        actions: torch.Tensor,      # [W, N] — current actions
+        alive_mask: torch.Tensor    # [W, N]
+    ) -> torch.Tensor:
+        """
+        Compute behavioral entropy per world.
+        H = -Σ p(a) * log(p(a)) over action distribution.
+        """
+        W, N = actions.shape
+        n_actions = 5  # Fwd, TurnL, TurnR, Harvest, Emit
+        
+        entropy = torch.zeros(W, dtype=torch.float32, device=actions.device)
+        for w in range(W):
+            alive_actions = actions[w][alive_mask[w]]
+            if alive_actions.shape[0] > 0:
+                counts = torch.bincount(alive_actions, minlength=n_actions).float()
+                probs = counts / counts.sum()
+                probs_nonzero = probs[probs > 0]
+                H = -torch.sum(probs_nonzero * torch.log(probs_nonzero))
+                entropy[w] = H / math.log(n_actions)
+        
+        return entropy
+    
+    @torch.no_grad()
+    def update_mutation_scale(self, current_entropy: torch.Tensor):
+        """
+        Adapt mutation scale based on population entropy.
+        Low entropy → boost mutation (escape stagnation).
+        High entropy → reduce mutation (exploit diversity).
+        """
+        self.entropy_history = (
+            self.smoothing * self.entropy_history + 
+            (1 - self.smoothing) * current_entropy
+        )
+        
+        for w in range(self.W):
+            H = self.entropy_history[w].item()
+            if H < self.entropy_floor:
+                deficit = (self.entropy_floor - H) / self.entropy_floor
+                scale = 1.0 + self.mutation_boost * deficit
+            elif H > self.entropy_ceiling:
+                excess = (H - self.entropy_ceiling) / (1.0 - self.entropy_ceiling)
+                scale = 1.0 - (1.0 - self.mutation_floor) * excess
+            else:
+                scale = 1.0
+            
+            self.mutation_scale[w] = scale
+
+
 class CPPNGenome:
     """
     Compositional Pattern Producing Network (CPPN) Indirect Genome Encoding.
@@ -33,7 +111,6 @@ class CPPNGenome:
         self.rng = rng if rng is not None else np.random.RandomState(seed)
         
         # 1. CPPN Topological Generator Weights (4 inputs -> 8 hidden -> 1 output)
-        # Inputs: [x_pre, y_post, dist_euclid, bias=1.0]
         self.W_cppn_1 = self.rng.randn(4, 8).astype(np.float32) * 0.5
         self.b_cppn_1 = self.rng.randn(8).astype(np.float32) * 0.1
         self.W_cppn_2 = self.rng.randn(8, 1).astype(np.float32) * 0.5
@@ -49,8 +126,6 @@ class CPPNGenome:
         # 3. Metabolic & Lifecycle Parameters
         self.E_threshold = float(np.clip(self.rng.normal(160.0, 20.0), 80.0, 300.0))
         self.metabolic_rate = float(np.clip(self.rng.normal(0.15, 0.03), 0.05, 0.50))
-        
-        # Synapse threshold for CPPN expression
         self.synapse_thresh = 0.25
 
     def express_phenotype(
@@ -58,118 +133,81 @@ class CPPNGenome:
         max_neurons: int = 64,
         max_synapses: int = 512,
         input_neurons: int = 16,
-        output_neurons: int = 4
+        output_neurons: int = 5
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Derive neural wiring from CPPN:
-        Returns:
-          pre_idx: [max_synapses] (int64)
-          post_idx: [max_synapses] (int64)
-          weights: [max_synapses] (float32)
-          syn_active: [max_synapses] (bool)
-        """
-        # Assign 2D coordinates to neurons on a circle in [-1, 1]
         coords = np.zeros((max_neurons, 2), dtype=np.float32)
-        for i in range(max_neurons):
-            angle = (2.0 * math.pi * i) / max_neurons
-            r = 0.5 if i < input_neurons else (0.8 if i >= max_neurons - output_neurons else 0.65)
-            coords[i, 0] = r * math.cos(angle)
-            coords[i, 1] = r * math.sin(angle)
-            
-        pre_list, post_list, weight_list = [], [], []
+        indices = np.arange(max_neurons)
+        angles = (2.0 * math.pi * indices) / max_neurons
         
-        # Evaluate CPPN over candidate pairs (feedforward + recurrent paths)
-        for src in range(max_neurons):
-            for dst in range(max_neurons):
-                # Don't connect directly into input sensory neurons
-                if dst < input_neurons:
-                    continue
-                x1, y1 = coords[src]
-                x2, y2 = coords[dst]
-                d = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-                
-                feat = np.array([x1, y2, d, 1.0], dtype=np.float32)
-                h = np.tanh(np.dot(feat, self.W_cppn_1) + self.b_cppn_1)
-                w_raw = float(np.dot(h, self.W_cppn_2)[0] + self.b_cppn_2)
-                
-                if abs(w_raw) >= self.synapse_thresh:
-                    w_clamped = float(np.clip(w_raw, -3.0, 3.0))
-                    pre_list.append(src)
-                    post_list.append(dst)
-                    weight_list.append(w_clamped)
-                    if len(pre_list) >= max_synapses:
-                        break
-            if len(pre_list) >= max_synapses:
-                break
-                
-        n_syn = len(pre_list)
+        r = np.full(max_neurons, 0.65, dtype=np.float32)
+        r[:input_neurons] = 0.5
+        r[max_neurons - output_neurons:] = 0.8
+        
+        coords[:, 0] = r * np.cos(angles)
+        coords[:, 1] = r * np.sin(angles)
+        
+        # Fully Vectorized CPPN Evaluation
+        src_idx = np.arange(max_neurons)
+        dst_idx = np.arange(input_neurons, max_neurons)
+        src_grid, dst_grid = np.meshgrid(src_idx, dst_idx, indexing='ij')
+        
+        x1 = coords[src_grid, 0]
+        y1 = coords[src_grid, 1]
+        x2 = coords[dst_grid, 0]
+        y2 = coords[dst_grid, 1]
+        d = np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        
+        feat = np.stack([x1, y2, d, np.ones_like(d)], axis=-1)
+        h = np.tanh(np.dot(feat, self.W_cppn_1) + self.b_cppn_1)
+        w_raw = np.dot(h, self.W_cppn_2)[..., 0] + self.b_cppn_2
+        
+        valid = np.abs(w_raw) >= self.synapse_thresh
+        pre_list = src_grid[valid]
+        post_list = dst_grid[valid]
+        weight_list = np.clip(w_raw[valid], -3.0, 3.0)
+        
+        n_syn = min(max_synapses, len(pre_list))
         pre_arr = np.zeros(max_synapses, dtype=np.int64)
         post_arr = np.zeros(max_synapses, dtype=np.int64)
         w_arr = np.zeros(max_synapses, dtype=np.float32)
         active_arr = np.zeros(max_synapses, dtype=bool)
         
         if n_syn > 0:
-            pre_arr[:n_syn] = pre_list
-            post_arr[:n_syn] = post_list
-            w_arr[:n_syn] = weight_list
+            pre_arr[:n_syn] = pre_list[:n_syn]
+            post_arr[:n_syn] = post_list[:n_syn]
+            w_arr[:n_syn] = weight_list[:n_syn]
             active_arr[:n_syn] = True
             
         return pre_arr, post_arr, w_arr, active_arr
 
-    def mutate(self) -> 'CPPNGenome':
-        """Create mutated offspring genome."""
+    def mutate(self, mutation_scale: float = 1.0) -> 'CPPNGenome':
         child = copy.deepcopy(self)
         
-        # 1. Mutate CPPN weights (Gaussian drift)
         if child.rng.rand() < 0.8:
-            child.W_cppn_1 += child.rng.randn(*child.W_cppn_1.shape) * 0.08
-            child.b_cppn_1 += child.rng.randn(*child.b_cppn_1.shape) * 0.04
-            child.W_cppn_2 += child.rng.randn(*child.W_cppn_2.shape) * 0.08
-            child.b_cppn_2 += float(child.rng.randn() * 0.04)
+            child.W_cppn_1 += child.rng.randn(*child.W_cppn_1.shape) * 0.08 * mutation_scale
+            child.b_cppn_1 += child.rng.randn(*child.b_cppn_1.shape) * 0.04 * mutation_scale
+            child.W_cppn_2 += child.rng.randn(*child.W_cppn_2.shape) * 0.08 * mutation_scale
+            child.b_cppn_2 += float(child.rng.randn() * 0.04 * mutation_scale)
             
-        # 2. Mutate plasticity params
         if child.rng.rand() < 0.5:
-            child.eta_stdp = float(np.clip(child.eta_stdp + child.rng.normal(0, 0.002), 0.001, 0.05))
-            child.tau_trace = float(np.clip(child.tau_trace + child.rng.normal(0, 0.02), 0.50, 0.98))
-            child.A_plus = float(np.clip(child.A_plus + child.rng.normal(0, 0.005), 0.01, 0.20))
-            child.A_minus = float(np.clip(child.A_minus + child.rng.normal(0, 0.005), 0.01, 0.20))
-            child.tau_homeo = float(np.clip(child.tau_homeo + child.rng.normal(0, 0.0002), 0.0001, 0.01))
+            child.eta_stdp = float(np.clip(child.eta_stdp + child.rng.normal(0, 0.002 * mutation_scale), 0.001, 0.05))
+            child.tau_trace = float(np.clip(child.tau_trace + child.rng.normal(0, 0.02 * mutation_scale), 0.50, 0.98))
+            child.A_plus = float(np.clip(child.A_plus + child.rng.normal(0, 0.005 * mutation_scale), 0.01, 0.20))
+            child.A_minus = float(np.clip(child.A_minus + child.rng.normal(0, 0.005 * mutation_scale), 0.01, 0.20))
+            child.tau_homeo = float(np.clip(child.tau_homeo + child.rng.normal(0, 0.0002 * mutation_scale), 0.0001, 0.01))
             
-        # 3. Mutate metabolic params
         if child.rng.rand() < 0.4:
-            child.E_threshold = float(np.clip(child.E_threshold + child.rng.normal(0, 5.0), 80.0, 300.0))
-            child.metabolic_rate = float(np.clip(child.metabolic_rate + child.rng.normal(0, 0.01), 0.05, 0.50))
+            child.E_threshold = float(np.clip(child.E_threshold + child.rng.normal(0, 5.0 * mutation_scale), 80.0, 300.0))
+            child.metabolic_rate = float(np.clip(child.metabolic_rate + child.rng.normal(0, 0.01 * mutation_scale), 0.05, 0.50))
             
-        return child
-
-    @classmethod
-    def crossover(cls, parent_a: 'CPPNGenome', parent_b: 'CPPNGenome') -> 'CPPNGenome':
-        """Homologous crossover between two parent genomes."""
-        child = copy.deepcopy(parent_a)
-        mask1 = child.rng.rand(*child.W_cppn_1.shape) < 0.5
-        child.W_cppn_1 = np.where(mask1, parent_a.W_cppn_1, parent_b.W_cppn_1)
-        child.W_cppn_2 = np.where(child.rng.rand(*child.W_cppn_2.shape) < 0.5, parent_a.W_cppn_2, parent_b.W_cppn_2)
-        
-        # Blend plasticity & metabolic
-        alpha = float(child.rng.rand())
-        child.eta_stdp = alpha * parent_a.eta_stdp + (1 - alpha) * parent_b.eta_stdp
-        child.tau_trace = alpha * parent_a.tau_trace + (1 - alpha) * parent_b.tau_trace
-        child.A_plus = alpha * parent_a.A_plus + (1 - alpha) * parent_b.A_plus
-        child.A_minus = alpha * parent_a.A_minus + (1 - alpha) * parent_b.A_minus
-        child.E_threshold = alpha * parent_a.E_threshold + (1 - alpha) * parent_b.E_threshold
-        child.metabolic_rate = alpha * parent_a.metabolic_rate + (1 - alpha) * parent_b.metabolic_rate
         return child
 
 
 class BatchedPopulation(nn.Module):
-    """
-    TensorNEAT-style Batched Evolutionary Population Engine.
-    Executes an entire heterogeneous population of N organisms in CUDA/PyTorch FP16
-    with zero dynamic allocations inside simulation ticks.
-    """
     def __init__(
         self,
-        pop_size: int = 128,
+        n_worlds: int = 32,
+        pop_per_world: int = 128,
         max_neurons: int = 64,
         max_synapses: int = 512,
         input_neurons: int = 20,
@@ -178,7 +216,9 @@ class BatchedPopulation(nn.Module):
         seed: int = 42
     ):
         super().__init__()
-        self.pop_size = pop_size
+        self.W = n_worlds
+        self.N = pop_per_world
+        self.pop_size = n_worlds * pop_per_world
         self.max_neurons = max_neurons
         self.max_synapses = max_synapses
         self.input_neurons = input_neurons
@@ -187,228 +227,231 @@ class BatchedPopulation(nn.Module):
         self.dtype = torch.float16 if self.dev.type == "cuda" else torch.float32
         self.rng = np.random.RandomState(seed)
         
-        # --- Pre-allocated State Tensors (Zero allocation inside loop) ---
-        self.register_buffer("states", torch.zeros(pop_size, max_neurons, dtype=self.dtype, device=self.dev))
-        self.register_buffer("weights", torch.zeros(pop_size, max_synapses, dtype=self.dtype, device=self.dev))
-        self.register_buffer("eligibility", torch.zeros(pop_size, max_synapses, dtype=self.dtype, device=self.dev))
-        self.register_buffer("energy", torch.full((pop_size,), 100.0, dtype=self.dtype, device=self.dev))
-        self.register_buffer("pre_idx", torch.zeros(pop_size, max_synapses, dtype=torch.int64, device=self.dev))
-        self.register_buffer("post_idx", torch.zeros(pop_size, max_synapses, dtype=torch.int64, device=self.dev))
-        self.register_buffer("syn_active", torch.zeros(pop_size, max_synapses, dtype=torch.bool, device=self.dev))
-        self.register_buffer("alive_mask", torch.zeros(pop_size, dtype=torch.bool, device=self.dev))
+        # --- Pre-allocated Multi-World State Tensors [W, N, ...] ---
+        self.register_buffer("states", torch.zeros(self.W, self.N, max_neurons, dtype=self.dtype, device=self.dev))
+        self.register_buffer("weights", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        self.register_buffer("eligibility", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        self.register_buffer("energy", torch.full((self.W, self.N), 100.0, dtype=self.dtype, device=self.dev))
         
-        # --- Spatial & Behavioral Buffers ---
-        self.register_buffer("positions", torch.zeros(pop_size, 2, dtype=torch.float32, device=self.dev))
-        self.register_buffer("orientations", torch.zeros(pop_size, dtype=torch.int64, device=self.dev))
-        self.register_buffer("actions", torch.zeros(pop_size, dtype=torch.int64, device=self.dev))
-        self.register_buffer("lineage_depth", torch.zeros(pop_size, dtype=torch.int64, device=self.dev))
-        self.register_buffer("generation_counter", torch.zeros(1, dtype=torch.int64, device=self.dev))
+        # Spatial indices (Shared across worlds for memory efficiency if desired, but we'll allocate per-organism)
+        # Actually, genomes are per-organism. So pre_idx must be [W, N, S]
+        self.register_buffer("pre_idx", torch.zeros(self.W, self.N, max_synapses, dtype=torch.int64, device=self.dev))
+        self.register_buffer("post_idx", torch.zeros(self.W, self.N, max_synapses, dtype=torch.int64, device=self.dev))
+        self.register_buffer("syn_active", torch.zeros(self.W, self.N, max_synapses, dtype=torch.bool, device=self.dev))
         
-        # --- Plasticity & Metabolic Coefficient Buffers (Vectorized) ---
-        self.register_buffer("eta_stdp", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
-        self.register_buffer("tau_trace", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
-        self.register_buffer("A_plus", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
-        self.register_buffer("A_minus", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
-        self.register_buffer("tau_homeo", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
-        self.register_buffer("E_threshold", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
-        self.register_buffer("metabolic_rate", torch.zeros(pop_size, dtype=self.dtype, device=self.dev))
+        self.register_buffer("alive_mask", torch.zeros(self.W, self.N, dtype=torch.bool, device=self.dev))
+        self.register_buffer("positions", torch.zeros(self.W, self.N, 2, dtype=torch.float32, device=self.dev))
+        self.register_buffer("orientations", torch.zeros(self.W, self.N, dtype=torch.int64, device=self.dev))
+        self.register_buffer("actions", torch.zeros(self.W, self.N, dtype=torch.int64, device=self.dev))
+        self.register_buffer("lineage_depth", torch.zeros(self.W, self.N, dtype=torch.int64, device=self.dev))
         
-        # Genome repository
-        self.genomes: List[Optional[CPPNGenome]] = [None] * pop_size
+        self.register_buffer("eta_stdp", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("tau_trace", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("A_plus", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("A_minus", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("tau_homeo", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("E_threshold", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("metabolic_rate", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
         
-        # Telemetry accumulators
+        # We need a 2D list for genomes: W x N
+        self.genomes: List[List[Optional[CPPNGenome]]] = [[None for _ in range(self.N)] for _ in range(self.W)]
+        
         self.total_births = 0
         self.total_deaths = 0
         self.total_ticks = 0
         
-        # Landauer physical scaling constants (Rule 21)
         self.E_base = 0.05
         self.E_flop = 1e-4
         self.E_traffic = 2e-5
         
-        self.initialize_founder_population(initial_pop=min(64, pop_size))
+        self.initialize_founder_population(initial_pop=min(64, self.N))
+        
+        # Adaptive Mutation
+        self.mutation_scheduler = AdaptiveMutationScheduler(n_worlds=self.W, device=device)
 
     def initialize_founder_population(self, initial_pop: int):
-        """Populate initial organisms with diverse CPPN founder genomes."""
-        for i in range(initial_pop):
-            genome = CPPNGenome(rng=self.rng)
-            self._load_organism(i, genome, initial_energy=100.0)
-        self.alive_mask[:initial_pop] = True
-        self.alive_mask[initial_pop:] = False
+        for w in range(self.W):
+            for i in range(initial_pop):
+                genome = CPPNGenome(rng=self.rng)
+                self._load_organism(w, i, genome, initial_energy=100.0)
+            self.alive_mask[w, :initial_pop] = True
+            self.alive_mask[w, initial_pop:] = False
 
-    def _load_organism(self, idx: int, genome: CPPNGenome, initial_energy: float = 100.0, depth: int = 0):
-        """Express genome into pre-allocated slot `idx`."""
+    def _load_organism(self, w: int, idx: int, genome: CPPNGenome, initial_energy: float = 100.0, depth: int = 0):
         pre_arr, post_arr, w_arr, act_arr = genome.express_phenotype(
-            max_neurons=self.max_neurons,
-            max_synapses=self.max_synapses,
-            input_neurons=self.input_neurons,
-            output_neurons=self.output_neurons
+            max_neurons=self.max_neurons, max_synapses=self.max_synapses,
+            input_neurons=self.input_neurons, output_neurons=self.output_neurons
         )
         
-        self.genomes[idx] = genome
-        self.pre_idx[idx] = torch.tensor(pre_arr, dtype=torch.int64, device=self.dev)
-        self.post_idx[idx] = torch.tensor(post_arr, dtype=torch.int64, device=self.dev)
-        self.weights[idx] = torch.tensor(w_arr, dtype=self.dtype, device=self.dev)
-        self.syn_active[idx] = torch.tensor(act_arr, dtype=torch.bool, device=self.dev)
-        self.eligibility[idx].zero_()
-        self.states[idx].zero_()
-        self.energy[idx] = float(initial_energy)
-        self.alive_mask[idx] = True
-        self.lineage_depth[idx] = depth
+        self.genomes[w][idx] = genome
+        self.pre_idx[w, idx] = torch.tensor(pre_arr, dtype=torch.int64, device=self.dev)
+        self.post_idx[w, idx] = torch.tensor(post_arr, dtype=torch.int64, device=self.dev)
+        self.weights[w, idx] = torch.tensor(w_arr, dtype=self.dtype, device=self.dev)
+        self.syn_active[w, idx] = torch.tensor(act_arr, dtype=torch.bool, device=self.dev)
+        self.eligibility[w, idx].zero_()
+        self.states[w, idx].zero_()
+        self.energy[w, idx] = float(initial_energy)
+        self.alive_mask[w, idx] = True
+        self.lineage_depth[w, idx] = depth
         
-        # Set individual plasticity & metabolic traits
-        self.eta_stdp[idx] = genome.eta_stdp
-        self.tau_trace[idx] = genome.tau_trace
-        self.A_plus[idx] = genome.A_plus
-        self.A_minus[idx] = genome.A_minus
-        self.tau_homeo[idx] = genome.tau_homeo
-        self.E_threshold[idx] = genome.E_threshold
-        self.metabolic_rate[idx] = genome.metabolic_rate
+        self.eta_stdp[w, idx] = genome.eta_stdp
+        self.tau_trace[w, idx] = genome.tau_trace
+        self.A_plus[w, idx] = genome.A_plus
+        self.A_minus[w, idx] = genome.A_minus
+        self.tau_homeo[w, idx] = genome.tau_homeo
+        self.E_threshold[w, idx] = genome.E_threshold
+        self.metabolic_rate[w, idx] = genome.metabolic_rate
         
-        # Random initial 2D coordinate [0, 1]
-        self.positions[idx, 0] = float(self.rng.rand())
-        self.positions[idx, 1] = float(self.rng.rand())
-        self.orientations[idx] = int(self.rng.randint(0, 4))
+        self.positions[w, idx, 0] = float(self.rng.rand())
+        self.positions[w, idx, 1] = float(self.rng.rand())
+        self.orientations[w, idx] = int(self.rng.randint(0, 4))
+
+    def capture_tick_graph(self, sample_sensory, sample_harvested):
+        for _ in range(3):
+            self._tick_internal(sample_sensory, sample_harvested)
+        self.static_sensory = sample_sensory.clone()
+        self.static_harvested = sample_harvested.clone()
+        
+        self.graph = torch.cuda.CUDAGraph()
+        with torch.cuda.graph(self.graph):
+            self.static_actions = self._tick_internal(self.static_sensory, self.static_harvested)
 
     @torch.no_grad()
     def step_tick(self, sensory_inputs: torch.Tensor, harvested_resources: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, Any]]:
-        """
-        Execute one complete batched HPC simulation tick across all alive organisms:
-        1. Inject sensory observations.
-        2. Vectorized forward neural propagation.
-        3. 3-Factor local STDP plasticity update.
-        4. Thermodynamic Landauer metabolic accounting.
-        5. Vectorized lifecycle: Death and Auto-Reproduction.
-        """
         self.total_ticks += 1
-        active_alive = self.alive_mask
-        n_alive = int(active_alive.sum().item())
         
-        if n_alive == 0:
-            # Reseed minimum viable founder pool under Rule 14/16 if extinction occurs
-            self.initialize_founder_population(initial_pop=min(32, self.pop_size))
-            n_alive = int(self.alive_mask.sum().item())
+        # Every 100 ticks update mutation scale
+        if self.total_ticks % 100 == 0:
+            entropy = self.mutation_scheduler.compute_population_entropy(self.actions, self.alive_mask)
+            self.mutation_scheduler.update_mutation_scale(entropy)
+            
+        # Re-seed extinct worlds
+        for w in range(self.W):
+            if int(self.alive_mask[w].sum().item()) == 0:
+                for i in range(min(32, self.N)):
+                    genome = CPPNGenome(rng=self.rng)
+                    self._load_organism(w, i, genome, initial_energy=100.0)
 
-        # 1. Inject sensory inputs [pop, input_neurons]
-        self.states[:, :self.input_neurons] = sensory_inputs.to(self.dtype)
+        # CPU/GPU syncing block (Lifecycle handled outside graph because of dynamic conditions)
+        self._handle_lifecycle()
 
-        # 2. Vectorized Neural Propagation (Scatter-Add)
-        # pre_states: [pop, max_synapses]
-        pre_states = torch.gather(self.states, 1, self.pre_idx)
-        # mask inactive synapses
+        # Run Neural Tick
+        if hasattr(self, 'graph'):
+            self.static_sensory.copy_(sensory_inputs)
+            self.static_harvested.copy_(harvested_resources)
+            self.graph.replay()
+            self.actions = self.static_actions
+        else:
+            self.actions = self._tick_internal(sensory_inputs, harvested_resources)
+            
+        # Generate Telemetry for World 0
+        n_alive_w0 = int(self.alive_mask[0].sum().item())
+        if n_alive_w0 > 0:
+            tel_energy = float(self.energy[0][self.alive_mask[0]].mean().item())
+            tel_syn = float(self.syn_active[0][self.alive_mask[0]].sum(dim=-1).float().mean().item())
+            tel_lin = int(self.lineage_depth[0][self.alive_mask[0]].max().item())
+        else:
+            tel_energy = 0.0
+            tel_syn = 0.0
+            tel_lin = 0
+            
+        telemetry = {
+            "tick": self.total_ticks,
+            "population_size": n_alive_w0,
+            "births_total": self.total_births,
+            "deaths_total": self.total_deaths,
+            "mean_energy": tel_energy,
+            "mean_synapses": tel_syn,
+            "max_lineage": tel_lin
+        }
+        return self.actions, telemetry
+
+    @torch.no_grad()
+    def _tick_internal(self, sensory_inputs, harvested_resources):
+        # 1. Inject sensory [W, N, input_neurons]
+        self.states[:, :, :self.input_neurons] = sensory_inputs.to(self.dtype)
+        
+        # 2. Vectorized Propagation [W, N, max_synapses]
+        pre_states = torch.gather(self.states, 2, self.pre_idx)
         pre_states = pre_states * self.syn_active.to(self.dtype)
         syn_contributions = pre_states * self.weights
         
-        # Accumulate into post-synaptic neurons
         post_acc = torch.zeros_like(self.states)
-        post_acc.scatter_add_(1, self.post_idx, syn_contributions)
+        post_acc.scatter_add_(2, self.post_idx, syn_contributions)
         
-        # Nonlinear recurrent activation
         new_states = torch.tanh(post_acc)
-        # Preserve input sensory stream at inputs
-        new_states[:, :self.input_neurons] = self.states[:, :self.input_neurons]
+        new_states[:, :, :self.input_neurons] = self.states[:, :, :self.input_neurons]
         self.states.copy_(new_states)
-
-        # Output motor action decisions (last 5 neurons: [0: Fwd, 1: TurnL, 2: TurnR, 3: Harvest, 4: Emit])
-        motor_logits = self.states[:, self.max_neurons - self.output_neurons:]
-        self.actions = torch.argmax(motor_logits, dim=-1)
-
-        # 3. Vectorized 3-Factor STDP Plasticity Update
-        # STDP Hebbian correlation term: Pre * Post
-        post_gathered = torch.gather(self.states, 1, self.post_idx)
-        stdp_corr = pre_states * post_gathered  # [pop, max_synapses]
         
-        # Eligibility trace: E = tau * E + correlation
+        # Actions
+        motor_logits = self.states[:, :, self.max_neurons - self.output_neurons:]
+        actions = torch.argmax(motor_logits, dim=-1)
+        
+        # 3. STDP Plasticity
+        post_gathered = torch.gather(self.states, 2, self.post_idx)
+        stdp_corr = pre_states * post_gathered
+        
         tau_t = self.tau_trace.unsqueeze(-1)
-        self.eligibility = tau_t * self.eligibility + stdp_corr
+        self.eligibility.copy_(tau_t * self.eligibility + stdp_corr)
         
-        # Modulator M(t) derived from energy surplus homeostasis (No external reward!)
-        # M(t) = sigma((E - E_thresh) / E_thresh) - 0.5
         surplus = (self.energy - self.E_threshold) / torch.clamp(self.E_threshold, min=1.0)
-        M_t = (torch.sigmoid(surplus) - 0.5).unsqueeze(-1)  # [pop, 1]
+        M_t = (torch.sigmoid(surplus) - 0.5).unsqueeze(-1)
         
-        # Weight adjustment with synaptic homeostasis
         eta = self.eta_stdp.unsqueeze(-1)
         gamma_h = self.tau_homeo.unsqueeze(-1)
         dW = eta * M_t * self.eligibility - gamma_h * self.weights
-        self.weights = torch.clamp(self.weights + dW * self.syn_active.to(self.dtype), -4.0, 4.0)
-
-        # 4. Strict Landauer Thermodynamic Accounting (Rule 21)
-        # FLOP count per tick = 2 * active_synapses
+        self.weights.copy_(torch.clamp(self.weights + dW * self.syn_active.to(self.dtype), -4.0, 4.0))
+        
+        # 4. Landauer Energy (Metabolism)
         n_syn_active = self.syn_active.sum(dim=-1).to(self.dtype)
         flops_cost = n_syn_active * self.E_flop
         traffic_cost = (n_syn_active * 2.0 + self.max_neurons * 2.0) * self.E_traffic
         base_cost = self.metabolic_rate + self.E_base
+        emit_cost = (actions == 4).to(self.dtype) * 0.015
         
-        # Additional cost for stigmergy emission (action 4)
-        emit_cost = (self.actions == 4).to(self.dtype) * 0.015
+        total_metabolic_cost = (base_cost + flops_cost + traffic_cost + emit_cost) * self.alive_mask.to(self.dtype)
+        intake = harvested_resources.to(self.dtype) * self.alive_mask.to(self.dtype)
         
-        total_metabolic_cost = (base_cost + flops_cost + traffic_cost + emit_cost) * active_alive.to(self.dtype)
+        self.energy.copy_(self.energy + intake - total_metabolic_cost)
+        return actions
         
-        # Energy update: Intake from environment - Metabolic Cost
-        intake = harvested_resources.to(self.dtype) * active_alive.to(self.dtype)
-        self.energy = self.energy + intake - total_metabolic_cost
-
-        # 5. Vectorized Lifecycle: Death (Apoptosis) & Auto-Reproduction
-        dead_mask = (self.energy <= 0.0) & active_alive
+    @torch.no_grad()
+    def _handle_lifecycle(self):
+        dead_mask = (self.energy <= 0.0) & self.alive_mask
         n_dead = int(dead_mask.sum().item())
         if n_dead > 0:
             self.alive_mask[dead_mask] = False
             self.energy[dead_mask] = 0.0
             self.total_deaths += n_dead
-
-        # Auto-Reproduction: Energy exceeds E_threshold
-        repro_mask = (self.energy >= self.E_threshold) & self.alive_mask
-        repro_indices = torch.nonzero(repro_mask).squeeze(-1).tolist()
-        if isinstance(repro_indices, int):
-            repro_indices = [repro_indices]
             
-        n_born = 0
-        if repro_indices:
-            # Find free slots in population
-            free_slots = torch.nonzero(~self.alive_mask).squeeze(-1).tolist()
-            if isinstance(free_slots, int):
-                free_slots = [free_slots]
+        repro_mask = (self.energy >= self.E_threshold) & self.alive_mask
+        if int(repro_mask.sum().item()) > 0:
+            for w in range(self.W):
+                repro_indices = torch.nonzero(repro_mask[w]).squeeze(-1).tolist()
+                if isinstance(repro_indices, int): repro_indices = [repro_indices]
+                if not repro_indices: continue
                 
-            for parent_idx in repro_indices:
-                if not free_slots:
-                    break
-                slot = free_slots.pop(0)
-                parent_genome = self.genomes[parent_idx]
-                if parent_genome is not None:
-                    # Energy division: Parent gives half to child minus reproduction cost
-                    repro_cost = 5.0
-                    parent_energy = float(self.energy[parent_idx].item())
-                    child_energy = max(10.0, (parent_energy - repro_cost) / 2.0)
-                    self.energy[parent_idx] = child_energy
-                    
-                    # Mutate offspring genome
-                    child_genome = parent_genome.mutate()
-                    depth = int(self.lineage_depth[parent_idx].item()) + 1
-                    self._load_organism(slot, child_genome, initial_energy=child_energy, depth=depth)
-                    
-                    # Place child near parent with small spatial displacement
-                    px, py = float(self.positions[parent_idx, 0].item()), float(self.positions[parent_idx, 1].item())
-                    self.positions[slot, 0] = float(np.clip(px + self.rng.normal(0, 0.05), 0.0, 1.0))
-                    self.positions[slot, 1] = float(np.clip(py + self.rng.normal(0, 0.05), 0.0, 1.0))
-                    
-                    n_born += 1
-                    self.total_births += 1
-                    
-        telemetry = {
-            "tick": self.total_ticks,
-            "population_size": int(self.alive_mask.sum().item()),
-            "births_total": self.total_births,
-            "deaths_total": self.total_deaths,
-            "mean_energy": float(self.energy[self.alive_mask].mean().item()) if n_alive > 0 else 0.0,
-            "mean_synapses": float(self.syn_active[self.alive_mask].sum(dim=-1).float().mean().item()) if n_alive > 0 else 0.0,
-            "max_lineage": int(self.lineage_depth[self.alive_mask].max().item()) if n_alive > 0 else 0,
-            "mean_metabolic_cost": float(total_metabolic_cost[self.alive_mask].mean().item()) if n_alive > 0 else 0.0,
-            "neuromodulator_mean": float(M_t[self.alive_mask].mean().item()) if n_alive > 0 else 0.0,
-            "eligibility_mean": float(self.eligibility[self.alive_mask].abs().mean().item()) if n_alive > 0 else 0.0,
-            "stdp_lr_mean": float(self.eta_stdp[self.alive_mask].mean().item()) if n_alive > 0 else 0.0,
-            "weight_norm": float(self.weights[self.alive_mask].norm(dim=-1).mean().item()) if n_alive > 0 else 0.0,
-            "total_landauer_joules": float(total_metabolic_cost[self.alive_mask].sum().item() * 2.87e-21) if n_alive > 0 else 0.0
-        }
-        
-        return self.actions, telemetry
+                free_slots = torch.nonzero(~self.alive_mask[w]).squeeze(-1).tolist()
+                if isinstance(free_slots, int): free_slots = [free_slots]
+                
+                scale = self.mutation_scheduler.mutation_scale[w].item()
+                
+                for parent_idx in repro_indices:
+                    if not free_slots: break
+                    slot = free_slots.pop(0)
+                    parent_genome = self.genomes[w][parent_idx]
+                    if parent_genome is not None:
+                        repro_cost = 5.0
+                        parent_energy = float(self.energy[w, parent_idx].item())
+                        child_energy = max(10.0, (parent_energy - repro_cost) / 2.0)
+                        self.energy[w, parent_idx] = child_energy
+                        
+                        child_genome = parent_genome.mutate(mutation_scale=scale)
+                        depth = int(self.lineage_depth[w, parent_idx].item()) + 1
+                        self._load_organism(w, slot, child_genome, child_energy, depth)
+                        
+                        px = float(self.positions[w, parent_idx, 0].item())
+                        py = float(self.positions[w, parent_idx, 1].item())
+                        self.positions[w, slot, 0] = float(np.clip(px + self.rng.normal(0, 0.05), 0.0, 1.0))
+                        self.positions[w, slot, 1] = float(np.clip(py + self.rng.normal(0, 0.05), 0.0, 1.0))
+                        self.total_births += 1

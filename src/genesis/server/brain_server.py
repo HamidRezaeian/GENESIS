@@ -745,6 +745,43 @@ class GenesisEnvironment:
         # runner injects max_energy_hint
         return (self.max_energy_hint / HAZARD_LETHAL_TICKS)
 
+class WorldMigration:
+    """
+    Periodic gene flow between evolutionary worlds.
+    Migrants are chosen by energy surplus (emergent fitness proxy).
+    """
+    def __init__(self, migration_interval: int = 1000, n_migrants: int = 6):
+        self.interval = migration_interval
+        self.n_migrants = n_migrants
+    
+    @torch.no_grad()
+    def migrate(self, populations: BatchedPopulation, tick_count: int):
+        if tick_count % self.interval != 0:
+            return
+        
+        W = populations.W
+        for source_world in range(W):
+            source_energy = populations.energy[source_world]
+            energy_ranked = torch.argsort(source_energy, descending=True)
+            top_indices = energy_ranked[:self.n_migrants]
+            
+            dest_world = (source_world + torch.randint(1, W, (1,)).item()) % W
+            dest_energy = populations.energy[dest_world]
+            dest_ranked = torch.argsort(dest_energy)
+            replace_indices = dest_ranked[:self.n_migrants]
+            
+            for i in range(self.n_migrants):
+                src_idx = top_indices[i].item()
+                dst_idx = replace_indices[i].item()
+                src_genome = populations.genomes[source_world][src_idx]
+                if src_genome is not None:
+                    import copy
+                    populations.genomes[dest_world][dst_idx] = copy.deepcopy(src_genome)
+                    populations._load_organism(
+                        dest_world, dst_idx, src_genome, 
+                        initial_energy=50.0, 
+                        depth=populations.lineage_depth[source_world, src_idx].item()
+                    )
 
 class GenesisEngineRunner:
     def __init__(self):
@@ -783,9 +820,10 @@ class GenesisEngineRunner:
         self.emergence_suite = BehavioralEmergenceSuite()
         
         # GENESIS Phase-E: Batched Open-Ended Evolutionary ALife Substrate (GLM 5.3)
-        self.phase_e_pop = BatchedPopulation(pop_size=128, seed=42)
-        self.phase_e_eco = EcologyField(grid_size=32, seed=42)
+        self.phase_e_pop = BatchedPopulation(n_worlds=32, pop_per_world=128, seed=42)
+        self.phase_e_eco = EcologyField(n_worlds=32, grid_size=32, seed=42)
         self.phase_e_metrics = PhaseEEmergenceTracker(history_len=500)
+        self.world_migration = WorldMigration()
         self.last_phase_e_telem = {}
 
         # Load existing brain if available
@@ -796,6 +834,33 @@ class GenesisEngineRunner:
                 print(
                     f"[GENESIS CORE] Successfully loaded canonical brain from {ckpt_path}")
             except Exception as e:
+                print(f"[GENESIS CORE] Failed to load brain: {e}")
+
+        # Load Phase-E existing state
+        phase_e_ckpt = BRAIN_DIR / "phase_e_state.pt"
+        if phase_e_ckpt.exists():
+            try:
+                import pickle
+                with open(phase_e_ckpt, "rb") as f:
+                    state = torch.load(f, pickle_module=pickle, weights_only=False)
+                
+                self.phase_e_pop.load_state_dict(state['pop_state'])
+                self.phase_e_pop.genomes = state['pop_genomes']
+                self.phase_e_pop.total_births = state['pop_births']
+                self.phase_e_pop.total_deaths = state.get('pop_deaths', 0)
+                
+                self.phase_e_eco.resources.copy_(state['eco_resources'])
+                self.phase_e_eco.stigmergy.copy_(state['eco_stigmergy'])
+                self.phase_e_eco.locked_resources.copy_(state['eco_locked'])
+                
+                self.tick_count = state['tick_count']
+                self.phase_e_eco.tick_count = state['tick_count']
+                self.episode_seed = state.get('episode_seed', 0)
+                
+                print(f"[GENESIS CORE] Successfully loaded Phase-E ALife state from tick {self.tick_count}")
+            except Exception as e:
+                print(f"[GENESIS CORE] Failed to load Phase-E state: {e}")
+            except Exception as e:
                 print(f"[GENESIS CORE] Checkpoint load note: {e}")
 
     def _end_episode(self, success: bool):
@@ -804,27 +869,71 @@ class GenesisEngineRunner:
         self.brain.state_history.clear()
 
     def step_once(self) -> dict:
-        self.tick_count += 1
-        self.energy -= self.metabolic_cost
+        is_headless = len(self.connected_websockets) == 0
+        iters = 50 if is_headless else 1
 
-        # ── Step Phase-E Evolutionary ALife Substrate ──
-        p_sensory, p_harvested = self.phase_e_eco.process_interactions(
-            self.phase_e_pop.positions,
-            self.phase_e_pop.orientations,
-            self.phase_e_pop.actions,
-            self.phase_e_pop.alive_mask,
-            self.phase_e_pop.energy,
-            self.phase_e_pop.dev
-        )
-        p_actions, p_pop_telem = self.phase_e_pop.step_tick(p_sensory, p_harvested)
+        for _ in range(iters):
+            self.tick_count += 1
+            self.energy -= self.metabolic_cost
+
+            # ── Step Phase-E Evolutionary ALife Substrate ──
+            if not hasattr(self.phase_e_pop, 'graph'):
+                sample_sensory = torch.zeros((self.phase_e_pop.W, self.phase_e_pop.N, 20), dtype=self.phase_e_pop.dtype, device=self.phase_e_pop.dev)
+                sample_harvested = torch.zeros((self.phase_e_pop.W, self.phase_e_pop.N), dtype=self.phase_e_pop.dtype, device=self.phase_e_pop.dev)
+                self.phase_e_pop.capture_tick_graph(sample_sensory, sample_harvested)
+
+            self.phase_e_eco.update_environment()
+            p_sensory, p_harvested = self.phase_e_eco.process_interactions(
+                self.phase_e_pop.positions,
+                self.phase_e_pop.orientations,
+                self.phase_e_pop.actions,
+                self.phase_e_pop.alive_mask,
+                self.phase_e_pop.energy,
+                self.phase_e_pop.dev
+            )
+            p_actions, p_pop_telem = self.phase_e_pop.step_tick(p_sensory, p_harvested)
+            self.world_migration.migrate(self.phase_e_pop, self.tick_count)
+            
+            if is_headless:
+                self.emergence_suite.observe_tick(
+                    latent_state=np.zeros(32, dtype=np.float32),
+                    concept_vector=np.zeros(16, dtype=np.float32),
+                    goal_vector=np.zeros(16, dtype=np.float32),
+                    action=0, reward=0.0, is_generation_end=False
+                )
+                if self.tick_count > 0 and self.tick_count % 1000 == 0:
+                    self.brain.save_checkpoint(BRAIN_DIR / "canonical_brain.npz")
+                    
+                    import pickle
+                    phase_e_state = {
+                        'pop_state': self.phase_e_pop.state_dict(),
+                        'pop_genomes': self.phase_e_pop.genomes,
+                        'pop_births': getattr(self.phase_e_pop, 'total_births', 0),
+                        'pop_deaths': getattr(self.phase_e_pop, 'total_deaths', 0),
+                        'eco_resources': self.phase_e_eco.resources,
+                        'eco_stigmergy': self.phase_e_eco.stigmergy,
+                        'eco_locked': self.phase_e_eco.locked_resources,
+                        'tick_count': self.tick_count,
+                        'episode_seed': self.episode_seed
+                    }
+                    with open(BRAIN_DIR / "phase_e_state.pt", "wb") as f:
+                        torch.save(phase_e_state, f, pickle_module=pickle)
+                        
+                    print(f"[HEADLESS] Fast-forwarded to tick {self.tick_count}", flush=True)
+                    
+        if is_headless:
+            return {}
+
+        # Telemetry only on World 0 (Only when UI is connected)
         p_metric_telem = self.phase_e_metrics.observe_step(
-            self.phase_e_pop.positions,
-            self.phase_e_pop.actions,
-            self.phase_e_pop.states,
-            self.phase_e_pop.alive_mask
+            self.phase_e_pop.positions[0],
+            self.phase_e_pop.actions[0],
+            self.phase_e_pop.states[0],
+            self.phase_e_pop.alive_mask[0]
         )
         self.last_phase_e_telem = {**p_pop_telem, **p_metric_telem}
 
+        # (RL Agent is skipped in headless mode)
         obs = self.env.get_visual_observation()
         s_curr = self.brain.forward_transformer(obs, self.active_task_text)
         mcts_info = self.brain.run_hierarchical_mcts(s_curr, self.policy_mode)
@@ -979,7 +1088,7 @@ class GenesisEngineRunner:
                 return [sanitize_floats(v) for v in obj]
             return obj
 
-        alive_raw = torch.nonzero(self.phase_e_pop.alive_mask).squeeze(-1).tolist()
+        alive_raw = torch.nonzero(self.phase_e_pop.alive_mask[0]).squeeze(-1).tolist()
         alive_indices = [alive_raw] if isinstance(alive_raw, int) else (alive_raw if isinstance(alive_raw, list) else [])
 
         payload = {
@@ -1045,15 +1154,15 @@ class GenesisEngineRunner:
                 "population": [
                     {
                         "id": int(i),
-                        "x": float(self.phase_e_pop.positions[i, 0].item()),
-                        "y": float(self.phase_e_pop.positions[i, 1].item()),
-                        "dir": int(self.phase_e_pop.orientations[i].item() % 4),
-                        "energy": float(self.phase_e_pop.energy[i].item()),
-                        "lineage": int(self.phase_e_pop.lineage_depth[i].item())
+                        "x": float(self.phase_e_pop.positions[0, i, 0].item()),
+                        "y": float(self.phase_e_pop.positions[0, i, 1].item()),
+                        "dir": int(self.phase_e_pop.orientations[0, i].item() % 4),
+                        "energy": float(self.phase_e_pop.energy[0, i].item()),
+                        "lineage": int(self.phase_e_pop.lineage_depth[0, i].item())
                     }
                     for i in alive_indices
                 ],
-                "resource_grid": self.phase_e_eco.get_render_grid().flatten().tolist()
+                "resource_grid": self.phase_e_eco.get_render_grid(world_idx=0).flatten().tolist()
             }
         }
         return sanitize_floats(payload)
@@ -1180,12 +1289,15 @@ async def simulation_loop():
     loop = asyncio.get_running_loop()
     while True:
         try:
-            if runner.is_running and runner.connected_websockets:
-                # Offload heavy PyTorch/Numba computation to thread pool so WebSocket never starves
+            if runner.is_running:
                 st = await loop.run_in_executor(None, runner.step_once)
-                await runner.broadcast_state(st)
-                delay = 0.08 / max(1, runner.speed)
-                await asyncio.sleep(delay)
+                if runner.connected_websockets:
+                    await runner.broadcast_state(st)
+                    delay = 0.08 / max(1, runner.speed)
+                    await asyncio.sleep(delay)
+                else:
+                    # Headless Mode Optimization: run at maximum speed without UI delays
+                    await asyncio.sleep(0.001)
             else:
                 await asyncio.sleep(0.1)
         except asyncio.CancelledError:
