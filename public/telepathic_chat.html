@@ -914,8 +914,9 @@
             if (data.organism_id !== undefined) {
                 vitalId.innerText = `#${data.organism_id}`;
                 vitalGen.innerText = `Gen ${data.generation}`;
-                vitalEnergy.innerText = data.energy.toLocaleString();
-                activeOrganismBadge.innerText = `👑 آلفای جهان ۰ (Organism #${data.organism_id})`;
+                vitalEnergy.innerText = (data.energy !== undefined) ? data.energy.toLocaleString() : '--';
+                const wId = (data.world_id !== undefined) ? data.world_id : 0;
+                activeOrganismBadge.innerText = `👑 ارگانیسم #${data.organism_id} (جهان ${wId} • نسل ${data.generation})`;
                 if (data.tick_count) tickBadge.innerText = data.tick_count;
             }
 
@@ -926,15 +927,16 @@
             const qWords = (data.thought_tokens || []).filter(w => w).join(', ') || '---';
             const hWords = (data.qwen_response || []).filter(w => w).join(', ') || '---';
             const symbols = data.symbols || [0, 0, 0, 0];
+            const wId = (data.world_id !== undefined) ? data.world_id : 0;
 
             const farsiText = data.farsi_reply || data.natural_reply || 'سیگنال با موفقیت دریافت و پردازش شد.';
-            const posInfo = (data.pos_x !== undefined) ? `مختصات: [${data.pos_x}, ${data.pos_y}] | جهت: ${data.direction || 'شمال'}` : '';
+            const posInfo = (data.pos_x !== undefined) ? `مختصات: [${data.pos_x}, ${data.pos_y}] در جهان ${wId} | جهت: ${data.direction || 'شمال'}` : '';
 
             const div = document.createElement('div');
             div.className = 'message-row organism';
             div.innerHTML = `
                 <div class="msg-meta">
-                    <span>👑 ارگانیسم #${data.organism_id} (نسل ${data.generation})</span>
+                    <span>👑 ارگانیسم #${data.organism_id} (جهان ${wId} • نسل ${data.generation})</span>
                     <span>•</span>
                     <span>انرژی: ${data.energy ? data.energy.toLocaleString() : '--'}</span>
                     <span>•</span>
@@ -942,14 +944,20 @@
                 </div>
                 <div class="organism-bubble">
                     
+                    ${farsiText ? `
+                    <!-- Natural Language Cognitive Synthesis -->
+                    <div class="organism-synthesis-text" style="font-size: 1.02rem; line-height: 1.6; color: #f8fafc; margin-bottom: 12px; font-family: 'Vazirmatn', sans-serif;">
+                        ${escapeHtml(farsiText)}
+                    </div>` : ''}
+
                     <!-- Pure Neural Intention & Echo Header -->
                     <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
                         <div class="concept-pills-row" dir="ltr" style="margin: 0;">
-                            <div class="concept-pill thought" style="font-size: 0.92rem; padding: 6px 12px;">
+                            <div class="concept-pill thought" style="font-size: 0.88rem; padding: 5px 10px;">
                                 <span>🧠 تفکر عصبی ارگانیسم:</span>
                                 <strong style="color: #ffffff;">${escapeHtml(qWords)}</strong>
                             </div>
-                            <div class="concept-pill echo" style="font-size: 0.92rem; padding: 6px 12px;">
+                            <div class="concept-pill echo" style="font-size: 0.88rem; padding: 5px 10px;">
                                 <span>📡 پژواک معنایی Qwen:</span>
                                 <strong style="color: #ffffff;">${escapeHtml(hWords)}</strong>
                             </div>

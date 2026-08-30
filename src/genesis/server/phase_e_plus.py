@@ -10,6 +10,7 @@ Invariants:
 
 import torch
 import torch.nn as nn
+import numpy as np
 from typing import Tuple, Dict
 import warnings
 
@@ -220,77 +221,129 @@ class LandauerQueryCostModel:
         return self.E_query_total
 
 
-class EnergyBudgetEnforcer:
+class TemporalDecoupledSensory:
     """
-    Physical Landauer energy enforcer (Rule 21 & Rule 9).
-    No game mechanics or artificial cooldown timers:
-    Organisms query if and only if they possess sufficient metabolic energy.
+    GLM 5.3 Layer 1: Temporal Decoupling.
+    LLM sensory field updated every N ticks with Zero-Order / First-Order Hold.
     """
-    def __init__(
-        self,
-        query_cost_model: LandauerQueryCostModel
-    ):
-        self.cost_model = query_cost_model
+    def __init__(self, n_worlds: int = 32, pop_per_world: int = 128, n_sensory: int = 20, update_interval: int = 10, device: str = "cuda"):
+        self.N = update_interval
+        self.W = n_worlds
+        self.P = pop_per_world
+        self.S = n_sensory
+        self.dev = torch.device(device)
+        
+        # Persistent sensory cache [W, P, S]
+        self.sensory_cache = torch.zeros((n_worlds, pop_per_world, n_sensory), dtype=torch.float16, device=self.dev)
+        self.prev_cache = torch.zeros_like(self.sensory_cache)
+        self.last_update_tick = 0
+    
+    def get_sensory(self, current_tick: int) -> torch.Tensor:
+        """Return cached sensory with smooth interpolation."""
+        if current_tick - self.last_update_tick >= self.N:
+            return self.sensory_cache
+        
+        alpha = float((current_tick - self.last_update_tick) / max(1, self.N))
+        return (1.0 - alpha) * self.prev_cache + alpha * self.sensory_cache
+    
+    def update_cache(self, new_sensory: torch.Tensor, current_tick: int):
+        self.prev_cache.copy_(self.sensory_cache)
+        self.sensory_cache.copy_(new_sensory)
+        self.last_update_tick = current_tick
+
+
+class StochasticSensoryGate:
+    """
+    GLM 5.3 Layer 2: Energy-Gated Stochastic Sub-Sampling (Rule 25 Compliant).
+    Bernoulli sampling with adaptive temperature to maintain target batch size K=32.
+    """
+    def __init__(self, query_cost: float = 25.0, target_batch_size: int = 32, device: str = "cuda"):
+        self.E_query = query_cost
+        self.K_target = target_batch_size
+        self.dev = torch.device(device)
+        self.tau_gate = 10.0
     
     @torch.no_grad()
-    def can_query(
-        self, 
-        organism_energy: torch.Tensor,
-        current_tick: int
-    ) -> torch.Tensor:
-        query_cost = self.cost_model.get_query_cost(batch_size=1)
-        # Grounded: Pure physical check (Do you have the energy to pay the Landauer cost?)
-        return organism_energy >= query_cost
-    
-    @torch.no_grad()
-    def charge_query(
-        self,
-        organism_energy: torch.Tensor,
-        query_mask: torch.Tensor,
-        current_tick: int
-    ):
-        query_cost = self.cost_model.get_query_cost(batch_size=1)
-        organism_energy -= query_mask.to(organism_energy.dtype) * query_cost
+    def select_queries(self, energy: torch.Tensor, emit_mask: torch.Tensor) -> torch.Tensor:
+        """
+        Returns boolean mask [W, P] of organisms selected to query this tick.
+        """
+        # Emergent energy-gated probability: p = sigmoid((E - E_query) / tau)
+        gate_logit = (energy - self.E_query) / max(0.1, self.tau_gate)
+        p_query = torch.sigmoid(gate_logit)
+        
+        # Apply strictly to emitters (action == 4)
+        p_masked = p_query * emit_mask.float()
+        
+        # Stochastic Bernoulli sampling
+        rand = torch.rand_like(p_masked)
+        selected = (rand < p_masked) & emit_mask
+        
+        # Adaptive temperature control to maintain target batch size K=32
+        n_selected = int(selected.sum().item())
+        if n_selected > self.K_target * 1.5:
+            self.tau_gate *= 0.95
+        elif n_selected < self.K_target * 0.5:
+            self.tau_gate *= 1.05
+        self.tau_gate = float(np.clip(self.tau_gate, 1.0, 100.0)) if 'np' in globals() else max(1.0, min(100.0, self.tau_gate))
+        
+        return selected
 
 
 class PhaseEPlusInternetSensing:
     """
     Complete Phase-E+ architecture integrating LLM as external sensory organ.
+    Authoritative GLM 5.3 formulation: Multi-Rate Stochastic Sensory Gating.
     """
     def __init__(
         self,
         population,
         ecology,
         llm_model_name: str = "Qwen/Qwen2-0.5B",
-        device: str = "cuda"
+        device: str = "cuda",
+        update_interval: int = 10,
+        target_batch_size: int = 32
     ):
         self.population = population
         self.ecology = ecology
-        self.dev = torch.device(device)
+        self.dev = torch.device(device if torch.cuda.is_available() else "cpu")
+        self.update_interval = update_interval
         
-        # Gracefully handle missing transformers (so the server doesn't crash if they don't have it)
+        # Gracefully handle transformers
         try:
-            self.llm_interface = LLMSensoryInterface(llm_model_name)
+            self.llm_interface = LLMSensoryInterface(llm_model_name, device=str(self.dev))
             self.d_model = self.llm_interface.d_model
             self.llm_available = True
-        except ImportError:
-            print("[GENESIS CORE] WARNING: 'transformers' not installed. Phase-E+ LLM Sensing disabled.")
+        except Exception as e:
+            print(f"[GENESIS CORE] WARNING: LLM Interface failed: {e}. Phase-E+ Sensing disabled.")
             self.llm_available = False
             self.d_model = 896
             
         self.sensory_projection = HiddenToSensoryProjection(
             d_model=self.d_model,
             n_sensory=20,  
-            device=device
+            device=str(self.dev)
         )
         
         self.cost_model = LandauerQueryCostModel(
-            model_params=0.5e9, # Qwen2-0.5B
+            model_params=0.5e9,
             sequence_length=1
         )
         
-        self.energy_enforcer = EnergyBudgetEnforcer(
-            query_cost_model=self.cost_model
+        # GLM 5.3 Layer 1: Temporal Decoupling
+        self.temporal_cache = TemporalDecoupledSensory(
+            n_worlds=self.population.W,
+            pop_per_world=self.population.N,
+            n_sensory=20,
+            update_interval=update_interval,
+            device=str(self.dev)
+        )
+        
+        # GLM 5.3 Layer 2: Stochastic Gating
+        self.stochastic_gate = StochasticSensoryGate(
+            query_cost=25.0,
+            target_batch_size=target_batch_size,
+            device=str(self.dev)
         )
         
         self.query_count = 0
@@ -298,7 +351,7 @@ class PhaseEPlusInternetSensing:
     @torch.no_grad()
     def step_tick(self, current_tick: int) -> Tuple[torch.Tensor, dict]:
         """
-        Execute one Phase-E+ tick with optional LLM sensing.
+        Execute one Phase-E+ tick with Multi-Rate Stochastic Sensory Gating.
         Returns:
             (actions, telemetry)
         """
@@ -312,25 +365,30 @@ class PhaseEPlusInternetSensing:
             self.dev
         )
         
-        # 2. LLM Sensing (only for organisms that can afford it)
-        combined_sensory = spatial_sensory
-        query_mask = torch.zeros((self.population.W, self.population.N), dtype=torch.bool, device=self.dev)
+        queries_this_tick = 0
         
-        if self.llm_available:
-            can_query = self.energy_enforcer.can_query(
-                self.population.energy,
-                current_tick
-            )
+        # 2. GLM 5.3 Multi-Rate Gated Inference (runs every N=10 ticks)
+        if self.llm_available and (current_tick % self.update_interval == 0):
+            # Action 4 is "Emit"
+            emit_mask = (self.population.actions == 4) & self.population.alive_mask & (self.population.energy >= 25.0)
             
-            if torch.any(can_query):
-                # Action 4 is "Emit" (Query LLM)
-                query_mask = can_query & (self.population.actions == 4)
+            if torch.any(emit_mask):
+                # Sample target K=32 querying organisms stochastically
+                selected_mask = self.stochastic_gate.select_queries(
+                    self.population.energy,
+                    emit_mask
+                )
                 
-                if torch.any(query_mask):
-                    symbol_tensor = self.population.states[:, :, -4:]  # [W, N, 4]
-                    query_symbols = symbol_tensor[query_mask]         # [M, 4]
+                n_selected = int(selected_mask.sum().item())
+                if n_selected > 0:
+                    queries_this_tick = n_selected
+                    self.query_count += n_selected
                     
-                    # Forward ONLY querying organisms through LLM (M <= 16)
+                    # Extract symbols from selected organisms
+                    symbol_tensor = self.population.states[:, :, -4:]  # [W, N, 4]
+                    query_symbols = symbol_tensor[selected_mask]       # [M, 4]
+                    
+                    # Forward ONLY the selected organisms through Qwen (M <= 32)
                     query_hidden = self.llm_interface.query_llm(query_symbols)  # [M, d_model]
                     
                     # Scatter back to [W, N, d_model]
@@ -338,22 +396,22 @@ class PhaseEPlusInternetSensing:
                         (self.population.W, self.population.N, self.d_model),
                         dtype=torch.float16, device=self.dev
                     )
-                    hidden_state[query_mask] = query_hidden
+                    hidden_state[selected_mask] = query_hidden
                     
-                    combined_sensory = self.sensory_projection(hidden_state, spatial_sensory)
+                    # Project and update persistent sensory cache
+                    new_combined = self.sensory_projection(hidden_state, spatial_sensory)
+                    self.temporal_cache.update_cache(new_combined, current_tick)
                     
-                    self.energy_enforcer.charge_query(
-                        self.population.energy,
-                        query_mask,
-                        current_tick
-                    )
-                    self.query_count += int(query_mask.sum().item())
+                    # Charge Landauer metabolic cost (25 energy per query)
+                    self.population.energy[selected_mask] -= 25.0
+        
+        # Retrieve temporal sensory field (cached / interpolated)
+        combined_sensory = self.temporal_cache.get_sensory(current_tick)
         
         # 3. Execute population tick
         actions, telemetry = self.population.step_tick(combined_sensory, harvested)
         
         # Add Phase-E+ telemetry
-        queries_this_tick = int(query_mask.sum().item())
         telemetry.update({
             "llm_queries_this_tick": queries_this_tick,
             "total_llm_queries": self.query_count,

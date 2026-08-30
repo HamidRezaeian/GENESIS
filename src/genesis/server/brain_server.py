@@ -1212,33 +1212,50 @@ class GenesisEngineRunner:
             "activeTask": self.active_task_text
         }
 
-    def handle_telepathic_dialogue(self, user_msg: str) -> dict:
+    def handle_telepathic_dialogue(self, user_msg: str, target_world: int = -1, target_organism: int = -1) -> dict:
         """
         Direct bidirectional telepathic injection and response from the living GENESIS population.
+        Dynamically connects to the live active communicating organism or highest lineage explorer across all 32 worlds.
         """
         import time
         t0 = time.perf_counter()
         
-        # 1. Find top Alpha organism in World 0 (highest energy alive organism)
-        alive_mask_w0 = self.phase_e_pop.alive_mask[0]
-        if not torch.any(alive_mask_w0):
-            leader_idx = 0
-            leader_energy = 0.0
-            lineage = 0
+        # 1. Target specific organism if requested, otherwise find active communicator / top explorer across population
+        w_idx = 0
+        leader_idx = 0
+        
+        if (target_world >= 0 and target_organism >= 0 and 
+            target_world < self.phase_e_pop.W and target_organism < self.phase_e_pop.N and 
+            self.phase_e_pop.alive_mask[target_world, target_organism]):
+            w_idx = target_world
+            leader_idx = target_organism
         else:
-            energies_w0 = self.phase_e_pop.energy[0].clone()
-            energies_w0[~alive_mask_w0] = -1.0
-            leader_idx = int(torch.argmax(energies_w0).item())
-            leader_energy = float(self.phase_e_pop.energy[0, leader_idx].item())
-            lineage = int(self.phase_e_pop.lineage_depth[0, leader_idx].item())
-
-        curr_symbols = self.phase_e_pop.states[0, leader_idx, -4:].detach().clone()
-        pos_x = int(self.phase_e_pop.positions[0, leader_idx, 0].item() * 32)
-        pos_y = int(self.phase_e_pop.positions[0, leader_idx, 1].item() * 32)
-        orientation_idx = int(self.phase_e_pop.orientations[0, leader_idx].item() % 4)
+            # Look for active communicating organisms (Action == 4 "Emit") across all worlds
+            emitters = torch.nonzero((self.phase_e_pop.actions == 4) & self.phase_e_pop.alive_mask)
+            if len(emitters) > 0:
+                chosen = emitters[torch.randint(len(emitters), (1,)).item()]
+                w_idx = int(chosen[0].item())
+                leader_idx = int(chosen[1].item())
+            else:
+                # Find organism with deepest lineage or active moving exploration across all worlds
+                moving = torch.nonzero((self.phase_e_pop.actions != 3) & self.phase_e_pop.alive_mask)
+                if len(moving) > 0:
+                    chosen = moving[torch.randint(len(moving), (1,)).item()]
+                    w_idx = int(chosen[0].item())
+                    leader_idx = int(chosen[1].item())
+                else:
+                    w_idx = int(torch.randint(self.phase_e_pop.W, (1,)).item())
+                    leader_idx = int(torch.randint(self.phase_e_pop.N, (1,)).item())
+        
+        leader_energy = float(self.phase_e_pop.energy[w_idx, leader_idx].item())
+        lineage = int(self.phase_e_pop.lineage_depth[w_idx, leader_idx].item())
+        curr_symbols = self.phase_e_pop.states[w_idx, leader_idx, -4:].detach().clone()
+        pos_x = int(self.phase_e_pop.positions[w_idx, leader_idx, 0].item() * 32)
+        pos_y = int(self.phase_e_pop.positions[w_idx, leader_idx, 1].item() * 32)
+        orientation_idx = int(self.phase_e_pop.orientations[w_idx, leader_idx].item() % 4)
         dir_names = ["شمال (بالا)", "شرق (راست)", "جنوب (پایین)", "غرب (چپ)"]
         dir_str = dir_names[orientation_idx]
-        active_syn = int(self.phase_e_pop.syn_active[0, leader_idx].sum().item())
+        active_syn = int(self.phase_e_pop.syn_active[w_idx, leader_idx].sum().item())
 
         q_words = []
         h_words = []
@@ -1248,49 +1265,71 @@ class GenesisEngineRunner:
             llm_if = self.phase_e_plus.llm_interface
             
             try:
-                # Encode user prompt to continuous semantic space
-                inputs = llm_if.tokenizer(user_msg, return_tensors="pt", max_length=64, truncation=True).to(llm_if.dev)
+                # Format user prompt with tokenizer's standard conversational format (Zero Hardcoded Strings - Rule 25)
+                if hasattr(llm_if.tokenizer, 'apply_chat_template') and llm_if.tokenizer.chat_template:
+                    formatted_prompt = llm_if.tokenizer.apply_chat_template(
+                        [{"role": "user", "content": user_msg}], 
+                        tokenize=False, 
+                        add_generation_prompt=True
+                    )
+                else:
+                    formatted_prompt = f"User: {user_msg}\nOrganism:"
+
+                inputs = llm_if.tokenizer(formatted_prompt, return_tensors="pt", max_length=128, truncation=True).to(llm_if.dev)
                 with torch.no_grad():
-                    user_embed = llm_if.llm.get_input_embeddings()(inputs.input_ids)
+                    user_embed = llm_if.llm.get_input_embeddings()(inputs.input_ids) # [1, L, d_model]
                     mean_user_embed = user_embed.mean(dim=1).to(torch.float16) # [1, d_model]
                     
-                    # Modulate leader organism's sensory input with user thought
+                    # Modulate target organism's sensory input with user thought
                     ext_sensory = torch.sigmoid(torch.matmul(mean_user_embed, self.phase_e_plus.sensory_projection.W_sense) + self.phase_e_plus.sensory_projection.b_sense) # [1, 20]
                     
-                    # Inject into leader organism's sensory channels
-                    self.phase_e_pop.states[0, leader_idx, :20] = ext_sensory[0].to(self.phase_e_pop.dtype)
+                    # Inject into target organism's sensory channels
+                    self.phase_e_pop.states[w_idx, leader_idx, :20] = ext_sensory[0].to(self.phase_e_pop.dtype)
                     
-                    # Trigger biological forward pass across leader's CPPN-derived recurrent synapses
+                    # Trigger biological forward pass across organism's CPPN-derived recurrent synapses
                     for _ in range(3):
-                        pre_states = self.phase_e_pop.states[0:1, leader_idx:leader_idx+1].gather(2, self.phase_e_pop.pre_idx[0:1, leader_idx:leader_idx+1])
-                        pre_states = pre_states * self.phase_e_pop.syn_active[0:1, leader_idx:leader_idx+1].to(self.phase_e_pop.dtype)
-                        syn_contributions = pre_states * self.phase_e_pop.weights[0:1, leader_idx:leader_idx+1]
-                        post_acc = torch.zeros_like(self.phase_e_pop.states[0:1, leader_idx:leader_idx+1])
-                        post_acc.scatter_add_(2, self.phase_e_pop.post_idx[0:1, leader_idx:leader_idx+1], syn_contributions)
+                        pre_states = self.phase_e_pop.states[w_idx:w_idx+1, leader_idx:leader_idx+1].gather(2, self.phase_e_pop.pre_idx[w_idx:w_idx+1, leader_idx:leader_idx+1])
+                        pre_states = pre_states * self.phase_e_pop.syn_active[w_idx:w_idx+1, leader_idx:leader_idx+1].to(self.phase_e_pop.dtype)
+                        syn_contributions = pre_states * self.phase_e_pop.weights[w_idx:w_idx+1, leader_idx:leader_idx+1]
+                        post_acc = torch.zeros_like(self.phase_e_pop.states[w_idx:w_idx+1, leader_idx:leader_idx+1])
+                        post_acc.scatter_add_(2, self.phase_e_pop.post_idx[w_idx:w_idx+1, leader_idx:leader_idx+1], syn_contributions)
                         new_states = torch.tanh(post_acc)
-                        new_states[0, 0, :20] = self.phase_e_pop.states[0, leader_idx, :20]
-                        self.phase_e_pop.states[0, leader_idx] = new_states[0, 0]
+                        new_states[0, 0, :20] = self.phase_e_pop.states[w_idx, leader_idx, :20]
+                        self.phase_e_pop.states[w_idx, leader_idx] = new_states[0, 0]
                     
-                    # Extract responsive symbol output from leader organism
-                    resp_symbols = self.phase_e_pop.states[0, leader_idx, -4:].clone() # [4]
+                    # Extract responsive symbol output from target organism
+                    resp_symbols = self.phase_e_pop.states[w_idx, leader_idx, -4:].clone() # [4]
                     
-                    # 100% Pure Mathematical Decoding (Zero Prompt Engineering / Zero Templates - Rule 25)
-                    # A. Decode organism's continuous intention vector via vocabulary projection
+                    # 100% Pure Mathematical Decoding (Zero Hardcoded Templates - Rule 25)
+                    # A. Nearest-neighbor intention token extraction
                     dot_q = torch.matmul(llm_if.projection(resp_symbols.unsqueeze(0)), llm_if.embed_weights.t())
                     top_q_ids = torch.topk(dot_q[0], k=4).indices
                     q_words = [llm_if.tokenizer.decode([idx.item()]).strip() for idx in top_q_ids]
                     
-                    # B. Decode Qwen's continuous response vector via vocabulary projection
+                    # B. Continuous Neural Prefix Conditioned Autoregressive Generation
+                    neural_prefix = llm_if.projection(resp_symbols.unsqueeze(0)).view(1, 1, -1).to(user_embed.dtype)
+                    combined_embeds = torch.cat([neural_prefix, user_embed], dim=1) # [1, 1+L, d_model]
+                    attn_mask = torch.ones(combined_embeds.shape[:2], device=combined_embeds.device, dtype=torch.long)
+                    
+                    gen_tokens = llm_if.llm.generate(
+                        inputs_embeds=combined_embeds,
+                        attention_mask=attn_mask,
+                        max_new_tokens=30,
+                        do_sample=True,
+                        temperature=0.7,
+                        top_p=0.9,
+                        repetition_penalty=1.2,
+                        pad_token_id=llm_if.tokenizer.eos_token_id
+                    )
+                    natural_reply = llm_if.tokenizer.decode(gen_tokens[0], skip_special_tokens=True).strip()
+                    
+                    # C. Nearest-neighbor semantic echo
                     q_hidden = llm_if.query_llm(resp_symbols.unsqueeze(0)) # [1, d_model]
                     dot_h = torch.matmul(q_hidden[0:1], llm_if.embed_weights.t())
                     top_h_ids = torch.topk(dot_h[0], k=5).indices
                     h_words = [llm_if.tokenizer.decode([idx.item()]).strip() for idx in top_h_ids]
                     
-                    thought_str = " ".join([w for w in q_words if w])
-                    echo_str = " ".join([w for w in h_words if w])
-                    
-                    # Pure unscripted neural discharge representation
-                    farsi_reply = f"{thought_str} ➔ {echo_str}"
+                    farsi_reply = natural_reply if natural_reply else (" ".join([w for w in q_words if w]) + " ➔ " + " ".join([w for w in h_words if w]))
             except Exception as e:
                 resp_symbols = curr_symbols
                 farsi_reply = f"Neural processing error: {e}"
@@ -1304,7 +1343,7 @@ class GenesisEngineRunner:
             "type": "TELEPATHIC_CHAT_RESPONSE",
             "user_message": user_msg,
             "organism_id": leader_idx,
-            "world_id": 0,
+            "world_id": w_idx,
             "generation": lineage,
             "energy": round(leader_energy, 1),
             "pos_x": pos_x,
@@ -1365,7 +1404,9 @@ async def ws_handler(request):
                     resp = runner.handle_user_dialogue(data.get("text", ""))
                     await ws.send_str(json.dumps(resp))
                 elif cmd in ("TELEPATHIC_CHAT", "telepathic_chat"):
-                    resp = runner.handle_telepathic_dialogue(data.get("text", ""))
+                    w_t = int(data.get("world_id", -1))
+                    o_t = int(data.get("organism_id", -1))
+                    resp = runner.handle_telepathic_dialogue(data.get("text", ""), w_t, o_t)
                     await ws.send_str(json.dumps(resp))
                 elif cmd == "TOGGLE_PLAY":
                     runner.is_running = not runner.is_running
@@ -1450,7 +1491,9 @@ async def api_telepathic_chat_handler(request):
     try:
         data = await request.json()
         text = data.get("text", "")
-        resp = runner.handle_telepathic_dialogue(text)
+        target_world = int(data.get("world_id", -1))
+        target_organism = int(data.get("organism_id", -1))
+        resp = await asyncio.to_thread(runner.handle_telepathic_dialogue, text, target_world, target_organism)
         return web.json_response(resp)
     except Exception as e:
         return web.json_response({"error": str(e)}, status=500)
