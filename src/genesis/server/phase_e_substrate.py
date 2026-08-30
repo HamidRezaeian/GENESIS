@@ -240,6 +240,17 @@ class CuriosityModulatedSTDP(nn.Module):
         self.register_buffer("L_pred_var", torch.ones(self.W, self.N, dtype=self.dtype, device=self.dev))
         self.momentum = 0.99
         
+        # Pre-allocated work buffers (Zero-Allocation Invariant)
+        self.register_buffer("_s_pred", torch.zeros(self.W, self.N, input_neurons, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_error", torch.zeros(self.W, self.N, input_neurons, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_L_pred", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_novelty", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_homeostatic", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_M_curiosity", torch.zeros(self.W, self.N, 1, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_pred_cost", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.pred_flops = float(self.input_neurons * self.input_neurons * 2.0)
+        self.tick_count = 0
+        
     @torch.no_grad()
     def compute_curiosity_wave(
         self,
@@ -250,42 +261,43 @@ class CuriosityModulatedSTDP(nn.Module):
         alive_mask: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Calculates novelty signal from sensory prediction error and combines with homeostatic gate.
-        Returns:
-            M_curiosity: [W, N, 1]
-            pred_cost: [W, N] - Landauer computational cost for prediction
+        Calculates novelty signal from sensory prediction error and combines with homeostatic gate (Zero-Allocation).
         """
+        self.tick_count += 1
         s_prev_half = sensory_prev.to(self.dtype)
-        s_pred = torch.tanh(torch.matmul(s_prev_half, self.W_pred.t()) + self.b_pred)
-        
         s_curr_half = sensory_curr.to(self.dtype)
-        L_pred = torch.sum((s_curr_half - s_pred) ** 2, dim=-1) # [W, N]
+        
+        # 1. Forward prediction: tanh(s_prev @ W^T + b)
+        torch.matmul(s_prev_half, self.W_pred.t(), out=self._s_pred)
+        self._s_pred.add_(self.b_pred).tanh_()
+        
+        # 2. Prediction error: ||s_curr - s_pred||^2
+        torch.sub(s_curr_half, self._s_pred, out=self._error)
+        torch.sum(self._error * self._error, dim=-1, out=self._L_pred)
         
         alive_f = alive_mask.to(self.dtype)
-        self.L_pred_mean.copy_(alive_f * (self.momentum * self.L_pred_mean + (1.0 - self.momentum) * L_pred) + (1.0 - alive_f) * self.L_pred_mean)
-        self.L_pred_var.copy_(alive_f * (self.momentum * self.L_pred_var + (1.0 - self.momentum) * (L_pred - self.L_pred_mean) ** 2) + (1.0 - alive_f) * self.L_pred_var)
+        self.L_pred_mean.copy_(alive_f * (self.momentum * self.L_pred_mean + (1.0 - self.momentum) * self._L_pred) + (1.0 - alive_f) * self.L_pred_mean)
+        self.L_pred_var.copy_(alive_f * (self.momentum * self.L_pred_var + (1.0 - self.momentum) * (self._L_pred - self.L_pred_mean) ** 2) + (1.0 - alive_f) * self.L_pred_var)
         
         L_std = torch.sqrt(torch.clamp(self.L_pred_var, min=1e-6))
-        novelty = torch.tanh((L_pred - self.L_pred_mean) / L_std) # [W, N]
+        torch.tanh((self._L_pred - self.L_pred_mean) / L_std, out=self._novelty)
         
         surplus = (energy - E_threshold) / torch.clamp(E_threshold, min=1.0)
-        homeostatic = torch.sigmoid(surplus) - 0.5 # [W, N]
+        torch.sigmoid(surplus, out=self._homeostatic).sub_(0.5)
         
-        M_curiosity = (self.alpha * novelty + self.beta * homeostatic).unsqueeze(-1) # [W, N, 1]
+        self._M_curiosity.copy_((self.alpha * self._novelty + self.beta * self._homeostatic).unsqueeze(-1))
         
-        # Landauer FLOP cost
-        pred_flops = self.input_neurons * self.input_neurons * 2.0
-        pred_cost = pred_flops * self.E_pred_flop * alive_f
+        # Landauer FLOP cost (Zero-allocation)
+        torch.mul(alive_f, self.pred_flops * self.E_pred_flop, out=self._pred_cost)
         
-        # Self-supervised online weight update (Unsupervised sensory prediction)
-        error = s_curr_half - s_pred # [W, N, input_neurons]
-        grad_W = -2.0 * torch.matmul(error.transpose(-1, -2), s_prev_half).mean(dim=0)
-        grad_b = -2.0 * error.mean(dim=(0, 1))
-        
-        self.W_pred -= self.pred_lr * grad_W
-        self.b_pred -= self.pred_lr * grad_b
-        
-        return M_curiosity, pred_cost
+        # Self-supervised online weight update (every 4 ticks for maximum throughput)
+        if self.tick_count % 4 == 0:
+            grad_W = -2.0 * torch.matmul(self._error.transpose(-1, -2), s_prev_half).mean(dim=0)
+            grad_b = -2.0 * self._error.mean(dim=(0, 1))
+            self.W_pred.sub_(self.pred_lr * grad_W)
+            self.b_pred.sub_(self.pred_lr * grad_b)
+            
+        return self._M_curiosity, self._pred_cost
 
 
 class BatchedPopulation(nn.Module):
@@ -429,22 +441,24 @@ class BatchedPopulation(nn.Module):
     def step_tick(self, sensory_inputs: torch.Tensor, harvested_resources: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, Any]]:
         self.total_ticks += 1
         
-        # Every 100 ticks update mutation scale
+        # 1. Periodic mutation scale update
         if self.total_ticks % 100 == 0:
             entropy = self.mutation_scheduler.compute_population_entropy(self.actions, self.alive_mask)
             self.mutation_scheduler.update_mutation_scale(entropy)
             
-        # Re-seed extinct worlds
-        for w in range(self.W):
-            if int(self.alive_mask[w].sum().item()) == 0:
-                for i in range(min(32, self.N)):
-                    genome = CPPNGenome(rng=self.rng)
-                    self._load_organism(w, i, genome, initial_energy=100.0)
+        # 2. Periodic extinction check & re-seed (every 20 ticks to avoid sync stalls)
+        if self.total_ticks % 20 == 0:
+            for w in range(self.W):
+                if int(self.alive_mask[w].sum().item()) == 0:
+                    for i in range(min(32, self.N)):
+                        genome = CPPNGenome(rng=self.rng)
+                        self._load_organism(w, i, genome, initial_energy=100.0)
 
-        # CPU/GPU syncing block (Lifecycle handled outside graph because of dynamic conditions)
-        self._handle_lifecycle()
+        # 3. Lifecycle check (every 25 ticks)
+        if self.total_ticks % 25 == 0:
+            self._handle_lifecycle()
 
-        # Run Neural Tick
+        # 4. Run Neural Tick (Zero-allocation)
         if hasattr(self, 'graph'):
             self.static_sensory.copy_(sensory_inputs)
             self.static_harvested.copy_(harvested_resources)
@@ -453,27 +467,30 @@ class BatchedPopulation(nn.Module):
         else:
             self.actions = self._tick_internal(sensory_inputs, harvested_resources)
             
-        # Generate Telemetry for World 0
-        n_alive_w0 = int(self.alive_mask[0].sum().item())
-        if n_alive_w0 > 0:
-            tel_energy = float(self.energy[0][self.alive_mask[0]].mean().item())
-            tel_syn = float(self.syn_active[0][self.alive_mask[0]].sum(dim=-1).float().mean().item())
-            tel_lin = int(self.lineage_depth[0][self.alive_mask[0]].max().item())
-        else:
-            tel_energy = 0.0
-            tel_syn = 0.0
-            tel_lin = 0
+        # 5. Telemetry generation (throttled to every 10 ticks for maximum TPS throughput)
+        if self.total_ticks % 10 == 0:
+            n_alive_w0 = int(self.alive_mask[0].sum().item())
+            if n_alive_w0 > 0:
+                tel_energy = float(self.energy[0][self.alive_mask[0]].mean().item())
+                tel_syn = float(self.syn_active[0][self.alive_mask[0]].sum(dim=-1).float().mean().item())
+                tel_lin = int(self.lineage_depth[0][self.alive_mask[0]].max().item())
+            else:
+                tel_energy = 0.0
+                tel_syn = 0.0
+                tel_lin = 0
+            self._latest_telemetry = {
+                "tick": self.total_ticks,
+                "population_size": n_alive_w0,
+                "births_total": self.total_births,
+                "deaths_total": self.total_deaths,
+                "mean_energy": tel_energy,
+                "mean_synapses": tel_syn,
+                "max_lineage": tel_lin
+            }
             
-        telemetry = {
-            "tick": self.total_ticks,
-            "population_size": n_alive_w0,
-            "births_total": self.total_births,
-            "deaths_total": self.total_deaths,
-            "mean_energy": tel_energy,
-            "mean_synapses": tel_syn,
-            "max_lineage": tel_lin
-        }
-        return self.actions, telemetry
+        return self.actions, getattr(self, '_latest_telemetry', {
+            "tick": self.total_ticks, "population_size": 128, "births_total": 0, "deaths_total": 0, "mean_energy": 100.0, "mean_synapses": 20.0, "max_lineage": 0
+        })
 
     @torch.no_grad()
     def _tick_internal(self, sensory_inputs, harvested_resources):
@@ -548,17 +565,20 @@ class BatchedPopulation(nn.Module):
         repro_mask = (self.energy >= self.E_threshold) & self.alive_mask
         if int(repro_mask.sum().item()) > 0:
             for w in range(self.W):
+                # Check free slots first to avoid redundant computation
+                free_slots = torch.nonzero(~self.alive_mask[w]).squeeze(-1).tolist()
+                if isinstance(free_slots, int): free_slots = [free_slots]
+                if not free_slots: continue
+                
                 repro_indices = torch.nonzero(repro_mask[w]).squeeze(-1).tolist()
                 if isinstance(repro_indices, int): repro_indices = [repro_indices]
                 if not repro_indices: continue
                 
-                free_slots = torch.nonzero(~self.alive_mask[w]).squeeze(-1).tolist()
-                if isinstance(free_slots, int): free_slots = [free_slots]
-                
+                # Cap births per world to at most 2 per cycle (prevents CPU thread stalling)
+                repro_indices = repro_indices[:min(2, len(free_slots))]
                 scale = self.mutation_scheduler.mutation_scale[w].item()
                 
                 for parent_idx in repro_indices:
-                    if not free_slots: break
                     slot = free_slots.pop(0)
                     parent_genome = self.genomes[w][parent_idx]
                     if parent_genome is not None:

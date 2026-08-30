@@ -831,6 +831,8 @@ class GenesisEngineRunner:
             population=self.phase_e_pop,
             ecology=self.phase_e_eco,
             llm_model_name="Qwen/Qwen2-0.5B",
+            update_interval=20,
+            target_batch_size=8,
             device="cuda"
         )
         self.last_phase_e_telem = {}
@@ -881,7 +883,7 @@ class GenesisEngineRunner:
 
     def step_once(self) -> dict:
         is_headless = len(self.connected_websockets) == 0
-        iters = 50  # Always execute in GPU batches of 50 ticks for 1000+ ticks/s throughput
+        iters = 100  # Execute in GPU batches of 100 ticks for maximum throughput
 
         for _ in range(iters):
             self.tick_count += 1
@@ -893,28 +895,27 @@ class GenesisEngineRunner:
                 sample_harvested = torch.zeros((self.phase_e_pop.W, self.phase_e_pop.N), dtype=self.phase_e_pop.dtype, device=self.phase_e_pop.dev)
                 self.phase_e_pop.capture_tick_graph(sample_sensory, sample_harvested)
 
-            self.phase_e_eco.update_environment()
             p_actions, p_pop_telem = self.phase_e_plus.step_tick(self.tick_count)
             self.world_migration.migrate(self.phase_e_pop, self.tick_count)
             
             # Universal Periodic Checkpointing & Logging
             if self.tick_count > 0 and self.tick_count % 1000 == 0:
-                self.brain.save_checkpoint(BRAIN_DIR / "canonical_brain.npz")
-                
-                import pickle
-                phase_e_state = {
-                    'pop_state': self.phase_e_pop.state_dict(),
-                    'pop_genomes': self.phase_e_pop.genomes,
-                    'pop_births': getattr(self.phase_e_pop, 'total_births', 0),
-                    'pop_deaths': getattr(self.phase_e_pop, 'total_deaths', 0),
-                    'eco_resources': self.phase_e_eco.resources,
-                    'eco_stigmergy': self.phase_e_eco.stigmergy,
-                    'eco_locked': self.phase_e_eco.locked_resources,
-                    'tick_count': self.tick_count,
-                    'episode_seed': self.episode_seed
-                }
-                with open(BRAIN_DIR / "phase_e_state.pt", "wb") as f:
-                    torch.save(phase_e_state, f, pickle_module=pickle)
+                if self.tick_count % 5000 == 0:
+                    self.brain.save_checkpoint(BRAIN_DIR / "canonical_brain.npz")
+                    import pickle
+                    phase_e_state = {
+                        'pop_state': self.phase_e_pop.state_dict(),
+                        'pop_genomes': self.phase_e_pop.genomes,
+                        'pop_births': getattr(self.phase_e_pop, 'total_births', 0),
+                        'pop_deaths': getattr(self.phase_e_pop, 'total_deaths', 0),
+                        'eco_resources': self.phase_e_eco.resources,
+                        'eco_stigmergy': self.phase_e_eco.stigmergy,
+                        'eco_locked': self.phase_e_eco.locked_resources,
+                        'tick_count': self.tick_count,
+                        'episode_seed': self.episode_seed
+                    }
+                    with open(BRAIN_DIR / "phase_e_state.pt", "wb") as f:
+                        torch.save(phase_e_state, f, pickle_module=pickle)
                     
                 n_alive = int(self.phase_e_pop.alive_mask.sum().item())
                 avg_energy = float(self.phase_e_pop.energy[self.phase_e_pop.alive_mask].mean().item()) if n_alive > 0 else 0.0

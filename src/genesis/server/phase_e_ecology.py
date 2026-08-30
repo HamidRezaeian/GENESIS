@@ -295,11 +295,15 @@ class EcologyField:
         self._sensory_inputs[..., 6] = (orientations % 4).float() / 4.0
         self._sensory_inputs[..., 7] = torch.clamp(energy / 200.0, 0.0, 1.0)
         
-        offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        for s_idx, (ox, oy) in enumerate(offsets):
-            ngx = torch.clamp(gx + ox, 0, self.grid_size - 1)
-            ngy = torch.clamp(gy + oy, 0, self.grid_size - 1)
-            self._sensory_inputs[..., 8 + s_idx] = self.resources[w_grid, ngx, ngy] / self.max_cap
+        # Vectorized 8-neighbor sensory extraction (Single GPU Tensor Kernel)
+        if not hasattr(self, '_neighbor_ox'):
+            self._neighbor_ox = torch.tensor([-1, -1, -1, 0, 0, 1, 1, 1], dtype=torch.int64, device=device).view(1, 1, 8)
+            self._neighbor_oy = torch.tensor([-1, 0, 1, -1, 1, -1, 0, 1], dtype=torch.int64, device=device).view(1, 1, 8)
+            
+        ngx = torch.clamp(gx.unsqueeze(-1) + self._neighbor_ox, 0, self.grid_size - 1)
+        ngy = torch.clamp(gy.unsqueeze(-1) + self._neighbor_oy, 0, self.grid_size - 1)
+        w_grid_exp = w_grid.unsqueeze(-1).expand(W, N, 8)
+        self._sensory_inputs[..., 8:16] = self.resources[w_grid_exp, ngx, ngy] / self.max_cap
 
         for k in range(self.K_symbols):
             self._sensory_inputs[..., 16 + k] = self.stigmergy[w_grid, k, gx, gy] / self.stig_max

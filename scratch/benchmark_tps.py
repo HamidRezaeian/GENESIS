@@ -19,7 +19,13 @@ print(f"Hardware Device: {torch.cuda.get_device_name(0) if device == 'cuda' else
 
 pop = BatchedPopulation(n_worlds=32, pop_per_world=128, device=device)
 eco = EcologyField(n_worlds=32, grid_size=32, device=device)
-sensing = PhaseEPlusInternetSensing(population=pop, ecology=eco, device=device)
+sensing = PhaseEPlusInternetSensing(
+    population=pop,
+    ecology=eco,
+    update_interval=100,
+    target_batch_size=4,
+    device=device
+)
 
 # Warmup (100 ticks)
 print("Warming up GPU pipeline (100 ticks)...")

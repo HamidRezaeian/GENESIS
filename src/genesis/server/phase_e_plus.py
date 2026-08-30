@@ -157,7 +157,7 @@ class LLMSensoryInterface:
         self.latest_translation = None
     
     @torch.no_grad()
-    def query_llm(self, query_symbols: torch.Tensor) -> torch.Tensor:
+    def query_llm(self, query_symbols: torch.Tensor, current_tick: int = 0) -> torch.Tensor:
         """
         Args:
             query_symbols: [M, K] — organism symbols for active querying organisms only
@@ -177,24 +177,25 @@ class LLMSensoryInterface:
         
         hidden = outputs.last_hidden_state.squeeze(1).to(torch.float16)
         
-        # Decode top tokens for human observability
-        try:
-            dot_q = torch.matmul(query[:3], self.embed_weights.t())
-            top_q_ids = torch.argmax(dot_q, dim=-1)
-            q_words = [self.tokenizer.decode([idx.item()]).strip() for idx in top_q_ids]
-            
-            dot_h = torch.matmul(hidden[:3], self.embed_weights.t())
-            top_h_ids = torch.argmax(dot_h, dim=-1)
-            h_words = [self.tokenizer.decode([idx.item()]).strip() for idx in top_h_ids]
-            
-            self.latest_translation = {
-                "query_words": q_words,
-                "response_words": h_words,
-                "symbols": query_symbols[0].detach().cpu().numpy().round(2).tolist()
-            }
-        except Exception:
-            pass
-            
+        # Decode top tokens for human observability (throttled to every 1000 ticks to eliminate GPU-CPU sync stalls)
+        if current_tick % 1000 == 0:
+            try:
+                dot_q = torch.matmul(query[:3], self.embed_weights.t())
+                top_q_ids = torch.argmax(dot_q, dim=-1)
+                q_words = [self.tokenizer.decode([idx.item()]).strip() for idx in top_q_ids]
+                
+                dot_h = torch.matmul(hidden[:3], self.embed_weights.t())
+                top_h_ids = torch.argmax(dot_h, dim=-1)
+                h_words = [self.tokenizer.decode([idx.item()]).strip() for idx in top_h_ids]
+                
+                self.latest_translation = {
+                    "query_words": q_words,
+                    "response_words": h_words,
+                    "symbols": query_symbols[0].detach().cpu().numpy().round(2).tolist()
+                }
+            except Exception:
+                pass
+                
         return hidden
 
 
@@ -330,26 +331,24 @@ class StochasticSensoryGate:
     def select_queries(self, energy: torch.Tensor, emit_mask: torch.Tensor) -> torch.Tensor:
         """
         Returns boolean mask [W, P] of organisms selected to query this tick.
+        Strictly enforces K_target ceiling (GLM 5.3 Layer 2).
         """
-        # Emergent energy-gated probability: p = sigmoid((E - E_query) / tau)
-        gate_logit = (energy - self.E_query) / max(0.1, self.tau_gate)
-        p_query = torch.sigmoid(gate_logit)
+        if not torch.any(emit_mask):
+            return emit_mask
+            
+        emit_indices = torch.nonzero(emit_mask)
+        n_emit = len(emit_indices)
+        if n_emit <= self.K_target:
+            return emit_mask
+            
+        # Top-K energy sampling among emitters
+        emit_energies = energy[emit_indices[:, 0], emit_indices[:, 1]]
+        topk_k = min(self.K_target, n_emit)
+        topk_idx = torch.topk(emit_energies, k=topk_k).indices
         
-        # Apply strictly to emitters (action == 4)
-        p_masked = p_query * emit_mask.float()
-        
-        # Stochastic Bernoulli sampling
-        rand = torch.rand_like(p_masked)
-        selected = (rand < p_masked) & emit_mask
-        
-        # Adaptive temperature control to maintain target batch size K=32
-        n_selected = int(selected.sum().item())
-        if n_selected > self.K_target * 1.5:
-            self.tau_gate *= 0.95
-        elif n_selected < self.K_target * 0.5:
-            self.tau_gate *= 1.05
-        self.tau_gate = float(np.clip(self.tau_gate, 1.0, 100.0)) if 'np' in globals() else max(1.0, min(100.0, self.tau_gate))
-        
+        selected = torch.zeros_like(emit_mask, dtype=torch.bool)
+        chosen = emit_indices[topk_idx]
+        selected[chosen[:, 0], chosen[:, 1]] = True
         return selected
 
 
@@ -363,9 +362,9 @@ class PhaseEPlusInternetSensing:
         population,
         ecology,
         llm_model_name: str = "Qwen/Qwen2-0.5B",
-        device: str = "cuda",
-        update_interval: int = 10,
-        target_batch_size: int = 32
+        update_interval: int = 20,
+        target_batch_size: int = 8,
+        device: str = "cuda"
     ):
         self.population = population
         self.ecology = ecology
@@ -469,7 +468,7 @@ class PhaseEPlusInternetSensing:
                         self._physics_ready_event.record(torch.cuda.current_stream())
                         with torch.cuda.stream(self._llm_stream):
                             self._llm_stream.wait_event(self._physics_ready_event)
-                            query_hidden = self.llm_interface.query_llm(query_symbols)
+                            query_hidden = self.llm_interface.query_llm(query_symbols, current_tick)
                             
                             self.query_history.append((
                                 self.llm_interface.projection(query_symbols).detach(),
@@ -484,7 +483,7 @@ class PhaseEPlusInternetSensing:
                             self.temporal_cache.update_cache(new_combined, current_tick)
                             self._llm_complete_event.record(self._llm_stream)
                     else:
-                        query_hidden = self.llm_interface.query_llm(query_symbols)
+                        query_hidden = self.llm_interface.query_llm(query_symbols, current_tick)
                         self.query_history.append((
                             self.llm_interface.projection(query_symbols).detach(),
                             query_hidden.detach()
