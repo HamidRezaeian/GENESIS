@@ -339,6 +339,22 @@ class BatchedPopulation(nn.Module):
         self.register_buffer("E_threshold", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
         self.register_buffer("metabolic_rate", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
         
+        # ═══════════════════════════════════════════════════════
+        # PRE-ALLOCATED WORK BUFFERS (Zero-Allocation HPC Invariant)
+        # ═══════════════════════════════════════════════════════
+        self.register_buffer("_pre_states", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_syn_contributions", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_post_acc", torch.zeros(self.W, self.N, max_neurons, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_new_states", torch.zeros(self.W, self.N, max_neurons, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_stdp_corr", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_post_gathered", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_n_syn_active", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_flops_cost", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_traffic_cost", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_total_metabolic", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_emit_mask", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("_dW", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
+        
         # We need a 2D list for genomes: W x N
         self.genomes: List[List[Optional[CPPNGenome]]] = [[None for _ in range(self.N)] for _ in range(self.W)]
         
@@ -461,56 +477,64 @@ class BatchedPopulation(nn.Module):
 
     @torch.no_grad()
     def _tick_internal(self, sensory_inputs, harvested_resources):
-        # 1. Inject sensory [W, N, input_neurons]
-        self.states[:, :, :self.input_neurons] = sensory_inputs.to(self.dtype)
+        """Zero-Allocation In-Place Neural & STDP Simulation Tick."""
+        # 1. Inject sensory [W, N, input_neurons] in-place
+        self.states[:, :, :self.input_neurons].copy_(sensory_inputs.to(self.dtype))
         
-        # 2. Vectorized Propagation [W, N, max_synapses]
-        pre_states = torch.gather(self.states, 2, self.pre_idx)
-        pre_states = pre_states * self.syn_active.to(self.dtype)
-        syn_contributions = pre_states * self.weights
+        # 2. Vectorized Propagation [W, N, max_synapses] (Zero-allocation)
+        torch.gather(self.states, 2, self.pre_idx, out=self._pre_states)
+        self._pre_states.mul_(self.syn_active.to(self.dtype))
+        torch.mul(self._pre_states, self.weights, out=self._syn_contributions)
         
-        post_acc = torch.zeros_like(self.states)
-        post_acc.scatter_add_(2, self.post_idx, syn_contributions)
+        self._post_acc.zero_()
+        self._post_acc.scatter_add_(2, self.post_idx, self._syn_contributions)
         
-        new_states = torch.tanh(post_acc)
-        new_states[:, :, :self.input_neurons] = self.states[:, :, :self.input_neurons]
-        self.states.copy_(new_states)
+        torch.tanh(self._post_acc, out=self._new_states)
+        self._new_states[:, :, :self.input_neurons].copy_(self.states[:, :, :self.input_neurons])
+        self.states.copy_(self._new_states)
         
         # Extract Motor Actions [W, N]
-        motor_logits = self.states[:, :, self.max_neurons - self.output_neurons:]
-        actions = torch.argmax(motor_logits, dim=-1)
+        torch.argmax(self.states[:, :, self.max_neurons - self.output_neurons:], dim=-1, out=self.actions)
         
-        # 3. Autotelic Curiosity & STDP Plasticity (GLM 5.3 Prediction-Error Neuromodulation)
-        post_gathered = torch.gather(self.states, 2, self.post_idx)
-        stdp_corr = pre_states * post_gathered
+        # 3. Autotelic Curiosity & STDP Plasticity (Zero-allocation)
+        torch.gather(self.states, 2, self.post_idx, out=self._post_gathered)
+        torch.mul(self._pre_states, self._post_gathered, out=self._stdp_corr)
         
-        tau_t = self.tau_trace.unsqueeze(-1)
-        self.eligibility.copy_(tau_t * self.eligibility + stdp_corr)
+        # Eligibility trace update: E = tau * E + corr
+        self.eligibility.mul_(self.tau_trace.unsqueeze(-1)).add_(self._stdp_corr)
         
-        # Compute Autotelic Curiosity Wave (Novelty Signal + Homeostatic Gate)
+        # Compute Curiosity Wave
         M_curiosity, pred_cost = self.curiosity_engine.compute_curiosity_wave(
             self.prev_sensory, sensory_inputs, self.energy, self.E_threshold, self.alive_mask
         )
         self.prev_sensory.copy_(sensory_inputs.to(self.dtype))
         
-        M_t = M_curiosity # [W, N, 1]
-        eta = self.eta_stdp.unsqueeze(-1)
-        gamma_h = self.tau_homeo.unsqueeze(-1)
-        dW = eta * M_t * self.eligibility - gamma_h * self.weights
-        self.weights.copy_(torch.clamp(self.weights + dW * self.syn_active.to(self.dtype), -4.0, 4.0))
+        # Weight update: dW = eta * M * E - gamma * W
+        self._dW.copy_(self.eligibility)
+        self._dW.mul_(M_curiosity)
+        self._dW.mul_(self.eta_stdp.unsqueeze(-1))
+        self._dW.sub_(self.tau_homeo.unsqueeze(-1) * self.weights)
+        self._dW.mul_(self.syn_active.to(self.dtype))
+        self.weights.add_(self._dW).clamp_(-4.0, 4.0)
         
-        # 4. Landauer Energy (Metabolism with Prediction Cost - Rule 21)
-        n_syn_active = self.syn_active.sum(dim=-1).to(self.dtype)
-        flops_cost = n_syn_active * self.E_flop
-        traffic_cost = (n_syn_active * 2.0 + self.max_neurons * 2.0) * self.E_traffic
-        base_cost = self.metabolic_rate + self.E_base
-        emit_cost = (actions == 4).to(self.dtype) * 0.015
+        # 4. Landauer Energy Accounting (Zero-allocation)
+        torch.sum(self.syn_active.to(self.dtype), dim=-1, out=self._n_syn_active)
+        torch.mul(self._n_syn_active, self.E_flop, out=self._flops_cost)
+        torch.mul(self._n_syn_active, 2.0, out=self._traffic_cost).add_(self.max_neurons * 2.0).mul_(self.E_traffic)
         
-        total_metabolic_cost = (base_cost + flops_cost + traffic_cost + emit_cost + pred_cost) * self.alive_mask.to(self.dtype)
-        intake = harvested_resources.to(self.dtype) * self.alive_mask.to(self.dtype)
+        self._emit_mask.zero_()
+        self._emit_mask.masked_fill_(self.actions == 4, 0.015)
         
-        self.energy.copy_(self.energy + intake - total_metabolic_cost)
-        return actions
+        self._total_metabolic.copy_(self.metabolic_rate)
+        self._total_metabolic.add_(self.E_base)
+        self._total_metabolic.add_(self._flops_cost)
+        self._total_metabolic.add_(self._traffic_cost)
+        self._total_metabolic.add_(self._emit_mask)
+        self._total_metabolic.add_(pred_cost)
+        self._total_metabolic.mul_(self.alive_mask.to(self.dtype))
+        
+        self.energy.add_(harvested_resources.to(self.dtype) * self.alive_mask.to(self.dtype)).sub_(self._total_metabolic)
+        return self.actions
         
     @torch.no_grad()
     def _handle_lifecycle(self):

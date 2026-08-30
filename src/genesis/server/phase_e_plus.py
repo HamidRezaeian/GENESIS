@@ -412,11 +412,23 @@ class PhaseEPlusInternetSensing:
         self.query_count = 0
         self.query_history = []
         self.last_contrastive_loss = 0.0
+        
+        # Async CUDA Streams for Zero-Stall LLM Inference (GLM 5.3 Layer 3)
+        self.use_cuda_streams = (self.dev.type == "cuda")
+        if self.use_cuda_streams:
+            self._llm_stream = torch.cuda.Stream(priority=-1)
+            self._physics_ready_event = torch.cuda.Event()
+            self._llm_complete_event = torch.cuda.Event()
+            
+        self._hidden_state = torch.zeros(
+            (self.population.W, self.population.N, self.d_model),
+            dtype=torch.float16, device=self.dev
+        )
     
     @torch.no_grad()
     def step_tick(self, current_tick: int) -> Tuple[torch.Tensor, dict]:
         """
-        Execute one Phase-E+ tick with Multi-Rate Stochastic Sensory Gating.
+        Execute one Phase-E+ tick with Multi-Rate Stochastic Sensory Gating & Async Streams.
         Returns:
             (actions, telemetry)
         """
@@ -453,27 +465,36 @@ class PhaseEPlusInternetSensing:
                     symbol_tensor = self.population.states[:, :, -4:]  # [W, N, 4]
                     query_symbols = symbol_tensor[selected_mask]       # [M, 4]
                     
-                    # Forward ONLY the selected organisms through Qwen (M <= 32)
-                    query_hidden = self.llm_interface.query_llm(query_symbols)  # [M, d_model]
-                    
-                    # Buffer recent pairs for contrastive optimization
-                    self.query_history.append((
-                        self.llm_interface.projection(query_symbols).detach(),
-                        query_hidden.detach()
-                    ))
-                    if len(self.query_history) > 64:
-                        self.query_history.pop(0)
-                    
-                    # Scatter back to [W, N, d_model]
-                    hidden_state = torch.zeros(
-                        (self.population.W, self.population.N, self.d_model),
-                        dtype=torch.float16, device=self.dev
-                    )
-                    hidden_state[selected_mask] = query_hidden
-                    
-                    # Project and update persistent sensory cache
-                    new_combined = self.sensory_projection(hidden_state, spatial_sensory)
-                    self.temporal_cache.update_cache(new_combined, current_tick)
+                    if self.use_cuda_streams:
+                        self._physics_ready_event.record(torch.cuda.current_stream())
+                        with torch.cuda.stream(self._llm_stream):
+                            self._llm_stream.wait_event(self._physics_ready_event)
+                            query_hidden = self.llm_interface.query_llm(query_symbols)
+                            
+                            self.query_history.append((
+                                self.llm_interface.projection(query_symbols).detach(),
+                                query_hidden.detach()
+                            ))
+                            if len(self.query_history) > 64:
+                                self.query_history.pop(0)
+                                
+                            self._hidden_state.zero_()
+                            self._hidden_state[selected_mask] = query_hidden
+                            new_combined = self.sensory_projection(self._hidden_state, spatial_sensory)
+                            self.temporal_cache.update_cache(new_combined, current_tick)
+                            self._llm_complete_event.record(self._llm_stream)
+                    else:
+                        query_hidden = self.llm_interface.query_llm(query_symbols)
+                        self.query_history.append((
+                            self.llm_interface.projection(query_symbols).detach(),
+                            query_hidden.detach()
+                        ))
+                        if len(self.query_history) > 64:
+                            self.query_history.pop(0)
+                        self._hidden_state.zero_()
+                        self._hidden_state[selected_mask] = query_hidden
+                        new_combined = self.sensory_projection(self._hidden_state, spatial_sensory)
+                        self.temporal_cache.update_cache(new_combined, current_tick)
                     
                     # Charge Landauer metabolic cost (25 energy per query)
                     self.population.energy[selected_mask] -= 25.0

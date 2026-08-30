@@ -107,6 +107,14 @@ class EcologyField:
         self.lock_max = 15.0
         self.harvest_radius = 1
         
+        # Pre-allocated buffers (Zero-Allocation HPC Invariant)
+        self._target_field = torch.zeros((self.W, grid_size, grid_size), dtype=torch.float32, device=self.dev)
+        self._gaussian_patches = torch.zeros((self.W, grid_size, grid_size), dtype=torch.float32, device=self.dev)
+        self._macro_update_period = 4
+        self._diffusion_period = 8
+        self._sensory_inputs = torch.zeros((self.W, 128, 20), dtype=torch.float32, device=self.dev)
+        self._harvested_energy = torch.zeros((self.W, 128), dtype=torch.float32, device=self.dev)
+        
         self.w_idx = torch.arange(self.W, device=self.dev)
         
         self._seed_all_worlds()
@@ -141,66 +149,67 @@ class EcologyField:
     @torch.no_grad()
     def update_environment(self):
         """
-        GLM 5.3 Non-Stationary Ecology Update:
-        1. Seasonal Ornstein-Uhlenbeck modulation
-        2. Vectorized Brownian patch migration across 32 worlds
-        3. Multiplicative noise & Laplacian resource diffusion
+        GLM 5.3 Macro-Rate Non-Stationary Ecology Update:
+        - Full Gaussian mesh & patch migration: every 4 ticks
+        - Lightweight intra-macro linear inertia: every tick
+        - Grouped 2D Diffusion: every 8 ticks
         """
         self.tick_count += 1
         t = float(self.tick_count)
         
-        # 1. Seasonal modulation factor Phi_season(t)
-        season = (self.A_season * math.sin(2 * math.pi * t / self.T_season) 
-                  + 0.3 * math.cos(4 * math.pi * t / self.T_season))
-        season_factor = max(0.3, 1.0 + season)  # Strictly bounded >= 0.3 to prevent extinction
-        
-        # 2. Migrate patch centers (Vectorized Brownian motion with drift across worlds)
-        drift_angle = self.omega * t + self.phi_0 # [W]
-        drift_vec = torch.stack([
-            self.drift_speed * torch.cos(drift_angle),
-            self.drift_speed * torch.sin(drift_angle)
-        ], dim=-1).unsqueeze(1) # [W, 1, 2]
-        
-        noise = torch.randn_like(self.patch_centers) * self.patch_sigma # [W, n_patches, 2]
-        self.patch_centers = torch.clamp(self.patch_centers + drift_vec + noise, 0.05, 0.95)
-        
-        # 3. Reconstruct dynamic resource field from moving Gaussian patches
-        # grid_x, grid_y: [G, G] -> expand to [W, n_patches, G, G]
-        gx_exp = self.grid_x.unsqueeze(0).unsqueeze(0) # [1, 1, G, G]
-        gy_exp = self.grid_y.unsqueeze(0).unsqueeze(0) # [1, 1, G, G]
-        
-        cx = self.patch_centers[..., 0].unsqueeze(-1).unsqueeze(-1) # [W, n_patches, 1, 1]
-        cy = self.patch_centers[..., 1].unsqueeze(-1).unsqueeze(-1) # [W, n_patches, 1, 1]
-        amps = self.patch_amplitudes.unsqueeze(-1).unsqueeze(-1)    # [W, n_patches, 1, 1]
-        
-        d2 = (gx_exp - cx)**2 + (gy_exp - cy)**2
-        gaussian_patches = (amps * season_factor * torch.exp(-d2 / 0.015)).sum(dim=1) # [W, G, G]
-        
-        # 4. Multiplicative OU Process Noise
-        ou_noise = torch.randn_like(self.resources) * self.sigma_ou * torch.sqrt(torch.clamp(gaussian_patches, min=0.0))
-        target_field = torch.clamp(gaussian_patches + ou_noise, 0.0, self.max_cap)
-        
-        # 5. Blend with existing field (inertia)
-        self.resources = torch.clamp(
-            self.resources + self.kappa * (target_field - self.resources), 0.0, self.max_cap
-        )
-        
-        # 6. Grouped 2D Diffusion (every 4 ticks)
-        if self.tick_count % 4 == 0:
-            res_4d = self.resources.unsqueeze(1)  # [W, 1, G, G]
+        # ═══════════════════════════════════════════════════════
+        # 1. Macro-Rate Update (every 4 ticks)
+        # ═══════════════════════════════════════════════════════
+        if self.tick_count % self._macro_update_period == 0:
+            season = (self.A_season * math.sin(2 * math.pi * t / self.T_season) 
+                      + 0.3 * math.cos(4 * math.pi * t / self.T_season))
+            season_factor = max(0.3, 1.0 + season)
+            
+            # Migrate patch centers
+            drift_angle = self.omega * t + self.phi_0
+            drift_vec = torch.stack([
+                self.drift_speed * torch.cos(drift_angle),
+                self.drift_speed * torch.sin(drift_angle)
+            ], dim=-1).unsqueeze(1)
+            
+            noise = torch.randn_like(self.patch_centers) * self.patch_sigma
+            self.patch_centers.add_(drift_vec + noise).clamp_(0.05, 0.95)
+            
+            # Reconstruct dynamic Gaussian field
+            gx_exp = self.grid_x.unsqueeze(0).unsqueeze(0)
+            gy_exp = self.grid_y.unsqueeze(0).unsqueeze(0)
+            cx = self.patch_centers[..., 0].unsqueeze(-1).unsqueeze(-1)
+            cy = self.patch_centers[..., 1].unsqueeze(-1).unsqueeze(-1)
+            amps = self.patch_amplitudes.unsqueeze(-1).unsqueeze(-1)
+            
+            d2 = (gx_exp - cx)**2 + (gy_exp - cy)**2
+            torch.sum(amps * season_factor * torch.exp(-d2 / 0.015), dim=1, out=self._gaussian_patches)
+            
+            # Multiplicative OU noise
+            ou_noise = torch.randn_like(self.resources) * self.sigma_ou * torch.sqrt(torch.clamp(self._gaussian_patches, min=0.0))
+            self._target_field.copy_(self._gaussian_patches).add_(ou_noise).clamp_(0.0, self.max_cap)
+            
+            # Full inertia step
+            self.resources.add_(self.kappa * (self._target_field - self.resources)).clamp_(0.0, self.max_cap)
+        else:
+            # Lightweight intra-macro inertia step
+            alpha = self.kappa / self._macro_update_period
+            self.resources.add_(alpha * (self._target_field - self.resources)).clamp_(0.0, self.max_cap)
+            
+        # ═══════════════════════════════════════════════════════
+        # 2. Diffusion (every 8 ticks)
+        # ═══════════════════════════════════════════════════════
+        if self.tick_count % self._diffusion_period == 0:
+            res_4d = self.resources.unsqueeze(1)
             laplacian = F.conv2d(res_4d, self.diff_kernel, padding=1).squeeze(1)
-            self.resources = torch.clamp(self.resources + self.diff_rate * 4.0 * laplacian, 0.0, self.max_cap)
-
-        self.locked_resources += 0.0008 * (self.lock_max - self.locked_resources)
-        self.stigmergy *= (1.0 - self.stig_decay)
-
-        if self.tick_count % 4 == 0:
-            stig_4d = self.stigmergy.view(-1, 1, self.grid_size, self.grid_size)  # [W*K, 1, G, G]
+            self.resources.add_(self.diff_rate * 4.0 * laplacian).clamp_(0.0, self.max_cap)
+            
+            stig_4d = self.stigmergy.view(-1, 1, self.grid_size, self.grid_size)
             stig_lap = F.conv2d(stig_4d, self.diff_kernel, padding=1)
-            self.stigmergy = torch.clamp(
-                self.stigmergy + self.stig_diff_rate * stig_lap.view(self.W, self.K_symbols, self.grid_size, self.grid_size),
-                0.0, self.stig_max
-            )
+            self.stigmergy.add_(self.stig_diff_rate * stig_lap.view(self.W, self.K_symbols, self.grid_size, self.grid_size)).clamp_(0.0, self.stig_max)
+
+        self.locked_resources.add_(0.0008 * (self.lock_max - self.locked_resources))
+        self.stigmergy.mul_(1.0 - self.stig_decay)
 
     @torch.no_grad()
     def process_interactions(
@@ -230,7 +239,9 @@ class EcologyField:
         w_grid = self.w_idx.unsqueeze(1).expand(W, N)
         
         harvest = (actions == 3) & alive
-        harvested_energy = torch.zeros((W, N), dtype=torch.float32, device=device)
+        if self._harvested_energy.shape[:2] != (W, N):
+            self._harvested_energy = torch.zeros((W, N), dtype=torch.float32, device=device)
+        self._harvested_energy.zero_()
         
         if torch.any(harvest):
             hw = w_grid[harvest]
@@ -239,7 +250,7 @@ class EcologyField:
             avail = self.resources[hw, hx, hy]
             take = torch.clamp(avail, max=0.8)
             self.resources[hw, hx, hy] -= take
-            harvested_energy[harvest] += take * self.harvest_eff
+            self._harvested_energy[harvest] += take * self.harvest_eff
             
         emit = (actions == 4) & alive
         if torch.any(emit):
@@ -252,48 +263,50 @@ class EcologyField:
                 0.0, self.stig_max
             )
             
-        sensory_inputs = torch.zeros((W, N, 20), dtype=torch.float32, device=device)
+        if self._sensory_inputs.shape[:2] != (W, N):
+            self._sensory_inputs = torch.zeros((W, N, 20), dtype=torch.float32, device=device)
+        self._sensory_inputs.zero_()
         
-        sensory_inputs[..., 0] = self.resources[w_grid, gx, gy] / self.max_cap
+        self._sensory_inputs[..., 0] = self.resources[w_grid, gx, gy] / self.max_cap
         
         f_dirs = orientations % 4
         f_vecs = self.d_vecs[f_dirs]
         f_pos = torch.clamp(positions + f_vecs, 0.01, 0.99)
         fgx = torch.clamp((f_pos[..., 0] * self.grid_size).long(), 0, self.grid_size - 1)
         fgy = torch.clamp((f_pos[..., 1] * self.grid_size).long(), 0, self.grid_size - 1)
-        sensory_inputs[..., 1] = self.resources[w_grid, fgx, fgy] / self.max_cap
+        self._sensory_inputs[..., 1] = self.resources[w_grid, fgx, fgy] / self.max_cap
         
         l_dirs = (orientations - 1) % 4
         l_vecs = self.d_vecs[l_dirs]
         l_pos = torch.clamp(positions + l_vecs, 0.01, 0.99)
         lgx = torch.clamp((l_pos[..., 0] * self.grid_size).long(), 0, self.grid_size - 1)
         lgy = torch.clamp((l_pos[..., 1] * self.grid_size).long(), 0, self.grid_size - 1)
-        sensory_inputs[..., 2] = self.resources[w_grid, lgx, lgy] / self.max_cap
+        self._sensory_inputs[..., 2] = self.resources[w_grid, lgx, lgy] / self.max_cap
         
         r_dirs = (orientations + 1) % 4
         r_vecs = self.d_vecs[r_dirs]
         r_pos = torch.clamp(positions + r_vecs, 0.01, 0.99)
         rgx = torch.clamp((r_pos[..., 0] * self.grid_size).long(), 0, self.grid_size - 1)
         rgy = torch.clamp((r_pos[..., 1] * self.grid_size).long(), 0, self.grid_size - 1)
-        sensory_inputs[..., 3] = self.resources[w_grid, rgx, rgy] / self.max_cap
+        self._sensory_inputs[..., 3] = self.resources[w_grid, rgx, rgy] / self.max_cap
         
-        sensory_inputs[..., 4] = positions[..., 0]
-        sensory_inputs[..., 5] = positions[..., 1]
-        sensory_inputs[..., 6] = (orientations % 4).float() / 4.0
-        sensory_inputs[..., 7] = torch.clamp(energy / 200.0, 0.0, 1.0)
+        self._sensory_inputs[..., 4] = positions[..., 0]
+        self._sensory_inputs[..., 5] = positions[..., 1]
+        self._sensory_inputs[..., 6] = (orientations % 4).float() / 4.0
+        self._sensory_inputs[..., 7] = torch.clamp(energy / 200.0, 0.0, 1.0)
         
         offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         for s_idx, (ox, oy) in enumerate(offsets):
             ngx = torch.clamp(gx + ox, 0, self.grid_size - 1)
             ngy = torch.clamp(gy + oy, 0, self.grid_size - 1)
-            sensory_inputs[..., 8 + s_idx] = self.resources[w_grid, ngx, ngy] / self.max_cap
+            self._sensory_inputs[..., 8 + s_idx] = self.resources[w_grid, ngx, ngy] / self.max_cap
 
         for k in range(self.K_symbols):
-            sensory_inputs[..., 16 + k] = self.stigmergy[w_grid, k, gx, gy] / self.stig_max
+            self._sensory_inputs[..., 16 + k] = self.stigmergy[w_grid, k, gx, gy] / self.stig_max
             
         self.update_environment()
         
-        return sensory_inputs, harvested_energy
+        return self._sensory_inputs, self._harvested_energy
 
     def get_render_grid(self, world_idx: int = 0) -> np.ndarray:
         res_cpu = self.resources[world_idx].detach().cpu().numpy()
