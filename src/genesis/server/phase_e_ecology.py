@@ -30,6 +30,13 @@ class EcologyField:
         regeneration_rate: float = 0.005,
         diffusion_rate: float = 0.08,
         harvest_efficiency: float = 12.0,
+        T_season: float = 2000.0,
+        A_season: float = 0.6,
+        kappa: float = 0.01,
+        sigma_ou: float = 0.003,
+        drift_speed: float = 0.005,
+        patch_sigma: float = 0.02,
+        omega: float = 0.001,
         device: Optional[str] = None,
         seed: int = 42
     ):
@@ -39,11 +46,31 @@ class EcologyField:
         self.regen_rate = regeneration_rate
         self.diff_rate = diffusion_rate
         self.harvest_eff = harvest_efficiency
+        
+        # GLM 5.3 Non-Stationary Dynamics Parameters
+        self.T_season = T_season
+        self.A_season = A_season
+        self.kappa = kappa
+        self.sigma_ou = sigma_ou
+        self.drift_speed = drift_speed
+        self.patch_sigma = patch_sigma
+        self.omega = omega
+        
         self.dev = torch.device(device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu"))
         self.rng = np.random.RandomState(seed)
         
         # [W, G, G]
         self.resources = torch.zeros((self.W, grid_size, grid_size), dtype=torch.float32, device=self.dev)
+        
+        # Dynamic Migrating Patch Centers [W, n_patches, 2]
+        self.n_patches = 8
+        self.patch_centers = torch.rand(self.W, self.n_patches, 2, device=self.dev) * 0.8 + 0.1
+        self.patch_amplitudes = torch.full((self.W, self.n_patches), self.max_cap, device=self.dev)
+        self.phi_0 = torch.rand(self.W, device=self.dev) * 2 * math.pi
+        
+        # Precomputed Normalized Coordinate Grids [G, G]
+        coords = torch.arange(self.grid_size, device=self.dev, dtype=torch.float32) / self.grid_size
+        self.grid_y, self.grid_x = torch.meshgrid(coords, coords, indexing='xy')
         
         # 2D Diffusion kernel for F.conv2d [1, 1, 3, 3]
         kernel_np = np.array([
@@ -113,9 +140,52 @@ class EcologyField:
 
     @torch.no_grad()
     def update_environment(self):
+        """
+        GLM 5.3 Non-Stationary Ecology Update:
+        1. Seasonal Ornstein-Uhlenbeck modulation
+        2. Vectorized Brownian patch migration across 32 worlds
+        3. Multiplicative noise & Laplacian resource diffusion
+        """
         self.tick_count += 1
-        self.resources += self.regen_rate * (self.max_cap - self.resources)
+        t = float(self.tick_count)
         
+        # 1. Seasonal modulation factor Phi_season(t)
+        season = (self.A_season * math.sin(2 * math.pi * t / self.T_season) 
+                  + 0.3 * math.cos(4 * math.pi * t / self.T_season))
+        season_factor = max(0.3, 1.0 + season)  # Strictly bounded >= 0.3 to prevent extinction
+        
+        # 2. Migrate patch centers (Vectorized Brownian motion with drift across worlds)
+        drift_angle = self.omega * t + self.phi_0 # [W]
+        drift_vec = torch.stack([
+            self.drift_speed * torch.cos(drift_angle),
+            self.drift_speed * torch.sin(drift_angle)
+        ], dim=-1).unsqueeze(1) # [W, 1, 2]
+        
+        noise = torch.randn_like(self.patch_centers) * self.patch_sigma # [W, n_patches, 2]
+        self.patch_centers = torch.clamp(self.patch_centers + drift_vec + noise, 0.05, 0.95)
+        
+        # 3. Reconstruct dynamic resource field from moving Gaussian patches
+        # grid_x, grid_y: [G, G] -> expand to [W, n_patches, G, G]
+        gx_exp = self.grid_x.unsqueeze(0).unsqueeze(0) # [1, 1, G, G]
+        gy_exp = self.grid_y.unsqueeze(0).unsqueeze(0) # [1, 1, G, G]
+        
+        cx = self.patch_centers[..., 0].unsqueeze(-1).unsqueeze(-1) # [W, n_patches, 1, 1]
+        cy = self.patch_centers[..., 1].unsqueeze(-1).unsqueeze(-1) # [W, n_patches, 1, 1]
+        amps = self.patch_amplitudes.unsqueeze(-1).unsqueeze(-1)    # [W, n_patches, 1, 1]
+        
+        d2 = (gx_exp - cx)**2 + (gy_exp - cy)**2
+        gaussian_patches = (amps * season_factor * torch.exp(-d2 / 0.015)).sum(dim=1) # [W, G, G]
+        
+        # 4. Multiplicative OU Process Noise
+        ou_noise = torch.randn_like(self.resources) * self.sigma_ou * torch.sqrt(torch.clamp(gaussian_patches, min=0.0))
+        target_field = torch.clamp(gaussian_patches + ou_noise, 0.0, self.max_cap)
+        
+        # 5. Blend with existing field (inertia)
+        self.resources = torch.clamp(
+            self.resources + self.kappa * (target_field - self.resources), 0.0, self.max_cap
+        )
+        
+        # 6. Grouped 2D Diffusion (every 4 ticks)
         if self.tick_count % 4 == 0:
             res_4d = self.resources.unsqueeze(1)  # [W, 1, G, G]
             laplacian = F.conv2d(res_4d, self.diff_kernel, padding=1).squeeze(1)

@@ -27,6 +27,7 @@ from genesis.server.phase_e_substrate import BatchedPopulation
 from genesis.server.phase_e_plus import PhaseEPlusInternetSensing
 from genesis.server.phase_e_ecology import EcologyField
 from genesis.server.phase_e_metrics import PhaseEEmergenceTracker
+from genesis.server.phase_e_probes import ShadowCloneProbeHarness
 
 BRAIN_DIR = REPO_ROOT / "Brain"
 PUBLIC_DIR = REPO_ROOT / "public"
@@ -833,6 +834,8 @@ class GenesisEngineRunner:
             device="cuda"
         )
         self.last_phase_e_telem = {}
+        self.probe_harness = ShadowCloneProbeHarness(self.phase_e_pop, probe_size=64)
+        self.latest_diagnostic_audit = {}
 
         # Load existing brain if available
         ckpt_path = BRAIN_DIR / "canonical_brain.npz"
@@ -852,7 +855,7 @@ class GenesisEngineRunner:
                 with open(phase_e_ckpt, "rb") as f:
                     state = torch.load(f, pickle_module=pickle, weights_only=False)
                 
-                self.phase_e_pop.load_state_dict(state['pop_state'])
+                self.phase_e_pop.load_state_dict(state['pop_state'], strict=False)
                 self.phase_e_pop.genomes = state['pop_genomes']
                 self.phase_e_pop.total_births = state['pop_births']
                 self.phase_e_pop.total_deaths = state.get('pop_deaths', 0)
@@ -925,6 +928,18 @@ class GenesisEngineRunner:
                     sym_str = str(latest_trans.get("symbols", []))
                     status_line += f"\n   📡 [QWEN TRANSLATOR] Symbols {sym_str} ➔ Thought: '{q_str}' ➔ Qwen Echo: '{r_str}'"
                 print(status_line, flush=True)
+                
+                # ── Periodic Shadow Clone 5-Task Diagnostic Audit (Every 5,000 Ticks) ──
+                if self.tick_count % 5000 == 0:
+                    try:
+                        self.latest_diagnostic_audit = self.probe_harness.run_full_diagnostic_audit()
+                        dmts = self.latest_diagnostic_audit.get("dmts_benchmark", {})
+                        maze = self.latest_diagnostic_audit.get("spatial_maze_benchmark", {})
+                        print(f"🧠 [SHADOW CLONE 5-TASK AUDIT | Tick {self.tick_count:7d}]", flush=True)
+                        print(f"   ├─ DMTS (Working Memory): Normal={dmts.get('mean_normal',0):.3f} | Ablation={dmts.get('mean_ablation',0):.3f} | Δ={dmts.get('delta',0):+.3f} (z={dmts.get('z_score',0):+.2f}) ➔ {dmts.get('verdict')}", flush=True)
+                        print(f"   └─ Spatial Maze Nav     : Normal={maze.get('mean_normal',0):.3f} | Ablation={maze.get('mean_ablation',0):.3f} | Δ={maze.get('delta',0):+.3f} (z={maze.get('z_score',0):+.2f}) ➔ {maze.get('verdict')}", flush=True)
+                    except Exception as e:
+                        print(f"⚠️ [PROBE AUDIT ERROR]: {e}", flush=True)
                     
         if is_headless:
             return {}
@@ -1152,6 +1167,7 @@ class GenesisEngineRunner:
             "substrate22": self.brain.substrate22.get_telemetry(),
             "phase_e": {
                 "telemetry": self.last_phase_e_telem,
+                "cognitive_probes": self.latest_diagnostic_audit,
                 "population": [
                     {
                         "id": int(i),
@@ -1451,8 +1467,8 @@ async def simulation_loop():
                 if runner.connected_websockets and (now - last_broadcast_time >= 0.1):
                     last_broadcast_time = now
                     await runner.broadcast_state(st)
-                # Keep core evolutionary simulation running at maximum GPU tensor throughput
-                await asyncio.sleep(0.0005)
+                # Yield to event loop to serve incoming HTTP/WS traffic smoothly
+                await asyncio.sleep(0.005)
             else:
                 await asyncio.sleep(0.1)
         except asyncio.CancelledError:
@@ -1465,12 +1481,13 @@ async def simulation_loop():
 
 
 async def on_startup(app):
+    global sim_task
+    sim_task = asyncio.create_task(simulation_loop())
     print("[GENESIS SERVER] Starting background simulation loop...", flush=True)
-    app['sim_task'] = asyncio.create_task(simulation_loop())
 
 
 async def on_cleanup(app):
-    sim_task = app.get('sim_task')
+    global sim_task
     if sim_task:
         sim_task.cancel()
         try:
@@ -1490,7 +1507,7 @@ async def telepathic_chat_page_handler(request):
 async def api_telepathic_chat_handler(request):
     try:
         data = await request.json()
-        text = data.get("text", "")
+        text = data.get("text", data.get("prompt", ""))
         target_world = int(data.get("world_id", -1))
         target_organism = int(data.get("organism_id", -1))
         resp = await asyncio.to_thread(runner.handle_telepathic_dialogue, text, target_world, target_organism)
@@ -1541,7 +1558,7 @@ if __name__ == "__main__":
                     continue
         return start_port
 
-    base_port = int(os.environ.get("PORT", 8088))
+    base_port = int(os.environ.get("PORT", 8089))
     selected_port = find_free_port(base_port)
     
     app = init_app()

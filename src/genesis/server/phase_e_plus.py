@@ -10,6 +10,7 @@ Invariants:
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from typing import Tuple, Dict
 import warnings
@@ -17,25 +18,98 @@ import warnings
 # Suppress HuggingFace warnings for clean logs
 warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
 
-class SymbolToQueryProjection(nn.Module):
+class ContrastiveProjectionOptimizer(nn.Module):
     """
-    Projects organism symbol tensor [W, N, K] to LLM query space [W, N, d_model].
-    No hardcoded English syntax — purely learned continuous projection.
+    GLM 5.3 InfoNCE Contrastive Optimization for Sensorimotor-Language Latent Coupling.
+    Self-supervised alignment between organism motor actions and LLM latent consequences.
     """
     def __init__(
         self,
         k_symbols: int = 4,
-        d_model: int = 896,  # Qwen2-0.5B hidden dim
-        noise_sigma: float = 0.1,
+        d_model: int = 896,
+        temperature: float = 0.07,
+        queue_size: int = 256,
+        projection_dim: int = 128,
+        lr: float = 1e-4,
         device: str = "cuda"
     ):
         super().__init__()
-        self.K = k_symbols
-        self.d_model = d_model
-        self.noise_sigma = noise_sigma
+        self.temperature = temperature
+        self.queue_size = queue_size
+        self.projection_dim = projection_dim
         self.dev = torch.device(device)
         
-        # Learnable projection matrix: [K, d_model] (FP16)
+        # Projection heads for contrastive learning
+        self.head_q = nn.Sequential(
+            nn.Linear(d_model, projection_dim),
+            nn.ReLU(),
+            nn.Linear(projection_dim, projection_dim)
+        ).to(self.dev)
+        
+        self.head_k = nn.Sequential(
+            nn.Linear(d_model, projection_dim),
+            nn.ReLU(),
+            nn.Linear(projection_dim, projection_dim)
+        ).to(self.dev)
+        
+        # Negative sample queue (FIFO)
+        self.register_buffer("queue", torch.randn(queue_size, projection_dim, device=self.dev))
+        self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long, device=self.dev))
+        
+        # Optimizer
+        self.optimizer = torch.optim.AdamW(
+            list(self.head_q.parameters()) + list(self.head_k.parameters()),
+            lr=lr,
+            weight_decay=1e-5
+        )
+        
+    @torch.no_grad()
+    def _dequeue_and_enqueue(self, keys: torch.Tensor):
+        batch_size = keys.shape[0]
+        ptr = int(self.queue_ptr.item())
+        indices = (torch.arange(batch_size, device=self.dev) + ptr) % self.queue_size
+        self.queue[indices] = keys.detach()
+        self.queue_ptr[0] = (ptr + batch_size) % self.queue_size
+
+    def compute_infonce_loss(self, action_embeds: torch.Tensor, llm_hidden: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        InfoNCE Loss: aligns action projection with LLM hidden state consequences.
+        """
+        q = F.normalize(self.head_q(action_embeds.float()), dim=-1)
+        k = F.normalize(self.head_k(llm_hidden.float()), dim=-1)
+        
+        l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
+        l_neg = torch.einsum('nc,kc->nk', [q, self.queue.clone().detach().float()])
+        
+        logits = torch.cat([l_pos, l_neg], dim=1) / self.temperature
+        labels = torch.zeros(logits.shape[0], dtype=torch.long, device=self.dev)
+        
+        loss = F.cross_entropy(logits, labels)
+        return loss, k.detach()
+
+    def update_projection(self, action_embeds: torch.Tensor, llm_hidden: torch.Tensor) -> float:
+        """One step of contrastive learning."""
+        with torch.enable_grad():
+            loss, k_detach = self.compute_infonce_loss(action_embeds, llm_hidden)
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=1.0)
+            self.optimizer.step()
+        self._dequeue_and_enqueue(k_detach)
+        return float(loss.item())
+
+
+class SymbolToQueryProjection(nn.Module):
+    """
+    Continuous projection from organism 4-symbol output to LLM hidden space (FP16).
+    """
+    def __init__(self, k_symbols: int = 4, d_model: int = 896, device: str = "cuda"):
+        super().__init__()
+        self.k_symbols = k_symbols
+        self.d_model = d_model
+        self.dev = torch.device(device if torch.cuda.is_available() else "cpu")
+        
+        # Linear projection weight [K, d_model] in FP16
         self.W_proj = nn.Parameter(
             torch.randn(k_symbols, d_model, device=self.dev, dtype=torch.float16) * 0.02
         )
@@ -43,27 +117,15 @@ class SymbolToQueryProjection(nn.Module):
             torch.zeros(d_model, device=self.dev, dtype=torch.float16)
         )
         
-        # LayerNorm for stability (FP16)
-        self.layer_norm = nn.LayerNorm(d_model, dtype=torch.float16, device=self.dev)
-    
-    @torch.no_grad()
+        # LayerNorm to stabilize activation scale
+        self.layer_norm = nn.LayerNorm(d_model, device=self.dev, dtype=torch.float16)
+        self.noise_sigma = 0.05
+        
     def forward(self, action_tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Args:
-            action_tensor: [W, N, K] — organism symbol outputs (continuous)
-        Returns:
-            query_embedding: [W, N, d_model] — continuous LLM query vectors (FP16)
-        """
         act_half = action_tensor.to(dtype=torch.float16, device=self.dev)
-        # Linear projection: [W, N, K] @ [K, d_model] -> [W, N, d_model]
         projected = torch.matmul(act_half, self.W_proj) + self.b_proj
-        
-        # Add exploration noise (prevents mode collapse)
         noise = torch.randn_like(projected, dtype=torch.float16) * self.noise_sigma
-        
-        # Normalize and activate in FP16
         query = torch.tanh(self.layer_norm(projected + noise))
-        
         return query.to(torch.float16)
 
 
@@ -91,6 +153,7 @@ class LLMSensoryInterface:
             d_model=self.d_model,
             device=device
         )
+        self.contrastive = ContrastiveProjectionOptimizer(d_model=self.d_model, device=device)
         self.latest_translation = None
     
     @torch.no_grad()
@@ -347,6 +410,8 @@ class PhaseEPlusInternetSensing:
         )
         
         self.query_count = 0
+        self.query_history = []
+        self.last_contrastive_loss = 0.0
     
     @torch.no_grad()
     def step_tick(self, current_tick: int) -> Tuple[torch.Tensor, dict]:
@@ -391,6 +456,14 @@ class PhaseEPlusInternetSensing:
                     # Forward ONLY the selected organisms through Qwen (M <= 32)
                     query_hidden = self.llm_interface.query_llm(query_symbols)  # [M, d_model]
                     
+                    # Buffer recent pairs for contrastive optimization
+                    self.query_history.append((
+                        self.llm_interface.projection(query_symbols).detach(),
+                        query_hidden.detach()
+                    ))
+                    if len(self.query_history) > 64:
+                        self.query_history.pop(0)
+                    
                     # Scatter back to [W, N, d_model]
                     hidden_state = torch.zeros(
                         (self.population.W, self.population.N, self.d_model),
@@ -404,6 +477,14 @@ class PhaseEPlusInternetSensing:
                     
                     # Charge Landauer metabolic cost (25 energy per query)
                     self.population.energy[selected_mask] -= 25.0
+                    
+        # Periodic Contrastive Learning Update (every 1000 ticks)
+        if self.llm_available and (current_tick % 1000 == 0) and len(self.query_history) >= 16:
+            action_embeds_batch = torch.cat([p[0] for p in self.query_history], dim=0)
+            llm_hidden_batch = torch.cat([p[1] for p in self.query_history], dim=0)
+            self.last_contrastive_loss = self.llm_interface.contrastive.update_projection(
+                action_embeds_batch, llm_hidden_batch
+            )
         
         # Retrieve temporal sensory field (cached / interpolated)
         combined_sensory = self.temporal_cache.get_sensory(current_tick)
@@ -415,6 +496,7 @@ class PhaseEPlusInternetSensing:
         telemetry.update({
             "llm_queries_this_tick": queries_this_tick,
             "total_llm_queries": self.query_count,
+            "contrastive_loss": self.last_contrastive_loss,
             "query_to_move_ratio": self.cost_model.get_cost_ratio() if self.llm_available else 0.0,
             "latest_translation": getattr(self.llm_interface, 'latest_translation', None) if self.llm_available else None
         })

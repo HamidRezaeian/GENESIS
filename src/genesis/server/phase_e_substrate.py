@@ -203,6 +203,91 @@ class CPPNGenome:
         return child
 
 
+class CuriosityModulatedSTDP(nn.Module):
+    """
+    GLM 5.3 Three-Factor Learning with Unsupervised Prediction-Error Neuromodulation.
+    Pure physical curiosity without extrinsic game points (Rule 21 & Rule 25).
+    """
+    def __init__(
+        self,
+        n_worlds: int = 32,
+        pop_per_world: int = 128,
+        input_neurons: int = 20,
+        alpha: float = 0.7,
+        beta: float = 0.3,
+        pred_lr: float = 0.01,
+        E_pred_flop: float = 1e-4,
+        device: str = "cuda",
+        dtype: torch.dtype = torch.float16
+    ):
+        super().__init__()
+        self.W = n_worlds
+        self.N = pop_per_world
+        self.input_neurons = input_neurons
+        self.alpha = alpha
+        self.beta = beta
+        self.pred_lr = pred_lr
+        self.E_pred_flop = E_pred_flop
+        self.dev = torch.device(device)
+        self.dtype = dtype
+        
+        # Self-supervised next-sensory state predictor: [input_neurons, input_neurons]
+        self.register_buffer("W_pred", torch.randn(input_neurons, input_neurons, dtype=self.dtype, device=self.dev) * 0.01)
+        self.register_buffer("b_pred", torch.zeros(input_neurons, dtype=self.dtype, device=self.dev))
+        
+        # Running statistics for novelty normalization (EMA) [W, N]
+        self.register_buffer("L_pred_mean", torch.zeros(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.register_buffer("L_pred_var", torch.ones(self.W, self.N, dtype=self.dtype, device=self.dev))
+        self.momentum = 0.99
+        
+    @torch.no_grad()
+    def compute_curiosity_wave(
+        self,
+        sensory_prev: torch.Tensor,
+        sensory_curr: torch.Tensor,
+        energy: torch.Tensor,
+        E_threshold: torch.Tensor,
+        alive_mask: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Calculates novelty signal from sensory prediction error and combines with homeostatic gate.
+        Returns:
+            M_curiosity: [W, N, 1]
+            pred_cost: [W, N] - Landauer computational cost for prediction
+        """
+        s_prev_half = sensory_prev.to(self.dtype)
+        s_pred = torch.tanh(torch.matmul(s_prev_half, self.W_pred.t()) + self.b_pred)
+        
+        s_curr_half = sensory_curr.to(self.dtype)
+        L_pred = torch.sum((s_curr_half - s_pred) ** 2, dim=-1) # [W, N]
+        
+        alive_f = alive_mask.to(self.dtype)
+        self.L_pred_mean.copy_(alive_f * (self.momentum * self.L_pred_mean + (1.0 - self.momentum) * L_pred) + (1.0 - alive_f) * self.L_pred_mean)
+        self.L_pred_var.copy_(alive_f * (self.momentum * self.L_pred_var + (1.0 - self.momentum) * (L_pred - self.L_pred_mean) ** 2) + (1.0 - alive_f) * self.L_pred_var)
+        
+        L_std = torch.sqrt(torch.clamp(self.L_pred_var, min=1e-6))
+        novelty = torch.tanh((L_pred - self.L_pred_mean) / L_std) # [W, N]
+        
+        surplus = (energy - E_threshold) / torch.clamp(E_threshold, min=1.0)
+        homeostatic = torch.sigmoid(surplus) - 0.5 # [W, N]
+        
+        M_curiosity = (self.alpha * novelty + self.beta * homeostatic).unsqueeze(-1) # [W, N, 1]
+        
+        # Landauer FLOP cost
+        pred_flops = self.input_neurons * self.input_neurons * 2.0
+        pred_cost = pred_flops * self.E_pred_flop * alive_f
+        
+        # Self-supervised online weight update (Unsupervised sensory prediction)
+        error = s_curr_half - s_pred # [W, N, input_neurons]
+        grad_W = -2.0 * torch.matmul(error.transpose(-1, -2), s_prev_half).mean(dim=0)
+        grad_b = -2.0 * error.mean(dim=(0, 1))
+        
+        self.W_pred -= self.pred_lr * grad_W
+        self.b_pred -= self.pred_lr * grad_b
+        
+        return M_curiosity, pred_cost
+
+
 class BatchedPopulation(nn.Module):
     def __init__(
         self,
@@ -229,6 +314,7 @@ class BatchedPopulation(nn.Module):
         
         # --- Pre-allocated Multi-World State Tensors [W, N, ...] ---
         self.register_buffer("states", torch.zeros(self.W, self.N, max_neurons, dtype=self.dtype, device=self.dev))
+        self.register_buffer("prev_sensory", torch.zeros(self.W, self.N, input_neurons, dtype=self.dtype, device=self.dev))
         self.register_buffer("weights", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
         self.register_buffer("eligibility", torch.zeros(self.W, self.N, max_synapses, dtype=self.dtype, device=self.dev))
         self.register_buffer("energy", torch.full((self.W, self.N), 100.0, dtype=self.dtype, device=self.dev))
@@ -266,8 +352,15 @@ class BatchedPopulation(nn.Module):
         
         self.initialize_founder_population(initial_pop=min(64, self.N))
         
-        # Adaptive Mutation
+        # Adaptive Mutation & Autotelic Curiosity Engines
         self.mutation_scheduler = AdaptiveMutationScheduler(n_worlds=self.W, device=device)
+        self.curiosity_engine = CuriosityModulatedSTDP(
+            n_worlds=self.W,
+            pop_per_world=self.N,
+            input_neurons=self.input_neurons,
+            device=device,
+            dtype=self.dtype
+        )
 
     def initialize_founder_population(self, initial_pop: int):
         for w in range(self.W):
@@ -383,33 +476,37 @@ class BatchedPopulation(nn.Module):
         new_states[:, :, :self.input_neurons] = self.states[:, :, :self.input_neurons]
         self.states.copy_(new_states)
         
-        # Actions
+        # Extract Motor Actions [W, N]
         motor_logits = self.states[:, :, self.max_neurons - self.output_neurons:]
         actions = torch.argmax(motor_logits, dim=-1)
         
-        # 3. STDP Plasticity
+        # 3. Autotelic Curiosity & STDP Plasticity (GLM 5.3 Prediction-Error Neuromodulation)
         post_gathered = torch.gather(self.states, 2, self.post_idx)
         stdp_corr = pre_states * post_gathered
         
         tau_t = self.tau_trace.unsqueeze(-1)
         self.eligibility.copy_(tau_t * self.eligibility + stdp_corr)
         
-        surplus = (self.energy - self.E_threshold) / torch.clamp(self.E_threshold, min=1.0)
-        M_t = (torch.sigmoid(surplus) - 0.5).unsqueeze(-1)
+        # Compute Autotelic Curiosity Wave (Novelty Signal + Homeostatic Gate)
+        M_curiosity, pred_cost = self.curiosity_engine.compute_curiosity_wave(
+            self.prev_sensory, sensory_inputs, self.energy, self.E_threshold, self.alive_mask
+        )
+        self.prev_sensory.copy_(sensory_inputs.to(self.dtype))
         
+        M_t = M_curiosity # [W, N, 1]
         eta = self.eta_stdp.unsqueeze(-1)
         gamma_h = self.tau_homeo.unsqueeze(-1)
         dW = eta * M_t * self.eligibility - gamma_h * self.weights
         self.weights.copy_(torch.clamp(self.weights + dW * self.syn_active.to(self.dtype), -4.0, 4.0))
         
-        # 4. Landauer Energy (Metabolism)
+        # 4. Landauer Energy (Metabolism with Prediction Cost - Rule 21)
         n_syn_active = self.syn_active.sum(dim=-1).to(self.dtype)
         flops_cost = n_syn_active * self.E_flop
         traffic_cost = (n_syn_active * 2.0 + self.max_neurons * 2.0) * self.E_traffic
         base_cost = self.metabolic_rate + self.E_base
         emit_cost = (actions == 4).to(self.dtype) * 0.015
         
-        total_metabolic_cost = (base_cost + flops_cost + traffic_cost + emit_cost) * self.alive_mask.to(self.dtype)
+        total_metabolic_cost = (base_cost + flops_cost + traffic_cost + emit_cost + pred_cost) * self.alive_mask.to(self.dtype)
         intake = harvested_resources.to(self.dtype) * self.alive_mask.to(self.dtype)
         
         self.energy.copy_(self.energy + intake - total_metabolic_cost)
