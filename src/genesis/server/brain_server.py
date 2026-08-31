@@ -935,10 +935,15 @@ class GenesisEngineRunner:
                     try:
                         self.latest_diagnostic_audit = self.probe_harness.run_full_diagnostic_audit()
                         dmts = self.latest_diagnostic_audit.get("dmts_benchmark", {})
+                        parity = self.latest_diagnostic_audit.get("bit_parity_benchmark", {})
+                        arith = self.latest_diagnostic_audit.get("compositional_arithmetic_benchmark", {})
                         maze = self.latest_diagnostic_audit.get("spatial_maze_benchmark", {})
+                        
                         print(f"🧠 [SHADOW CLONE 5-TASK AUDIT | Tick {self.tick_count:7d}]", flush=True)
-                        print(f"   ├─ DMTS (Working Memory): Normal={dmts.get('mean_normal',0):.3f} | Ablation={dmts.get('mean_ablation',0):.3f} | Δ={dmts.get('delta',0):+.3f} (z={dmts.get('z_score',0):+.2f}) ➔ {dmts.get('verdict')}", flush=True)
-                        print(f"   └─ Spatial Maze Nav     : Normal={maze.get('mean_normal',0):.3f} | Ablation={maze.get('mean_ablation',0):.3f} | Δ={maze.get('delta',0):+.3f} (z={maze.get('z_score',0):+.2f}) ➔ {maze.get('verdict')}", flush=True)
+                        print(f"   ├─ DMTS (Working Memory) : Normal={dmts.get('mean_normal',0):.3f} | Ablation={dmts.get('mean_ablation',0):.3f} | Δ={dmts.get('delta',0):+.3f} (z={dmts.get('z_score',0):+.2f}) ➔ {dmts.get('verdict')}", flush=True)
+                        print(f"   ├─ Bit Parity (Task 2)   : Normal={parity.get('mean_normal',0):.3f} | Ablation={parity.get('mean_ablation',0):.3f} | Δ={parity.get('delta',0):+.3f} (z={parity.get('z_score',0):+.2f}) ➔ {parity.get('verdict')}", flush=True)
+                        print(f"   ├─ Compositional (Task 3): Normal={arith.get('mean_normal',0):.3f} | Ablation={arith.get('mean_ablation',0):.3f} | Δ={arith.get('delta',0):+.3f} (z={arith.get('z_score',0):+.2f}) ➔ {arith.get('verdict')}", flush=True)
+                        print(f"   └─ Spatial Maze Nav      : Normal={maze.get('mean_normal',0):.3f} | Ablation={maze.get('mean_ablation',0):.3f} | Δ={maze.get('delta',0):+.3f} (z={maze.get('z_score',0):+.2f}) ➔ {maze.get('verdict')}", flush=True)
                     except Exception as e:
                         print(f"⚠️ [PROBE AUDIT ERROR]: {e}", flush=True)
                     

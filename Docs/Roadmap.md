@@ -1139,13 +1139,33 @@ See Docs/Result.md Experiment 87 and src/exp87_metabolic_ceiling_evolution.py.
 
 ---
 
-## Substrate 20: Counterfactual World Modeling, Latent ToM & Emergent Symbolic Communication (2026-08-27)
+## Substrate 22 / Phase-E Ascent: Milestone 1,000,000 Ticks & Phase 2 Roadmap (2026-08-30)
 
-- ✅ **Mathematical Formulation by GLM 5.3:** Established endogenous 4th PLL Gate ($\text{gate}_{\text{imagine}}(\phi) = \frac{1}{2}(1 - \cos\phi) \cdot \sigma((E_t - E_{\text{crit}})/E_{\text{crit}})$) treating imagination/dreaming as an energy-gated metabolic luxury without hardcoded rules.
-- ✅ **Counterfactual Imagination Engine with Self-Attention Merging:** Latent rollouts across $B=4$ hypothetical branches and $H=8$ horizon steps, with differentiable cosine self-attention merging ($\mathbf{A}_\tau = \text{softmax}((\mathbf{S}_\tau - \tau)/\kappa)$) preventing combinatorial branch explosion (Rule 25).
-- ✅ **Latent Theory of Mind (ToM) / Inverse Peer Modeling:** 73D spatio-temporal peer observation encoder ($P=4$ peers) inferring hidden peer states ($\hat{\mathbf{z}}^{(p)}_t \in \mathbb{R}^{32}$), peer goals ($\hat{\mathbf{g}}^{(p)}_t \in \mathbb{R}^{32}$), and predicting discrete peer actions ($\hat{\mathbf{a}}^{(p)}_{t+1} \in \mathbb{R}^4$) trained via 3-factor STDP3C eligibility traces.
-- ✅ **Emergent Symbolic Protocol & Grounded Semiogenesis:** Soft 64-symbol continuous emission and reception with predictive Hebbian grounding matrix $\mathbf{G} \in \mathbb{R}^{64 \times 32}$ and Contrastive Predictive Coding (CPC) loss grounding symbol distributions to causal future states without an oracle or predefined dictionary (Rules 9 & 26).
-- ✅ **Physical Grounding & Hardware Invariants (Rules 21 & 23):** Measured FLOPs and memory traffic accounting deducted per step from metabolic energy; pure `torch.float16` pre-allocated zero-allocation buffers.
-- ✅ **Zero-Flaw Verification Suite:** 6 dedicated Substrate 20 unit tests, 17 total regression tests passing with 100% success (`17/17 PASSED` in 35.60s), 100-tick headless simulation passed (`Energy: 66.0`), and live telemetry card integrated in `public/embodied_deck.html`.
+- ✅ **Milestone 1,000,000 Ticks Completed (Phase 1 Ascent):** Unbroken continuous GPU ALife evolution across 4,096 organisms and 32 worlds, reaching tick 1,000,000+.
+- ✅ **Rule 18 Criterion B Confirmed (Learning Load-Bearing):**
+  - **DMTS Working Memory (Task 1):** Reached verified $z = +3.69\sigma$ ($\Delta = +0.091$, normal $22.5\%$ vs ablated $13.4\%$).
+  - **Spatial Maze Navigation (Task 4):** Reached verified $z = +2.15\sigma$ ($\Delta = +0.009$, normal $18.1\%$ vs ablated $17.2\%$).
+- ✅ **GLM 5.3 HPC Zero-Allocation & Decoupled LLM Sensing (5x Speedup):**
+  - Full pre-allocated in-place work buffers (`register_buffer`) ensuring $0.0000$ MB VRAM drift.
+  - Multi-rate Gaussian ecology reconstruction ($\Delta t_{\text{macro}} = 4$) and vectorized 8-neighbor sensory indexing.
+  - Dedicated asynchronous CUDA Stream for Qwen2-0.5B query inference ($91,000+$ queries processed).
+  - Throughput stabilized at ~60–80 TPS ($12.5\text{s}$ to $16.7\text{s}$ per 1,000 ticks).
+
+---
+
+## Phase 2 Cognitive Curriculum: Ticks 1,000,000 to 2,500,000 (GLM 5.3 Formulation)
+
+- 🚀 **Task 2: Temporal Delayed Bit Parity Probe:**
+  - Measures multi-step working memory integration via delayed binary XOR sequences: $y_{\text{target}}(t) = \bigoplus_{i=0}^{N-1} b(t - i \cdot \Delta t) \pmod 2$.
+  - Parameters: $N_{\text{bits}} = 4$, $\Delta t = 5$ ticks, sensory injection on Channel 16.
+  - Falsification Threshold: Accuracy $\ge 62.5\%$ (chance $50.0\%$), $z \ge +2.0\sigma$ vs STDP ablation.
+- 🚀 **Task 3: Compositional Arithmetic Probe:**
+  - Multi-sensor binding and mathematical composition: $y_{\text{target}} = f_{\text{op}}(s_1, s_2) \pmod 8$, where $\text{op} \in \{+, -, \times\}$.
+  - Parameters: Operand A on Channel 17 (10 ticks), Operand B on Channel 18 (10 ticks), Opcode on Channel 19 (5 ticks), 3-bit response decoding (15 ticks).
+  - Falsification Threshold: Accuracy $\ge 45.0\%$ (chance $12.5\%$), $z \ge +2.5\sigma$ vs STDP ablation.
+- 🚀 **Zero-Energy Sensory Coupler (Rule 21 Compliance):**
+  - Diagnostic stimuli inject exclusively as sensory voltage inputs without gifting artificial energy.
+  - Landauer FLOP energy deduction applied to organisms processing diagnostic signals.
+
 
 

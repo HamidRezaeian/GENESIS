@@ -189,6 +189,138 @@ class ShadowCloneProbeHarness:
         return scores / float(n_mazes)
 
     @torch.no_grad()
+    def probe_bit_parity(
+        self,
+        clone_pop: BatchedPopulation,
+        n_bits: int = 4,
+        bit_interval: int = 5,
+        response_window: int = 10,
+        n_trials: int = 16
+    ) -> torch.Tensor:
+        """
+        Task 2: Temporal Bit Parity Cognitive Probe (GLM 5.3 Layer 1):
+        Measures multi-step working memory integration by computing delayed XOR of binary bit sequences.
+        Formula: y_target = (b_0 ⊕ b_1 ⊕ ... ⊕ b_{N-1}) mod 2
+        Returns: [probe_size] tensor of exact match accuracy scores.
+        """
+        dummy_harvest = torch.zeros(1, self.probe_size, dtype=torch.float32, device=self.dev)
+        trial_scores = []
+        sensory = torch.zeros(1, self.probe_size, clone_pop.input_neurons, dtype=torch.float32, device=self.dev)
+        
+        for trial in range(n_trials):
+            # 1. Generate random bits [n_bits, probe_size]
+            bits = torch.randint(0, 2, (n_bits, self.probe_size), device=self.dev, dtype=torch.float32)
+            
+            # Compute target parity: XOR is sum modulo 2
+            expected_parity = torch.remainder(torch.sum(bits, dim=0), 2.0) # [probe_size]
+            
+            # 2. Present bits sequentially with bit_interval delay
+            for b_idx in range(n_bits):
+                bit_val = bits[b_idx] # [probe_size]
+                
+                # Bit pulse on sensory channel 16
+                sensory.zero_()
+                sensory[0, :, 16] = bit_val
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+                # Blank delay ticks
+                sensory.zero_()
+                for _ in range(bit_interval - 1):
+                    clone_pop.step_tick(sensory, dummy_harvest)
+                    
+            # 3. Intermediate delay before response window
+            for _ in range(5):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+            # 4. Response window: Observe motor/emit output
+            response_acc = torch.zeros(self.probe_size, device=self.dev)
+            for _ in range(response_window):
+                actions, _ = clone_pop.step_tick(sensory, dummy_harvest)
+                # Output activation on emit channel (action 4) or state voltage
+                emit_active = (actions[0] == 4).float()
+                state_sig = torch.sigmoid(clone_pop.states[0, :, -4])
+                response_acc += (emit_active * 0.5 + state_sig * 0.5)
+                
+            mean_response = response_acc / float(response_window)
+            predicted_parity = (mean_response > 0.5).float()
+            
+            # Match accuracy score: 1.0 if correct parity, 0.0 otherwise
+            match = (predicted_parity == expected_parity).float()
+            trial_scores.append(match)
+            
+        return torch.stack(trial_scores).mean(dim=0) # [probe_size]
+
+    @torch.no_grad()
+    def probe_compositional_arithmetic(
+        self,
+        clone_pop: BatchedPopulation,
+        value_range: int = 8,
+        n_trials: int = 16
+    ) -> torch.Tensor:
+        """
+        Task 3: Compositional Arithmetic Cognitive Probe (GLM 5.3 Layer 2):
+        Measures multi-sensor binding and mathematical composition across channels.
+        Formula: y_target = f_op(s_1, s_2) mod 8, where op in {add, sub, mul}
+        Returns: [probe_size] tensor of exact match + partial credit scores.
+        """
+        dummy_harvest = torch.zeros(1, self.probe_size, dtype=torch.float32, device=self.dev)
+        trial_scores = []
+        sensory = torch.zeros(1, self.probe_size, clone_pop.input_neurons, dtype=torch.float32, device=self.dev)
+        
+        for trial in range(n_trials):
+            # Operands a, b in {0..7}
+            op_a = torch.randint(0, value_range, (self.probe_size,), device=self.dev, dtype=torch.float32)
+            op_b = torch.randint(0, value_range, (self.probe_size,), device=self.dev, dtype=torch.float32)
+            op_type = torch.randint(0, 3, (self.probe_size,), device=self.dev) # 0: +, 1: -, 2: *
+            
+            # Target computation
+            res_add = torch.remainder(op_a + op_b, float(value_range))
+            res_sub = torch.remainder(op_a - op_b + float(value_range), float(value_range))
+            res_mul = torch.remainder(op_a * op_b, float(value_range))
+            
+            expected_res = torch.where(op_type == 0, res_add, torch.where(op_type == 1, res_sub, res_mul))
+            
+            # Phase 1: Operand A on Channel 17 (10 ticks)
+            sensory.zero_()
+            sensory[0, :, 17] = op_a / float(value_range)
+            for _ in range(10):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+            # Phase 2: Operand B on Channel 18 (10 ticks)
+            sensory.zero_()
+            sensory[0, :, 18] = op_b / float(value_range)
+            for _ in range(10):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+            # Phase 3: Operation Code on Channel 19 (5 ticks)
+            sensory.zero_()
+            sensory[0, :, 19] = (op_type.float() + 1.0) / 3.0
+            for _ in range(5):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+            # Phase 4: Response Window (15 ticks) - Decode 3-bit response
+            sensory.zero_()
+            res_acc = torch.zeros(self.probe_size, 3, device=self.dev)
+            for _ in range(15):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                # Read 3 most significant state neurons
+                bits_val = torch.sigmoid(clone_pop.states[0, :, -3:])
+                res_acc += bits_val
+                
+            mean_bits = (res_acc / 15.0 > 0.5).float() # [probe_size, 3]
+            predicted_val = mean_bits[:, 0] * 4.0 + mean_bits[:, 1] * 2.0 + mean_bits[:, 2] * 1.0
+            
+            # Exact match (70%) + Hamming proximity (30%)
+            exact = (predicted_val == expected_res).float()
+            val_diff = torch.abs(predicted_val - expected_res) / float(value_range)
+            proximity = torch.clamp(1.0 - val_diff, 0.0, 1.0)
+            
+            score = exact * 0.7 + proximity * 0.3
+            trial_scores.append(score)
+            
+        return torch.stack(trial_scores).mean(dim=0) # [probe_size]
+
+    @torch.no_grad()
     def run_ablation_control(
         self,
         clone_pop: BatchedPopulation,
@@ -237,22 +369,45 @@ class ShadowCloneProbeHarness:
     @torch.no_grad()
     def run_full_diagnostic_audit(self) -> Dict[str, Any]:
         """
-        Runs complete benchmark suite across DMTS and Spatial Navigation with Rule 18 ablation checks.
+        Runs complete benchmark suite across all 4 cognitive families:
+        1. DMTS (Delayed Match-to-Sample Working Memory)
+        2. Bit Parity (Temporal Delayed XOR Integration - Phase 2)
+        3. Compositional Arithmetic (Multi-Sensor Binding - Phase 2)
+        4. Spatial Maze Navigation
         """
-        # 1. Clone fresh sample for DMTS
+        # 1. DMTS Probe (Task 1)
         clone_pop_dmts = self.clone_sample_organisms()
         dmts_normal = self.probe_dmts(clone_pop_dmts)
         dmts_ablation = self.run_ablation_control(clone_pop_dmts, self.probe_dmts)
-        dmts_sig = self.evaluate_learning_significance(dmts_normal, dmts_ablation)
+        dmts_sig = self.evaluate_learning_significance(dmts_normal, dmts_ablation, z_threshold=2.0)
 
-        # 2. Clone fresh sample for Spatial Maze
+        # 2. Bit Parity Probe (Task 2 - Phase 2)
+        clone_pop_parity = self.clone_sample_organisms()
+        parity_normal = self.probe_bit_parity(clone_pop_parity)
+        parity_ablation = self.run_ablation_control(clone_pop_parity, self.probe_bit_parity)
+        parity_sig = self.evaluate_learning_significance(parity_normal, parity_ablation, z_threshold=2.0)
+
+        # 3. Compositional Arithmetic Probe (Task 3 - Phase 2)
+        clone_pop_arith = self.clone_sample_organisms()
+        arith_normal = self.probe_compositional_arithmetic(clone_pop_arith)
+        arith_ablation = self.run_ablation_control(clone_pop_arith, self.probe_compositional_arithmetic)
+        arith_sig = self.evaluate_learning_significance(arith_normal, arith_ablation, z_threshold=2.5)
+
+        # 4. Spatial Maze Probe (Task 4)
         clone_pop_maze = self.clone_sample_organisms()
         maze_normal = self.probe_spatial_maze(clone_pop_maze)
         maze_ablation = self.run_ablation_control(clone_pop_maze, self.probe_spatial_maze)
-        maze_sig = self.evaluate_learning_significance(maze_normal, maze_ablation)
+        maze_sig = self.evaluate_learning_significance(maze_normal, maze_ablation, z_threshold=2.0)
 
         return {
             "dmts_benchmark": dmts_sig,
+            "bit_parity_benchmark": parity_sig,
+            "compositional_arithmetic_benchmark": arith_sig,
             "spatial_maze_benchmark": maze_sig,
-            "rule18_passed": bool(dmts_sig["is_significant"] or maze_sig["is_significant"])
+            "rule18_passed": bool(
+                dmts_sig["is_significant"] or 
+                parity_sig["is_significant"] or 
+                arith_sig["is_significant"] or 
+                maze_sig["is_significant"]
+            )
         }
