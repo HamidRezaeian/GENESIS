@@ -838,6 +838,10 @@ class GenesisEngineRunner:
         self.last_phase_e_telem = {}
         self.probe_harness = ShadowCloneProbeHarness(self.phase_e_pop, probe_size=64)
         self.latest_diagnostic_audit = {}
+        
+        from genesis.server.phase_e_cert import LongitudinalTelemetryLogger, ReplicationCertificateGenerator
+        self.telemetry_logger = LongitudinalTelemetryLogger()
+        self.cert_generator = ReplicationCertificateGenerator(self.telemetry_logger)
 
         # Load existing brain if available
         ckpt_path = BRAIN_DIR / "canonical_brain.npz"
@@ -859,7 +863,7 @@ class GenesisEngineRunner:
                 
                 self.phase_e_pop.load_state_dict(state['pop_state'], strict=False)
                 self.phase_e_pop.genomes = state['pop_genomes']
-                self.phase_e_pop.total_births = state['pop_births']
+                self.phase_e_pop.total_births = state.get('pop_births', 0)
                 self.phase_e_pop.total_deaths = state.get('pop_deaths', 0)
                 
                 self.phase_e_eco.resources.copy_(state['eco_resources'])
@@ -869,6 +873,8 @@ class GenesisEngineRunner:
                 self.tick_count = state['tick_count']
                 self.phase_e_eco.tick_count = state['tick_count']
                 self.episode_seed = state.get('episode_seed', 0)
+                if hasattr(self.phase_e_plus, 'query_count'):
+                    self.phase_e_plus.query_count = state.get('llm_query_count', self.phase_e_plus.query_count)
                 
                 print(f"[GENESIS CORE] Successfully loaded Phase-E ALife state from tick {self.tick_count}")
             except Exception as e:
@@ -912,7 +918,8 @@ class GenesisEngineRunner:
                         'eco_stigmergy': self.phase_e_eco.stigmergy,
                         'eco_locked': self.phase_e_eco.locked_resources,
                         'tick_count': self.tick_count,
-                        'episode_seed': self.episode_seed
+                        'episode_seed': self.episode_seed,
+                        'llm_query_count': getattr(self.phase_e_plus, 'query_count', 0)
                     }
                     with open(BRAIN_DIR / "phase_e_state.pt", "wb") as f:
                         torch.save(phase_e_state, f, pickle_module=pickle)
@@ -940,6 +947,16 @@ class GenesisEngineRunner:
                         maze = self.latest_diagnostic_audit.get("spatial_maze_benchmark", {})
                         causal = self.latest_diagnostic_audit.get("causal_intervention_benchmark", {})
                         
+                        # Persist to longitudinal append-only JSONL ledger (Survives restarts)
+                        self.telemetry_logger.log(self.tick_count, self.latest_diagnostic_audit, self.phase_e_pop)
+                        
+                        # Check 5M Milestone Level-1 Replication Certification
+                        self.cert_generator.maybe_generate(
+                            self.tick_count,
+                            self.phase_e_pop,
+                            getattr(self.phase_e_plus, 'query_count', 0)
+                        )
+                        
                         print(f"🧠 [SHADOW CLONE 5-TASK AUDIT | Tick {self.tick_count:7d}]", flush=True)
                         print(f"   ├─ DMTS (Working Memory) : Normal={dmts.get('mean_normal',0):.3f} | Ablation={dmts.get('mean_ablation',0):.3f} | Δ={dmts.get('delta',0):+.3f} (z={dmts.get('z_score',0):+.2f}) ➔ {dmts.get('verdict')}", flush=True)
                         print(f"   ├─ Bit Parity (Task 2)   : Normal={parity.get('mean_normal',0):.3f} | Ablation={parity.get('mean_ablation',0):.3f} | Δ={parity.get('delta',0):+.3f} (z={parity.get('z_score',0):+.2f}) ➔ {parity.get('verdict')}", flush=True)
@@ -948,11 +965,8 @@ class GenesisEngineRunner:
                         print(f"   └─ Causal Reasoning (T5) : Normal={causal.get('mean_normal',0):.3f} | Ablation={causal.get('mean_ablation',0):.3f} | Δ={causal.get('delta',0):+.3f} (z={causal.get('z_score',0):+.2f}) ➔ {causal.get('verdict')}", flush=True)
                     except Exception as e:
                         print(f"⚠️ [PROBE AUDIT ERROR]: {e}", flush=True)
-                    
-        if is_headless:
-            return {}
-
-        # Telemetry only on World 0 (Only when UI is connected)
+                        
+        # Continuous Emergence Tracking (Runs Headless and UI alike)
         p_metric_telem = self.phase_e_metrics.observe_step(
             self.phase_e_pop.positions[0],
             self.phase_e_pop.actions[0],
@@ -960,6 +974,9 @@ class GenesisEngineRunner:
             self.phase_e_pop.alive_mask[0]
         )
         self.last_phase_e_telem = {**p_pop_telem, **p_metric_telem}
+                    
+        if is_headless:
+            return {}
 
         # Light 1-step RL observation for UI (throttled to UI frame rate)
         obs = self.env.get_visual_observation()
