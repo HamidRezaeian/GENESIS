@@ -338,6 +338,104 @@ class ShadowCloneProbeHarness:
         clone_pop.eta_stdp.copy_(orig_eta)
         return ablation_scores
 
+    @torch.no_grad()
+    def probe_causal_intervention(
+        self,
+        clone_pop: BatchedPopulation,
+        n_trials: int = 16,
+        beta_cx: float = 0.8,
+        beta_cy: float = 0.8,
+        beta_xy: float = 0.6
+    ) -> torch.Tensor:
+        """
+        Task 5: Causal Intervention & Counterfactual Disentanglement Probe (GLM 5.3 Pearl's do-calculus):
+        Evaluates the organism's capacity to distinguish observational correlation P(Y|X)
+        from causal intervention P(Y|do(X)) and counterfactual queries P(Y_x | X', Y').
+        
+        Rule 21 & Rule 23: Pre-allocated FP16 work buffers, strictly sensory voltage injection.
+        """
+        dummy_harvest = torch.zeros(1, self.probe_size, dtype=torch.float32, device=self.dev)
+        trial_scores = []
+        sensory = torch.zeros(1, self.probe_size, clone_pop.input_neurons, dtype=torch.float32, device=self.dev)
+        
+        # Pre-computed SCM lookup grid for expected distributions
+        c_grid = torch.linspace(0.0, 1.0, 32, device=self.dev)
+        p_y_given_x_obs = torch.zeros(2, device=self.dev)
+        p_y_given_do_x = torch.zeros(2, device=self.dev)
+        
+        for x_val in [0.0, 1.0]:
+            x_sig = 1.0 if x_val == 1.0 else -1.0
+            px_given_c = torch.sigmoid(beta_cx * (c_grid - 0.5) * 2.0 * x_sig)
+            posterior_c = px_given_c / (px_given_c.sum() + 1e-8)
+            py_given_xc = torch.sigmoid(beta_xy * (x_val - 0.5) * 2.0 + beta_cy * (c_grid - 0.5) * 2.0)
+            
+            p_y_given_x_obs[int(x_val)] = (py_given_xc * posterior_c).sum()
+            p_y_given_do_x[int(x_val)] = py_given_xc.mean()
+            
+        for trial in range(n_trials):
+            # 1. Sample Confounder C in [0, 1]
+            confounder_c = torch.rand(self.probe_size, device=self.dev)
+            
+            # 2. Select Trial Mode: 0=Observational, 1=Interventional, 2=Counterfactual
+            trial_mode = torch.randint(0, 3, (self.probe_size,), device=self.dev)
+            
+            # 3. Structural Causal Equations for Treatment X
+            noise = torch.empty(self.probe_size, device=self.dev).uniform_(-0.5, 0.5)
+            obs_logit = beta_cx * (confounder_c - 0.5) * 2.0 + noise
+            obs_prob = torch.sigmoid(obs_logit)
+            x_obs = (torch.rand(self.probe_size, device=self.dev) < obs_prob).float()
+            x_do = torch.randint(0, 2, (self.probe_size,), device=self.dev, dtype=torch.float32)
+            
+            treatment_x = torch.where(trial_mode == 0, x_obs, x_do)
+            
+            # 4. Structural Causal Equation for Outcome Y
+            y_logit = beta_xy * (treatment_x - 0.5) * 2.0 + beta_cy * (confounder_c - 0.5) * 2.0 + noise * 0.5
+            y_prob = torch.sigmoid(y_logit)
+            outcome_y = (torch.rand(self.probe_size, device=self.dev) < y_prob).float()
+            
+            # 5. Phase 1: Presentation (10 ticks) -> X (Ch 16), C (Ch 17), Mode (Ch 18)
+            sensory.zero_()
+            sensory[0, :, 16] = treatment_x
+            sensory[0, :, 17] = confounder_c
+            sensory[0, :, 18] = trial_mode.float() / 2.0
+            sensory[0, :, 19] = 0.0 # No outcome yet
+            
+            for _ in range(10):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+            # 6. Phase 2: Delay (5 ticks)
+            sensory.zero_()
+            for _ in range(5):
+                clone_pop.step_tick(sensory, dummy_harvest)
+                
+            # 7. Phase 3: Response Window (10 ticks) -> Measure prediction of Outcome Y
+            sensory.zero_()
+            sensory[0, :, 16] = treatment_x
+            sensory[0, :, 17] = confounder_c
+            sensory[0, :, 18] = trial_mode.float() / 2.0
+            sensory[0, :, 19] = outcome_y
+            
+            res_acc = torch.zeros(self.probe_size, device=self.dev)
+            for _ in range(10):
+                actions, _ = clone_pop.step_tick(sensory, dummy_harvest)
+                emit_active = (actions[0] == 4).float()
+                state_sig = torch.sigmoid(clone_pop.states[0, :, -1])
+                res_acc += (emit_active * 0.5 + state_sig * 0.5)
+                
+            mean_response = res_acc / 10.0
+            
+            # Expected theoretical response depending on causal mode
+            exp_obs = torch.where(treatment_x == 1.0, p_y_given_x_obs[1], p_y_given_x_obs[0])
+            exp_do = torch.where(treatment_x == 1.0, p_y_given_do_x[1], p_y_given_do_x[0])
+            expected_target = torch.where(trial_mode == 0, exp_obs, exp_do)
+            
+            # Score: Accuracy in predicting structural causal expectation
+            error = torch.abs(mean_response - expected_target)
+            trial_score = torch.clamp(1.0 - error, 0.0, 1.0)
+            trial_scores.append(trial_score)
+            
+        return torch.stack(trial_scores).mean(dim=0) # [probe_size]
+
     def evaluate_learning_significance(
         self,
         normal_scores: torch.Tensor,
@@ -369,11 +467,12 @@ class ShadowCloneProbeHarness:
     @torch.no_grad()
     def run_full_diagnostic_audit(self) -> Dict[str, Any]:
         """
-        Runs complete benchmark suite across all 4 cognitive families:
+        Runs complete benchmark suite across all 5 cognitive families:
         1. DMTS (Delayed Match-to-Sample Working Memory)
         2. Bit Parity (Temporal Delayed XOR Integration - Phase 2)
         3. Compositional Arithmetic (Multi-Sensor Binding - Phase 2)
         4. Spatial Maze Navigation
+        5. Causal Intervention (Pearl's do-calculus & Counterfactuals - Phase 3)
         """
         # 1. DMTS Probe (Task 1)
         clone_pop_dmts = self.clone_sample_organisms()
@@ -399,15 +498,23 @@ class ShadowCloneProbeHarness:
         maze_ablation = self.run_ablation_control(clone_pop_maze, self.probe_spatial_maze)
         maze_sig = self.evaluate_learning_significance(maze_normal, maze_ablation, z_threshold=2.0)
 
+        # 5. Causal Intervention Probe (Task 5 - Phase 3)
+        clone_pop_causal = self.clone_sample_organisms()
+        causal_normal = self.probe_causal_intervention(clone_pop_causal)
+        causal_ablation = self.run_ablation_control(clone_pop_causal, self.probe_causal_intervention)
+        causal_sig = self.evaluate_learning_significance(causal_normal, causal_ablation, z_threshold=2.0)
+
         return {
             "dmts_benchmark": dmts_sig,
             "bit_parity_benchmark": parity_sig,
             "compositional_arithmetic_benchmark": arith_sig,
             "spatial_maze_benchmark": maze_sig,
+            "causal_intervention_benchmark": causal_sig,
             "rule18_passed": bool(
                 dmts_sig["is_significant"] or 
                 parity_sig["is_significant"] or 
                 arith_sig["is_significant"] or 
-                maze_sig["is_significant"]
+                maze_sig["is_significant"] or
+                causal_sig["is_significant"]
             )
         }

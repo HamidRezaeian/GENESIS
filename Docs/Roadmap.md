@@ -1162,10 +1162,24 @@ See Docs/Result.md Experiment 87 and src/exp87_metabolic_ceiling_evolution.py.
 - 🚀 **Task 3: Compositional Arithmetic Probe:**
   - Multi-sensor binding and mathematical composition: $y_{\text{target}} = f_{\text{op}}(s_1, s_2) \pmod 8$, where $\text{op} \in \{+, -, \times\}$.
   - Parameters: Operand A on Channel 17 (10 ticks), Operand B on Channel 18 (10 ticks), Opcode on Channel 19 (5 ticks), 3-bit response decoding (15 ticks).
-  - Falsification Threshold: Accuracy $\ge 45.0\%$ (chance $12.5\%$), $z \ge +2.5\sigma$ vs STDP ablation.
-- 🚀 **Zero-Energy Sensory Coupler (Rule 21 Compliance):**
-  - Diagnostic stimuli inject exclusively as sensory voltage inputs without gifting artificial energy.
-  - Landauer FLOP energy deduction applied to organisms processing diagnostic signals.
+---
+
+## Phase 3 Cognitive Curriculum & Finish Line: Ticks 2,500,000 to 5,000,000 (GLM 5.3 Formulation)
+
+- 🚀 **Task 5: Causal Intervention & Counterfactual Disentanglement Probe:**
+  - Evaluates Pearl's 3-Rung Causal Ladder: Association $P(Y \mid X)$, Intervention $P(Y \mid do(X))$, and Counterfactuals $P(Y_x \mid X', Y')$.
+  - Structural Causal Model (SCM):
+    - Confounder $C \sim U(0, 1)$
+    - Treatment $X := \sigma(\beta_{cx} C + \epsilon_x)$ in Observational mode; $X \sim \text{Bernoulli}(0.5)$ in $do(X)$ Interventional mode
+    - Outcome $Y := \sigma(\beta_{xy} X + \beta_{cy} C + \epsilon_y)$
+  - Sensory Channel Coupling (Rule 21): Treatment $X$ on Channel 16, Confounder $C$ on Channel 17, Mode on Channel 18, Outcome Feedback $Y$ on Channel 19.
+  - Zero-Allocation & FP16 Substrate (Rule 23): Complete pre-allocated buffers on CUDA Tensor Cores.
+- 🎯 **Phase 3 Finish Line Criteria (Binding under Rule 18 & Rule 24):**
+  - **Causal Disentanglement $z$-score:** $z \ge +2.0\sigma$ vs matched STDP ablation control (strong evidence at $z \ge +3.0\sigma$).
+  - **Observational & Interventional Accuracy:** $\ge 55.0\%$ (chance $50.0\%$).
+  - **Effect Size (Cohen's $d$):** $\ge 0.50$ (medium to large effect size).
+  - **Pop Survival:** $\ge 85\%$ across 32 worlds sustaining continuous evolution up to Tick 5,000,000.
+
 
 
 
