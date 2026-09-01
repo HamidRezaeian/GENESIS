@@ -947,8 +947,13 @@ class GenesisEngineRunner:
                         maze = self.latest_diagnostic_audit.get("spatial_maze_benchmark", {})
                         causal = self.latest_diagnostic_audit.get("causal_intervention_benchmark", {})
                         
-                        # Persist to longitudinal append-only JSONL ledger (Survives restarts)
-                        self.telemetry_logger.log(self.tick_count, self.latest_diagnostic_audit, self.phase_e_pop)
+                        # Persist to longitudinal append-only JSONL ledger (Survives restarts & records Criterion A)
+                        self.telemetry_logger.log(
+                            self.tick_count, 
+                            self.latest_diagnostic_audit, 
+                            self.phase_e_pop,
+                            emergence_metrics=self.last_phase_e_telem
+                        )
                         
                         # Check 5M Milestone Level-1 Replication Certification
                         self.cert_generator.maybe_generate(
@@ -966,13 +971,16 @@ class GenesisEngineRunner:
                     except Exception as e:
                         print(f"⚠️ [PROBE AUDIT ERROR]: {e}", flush=True)
                         
-        # Continuous Emergence Tracking (Runs Headless and UI alike)
+        # Continuous Emergence Tracking (Headless and UI alike).
+        # v3: sample ALL 32 worlds flattened — world-0-only sampling was measuring
+        # a dying world (1-7 alive), zeroing behavioral diversity and emergence_index.
         p_metric_telem = self.phase_e_metrics.observe_step(
-            self.phase_e_pop.positions[0],
-            self.phase_e_pop.actions[0],
-            self.phase_e_pop.states[0],
-            self.phase_e_pop.alive_mask[0]
+            self.phase_e_pop.positions.reshape(-1, 2),
+            self.phase_e_pop.actions.reshape(-1),
+            self.phase_e_pop.states.reshape(-1, self.phase_e_pop.max_neurons),
+            self.phase_e_pop.alive_mask.reshape(-1)
         )
+        p_metric_telem["population_total_alive"] = int(self.phase_e_pop.alive_mask.sum().item())
         self.last_phase_e_telem = {**p_pop_telem, **p_metric_telem}
                     
         if is_headless:

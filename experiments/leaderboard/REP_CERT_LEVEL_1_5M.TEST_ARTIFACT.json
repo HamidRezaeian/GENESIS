@@ -1,0 +1,131 @@
+{
+  "certificate_version": "1.0.0",
+  "standard": "GENESIS_FRAMEWORK_SPEC_RULE24_LEVEL1",
+  "milestone": "5M_TICK_DEEP_TIME_ASCENT",
+  "tick": 5000000,
+  "timestamp_utc": "2026-08-31T15:22:51Z",
+  "canonical_brain_sha256": "0dcf568e7b1990d7fa83ace1556aa0b0ae90ffdf31de193c1aa469af0f6e5fa3",
+  "total_llm_queries_processed": 62500,
+  "statistical_replication": {
+    "n_seeds": 10,
+    "seeds": [
+      {
+        "seed": 1201,
+        "dmts_delta": 0.01171875,
+        "dmts_z": 0.4487994468418073,
+        "bit_parity_delta": 0.0244140625,
+        "compositional_delta": 0.01011962816119194,
+        "spatial_maze_delta": 0.014894958585500717,
+        "causal_delta": 0.0007194867357611656,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1202,
+        "dmts_delta": 0.0009765625,
+        "dmts_z": 0.038019966486840605,
+        "bit_parity_delta": -0.0439453125,
+        "compositional_delta": 0.01625976711511612,
+        "spatial_maze_delta": 0.006521962117403746,
+        "causal_delta": 0.004589976742863655,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1203,
+        "dmts_delta": -0.0029296875,
+        "dmts_z": -0.1163128063042407,
+        "bit_parity_delta": -0.005859375,
+        "compositional_delta": 0.03425293415784836,
+        "spatial_maze_delta": 0.008794313296675682,
+        "causal_delta": -0.0025806883350014687,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1204,
+        "dmts_delta": 0.0,
+        "dmts_z": 0.0,
+        "bit_parity_delta": 0.0224609375,
+        "compositional_delta": 0.00913085788488388,
+        "spatial_maze_delta": 0.00894647091627121,
+        "causal_delta": 0.014959669671952724,
+        "rule18_passed": true
+      },
+      {
+        "seed": 1205,
+        "dmts_delta": -0.0009765625,
+        "dmts_z": -0.040881647766951655,
+        "bit_parity_delta": 0.0146484375,
+        "compositional_delta": -0.011645507998764515,
+        "spatial_maze_delta": 0.00650032889097929,
+        "causal_delta": 0.006456414237618446,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1206,
+        "dmts_delta": 0.005859375,
+        "dmts_z": 0.2516840929900319,
+        "bit_parity_delta": 0.02734375,
+        "compositional_delta": 0.01816406287252903,
+        "spatial_maze_delta": 0.014800635166466236,
+        "causal_delta": -0.00568112637847662,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1207,
+        "dmts_delta": 0.0205078125,
+        "dmts_z": 0.8072848598893944,
+        "bit_parity_delta": 0.0439453125,
+        "compositional_delta": 0.009985359385609627,
+        "spatial_maze_delta": 0.013366414234042168,
+        "causal_delta": 0.012113486416637897,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1208,
+        "dmts_delta": -0.009765625,
+        "dmts_z": -0.3560631512792318,
+        "bit_parity_delta": 0.046875,
+        "compositional_delta": 0.0002807623241096735,
+        "spatial_maze_delta": 0.013971449807286263,
+        "causal_delta": -0.00696876086294651,
+        "rule18_passed": true
+      },
+      {
+        "seed": 1209,
+        "dmts_delta": 0.013671875,
+        "dmts_z": 0.5803028519389027,
+        "bit_parity_delta": 0.03515625,
+        "compositional_delta": 0.02290038950741291,
+        "spatial_maze_delta": 0.012899404391646385,
+        "causal_delta": 0.003313967026770115,
+        "rule18_passed": false
+      },
+      {
+        "seed": 1210,
+        "dmts_delta": 0.0107421875,
+        "dmts_z": 0.425103068090358,
+        "bit_parity_delta": 0.0185546875,
+        "compositional_delta": 0.012353518977761269,
+        "spatial_maze_delta": 0.01411508396267891,
+        "causal_delta": 0.0043020062148571014,
+        "rule18_passed": false
+      }
+    ],
+    "mean_delta": 0.00498046875,
+    "std_error": 0.002891277434347221,
+    "overall_z": 1.7225841736368914,
+    "all_positive": false,
+    "level1_certified": false
+  },
+  "task_families_evaluated": [
+    "Task 1: Delayed Match-to-Sample (DMTS Working Memory)",
+    "Task 2: Temporal Bit Parity (XOR Delayed Integration)",
+    "Task 3: Compositional Arithmetic (Multi-Sensor Binding)",
+    "Task 4: Spatial Maze Navigation (2D Grid)",
+    "Task 5: Causal Intervention (Pearl's do-calculus)"
+  ],
+  "claim_boundary": {
+    "statistical_replication_status": "REPLICATION_PENDING",
+    "broad_task_generalization": "NOT_ESTABLISHED",
+    "real_world_agi_claim": "NOT_SUPPORTED_ARTIFACT_FRAME"
+  }
+}

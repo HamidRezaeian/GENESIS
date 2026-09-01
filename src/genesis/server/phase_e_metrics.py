@@ -33,8 +33,9 @@ class PhaseEEmergenceTracker:
         self.emergence_indices: List[float] = []
         self.diversity_history: List[float] = []
         
-        # Latent state transition buffer for self-modeling
+        # Latent state transition buffer for self-modeling (v4: identity-aligned)
         self.prev_states: Optional[np.ndarray] = None
+        self.prev_alive: Optional[np.ndarray] = None
         self.W_pred = np.random.randn(16, 16).astype(np.float32) * 0.05
 
     def observe_step(
@@ -51,6 +52,8 @@ class PhaseEEmergenceTracker:
         pos_np = positions.cpu().numpy()[alive_np]
         act_np = actions.cpu().numpy()[alive_np]
         st_np = states.cpu().numpy()[alive_np]
+        # Full-population sensory (identity-aligned predictor input, v4):
+        st_full = states.cpu().numpy()  # [P, max_neurons] — alive mask applied inside predictor
         
         n_alive = len(pos_np)
         if n_alive == 0:
@@ -76,18 +79,29 @@ class PhaseEEmergenceTracker:
         if len(self.diversity_history) > self.history_len:
             self.diversity_history.pop(0)
 
-        # 3. Environmental Next-State Modeling Error
-        curr_sensory = st_np[:, :16]
+        # 3. Environmental Next-State Modeling Error (v4: identity-aligned)
+        # Predict ONLY organisms alive in BOTH the previous and current frames.
+        # The old shape-equality gate broke every frame under 32-world flattened
+        # sampling (alive-count changes constantly), silently freezing pred_err
+        # at its 0.5 default — a dead instrument.
+        curr_sensory_full = st_full[:, :16]
         pred_err = 0.5
-        if self.prev_states is not None and self.prev_states.shape[0] == curr_sensory.shape[0]:
-            predicted = np.tanh(np.dot(self.prev_states, self.W_pred))
-            err = np.mean((predicted - curr_sensory) ** 2)
-            pred_err = float(err)
-            # Local gradient for observer model W_pred
-            dW = np.dot(self.prev_states.T, (curr_sensory - predicted)) * 0.001
-            self.W_pred += np.clip(dW, -0.05, 0.05)
-            
-        self.prev_states = curr_sensory.copy()
+        if self.prev_states is not None:
+            both = self.prev_alive & alive_np
+            n_both = int(both.sum())
+            if n_both >= 1:
+                prev_s = self.prev_states[both]
+                curr_s = curr_sensory_full[both]
+                predicted = np.tanh(np.dot(prev_s, self.W_pred))
+                err = np.mean((predicted - curr_s) ** 2)
+                pred_err = float(err)
+                # Local gradient for observer model W_pred
+                dW = np.dot(prev_s.T, (curr_s - predicted)) * 0.001
+                self.W_pred += np.clip(dW, -0.05, 0.05)
+
+        # Store full-width, identity-aligned states (alive mask applied at next step)
+        self.prev_states = curr_sensory_full.copy()
+        self.prev_alive = alive_np.copy()
         self.pred_errors.append(pred_err)
         if len(self.pred_errors) > self.history_len:
             self.pred_errors.pop(0)

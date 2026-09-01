@@ -1,2 +1,5 @@
 {"tick": 3710000, "ts_utc": "2026-08-31T12:01:34Z", "weight_sha256": "cb53fa50ba353343", "data": {"status": "VERIFICATION_TEST", "dmts_z": 2.5}}
 {"tick": 3710000, "ts_utc": "2026-08-31T12:06:13Z", "weight_sha256": "cb53fa50ba353343", "data": {"status": "VERIFICATION_TEST", "dmts_z": 2.5}}
+{"tick": 3875000, "ts_utc": "2026-08-31T15:17:48Z", "weight_sha256": "cb53fa50ba353343", "data": {"status": "VERIFICATION_TEST", "dmts_z": 2.79, "parity_z": 3.5}}
+{"tick": 3875000, "ts_utc": "2026-08-31T16:19:04Z", "weight_sha256": "cb53fa50ba353343", "diagnostic_audit": {"status": "VERIFICATION_TEST", "dmts_z": 2.79, "parity_z": 3.5}, "criterion_a_emergence": {}}
+{"tick": 3875000, "ts_utc": "2026-08-31T16:19:45Z", "weight_sha256": "cb53fa50ba353343", "diagnostic_audit": {"status": "VERIFICATION_TEST", "dmts_z": 2.79, "parity_z": 3.5}, "criterion_a_emergence": {}}

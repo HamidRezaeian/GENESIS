@@ -128,9 +128,22 @@ class ShadowCloneProbeHarness:
             clone_pop.step_tick(nonmatch_stim, dummy_harvest)
             nonmatch_actions = clone_pop.actions[0].clone()
             
-            # Score: Organism exhibits differentiated motor response to match vs non-match
-            diff = (match_actions != nonmatch_actions).float()
-            diff_scores.append(diff)
+            # Phase 5: Second Non-match presentation (Rule 20 Shuffled NULL Control)
+            nonmatch_stim2 = torch.sigmoid(torch.randn(1, self.probe_size, clone_pop.input_neurons, device=self.dev))
+            clone_pop.step_tick(nonmatch_stim2, dummy_harvest)
+            nonmatch_actions2 = clone_pop.actions[0].clone()
+            
+            # Match vs Non-match differentiation
+            diff_match = (match_actions != nonmatch_actions).float()
+            # Random stimulus sensitivity baseline (NULL control)
+            diff_null = (nonmatch_actions != nonmatch_actions2).float()
+            
+            # Rule 20 NULL Control (full subtraction, Rule 17: no designer coefficient):
+            # memory_score > 0 = genuine memory above raw stimulus sensitivity;
+            # memory_score < 0 = stimulus sensitivity dominates (honest negative).
+            # Metric version 2 — change point from v1 (diff_match only) documented in ledger.
+            memory_score = diff_match - diff_null
+            diff_scores.append(memory_score)
             
         return torch.stack(diff_scores).mean(dim=0) # [probe_size]
 
@@ -179,12 +192,11 @@ class ShadowCloneProbeHarness:
                 clone_pop.orientations[0, turn_l] = (clone_pop.orientations[0, turn_l] - 1) % 4
                 clone_pop.orientations[0, turn_r] = (clone_pop.orientations[0, turn_r] + 1) % 4
                 
-                dirs = clone_pop.orientations[0, fwd] % 4
-                d_vecs = torch.tensor([[0.0, -0.05], [0.05, 0.0], [0.0, 0.05], [-0.05, 0.0]], device=self.dev)
-                clone_pop.positions[0, fwd] = torch.clamp(clone_pop.positions[0, fwd] + d_vecs[dirs], 0.02, 0.98)
-
-            maze_score = reached.float() * 0.6 + (1.0 - min_dist) * 0.4
-            scores += maze_score
+                heading = clone_pop.orientations[0].float() * (math.pi / 2.0)
+                clone_pop.positions[0, fwd, 0] = torch.clamp(clone_pop.positions[0, fwd, 0] + 0.05 * torch.cos(heading[fwd]), 0.0, 1.0)
+                clone_pop.positions[0, fwd, 1] = torch.clamp(clone_pop.positions[0, fwd, 1] + 0.05 * torch.sin(heading[fwd]), 0.0, 1.0)
+                
+            scores += (reached.float() * 0.7 + (1.0 - min_dist) * 0.3)
 
         return scores / float(n_mazes)
 
@@ -467,41 +479,57 @@ class ShadowCloneProbeHarness:
     @torch.no_grad()
     def run_full_diagnostic_audit(self) -> Dict[str, Any]:
         """
-        Runs complete benchmark suite across all 5 cognitive families:
-        1. DMTS (Delayed Match-to-Sample Working Memory)
-        2. Bit Parity (Temporal Delayed XOR Integration - Phase 2)
-        3. Compositional Arithmetic (Multi-Sensor Binding - Phase 2)
+        Runs complete benchmark suite across all 5 cognitive families with
+        COUNTERBALANCED, INDEPENDENT CLONES (zero sequential order artifact):
+        1. DMTS (Delayed Match-to-Sample Working Memory + NULL Control)
+        2. Bit Parity (Temporal Delayed XOR Integration)
+        3. Compositional Arithmetic (Multi-Sensor Binding)
         4. Spatial Maze Navigation
-        5. Causal Intervention (Pearl's do-calculus & Counterfactuals - Phase 3)
+        5. Causal Intervention (Pearl's do-calculus & Counterfactuals)
         """
-        # 1. DMTS Probe (Task 1)
-        clone_pop_dmts = self.clone_sample_organisms()
-        dmts_normal = self.probe_dmts(clone_pop_dmts)
-        dmts_ablation = self.run_ablation_control(clone_pop_dmts, self.probe_dmts)
+        # 1. DMTS Probe (Task 1) with Independent Fresh Clones
+        clone_dmts_norm = self.clone_sample_organisms()
+        clone_dmts_abl = self.clone_sample_organisms()
+        clone_dmts_abl.eta_stdp.zero_()
+        
+        dmts_normal = self.probe_dmts(clone_dmts_norm)
+        dmts_ablation = self.probe_dmts(clone_dmts_abl)
         dmts_sig = self.evaluate_learning_significance(dmts_normal, dmts_ablation, z_threshold=2.0)
 
-        # 2. Bit Parity Probe (Task 2 - Phase 2)
-        clone_pop_parity = self.clone_sample_organisms()
-        parity_normal = self.probe_bit_parity(clone_pop_parity)
-        parity_ablation = self.run_ablation_control(clone_pop_parity, self.probe_bit_parity)
+        # 2. Bit Parity Probe (Task 2) with Independent Fresh Clones
+        clone_par_norm = self.clone_sample_organisms()
+        clone_par_abl = self.clone_sample_organisms()
+        clone_par_abl.eta_stdp.zero_()
+        
+        parity_normal = self.probe_bit_parity(clone_par_norm)
+        parity_ablation = self.probe_bit_parity(clone_par_abl)
         parity_sig = self.evaluate_learning_significance(parity_normal, parity_ablation, z_threshold=2.0)
 
-        # 3. Compositional Arithmetic Probe (Task 3 - Phase 2)
-        clone_pop_arith = self.clone_sample_organisms()
-        arith_normal = self.probe_compositional_arithmetic(clone_pop_arith)
-        arith_ablation = self.run_ablation_control(clone_pop_arith, self.probe_compositional_arithmetic)
+        # 3. Compositional Arithmetic Probe (Task 3) with Independent Fresh Clones
+        clone_arith_norm = self.clone_sample_organisms()
+        clone_arith_abl = self.clone_sample_organisms()
+        clone_arith_abl.eta_stdp.zero_()
+        
+        arith_normal = self.probe_compositional_arithmetic(clone_arith_norm)
+        arith_ablation = self.probe_compositional_arithmetic(clone_arith_abl)
         arith_sig = self.evaluate_learning_significance(arith_normal, arith_ablation, z_threshold=2.5)
 
-        # 4. Spatial Maze Probe (Task 4)
-        clone_pop_maze = self.clone_sample_organisms()
-        maze_normal = self.probe_spatial_maze(clone_pop_maze)
-        maze_ablation = self.run_ablation_control(clone_pop_maze, self.probe_spatial_maze)
+        # 4. Spatial Maze Probe (Task 4) with Independent Fresh Clones
+        clone_maze_norm = self.clone_sample_organisms()
+        clone_maze_abl = self.clone_sample_organisms()
+        clone_maze_abl.eta_stdp.zero_()
+        
+        maze_normal = self.probe_spatial_maze(clone_maze_norm)
+        maze_ablation = self.probe_spatial_maze(clone_maze_abl)
         maze_sig = self.evaluate_learning_significance(maze_normal, maze_ablation, z_threshold=2.0)
 
-        # 5. Causal Intervention Probe (Task 5 - Phase 3)
-        clone_pop_causal = self.clone_sample_organisms()
-        causal_normal = self.probe_causal_intervention(clone_pop_causal)
-        causal_ablation = self.run_ablation_control(clone_pop_causal, self.probe_causal_intervention)
+        # 5. Causal Intervention Probe (Task 5) with Independent Fresh Clones
+        clone_causal_norm = self.clone_sample_organisms()
+        clone_causal_abl = self.clone_sample_organisms()
+        clone_causal_abl.eta_stdp.zero_()
+        
+        causal_normal = self.probe_causal_intervention(clone_causal_norm)
+        causal_ablation = self.probe_causal_intervention(clone_causal_abl)
         causal_sig = self.evaluate_learning_significance(causal_normal, causal_ablation, z_threshold=2.0)
 
         return {

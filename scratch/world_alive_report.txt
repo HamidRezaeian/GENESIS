@@ -1,0 +1,6 @@
+server tick: 3930000
+llm queries: 83679
+per-world alive: [7, 32, 32, 14, 38, 44, 31, 3, 38, 7, 38, 14, 38, 38, 21, 17, 33, 12, 25, 7, 50, 3, 8, 7, 24, 1, 50, 8, 7, 2, 7, 9]
+total alive: 665 / 4096
+mean energy (all): 7.5
+mean energy (alive): 46.1
