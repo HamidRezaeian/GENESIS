@@ -901,7 +901,24 @@ Phase D continuous 100,000-tick Deep-Time Ascension Benchmark (Experiment 64) ve
   - Inter-column spike synchronization managed via `torch.cuda.Stream()` and P2P CUDA memory transfers.
 - **Seed Checkpoint Grafting:** Inherits and grafts `Brain_Phase3_16K_Cortical.npz` (16,384 Neurons) into the core of Phase 4 65K neocortex.
 - **Target Deliverables:** `Brain_Phase4_65K_Cortical.npz` & `Phase4_Telemetry.json`.
-- **Verdict (2026-07-30): 🟢 PHASE 4 NOTEBOOK GENERATED & READY FOR KAGGLE DUAL T4 GPU EXECUTION** — Notebook compiled, zero-OOM PyTorch JIT dual-stream architecture constructed, ready for 2.0M tick deep time run.
+---
+
+## 18. Experiment 94 — Phase-E 5,000,000-Tick Deep Time Ascent & Formal Substrate Closure (2026-08-31)
+
+**Pre-Registered Finish Line & Formal Audit (Binding — Rule 1, 6, 18, 20, 23, 24):**
+- **Milestone Reached:** Global tick `5,000,000` reached with `510,572` Qwen2-0.5B language queries processed across 32 multi-worlds.
+- **Formal Artifacts Exported:** 
+  - Canonical Master Brain: `Brain/canonical_brain_5M.npz` (2.89 MB, SHA256: `96a26c9ec28d28e0dc119a2719f2201593bbc43ad7266a48bb105e99495c3b67`).
+  - Formal Replication Certificate: `experiments/leaderboard/REP_CERT_LEVEL_1_5M.json`.
+  - Append-only Longitudinal Telemetry: `experiments/leaderboard/cortex_longitudinal.jsonl` (253 audits, Metric Version 4).
+- **10-Seed Replication Statistics (Seeds 1201–1210):**
+  - Mean DMTS Delta: `+0.00137`
+  - Standard Error: `0.00509`
+  - Overall Z-Score: `+0.269`
+  - Level-1 Certification: `False` (Status: `REPLICATION_PENDING`)
+- **Scientific Verdict & Formal Tombstone:**
+  > *Tick 5,000,000: honest instruments falsified flat-SNN Criterion B (z=+0.27, REPLICATION_PENDING); substrate closed per Rule 23; Phase-5 per PHASE5_DUAL_MEMORY_SPEC.*
+- **Strategic Transition:** Flat single-timescale SNN substrate declared formally closed with a clean, publication-grade empirical baseline. All future AGI research transitions to Phase-5 Dual-Timescale Addressable Memory Substrate under `Docs/Architecture/PHASE5_DUAL_MEMORY_SPEC.md`.
 
 
 
